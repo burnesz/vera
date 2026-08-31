@@ -1,0 +1,37 @@
+version: '3.8'
+services:
+  # --- Módulo de Back-end (FastAPI) ---
+  api:
+    build: .
+    container_name: vera_api
+    ports:
+      - "8000:8000"
+    depends_on:
+      - postgres
+    environment:
+      # Conexões Locais
+      - DATABASE_URL=postgresql://vera_admin:suasenhaforte@postgres:5432/vera_historico
+      
+      # Cloudflare R2
+      - R2_ENDPOINT_URL=${R2_ENDPOINT_URL}
+      - R2_ACCESS_KEY_ID=${R2_ACCESS_KEY_ID}
+      - R2_SECRET_ACCESS_KEY=${R2_SECRET_ACCESS_KEY}
+      
+      # Conexões em Nuvem
+      - PINECONE_API_KEY=${PINECONE_API_KEY}
+      
+      # Módulo de Inferência de IA (Qwen)
+      - LLM_ENDPOINT_URL=${LLM_ENDPOINT_URL}
+      - LLM_API_KEY=${LLM_API_KEY}
+
+  postgres:
+    image: postgres:15
+    container_name: vera_postgres
+    environment:
+      - POSTGRES_USER=vera_admin
+      - POSTGRES_PASSWORD=suasenhaforte
+      - POSTGRES_DB=vera_historico
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./postgres_data:/var/lib/postgresql/data
