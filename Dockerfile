@@ -1,9 +1,11 @@
-# Usa uma imagem oficial leve do Python
-FROM python:3.10-slim
+# Usa uma imagem oficial segura e atualizada do Python (Debian Bookworm)
+FROM python:3.11-slim-bookworm
+
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1
 
 # Atualiza pacotes do sistema para corrigir vulnerabilidades conhecidas
 RUN apt-get update && apt-get upgrade -y && rm -rf /var/lib/apt/lists/*
-
 
 # Define o diretório de trabalho dentro do contêiner
 WORKDIR /app
