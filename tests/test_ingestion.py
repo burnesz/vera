@@ -92,7 +92,7 @@ def test_embedding_service_prefixes():
 
 def test_pinecone_upsert_batches():
     mock_embedding_service = MagicMock()
-    mock_embedding_service.embed_documents.return_value = [[0.1] * 768]
+    mock_embedding_service.embed_documents.return_value = [[0.1] * 1024]
 
     mock_pc = MagicMock()
     mock_index = MagicMock()

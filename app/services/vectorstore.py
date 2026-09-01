@@ -3,18 +3,24 @@ from typing import List, Dict, Any, Optional
 
 from app.core.config import settings
 
+import os
+import torch
+
 logger = logging.getLogger(__name__)
 
 
 class EmbeddingService:
     """
-    Serviço de geração de embeddings com intfloat/multilingual-e5-base (768 dimensões).
+    Serviço de geração de embeddings com intfloat/multilingual-e5-large (1024 dimensões).
     Aplica as diretrizes do modelo E5 (prefixo 'passage:' para documentos e 'query:' para buscas).
     """
 
     def __init__(self, model_name: Optional[str] = None):
         self.model_name = model_name or settings.EMBEDDING_MODEL_NAME
         self._model = None
+        # Otimiza o paralelismo em CPUs para maior vazão de inferência
+        num_threads = os.cpu_count() or 4
+        torch.set_num_threads(num_threads)
 
     @property
     def model(self):
@@ -28,7 +34,10 @@ class EmbeddingService:
         """
         Gera embeddings para passagens de documentos com o prefixo 'passage: '.
         """
-        prefixed_texts = [f"passage: {t.strip()}" for t in texts]
+        prefixed_texts = [
+            f"passage: {str(t).strip()}" if t is not None and str(t).strip() else "passage: "
+            for t in texts
+        ]
         embeddings = self.model.encode(prefixed_texts, normalize_embeddings=True, show_progress_bar=False)
         if hasattr(embeddings, "tolist"):
             return embeddings.tolist()
@@ -38,7 +47,8 @@ class EmbeddingService:
         """
         Gera embedding para consulta de busca com o prefixo 'query: '.
         """
-        prefixed_query = f"query: {query.strip()}"
+        clean_query = str(query).strip() if query else ""
+        prefixed_query = f"query: {clean_query}"
         embedding = self.model.encode(prefixed_query, normalize_embeddings=True, show_progress_bar=False)
         if hasattr(embedding, "tolist"):
             return embedding.tolist()
@@ -108,15 +118,19 @@ class PineconeVectorStore:
 
         for i in range(0, total_chunks, batch_size):
             batch = chunks[i : i + batch_size]
-            texts = [c["text"] for c in batch]
+            valid_batch = [c for c in batch if c and c.get("text") and str(c["text"]).strip()]
+            if not valid_batch:
+                continue
+
+            texts = [str(c["text"]).strip() for c in valid_batch]
             embeddings = self.embedding_service.embed_documents(texts)
 
             vectors = []
-            for item, emb in zip(batch, embeddings):
+            for item, emb in zip(valid_batch, embeddings):
                 metadata = dict(item.get("metadata", {}))
-                metadata["text"] = item["text"]
+                metadata["text"] = str(item["text"])[:3000]
                 vectors.append({
-                    "id": item["id"],
+                    "id": str(item["id"]),
                     "values": emb,
                     "metadata": metadata
                 })

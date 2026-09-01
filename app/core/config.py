@@ -20,8 +20,8 @@ class Settings(BaseSettings):
     PINECONE_INDEX_NAME: str = "vera-math-index"
     
     # Embeddings
-    EMBEDDING_MODEL_NAME: str = "intfloat/multilingual-e5-base"
-    EMBEDDING_DIMENSION: int = 768
+    EMBEDDING_MODEL_NAME: str = "intfloat/multilingual-e5-large"
+    EMBEDDING_DIMENSION: int = 1024
 
     # Cloudflare R2 (S3-compatible Object Storage)
     R2_ENDPOINT_URL: str = ""
