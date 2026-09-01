@@ -14,7 +14,6 @@ def test_parse_metadata_from_filename_enem():
     assert meta["topic"] == "Ciclo Trigonometrico"
     assert meta["title"] == "Ciclo Trigonometrico"
     assert meta["source_type"] == "materiais_didaticos"
-    # Garante que não há mapeamento forçado de habilidades em materiais didáticos
     assert "habilidades" not in meta
 
 
@@ -26,7 +25,7 @@ def test_parse_metadata_financeira():
     assert meta["source_type"] == "materiais_didaticos"
 
 
-def test_chunker_splitting():
+def test_chunker_splitting_fallback():
     chunker = MaterialChunker(chunk_size=100, chunk_overlap=20)
     sample_text = (
         "O ciclo trigonométrico é uma circunferência de raio unitário utilizada para representar "
@@ -34,7 +33,7 @@ def test_chunker_splitting():
         "Ele é fundamental para o estudo de funções periódicas no ENEM."
     )
 
-    splits = chunker._split_text(sample_text)
+    splits = chunker._split_text_fallback(sample_text)
     assert len(splits) >= 2
     for s in splits:
         assert len(s) <= 120
@@ -44,6 +43,23 @@ def test_chunker_splitting():
 def test_chunker_overlap_validation():
     with pytest.raises(ValueError):
         MaterialChunker(chunk_size=100, chunk_overlap=120)
+
+
+def test_chunker_process_with_fallback():
+    chunker = MaterialChunker(chunk_size=200, chunk_overlap=30)
+    doc_metadata = {"filename": "test.pdf", "title": "Teste", "topic": "Teste", "source_type": "materiais_didaticos"}
+    
+    with patch("pypdf.PdfReader") as mock_reader_cls:
+        mock_page = MagicMock()
+        mock_page.extract_text.return_value = "Definição de Trigonometria e seno, cosseno e tangente."
+        mock_reader = MagicMock()
+        mock_reader.pages = [mock_page]
+        mock_reader_cls.return_value = mock_reader
+
+        chunks = chunker._process_with_fallback("test.pdf", b"%PDF-mock", doc_metadata)
+        assert len(chunks) == 1
+        assert chunks[0]["metadata"]["title"] == "Teste"
+        assert "Trigonometria" in chunks[0]["text"]
 
 
 def test_embedding_service_prefixes():
