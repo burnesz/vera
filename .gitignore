@@ -54,4 +54,6 @@ dist/
 *.tmp
 *.temp
 
+postgres_data
+
 VERA_guia_agente.md
