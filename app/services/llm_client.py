@@ -148,8 +148,8 @@ class LLMClient:
         self,
         prompt: str,
         session_id: Optional[str] = "default",
-        max_tokens: int = 1024,
-        temperature: float = 0.0,
+        max_tokens: int = 512,
+        temperature: float = 0.7,
         top_p: float = 0.9,
         repetition_penalty: float = 1.1
     ) -> str:
@@ -213,8 +213,8 @@ class LLMClient:
         self,
         prompt: str,
         session_id: Optional[str] = "default",
-        max_tokens: int = 1024,
-        temperature: float = 0.0,
+        max_tokens: int = 512,
+        temperature: float = 0.7,
         top_p: float = 0.9,
         repetition_penalty: float = 1.1
     ) -> str:

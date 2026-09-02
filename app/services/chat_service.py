@@ -146,8 +146,8 @@ class ChatService:
             context_chunks=[c.model_dump() for c in context_chunks]
         )
 
-        # 4. Inferência via LLM
-        reply_raw = self.llm_client.generate(prompt=prompt, session_id=session_id)
+        # 4. Inferência via LLM (gerenciamento de histórico centralizado no backend)
+        reply_raw = self.llm_client.generate(prompt=prompt, session_id=None)
         elapsed_time = round(time.time() - start_time, 2)
 
         # 5. Registra mensagens no histórico da sessão
@@ -184,8 +184,8 @@ class ChatService:
             context_chunks=[c.model_dump() for c in context_chunks]
         )
 
-        # 4. Inferência assíncrona via LLM
-        reply_raw = await self.llm_client.agenerate(prompt=prompt, session_id=session_id)
+        # 4. Inferência assíncrona via LLM (gerenciamento de histórico centralizado no backend)
+        reply_raw = await self.llm_client.agenerate(prompt=prompt, session_id=None)
         elapsed_time = round(time.time() - start_time, 2)
 
         # 5. Registra mensagens no histórico da sessão

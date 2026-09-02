@@ -21,24 +21,28 @@ DIRETRIZES DE ATUAÇÃO PEDAGÓGICA:
 def build_chat_prompt(
     user_message: str,
     history_messages: List[Dict[str, Any]],
-    context_chunks: List[Dict[str, Any]]
+    context_chunks: List[Dict[str, Any]],
+    max_chunk_chars: int = 750,
+    max_history_msg_chars: int = 500
 ) -> str:
     """
     Monta o prompt para o Chatbot Especialista integrando:
     - Persona da tutora VERA
-    - Trechos teóricos resgatados do Pinecone (materiais_didaticos)
+    - Trechos teóricos resgatados do Pinecone (materiais_didaticos) com truncamento seguro de tokens
     - Histórico recente da conversa (multiturno)
     - Mensagem atual do estudante
     """
-    # 1. Formata o contexto teórico recuperado do Pinecone
+    # 1. Formata o contexto teórico recuperado do Pinecone (com limite de caracteres por chunk)
     context_section = ""
     if context_chunks:
         chunks_text = []
         for idx, chunk in enumerate(context_chunks, 1):
             title = chunk.get("title", "Material Didático")
             topic = chunk.get("topic", "")
-            text = chunk.get("text", "").strip()
-            chunks_text.append(f"--- [Material Didático {idx} | Título: {title} | Tópico: {topic}] ---\n{text}")
+            raw_text = str(chunk.get("text", "")).strip()
+            # Limita tamanho do trecho para não estourar a janela de contexto de 4096 tokens
+            trimmed_text = raw_text[:max_chunk_chars] + ("..." if len(raw_text) > max_chunk_chars else "")
+            chunks_text.append(f"--- [Material Didático {idx} | Título: {title} | Tópico: {topic}] ---\n{trimmed_text}")
         context_section = "\n\n".join(chunks_text)
     else:
         context_section = "Nenhum material didático complementar resgatado para esta mensagem específica."
@@ -49,8 +53,9 @@ def build_chat_prompt(
         dialogues = []
         for msg in history_messages:
             role_name = "Estudante" if msg.get("role") == "user" else "Tutora VERA"
-            content = msg.get("content", "").strip()
-            dialogues.append(f"{role_name}: {content}")
+            content = str(msg.get("content", "")).strip()
+            trimmed_content = content[:max_history_msg_chars] + ("..." if len(content) > max_history_msg_chars else "")
+            dialogues.append(f"{role_name}: {trimmed_content}")
         history_section = "\n".join(dialogues)
     else:
         history_section = "(Início de conversa - primeira interação)"
