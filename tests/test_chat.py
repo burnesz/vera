@@ -3,12 +3,48 @@ from unittest.mock import MagicMock, AsyncMock, patch
 from fastapi.testclient import TestClient
 
 from app.main import app
+from app.core.prompts import parse_cot_response
 from app.schemas.chat import ChatRequest
 from app.services.chat_service import ChatService, ChatSessionManager
 from app.services.llm_client import LLMClient
 
 
 client = TestClient(app)
+
+
+def test_parse_cot_response_with_tags():
+    raw = """
+<pensamento>
+1. Entendimento: O estudante quer calcular a área de um círculo com raio r=4.
+2. Cálculos: A = pi * r^2 = 16*pi.
+3. Validação: Fórmula correta, sem pegadinhas.
+4. Didática: Conectar com o formato de pizza.
+</pensamento>
+<resposta>
+Para calcular a área do círculo, usamos a fórmula $A = \\pi r^2$. Com raio 4, temos $A = 16\\pi$.
+</resposta>
+"""
+    thought, reply = parse_cot_response(raw)
+    assert thought is not None
+    assert "O estudante quer calcular a área" in thought
+    assert "Validação: Fórmula correta" in thought
+    assert "Para calcular a área do círculo" in reply
+    assert "<resposta>" not in reply
+    assert "<pensamento>" not in reply
+
+
+def test_parse_cot_response_without_tags():
+    raw = "Olá, a resposta direta é 42."
+    thought, reply = parse_cot_response(raw)
+    assert thought is None
+    assert reply == "Olá, a resposta direta é 42."
+
+
+def test_parse_cot_response_partial_tags():
+    raw = "<pensamento>Calculando x + 2 = 5 -> x = 3</pensamento>\nO valor de x é 3."
+    thought, reply = parse_cot_response(raw)
+    assert thought == "Calculando x + 2 = 5 -> x = 3"
+    assert reply == "O valor de x é 3."
 
 
 def test_chat_session_manager():
@@ -43,7 +79,10 @@ def test_chat_service_multiturn_flow():
     ]
 
     mock_llm = MagicMock(spec=LLMClient)
-    mock_llm.generate.return_value = "O Teorema de Pitágoras é fundamental para calcular a hipotenusa: a² + b² = c²."
+    mock_llm.generate.return_value = (
+        "<pensamento>Identificado triângulo retângulo. Validando hipotenusa.</pensamento>\n"
+        "<resposta>O Teorema de Pitágoras é fundamental para calcular a hipotenusa: a² + b² = c².</resposta>"
+    )
 
     service = ChatService(llm_client=mock_llm, vector_store=mock_vectorstore, manager=manager)
 
@@ -54,19 +93,28 @@ def test_chat_service_multiturn_flow():
     assert resp1.session_id is not None
     assert len(resp1.context_chunks) == 1
     assert "hipotenusa" in resp1.reply
+    assert resp1.thought is not None
+    assert "Validando hipotenusa" in resp1.thought
 
-    # Verifica se histórico gravou o turno 1
+    # Verifica se histórico gravou a resposta limpa (sem tags) no turno 1
     history = manager.get_history(resp1.session_id)
     assert len(history) == 2
     assert history[0].role == "user"
     assert history[1].role == "assistant"
+    assert "<pensamento>" not in history[1].content
+    assert history[1].thought is not None
 
     # Turno 2 (mesma sessão)
-    mock_llm.generate.return_value = "Se os catetos são 3 e 4, temos c² = 9 + 16 = 25, logo c = 5."
+    mock_llm.generate.return_value = (
+        "<pensamento>Catetos 3 e 4. 3² + 4² = 9 + 16 = 25. Raiz é 5.</pensamento>\n"
+        "<resposta>Se os catetos são 3 e 4, temos c² = 9 + 16 = 25, logo c = 5.</resposta>"
+    )
     req2 = ChatRequest(message="E se os catetos medirem 3 e 4?", session_id=resp1.session_id)
     resp2 = service.send_message(req2)
 
     assert resp2.session_id == resp1.session_id
+    assert resp2.thought is not None
+    assert "Catetos 3 e 4" in resp2.thought
     history_after_t2 = manager.get_history(resp1.session_id)
     assert len(history_after_t2) == 4
 
@@ -75,7 +123,9 @@ def test_chat_service_multiturn_flow():
 @patch("app.services.chat_service.LLMClient")
 def test_chat_api_endpoints(mock_llm_cls, mock_vs_cls):
     mock_llm = MagicMock()
-    mock_llm.agenerate = AsyncMock(return_value="Olá! Eu sou a VERA, sua tutora de Matemática. Como posso te ajudar hoje?")
+    mock_llm.agenerate = AsyncMock(
+        return_value="<pensamento>Saudação inicial ao estudante.</pensamento>\n<resposta>Olá! Eu sou a VERA, sua tutora de Matemática. Como posso te ajudar hoje?</resposta>"
+    )
     mock_llm_cls.return_value = mock_llm
 
     mock_vs = MagicMock()
@@ -90,6 +140,9 @@ def test_chat_api_endpoints(mock_llm_cls, mock_vs_cls):
     assert response.status_code == 200
     data = response.json()
     assert "reply" in data
+    assert "thought" in data
+    assert data["thought"] == "Saudação inicial ao estudante."
+    assert "Olá! Eu sou a VERA" in data["reply"]
     assert "session_id" in data
     session_id = data["session_id"]
 
@@ -99,6 +152,7 @@ def test_chat_api_endpoints(mock_llm_cls, mock_vs_cls):
     hist_data = hist_resp.json()
     assert hist_data["session_id"] == session_id
     assert hist_data["total_messages"] >= 2
+    assert hist_data["messages"][-1]["thought"] == "Saudação inicial ao estudante."
 
     # 3. Limpeza de sessão
     del_resp = client.delete(f"/api/v1/chat/session/{session_id}")

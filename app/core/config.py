@@ -13,6 +13,7 @@ class Settings(BaseSettings):
     LLM_ENDPOINT_URL: str = ""
     LLM_API_KEY: str = ""
     LLM_TIMEOUT_SECONDS: float = 60.0
+    LLM_MAX_TOKENS: int = 1024
 
     # Vector Store (Pinecone)
     PINECONE_API_KEY: str = ""

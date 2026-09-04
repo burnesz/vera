@@ -148,7 +148,7 @@ class LLMClient:
         self,
         prompt: str,
         session_id: Optional[str] = "default",
-        max_tokens: int = 512,
+        max_tokens: Optional[int] = None,
         temperature: float = 0.7,
         top_p: float = 0.9,
         repetition_penalty: float = 1.1
@@ -159,11 +159,13 @@ class LLMClient:
         if self.mock_mode or not self.endpoint_url:
             return self._generate_mock_response(prompt)
 
+        resolved_max_tokens = max_tokens if max_tokens is not None else settings.LLM_MAX_TOKENS
+
         url = f"{self.endpoint_url}/generate"
         payload = {
             "prompt": prompt,
             "session_id": session_id or "default",
-            "max_tokens": max_tokens,
+            "max_tokens": resolved_max_tokens,
             "temperature": temperature,
             "top_p": top_p,
             "repetition_penalty": repetition_penalty
@@ -172,7 +174,7 @@ class LLMClient:
         last_exception = None
         for attempt in range(1, self.max_retries + 1):
             try:
-                logger.info(f"Enviando requisição de geração ao LLM (tentativa {attempt}/{self.max_retries})...")
+                logger.info(f"Enviando requisição de geração ao LLM (tentativa {attempt}/{self.max_retries}, max_tokens={resolved_max_tokens})...")
                 with httpx.Client(timeout=self.timeout_seconds) as client:
                     response = client.post(url, json=payload, headers=self.headers)
 
@@ -213,7 +215,7 @@ class LLMClient:
         self,
         prompt: str,
         session_id: Optional[str] = "default",
-        max_tokens: int = 512,
+        max_tokens: Optional[int] = None,
         temperature: float = 0.7,
         top_p: float = 0.9,
         repetition_penalty: float = 1.1
@@ -224,11 +226,13 @@ class LLMClient:
         if self.mock_mode or not self.endpoint_url:
             return self._generate_mock_response(prompt)
 
+        resolved_max_tokens = max_tokens if max_tokens is not None else settings.LLM_MAX_TOKENS
+
         url = f"{self.endpoint_url}/generate"
         payload = {
             "prompt": prompt,
             "session_id": session_id or "default",
-            "max_tokens": max_tokens,
+            "max_tokens": resolved_max_tokens,
             "temperature": temperature,
             "top_p": top_p,
             "repetition_penalty": repetition_penalty

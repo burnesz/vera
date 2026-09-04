@@ -4,7 +4,7 @@ import logging
 from typing import List, Dict, Any, Optional
 
 from app.core.config import settings
-from app.core.prompts import build_chat_prompt
+from app.core.prompts import build_chat_prompt, parse_cot_response
 from app.schemas.chat import (
     ChatMessage,
     ChatRequest,
@@ -35,11 +35,11 @@ class ChatSessionManager:
             self._sessions[session_id] = []
         return session_id
 
-    def add_message(self, session_id: str, role: str, content: str) -> ChatMessage:
+    def add_message(self, session_id: str, role: str, content: str, thought: Optional[str] = None) -> ChatMessage:
         if session_id not in self._sessions:
             self._sessions[session_id] = []
         
-        msg = ChatMessage(role=role, content=content, timestamp=time.time())
+        msg = ChatMessage(role=role, content=content, thought=thought, timestamp=time.time())
         self._sessions[session_id].append(msg)
 
         # Aplica janela deslizante para limitar o tamanho do histórico
@@ -75,7 +75,8 @@ class ChatService:
     2. Resgata materiais didáticos relevantes no Pinecone (materiais_didaticos).
     3. Constrói o prompt estruturado com raciocínio Chain-of-Thought (CoT).
     4. Envia para o LLM remoto (Qwen 2.5) via gateway resiliente.
-    5. Atualiza o histórico da conversa e retorna a resposta formatada.
+    5. Separa o raciocínio interno (Scratchpad) da resposta final.
+    6. Atualiza o histórico da conversa e retorna a resposta formatada.
     """
 
     def __init__(
@@ -150,12 +151,16 @@ class ChatService:
         reply_raw = self.llm_client.generate(prompt=prompt, session_id=None)
         elapsed_time = round(time.time() - start_time, 2)
 
-        # 5. Registra mensagens no histórico da sessão
+        # 5. Separa raciocínio (thought) da resposta didática final
+        thought, clean_reply = parse_cot_response(reply_raw)
+
+        # 6. Registra mensagens no histórico da sessão (armazena clean_reply para não estourar contexto)
         self.session_manager.add_message(session_id=session_id, role="user", content=request.message)
-        self.session_manager.add_message(session_id=session_id, role="assistant", content=reply_raw)
+        self.session_manager.add_message(session_id=session_id, role="assistant", content=clean_reply, thought=thought)
 
         return ChatResponse(
-            reply=reply_raw,
+            reply=clean_reply,
+            thought=thought,
             session_id=session_id,
             context_chunks=context_chunks,
             inference_time_seconds=elapsed_time
@@ -188,12 +193,16 @@ class ChatService:
         reply_raw = await self.llm_client.agenerate(prompt=prompt, session_id=None)
         elapsed_time = round(time.time() - start_time, 2)
 
-        # 5. Registra mensagens no histórico da sessão
+        # 5. Separa raciocínio (thought) da resposta didática final
+        thought, clean_reply = parse_cot_response(reply_raw)
+
+        # 6. Registra mensagens no histórico da sessão (armazena clean_reply para não estourar contexto)
         self.session_manager.add_message(session_id=session_id, role="user", content=request.message)
-        self.session_manager.add_message(session_id=session_id, role="assistant", content=reply_raw)
+        self.session_manager.add_message(session_id=session_id, role="assistant", content=clean_reply, thought=thought)
 
         return ChatResponse(
-            reply=reply_raw,
+            reply=clean_reply,
+            thought=thought,
             session_id=session_id,
             context_chunks=context_chunks,
             inference_time_seconds=elapsed_time

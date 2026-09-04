@@ -9,6 +9,10 @@ class ChatMessage(BaseModel):
     """
     role: Literal["user", "assistant", "system"] = Field(..., description="Papel do remetente da mensagem")
     content: str = Field(..., description="Conteúdo textual da mensagem")
+    thought: Optional[str] = Field(
+        default=None,
+        description="Raciocínio interno e validação matemática passo a passo (Chain-of-Thought Scratchpad), se houver"
+    )
     timestamp: float = Field(default_factory=time.time, description="Timestamp Unix da criação da mensagem")
 
 
@@ -47,6 +51,10 @@ class ChatResponse(BaseModel):
     Resposta retornada pelo Chatbot especialista com raciocínio pedagógico e fontes consultadas.
     """
     reply: str = Field(..., description="Resposta didática formatada em Markdown gerada pela tutora VERA")
+    thought: Optional[str] = Field(
+        default=None,
+        description="Raciocínio interno e validação matemática passo a passo da Tutora (Chain-of-Thought Scratchpad)"
+    )
     session_id: str = Field(..., description="Identificador da sessão da conversa")
     context_chunks: List[ChatContextChunk] = Field(
         default_factory=list,
