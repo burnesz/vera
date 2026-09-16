@@ -1,6 +1,6 @@
 import uuid
 from datetime import datetime
-from typing import Dict, Any, List, TYPE_CHECKING
+from typing import Dict, Any, List, Optional, TYPE_CHECKING
 from sqlalchemy import String, Integer, Text, ForeignKey, UUID, DateTime, func, JSON
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column, relationship
@@ -34,9 +34,11 @@ class QuestaoEnem(Base):
         nullable=False,
         index=True
     )
+    co_item: Mapped[Optional[int]] = mapped_column(Integer, unique=True, nullable=True, index=True)
     enunciado: Mapped[str] = mapped_column(Text, nullable=False)
     alternativas: Mapped[Dict[str, Any]] = mapped_column(JSON_TYPE, nullable=False)
     gabarito: Mapped[str] = mapped_column(String(1), nullable=False)  # 'A', 'B', 'C', 'D', 'E'
+    metadados: Mapped[Optional[Dict[str, Any]]] = mapped_column(JSON_TYPE, nullable=True)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         server_default=func.now(),

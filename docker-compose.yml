@@ -1,4 +1,5 @@
 version: '3.8'
+
 services:
   # --- Módulo de Back-end (FastAPI) ---
   api:
@@ -8,30 +9,22 @@ services:
       - "8000:8000"
     depends_on:
       - postgres
+    env_file:
+      - .env
     environment:
-      # Conexões Locais
-      - DATABASE_URL=postgresql://vera_admin:suasenhaforte@postgres:5432/vera_historico
-      
-      # Cloudflare R2
-      - R2_ENDPOINT_URL=${R2_ENDPOINT_URL}
-      - R2_ACCESS_KEY_ID=${R2_ACCESS_KEY_ID}
-      - R2_SECRET_ACCESS_KEY=${R2_SECRET_ACCESS_KEY}
-      
-      # Conexões em Nuvem
-      - PINECONE_API_KEY=${PINECONE_API_KEY}
-      
-      # Módulo de Inferência de IA (Qwen)
-      - LLM_ENDPOINT_URL=${LLM_ENDPOINT_URL}
-      - LLM_API_KEY=${LLM_API_KEY}
+      # Sobrescreve o host do banco para apontar para o container do postgres na rede interna do Docker
+      - DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:${POSTGRES_PORT:-5432}/${POSTGRES_DB}
+      - POSTGRES_SERVER=postgres
 
+  # --- Banco de Dados Relacional (PostgreSQL) ---
   postgres:
     image: postgres:15
     container_name: vera_postgres
     environment:
-      - POSTGRES_USER=vera_admin
-      - POSTGRES_PASSWORD=suasenhaforte
-      - POSTGRES_DB=vera_historico
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_DB=${POSTGRES_DB}
     ports:
-      - "5432:5432"
+      - "${POSTGRES_PORT:-5432}:5432"
     volumes:
       - ./postgres_data:/var/lib/postgresql/data

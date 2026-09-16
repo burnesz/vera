@@ -40,16 +40,19 @@ CREATE INDEX IF NOT EXISTS idx_habilidades_competencia ON habilidades_enem(compe
 -- ------------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS questoes_enem (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    co_item INTEGER UNIQUE,
     ano INTEGER NOT NULL,
     habilidade_codigo VARCHAR(10) NOT NULL REFERENCES habilidades_enem(codigo) ON DELETE RESTRICT,
     enunciado TEXT NOT NULL,
     alternativas JSONB NOT NULL,
     gabarito CHAR(1) NOT NULL,
+    metadados JSONB,
     created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
 );
 
 CREATE INDEX IF NOT EXISTS idx_questoes_enem_ano ON questoes_enem(ano);
 CREATE INDEX IF NOT EXISTS idx_questoes_enem_hab ON questoes_enem(habilidade_codigo);
+CREATE INDEX IF NOT EXISTS idx_questoes_enem_co_item ON questoes_enem(co_item);
 
 -- ------------------------------------------------------------------------------
 -- 4. Tabela: questoes_ineditas (Geradas pelo LLM Qwen2.5 para Treino do Aluno)
