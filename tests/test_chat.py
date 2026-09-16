@@ -119,6 +119,26 @@ def test_chat_service_multiturn_flow():
     assert len(history_after_t2) == 4
 
 
+import uuid
+from app.api.deps import get_current_active_user
+from app.db.models.user import User
+
+
+def test_chat_endpoints_require_authentication():
+    """Garante que as rotas de chat rejeitam requisições sem token JWT com HTTP 401."""
+    # 1. Envio de mensagem sem auth
+    r_post = client.post("/api/v1/chat", json={"message": "Pergunta sem autenticação"})
+    assert r_post.status_code == 401
+
+    # 2. Histórico sem auth
+    r_get = client.get("/api/v1/chat/history/qualquer_sessao")
+    assert r_get.status_code == 401
+
+    # 3. Limpeza de sessão sem auth
+    r_del = client.delete("/api/v1/chat/session/qualquer_sessao")
+    assert r_del.status_code == 401
+
+
 @patch("app.services.chat_service.PineconeVectorStore")
 @patch("app.services.chat_service.LLMClient")
 def test_chat_api_endpoints(mock_llm_cls, mock_vs_cls):
@@ -132,29 +152,42 @@ def test_chat_api_endpoints(mock_llm_cls, mock_vs_cls):
     mock_vs.search.return_value = []
     mock_vs_cls.return_value = mock_vs
 
-    # 1. Envio de mensagem
-    response = client.post(
-        "/api/v1/chat",
-        json={"message": "Olá VERA, pode me ajudar com trigonometria?"}
+    mock_user = User(
+        id=uuid.uuid4(),
+        nome="Estudante Teste",
+        email="estudante_chat@enem.com",
+        hashed_password="hashed_pw",
+        role="student",
+        is_ativo=True
     )
-    assert response.status_code == 200
-    data = response.json()
-    assert "reply" in data
-    assert "thought" in data
-    assert data["thought"] == "Saudação inicial ao estudante."
-    assert "Olá! Eu sou a VERA" in data["reply"]
-    assert "session_id" in data
-    session_id = data["session_id"]
+    app.dependency_overrides[get_current_active_user] = lambda: mock_user
 
-    # 2. Consulta de histórico
-    hist_resp = client.get(f"/api/v1/chat/history/{session_id}")
-    assert hist_resp.status_code == 200
-    hist_data = hist_resp.json()
-    assert hist_data["session_id"] == session_id
-    assert hist_data["total_messages"] >= 2
-    assert hist_data["messages"][-1]["thought"] == "Saudação inicial ao estudante."
+    try:
+        # 1. Envio de mensagem autenticada
+        response = client.post(
+            "/api/v1/chat",
+            json={"message": "Olá VERA, pode me ajudar com trigonometria?"}
+        )
+        assert response.status_code == 200
+        data = response.json()
+        assert "reply" in data
+        assert "thought" in data
+        assert data["thought"] == "Saudação inicial ao estudante."
+        assert "Olá! Eu sou a VERA" in data["reply"]
+        assert "session_id" in data
+        session_id = data["session_id"]
 
-    # 3. Limpeza de sessão
-    del_resp = client.delete(f"/api/v1/chat/session/{session_id}")
-    assert del_resp.status_code == 200
-    assert del_resp.json()["cleared"] is True
+        # 2. Consulta de histórico autenticada
+        hist_resp = client.get(f"/api/v1/chat/history/{session_id}")
+        assert hist_resp.status_code == 200
+        hist_data = hist_resp.json()
+        assert hist_data["session_id"] == session_id
+        assert hist_data["total_messages"] >= 2
+        assert hist_data["messages"][-1]["thought"] == "Saudação inicial ao estudante."
+
+        # 3. Limpeza de sessão autenticada
+        del_resp = client.delete(f"/api/v1/chat/session/{session_id}")
+        assert del_resp.status_code == 200
+        assert del_resp.json()["cleared"] is True
+    finally:
+        app.dependency_overrides.pop(get_current_active_user, None)

@@ -38,8 +38,8 @@ def db_session():
 
 
 def test_create_user(db_session):
-    student = User(nome="Aluno Teste", email="aluno@teste.com", role="student")
-    admin = User(nome="Admin Teste", email="admin@teste.com", role="admin")
+    student = User(nome="Aluno Teste", email="aluno@teste.com", hashed_password="fake_hashed_pwd_student", role="student")
+    admin = User(nome="Admin Teste", email="admin@teste.com", hashed_password="fake_hashed_pwd_admin", role="admin")
     db_session.add_all([student, admin])
     db_session.commit()
 
@@ -173,7 +173,7 @@ def test_simulado_with_hybrid_items(db_session):
 
 def test_submission_and_feedback_flow(db_session):
     # Setup
-    user = User(nome="Aluno Teste", email="aluno_simulado@teste.com")
+    user = User(nome="Aluno Teste", email="aluno_simulado@teste.com", hashed_password="fake_hashed_pwd")
     hab = HabilidadeEnem(
         codigo="H12",
         competencia=3,
@@ -259,7 +259,7 @@ def test_submission_and_feedback_flow(db_session):
 
 
 def test_chat_persistence(db_session):
-    user = User(nome="Aluno Chat", email="chat@teste.com")
+    user = User(nome="Aluno Chat", email="chat@teste.com", hashed_password="fake_hashed_pwd")
     db_session.add(user)
     db_session.commit()
 
