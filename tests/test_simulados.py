@@ -98,7 +98,7 @@ def setup_database_data():
 def auth_headers():
     db = TestingSessionLocal()
     user = db.query(User).filter_by(email="estudante.simulado@teste.com").first()
-    token = create_access_token({"sub": str(user.id), "role": user.role})
+    token = create_access_token(subject=str(user.id), role=user.role)
     db.close()
     return {"Authorization": f"Bearer {token}"}
 

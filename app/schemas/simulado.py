@@ -1,7 +1,7 @@
 import uuid
 from datetime import datetime
 from typing import Dict, Any, List, Optional
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ConfigDict
 
 
 # --- Requisições de Criação de Simulado ---
@@ -24,8 +24,7 @@ class QuestaoItemResponse(BaseModel):
     enunciado: str
     alternativas: Dict[str, str]
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class SimuladoResponse(BaseModel):
@@ -37,8 +36,7 @@ class SimuladoResponse(BaseModel):
     itens: List[QuestaoItemResponse]
     created_at: datetime
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 # --- Submissão e Correção do Simulado ---
@@ -74,5 +72,4 @@ class SimuladoResultadoResponse(BaseModel):
     completed_at: Optional[datetime] = None
     itens: List[ItemCorrecaoResponse]
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
