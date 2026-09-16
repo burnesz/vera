@@ -1,5 +1,6 @@
 from functools import lru_cache
 from typing import Optional
+from pydantic import model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -40,12 +41,25 @@ class Settings(BaseSettings):
     CHUNK_OVERLAP: int = 150
 
     # PostgreSQL Relational Database
-    DATABASE_URL: Optional[str] = "postgresql://postgres:postgres@localhost:5432/vera_db"
+    DATABASE_URL: Optional[str] = None
     POSTGRES_SERVER: str = "localhost"
     POSTGRES_USER: str = "postgres"
     POSTGRES_PASSWORD: str = "postgres"
     POSTGRES_DB: str = "vera_db"
     POSTGRES_PORT: int = 5432
+
+    @model_validator(mode="after")
+    def assemble_database_url(self) -> "Settings":
+        """
+        Monta a DATABASE_URL dinamicamente caso não tenha sido fornecida explicitamente.
+        Garante fonte única da verdade com as variáveis POSTGRES_*.
+        """
+        if not self.DATABASE_URL:
+            self.DATABASE_URL = (
+                f"postgresql://{self.POSTGRES_USER}:{self.POSTGRES_PASSWORD}"
+                f"@{self.POSTGRES_SERVER}:{self.POSTGRES_PORT}/{self.POSTGRES_DB}"
+            )
+        return self
 
     # Namespaces Pinecone (RN-VETOR01)
     NAMESPACE_MATERIAIS_DIDATICOS: str = "materiais_didaticos"

@@ -12,8 +12,7 @@ services:
     env_file:
       - .env
     environment:
-      # Sobrescreve o host do banco para apontar para o container do postgres na rede interna do Docker
-      - DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:${POSTGRES_PORT:-5432}/${POSTGRES_DB}
+      # Sobrescreve o host do banco para a rede interna do Docker (a URL é montada dinamicamente pelo FastAPI)
       - POSTGRES_SERVER=postgres
 
   # --- Banco de Dados Relacional (PostgreSQL) ---
