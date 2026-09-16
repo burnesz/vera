@@ -13,6 +13,7 @@ from sqlalchemy.orm import sessionmaker, Session
 from sqlalchemy.dialects.postgresql import insert as pg_insert
 
 from app.core.config import settings
+import app.db.models  # Garante registro de todos os modelos no Base.metadata
 from app.db.base import Base
 from app.db.models.habilidade import HabilidadeEnem
 from app.db.models.questao_enem import QuestaoEnem
@@ -102,28 +103,28 @@ def seed_questoes(
     total_parsed = len(items)
     logger.info(f"Total de questões lidas e validadas: {total_parsed}")
 
-    # Estatísticas do conjunto
-    anos_treino = [item for item in items if item["ano"] <= 2022]
-    anos_heldout = [item for item in items if item["ano"] >= 2023]
-    logger.info(f"Split Temporal (RN-DADOS01): 2009-2022 = {len(anos_treino)} itens | 2023-2024 (held-out) = {len(anos_heldout)} itens")
+    logger.info(f"Total de questões disponíveis para simulados e treino: {total_parsed} itens (2009-2024)")
 
     if dry_run:
         logger.info("[DRY-RUN] Nenhuma alteração persistida no banco de dados.")
         return {
             "total_parsed": total_parsed,
-            "treino_count": len(anos_treino),
-            "heldout_count": len(anos_heldout),
             "inserted": 0,
             "updated": 0,
         }
 
     target_url = db_url or settings.DATABASE_URL
     engine = create_engine(target_url)
+
+    # 1. Garante que todas as tabelas do sistema existam (auto-healing para banco novo)
+    Base.metadata.create_all(bind=engine)
+    logger.info("Estrutura de tabelas verificada/criada com sucesso.")
+
     SessionMaker = sessionmaker(bind=engine, autocommit=False, autoflush=False)
     session: Session = SessionMaker()
 
     try:
-        # 1. Garantir que as habilidades existam
+        # 2. Garantir que as habilidades existam
         habilidades_existentes = set(session.scalars(select(HabilidadeEnem.codigo)).all())
         if len(habilidades_existentes) < len(HABILIDADES_MAT):
             logger.info("Populando habilidades da Matriz de Referência no banco...")
@@ -196,8 +197,6 @@ def seed_questoes(
         logger.info(f"Carga concluída com sucesso! Processados: {inserted_count + updated_count} itens.")
         return {
             "total_parsed": total_parsed,
-            "treino_count": len(anos_treino),
-            "heldout_count": len(anos_heldout),
             "inserted": inserted_count,
             "updated": updated_count,
         }

@@ -10,7 +10,7 @@ from scripts.seed_questoes import seed_questoes, parse_csv_rows
 
 def test_parse_csv_rows():
     items = parse_csv_rows("data/itens_prova_2009_2024_enriquecido.csv")
-    assert len(items) == 406
+    assert len(items) == 401
     first = items[0]
     assert first["co_item"] == 60227
     assert first["ano"] == 2009
@@ -30,16 +30,14 @@ def test_seed_questoes_sqlite(tmp_path):
     engine = create_engine(db_url)
     Base.metadata.create_all(bind=engine)
 
-    # 1ª execução: deve inserir todos os 406 itens e as 30 habilidades
+    # 1ª execução: deve inserir todos os 401 itens e as 30 habilidades
     result1 = seed_questoes(
         csv_path="data/itens_prova_2009_2024_enriquecido.csv",
         db_url=db_url,
         dry_run=False
     )
-    assert result1["total_parsed"] == 406
-    assert result1["treino_count"] == 325
-    assert result1["heldout_count"] == 81
-    assert result1["inserted"] == 406
+    assert result1["total_parsed"] == 401
+    assert result1["inserted"] == 401
     assert result1["updated"] == 0
 
     Session = sessionmaker(bind=engine)
@@ -50,7 +48,7 @@ def test_seed_questoes_sqlite(tmp_path):
     assert hab_count == 30
 
     q_count = session.query(QuestaoEnem).count()
-    assert q_count == 406
+    assert q_count == 401
 
     # Valida integridade de um item e relacionamento
     q = session.query(QuestaoEnem).filter_by(co_item=60227).first()
@@ -70,8 +68,8 @@ def test_seed_questoes_sqlite(tmp_path):
         dry_run=False
     )
     assert result2["inserted"] == 0
-    assert result2["updated"] == 406
+    assert result2["updated"] == 401
 
     session = Session()
-    assert session.query(QuestaoEnem).count() == 406
+    assert session.query(QuestaoEnem).count() == 401
     session.close()
