@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { LogIn, AlertCircle, Lock, Mail, Sparkles } from 'lucide-react';
+import { LogIn, AlertCircle, Lock, Mail } from 'lucide-react';
 
 interface LoginPageProps {
   onNavigate: (page: string) => void;
@@ -34,12 +34,6 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onNavigate }) => {
     } finally {
       setIsSubmitting(false);
     }
-  };
-
-  const handleDemoFill = () => {
-    setEmail('admin@vera.edu.br');
-    setPassword('admin123456');
-    setError(null);
   };
 
   return (
@@ -172,24 +166,6 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onNavigate }) => {
             {isSubmitting ? 'Verificando...' : 'Entrar na Conta'}
           </button>
         </form>
-
-        {/* Botão de Preenchimento Rápido / Demo */}
-        <div style={{ marginTop: '1rem', textAlign: 'center' }}>
-          <button
-            type="button"
-            onClick={handleDemoFill}
-            className="btn btn-ghost btn-sm"
-            style={{
-              color: 'var(--ocean-700)',
-              backgroundColor: 'var(--ocean-50)',
-              border: '1px dashed var(--border-ocean)',
-              width: '100%',
-            }}
-          >
-            <Sparkles size={16} />
-            Preenchimento Rápido (Demo / Admin)
-          </button>
-        </div>
 
         <div
           style={{
