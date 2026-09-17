@@ -7,7 +7,6 @@ import {
   BotMessageSquare,
   LogOut,
   X,
-  Sparkles,
 } from 'lucide-react';
 
 interface SidebarProps {
@@ -184,26 +183,6 @@ export const Sidebar: React.FC<SidebarProps> = ({
               Online
             </span>
           </button>
-
-          {/* Widget de Informações Acadêmicas do ENEM */}
-          <div
-            style={{
-              marginTop: 'auto',
-              padding: '1rem',
-              backgroundColor: 'var(--ocean-50)',
-              borderRadius: 'var(--radius-md)',
-              border: '1px solid var(--border-ocean)',
-              marginBottom: '0.5rem',
-            }}
-          >
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', color: 'var(--ocean-800)', marginBottom: '0.4rem' }}>
-              <Sparkles size={15} />
-              <strong style={{ fontSize: '0.8rem' }}>Matemática ENEM</strong>
-            </div>
-            <p style={{ fontSize: '0.775rem', color: 'var(--text-secondary)', lineHeight: 1.4, margin: 0 }}>
-              30 Habilidades da Matriz oficial mapeadas com inferência local (Ollama).
-            </p>
-          </div>
         </div>
 
         {/* Rodapé do Menu Lateral: Perfil do Estudante & Sair */}
