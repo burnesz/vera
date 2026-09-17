@@ -110,7 +110,7 @@ def build_chat_prompt(
     prompt = f"""{VERA_TUTOR_SYSTEM_PROMPT}
 
 ========================
-BASE TEÓRICA DIDÁTICA (CONTEÚDO CONFIÁVEL DO PINECONE):
+BASE TEÓRICA DIDÁTICA:
 ========================
 {context_section}
 
