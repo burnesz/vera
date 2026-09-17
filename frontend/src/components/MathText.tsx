@@ -9,7 +9,7 @@ interface MathTextProps {
 export const MathText: React.FC<MathTextProps> = ({ content, className = '' }) => {
   if (!content) return null;
 
-  // 1. Separar o texto em blocos de fórmulas matemáticas (\[ ... \] ou $$ ... $$) e texto normal
+  // 1. Separar blocos de matemática (\[ ... \] ou $$ ... $$) do texto padrão
   const blockRegex = /(\\\[[\s\S]*?\\\]|\$\$[\s\S]*?\$\$)/g;
   const sections = content.split(blockRegex);
 
@@ -18,19 +18,19 @@ export const MathText: React.FC<MathTextProps> = ({ content, className = '' }) =
       {sections.map((section, sIdx) => {
         if (!section) return null;
 
-        // Bloco LaTeX \[ ... \]
+        // Bloco LaTeX delimitado por \[ ... \]
         if (section.startsWith('\\[') && section.endsWith('\\]')) {
           const rawMath = section.slice(2, -2).trim();
           return renderKaTeX(rawMath, true, `block-${sIdx}`);
         }
 
-        // Bloco LaTeX $$ ... $$
+        // Bloco LaTeX delimitado por $$ ... $$
         if (section.startsWith('$$') && section.endsWith('$$')) {
           const rawMath = section.slice(2, -2).trim();
           return renderKaTeX(rawMath, true, `block-${sIdx}`);
         }
 
-        // Segmento de texto com potenciais parágrafos e inline math
+        // Segmento de texto normal com potenciais parágrafos e elementos inline
         return renderParagraphs(section, sIdx);
       })}
     </div>
@@ -110,15 +110,15 @@ function renderParagraphs(text: string, sectionIdx: number) {
   );
 }
 
-// Tokenizador de linha para capturar inline math \(...\), $...$, **bold** e *italic*
-function renderInlineTokens(line: string): React.ReactNode[] {
+// Tokenizador recursivo para capturar inline math \(...\), $...$, **bold** e *italic*
+function renderInlineTokens(text: string): React.ReactNode[] {
   // Regex captura:
   // 1. \( ... \)
-  // 2. $ ... $ (não vazio)
+  // 2. $ ... $
   // 3. ** ... **
   // 4. * ... *
-  const inlineRegex = /(\\\([\s\S]*?\\\)|\$[^$\n]+?\$|\*\*[^*]+?\*\*|\*[^*]+?\*)/g;
-  const parts = line.split(inlineRegex);
+  const inlineRegex = /(\\\([\s\S]*?\\\)|\$[^$]+?\$|\*\*[^*]+?\*\*|\*[^*]+?\*)/g;
+  const parts = text.split(inlineRegex);
 
   return parts.map((part, index) => {
     if (!part) return null;
@@ -126,27 +126,29 @@ function renderInlineTokens(line: string): React.ReactNode[] {
     // Inline LaTeX \( ... \)
     if (part.startsWith('\\(') && part.endsWith('\\)')) {
       const math = part.slice(2, -2).trim();
-      return renderKaTeX(math, false, `inline-paren-${index}`);
+      return renderKaTeX(math, false, `inline-paren-${index}-${part.slice(0, 8)}`);
     }
 
     // Inline LaTeX $ ... $
     if (part.startsWith('$') && part.endsWith('$') && part.length > 2) {
       const math = part.slice(1, -1).trim();
-      return renderKaTeX(math, false, `inline-dollar-${index}`);
+      return renderKaTeX(math, false, `inline-dollar-${index}-${part.slice(0, 8)}`);
     }
 
-    // Negrito ** ... **
-    if (part.startsWith('**') && part.endsWith('**') && part.length > 4) {
+    // Negrito ** ... ** (processa recursivamente para permitir fórmulas dentro do negrito)
+    if (part.startsWith('**') && part.endsWith('**') && part.length >= 4) {
+      const inner = part.slice(2, -2);
       return (
         <strong key={`bold-${index}`} style={{ fontWeight: 700, color: 'var(--text-primary)' }}>
-          {part.slice(2, -2)}
+          {renderInlineTokens(inner)}
         </strong>
       );
     }
 
-    // Itálico * ... *
-    if (part.startsWith('*') && part.endsWith('*') && part.length > 2) {
-      return <em key={`italic-${index}`}>{part.slice(1, -1)}</em>;
+    // Itálico * ... * (processa recursivamente)
+    if (part.startsWith('*') && part.endsWith('*') && part.length >= 2) {
+      const inner = part.slice(1, -1);
+      return <em key={`italic-${index}`}>{renderInlineTokens(inner)}</em>;
     }
 
     return part;
