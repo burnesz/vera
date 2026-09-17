@@ -32,6 +32,20 @@ export interface Simulado {
   created_at: string;
 }
 
+export interface SimuladoResumo {
+  id: string;
+  titulo: string;
+  descricao?: string | null;
+  tipo: string;
+  total_itens: number;
+  created_at: string;
+  status: 'pendente' | 'finalizado';
+  tentativa_id?: string | null;
+  total_acertos?: number | null;
+  score_percentual?: number | null;
+  completed_at?: string | null;
+}
+
 export interface RespostaItemInput {
   questao_id: string;
   alternativa_marcada: AlternativaLetra | 'X';

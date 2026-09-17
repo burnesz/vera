@@ -1,6 +1,7 @@
 import { apiFetch } from './api';
 import type {
   Simulado,
+  SimuladoResumo,
   SimuladoSubmissaoPayload,
   SimuladoResultado,
   QuestaoItem,
@@ -54,14 +55,35 @@ function gerarCadernoMock45(userId?: string): Simulado {
 }
 
 export const simuladoService = {
-  async gerarSimulado(userId?: string): Promise<Simulado> {
+  async listarSimulados(userId?: string): Promise<SimuladoResumo[]> {
+    try {
+      const res = await apiFetch<SimuladoResumo[]>('/simulados/');
+      if (Array.isArray(res)) {
+        return res;
+      }
+      return [];
+    } catch (error) {
+      console.warn('Erro ao listar simulados da API:', error);
+      const salvosLocalmente = localStorage.getItem(`vera_simulados_${userId || 'demo'}`);
+      if (salvosLocalmente) {
+        try {
+          return JSON.parse(salvosLocalmente);
+        } catch {
+          return [];
+        }
+      }
+      return [];
+    }
+  },
+
+  async gerarSimulado(titulo?: string, userId?: string): Promise<Simulado> {
     try {
       const res = await apiFetch<Simulado>('/simulados/gerar', {
         method: 'POST',
         body: JSON.stringify({
-          titulo: 'Simulado Geral de Matemática — ENEM (45 Questões)',
+          titulo: titulo || 'Simulado Geral de Matemática — ENEM (45 Questões)',
           tipo: 'geral_45',
-          proporcao_ineditas: 0.2,
+          proporcao_ineditas: 0.15,
         }),
       });
 
@@ -80,6 +102,18 @@ export const simuladoService = {
       return await apiFetch<Simulado>(`/simulados/${id}`);
     } catch {
       return gerarCadernoMock45();
+    }
+  },
+
+  async obterResultadoSimulado(simuladoId: string, tentativaId?: string): Promise<SimuladoResultado> {
+    try {
+      if (tentativaId) {
+        return await apiFetch<SimuladoResultado>(`/simulados/tentativas/${tentativaId}`);
+      }
+      return await apiFetch<SimuladoResultado>(`/simulados/${simuladoId}/resultado`);
+    } catch (error) {
+      console.warn('Erro ao obter resultado do simulado:', error);
+      throw error;
     }
   },
 
