@@ -216,11 +216,17 @@ def submeter_tentativa_simulado(
     if not simulado:
         raise ValueError(f"Simulado não encontrado para o ID: {simulado_id}")
 
-    # Indexa as respostas do aluno por simulado_item_id
-    respostas_map: Dict[uuid.UUID, str] = {
-        r.simulado_item_id: r.alternativa_selecionada.strip().upper()
-        for r in respostas_input
-    }
+    # Indexa as respostas do aluno por simulado_item_id e questao_id para máxima compatibilidade
+    respostas_por_item: Dict[uuid.UUID, str] = {}
+    respostas_por_questao: Dict[uuid.UUID, str] = {}
+    for r in respostas_input:
+        alt = (r.alternativa_selecionada or r.alternativa_marcada or "X").strip().upper()
+        if not alt:
+            alt = "X"
+        if r.simulado_item_id:
+            respostas_por_item[r.simulado_item_id] = alt
+        if r.questao_id:
+            respostas_por_questao[r.questao_id] = alt
 
     total_itens = len(simulado.itens)
     total_acertos = 0
@@ -239,7 +245,12 @@ def submeter_tentativa_simulado(
     db.flush()
 
     for item in simulado.itens:
-        alternativa_marcada = respostas_map.get(item.id, "X")  # 'X' indica item não respondido/em branco
+        qid = item.questao_enem_id or item.questao_inedita_id
+        alternativa_marcada = (
+            respostas_por_item.get(item.id)
+            or (respostas_por_questao.get(qid) if qid else None)
+            or "X"
+        )
         
         # Obtém gabarito da questão histórica ou inédita
         if item.origem_questao == "enem" and item.questao_enem:

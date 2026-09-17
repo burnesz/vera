@@ -455,3 +455,50 @@ def test_excluir_simulado_fluxo_completo(auth_headers):
     db.close()
 
 
+def test_submeter_com_formato_frontend_questao_id(auth_headers):
+    """
+    Testa que a API aceita a submissão com questao_id e alternativa_marcada (formato do frontend),
+    calcula acertos corretamente e persiste a tentativa como 'completed' no banco.
+    """
+    resp_gerar = client.post(
+        "/api/v1/simulados/gerar",
+        json={"titulo": "Simulado Teste Formato Frontend"},
+        headers=auth_headers
+    )
+    assert resp_gerar.status_code == 201
+    simulado_data = resp_gerar.json()
+    simulado_id = simulado_data["id"]
+    itens = simulado_data["itens"]
+
+    # Monta payload com questao_id e alternativa_marcada (5 acertos 'B' e 40 incorretos 'A')
+    respostas_payload = [
+        {
+            "questao_id": item["questao_id"],
+            "alternativa_marcada": "B" if item["ordem"] <= 5 else "A",
+        }
+        for item in itens
+    ]
+
+    resp_submeter = client.post(
+        f"/api/v1/simulados/{simulado_id}/submeter",
+        json={"respostas": respostas_payload},
+        headers=auth_headers
+    )
+    assert resp_submeter.status_code == 200
+    resultado = resp_submeter.json()
+    assert resultado["simulado_id"] == simulado_id
+    assert resultado["total_itens"] == 45
+    assert resultado["total_acertos"] == 5
+    assert resultado["status"] == "completed"
+
+    # Confere na listagem de simulados que agora está como 'finalizado'
+    resp_lista = client.get("/api/v1/simulados/", headers=auth_headers)
+    assert resp_lista.status_code == 200
+    sims = resp_lista.json()
+    meu_sim = next((s for s in sims if s["id"] == simulado_id), None)
+    assert meu_sim is not None
+    assert meu_sim["status"] == "finalizado"
+    assert meu_sim["total_acertos"] == 5
+    assert meu_sim["tentativa_id"] is not None
+
+

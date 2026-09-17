@@ -69,8 +69,12 @@ class SimuladoResumoResponse(BaseModel):
 # --- Submissão e Correção do Simulado ---
 
 class RespostaItemInput(BaseModel):
-    simulado_item_id: uuid.UUID
-    alternativa_selecionada: str = Field(..., max_length=1, description="Letra 'A', 'B', 'C', 'D' ou 'E'")
+    simulado_item_id: Optional[uuid.UUID] = None
+    questao_id: Optional[uuid.UUID] = None
+    alternativa_selecionada: Optional[str] = Field(default=None, max_length=1, description="Letra 'A', 'B', 'C', 'D', 'E' ou 'X'")
+    alternativa_marcada: Optional[str] = Field(default=None, max_length=1, description="Alias para alternativa_selecionada")
+
+    model_config = ConfigDict(from_attributes=True)
 
 
 class SimuladoSubmissaoRequest(BaseModel):
