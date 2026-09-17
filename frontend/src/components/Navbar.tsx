@@ -9,6 +9,7 @@ import {
   UserPlus,
   Menu,
   X,
+  Lock,
 } from 'lucide-react';
 
 interface NavbarProps {
@@ -127,6 +128,7 @@ export const Navbar: React.FC<NavbarProps> = ({ currentPage, onNavigate }) => {
           >
             <FileCheck2 size={18} />
             Simulado Geral (45)
+            {!isAuthenticated && <Lock size={13} style={{ opacity: 0.6 }} />}
           </button>
 
           <button
@@ -139,6 +141,7 @@ export const Navbar: React.FC<NavbarProps> = ({ currentPage, onNavigate }) => {
           >
             <BotMessageSquare size={18} />
             Tutora VERA
+            {!isAuthenticated && <Lock size={13} style={{ opacity: 0.6 }} />}
           </button>
         </nav>
 
@@ -254,18 +257,20 @@ export const Navbar: React.FC<NavbarProps> = ({ currentPage, onNavigate }) => {
           <button
             onClick={() => handleNav('simulado')}
             className={`btn ${currentPage === 'simulado' ? 'btn-primary' : 'btn-ghost'}`}
-            style={{ justifyContent: 'flex-start', width: '100%' }}
+            style={{ justifyContent: 'flex-start', width: '100%', gap: '0.65rem' }}
           >
             <FileCheck2 size={18} />
-            Simulado Geral (45 Questões)
+            <span>Simulado Geral (45 Questões)</span>
+            {!isAuthenticated && <Lock size={14} style={{ marginLeft: 'auto', opacity: 0.6 }} />}
           </button>
           <button
             onClick={() => handleNav('chat')}
             className={`btn ${currentPage === 'chat' ? 'btn-primary' : 'btn-ghost'}`}
-            style={{ justifyContent: 'flex-start', width: '100%' }}
+            style={{ justifyContent: 'flex-start', width: '100%', gap: '0.65rem' }}
           >
             <BotMessageSquare size={18} />
-            Tutora Especialista VERA
+            <span>Tutora Especialista VERA</span>
+            {!isAuthenticated && <Lock size={14} style={{ marginLeft: 'auto', opacity: 0.6 }} />}
           </button>
 
           <div style={{ height: '1px', backgroundColor: 'var(--border-light)', margin: '0.5rem 0' }} />

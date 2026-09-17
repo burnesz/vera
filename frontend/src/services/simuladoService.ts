@@ -8,7 +8,7 @@ import type {
 } from '../types/simulado';
 
 // Banco demonstrativo estuturado de 45 questões caso o backend esteja em modo offline
-function gerarCadernoMock45(): Simulado {
+function gerarCadernoMock45(userId?: string): Simulado {
   const habilidades = [
     'H01', 'H02', 'H03', 'H04', 'H05', 'H06', 'H07', 'H08', 'H09', 'H10',
     'H11', 'H12', 'H13', 'H14', 'H15', 'H16', 'H17', 'H18', 'H19', 'H20',
@@ -41,6 +41,7 @@ function gerarCadernoMock45(): Simulado {
 
   return {
     id: 'mock-simulado-45',
+    user_id: userId || null,
     titulo: 'Simulado Geral de Matemática — Caderno Padrão ENEM (45 Questões)',
     descricao: 'Caderno equilibrado contemplando todas as 30 habilidades da Matriz de Referência do ENEM.',
     tipo: 'geral_45',
@@ -53,7 +54,7 @@ function gerarCadernoMock45(): Simulado {
 }
 
 export const simuladoService = {
-  async gerarSimulado(): Promise<Simulado> {
+  async gerarSimulado(userId?: string): Promise<Simulado> {
     try {
       const res = await apiFetch<Simulado>('/simulados/gerar', {
         method: 'POST',
@@ -67,10 +68,10 @@ export const simuladoService = {
       if (res && res.itens && res.itens.length > 0) {
         return res;
       }
-      return gerarCadernoMock45();
+      return gerarCadernoMock45(userId);
     } catch (error) {
       console.warn('Backend indisponível ou vazio, utilizando caderno de 45 questões padrão:', error);
-      return gerarCadernoMock45();
+      return gerarCadernoMock45(userId);
     }
   },
 
@@ -85,7 +86,8 @@ export const simuladoService = {
   async submeterSimulado(
     simuladoId: string,
     respostas: Array<{ questao_id: string; alternativa_marcada: AlternativaLetra | 'X' }>,
-    itens: QuestaoItem[]
+    itens: QuestaoItem[],
+    userId?: string
   ): Promise<SimuladoResultado> {
     try {
       const payload: SimuladoSubmissaoPayload = { respostas };
@@ -120,7 +122,7 @@ export const simuladoService = {
       return {
         tentativa_id: 'tentativa-mock-' + Date.now(),
         simulado_id: simuladoId,
-        user_id: 'user-demo',
+        user_id: userId || 'user-demo',
         status: 'finalizado',
         total_itens: itens.length,
         total_acertos: acertos,

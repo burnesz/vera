@@ -21,6 +21,7 @@ export interface QuestaoItem {
 
 export interface Simulado {
   id: string;
+  user_id?: string | null;
   titulo: string;
   descricao?: string;
   tipo: string;

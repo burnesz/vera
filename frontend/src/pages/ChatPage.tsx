@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { useAuth } from '../context/AuthContext';
 import { chatService } from '../services/chatService';
 import type { ChatMessage } from '../types/chat';
 import { MathText } from '../components/MathText';
@@ -9,13 +10,15 @@ import {
   BotMessageSquare,
   User as UserIcon,
   Lightbulb,
+  Lock,
 } from 'lucide-react';
 
 interface ChatPageProps {
   onNavigate: (page: string) => void;
 }
 
-export const ChatPage: React.FC<ChatPageProps> = () => {
+export const ChatPage: React.FC<ChatPageProps> = ({ onNavigate }) => {
+  const { user, isAuthenticated } = useAuth();
   const [messages, setMessages] = useState<ChatMessage[]>(() => {
     return [
       {
@@ -111,6 +114,62 @@ Sobre qual conteúdo de Matemática você gostaria de conversar hoje?`,
     'Qual a diferença entre média aritmética e média ponderada?',
   ];
 
+  // Bloqueio de acesso para estudantes não cadastrados / não autenticados
+  if (!isAuthenticated) {
+    return (
+      <div className="container" style={{ padding: '4rem 1.25rem', textAlign: 'center' }}>
+        <div
+          className="card"
+          style={{
+            maxWidth: '560px',
+            margin: '0 auto',
+            padding: '3rem 2rem',
+            borderTop: '6px solid var(--ocean-600)',
+            boxShadow: 'var(--shadow-ocean)',
+          }}
+        >
+          <div
+            style={{
+              width: '64px',
+              height: '64px',
+              borderRadius: '50%',
+              backgroundColor: 'var(--ocean-100)',
+              color: 'var(--ocean-700)',
+              display: 'inline-flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              marginBottom: '1.25rem',
+            }}
+          >
+            <Lock size={32} />
+          </div>
+          <h1 style={{ fontSize: '1.75rem', fontWeight: 800, color: 'var(--ocean-950)', marginBottom: '0.75rem' }}>
+            Acesso Restrito à Tutora VERA
+          </h1>
+          <p style={{ fontSize: '1rem', color: 'var(--text-secondary)', lineHeight: '1.6', marginBottom: '2rem' }}>
+            Para conversar com a Tutora Inteligente e ter seu histórico de aprendizado registrado, você precisa estar cadastrado e conectado à plataforma.
+          </p>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+            <button
+              onClick={() => onNavigate('register')}
+              className="btn btn-primary btn-lg"
+              style={{ width: '100%', fontWeight: 700 }}
+            >
+              Criar Conta Gratuita
+            </button>
+            <button
+              onClick={() => onNavigate('login')}
+              className="btn btn-outline"
+              style={{ width: '100%' }}
+            >
+              Já possui conta? Fazer Login
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="container" style={{ padding: '1.5rem 1.25rem 3rem', maxWidth: '1000px' }}>
       <div
@@ -161,6 +220,11 @@ Sobre qual conteúdo de Matemática você gostaria de conversar hoje?`,
                 <span className="badge badge-success" style={{ fontSize: '0.75rem' }}>
                   Online
                 </span>
+                {user && (
+                  <span className="badge badge-ocean" style={{ fontSize: '0.75rem' }}>
+                    Estudante: {user.nome.split(' ')[0]}
+                  </span>
+                )}
               </div>
               <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
                 IA Especialista em Matemática • Matriz de Referência do ENEM

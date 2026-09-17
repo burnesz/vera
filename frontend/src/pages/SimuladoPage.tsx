@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useAuth } from '../context/AuthContext';
 import { simuladoService } from '../services/simuladoService';
 import type { Simulado, AlternativaLetra, SimuladoResultado } from '../types/simulado';
 import { MathText } from '../components/MathText';
@@ -15,6 +16,7 @@ import {
   RotateCcw,
   BotMessageSquare,
   Award,
+  Lock,
 } from 'lucide-react';
 
 interface SimuladoPageProps {
@@ -22,6 +24,7 @@ interface SimuladoPageProps {
 }
 
 export const SimuladoPage: React.FC<SimuladoPageProps> = ({ onNavigate }) => {
+  const { user, isAuthenticated } = useAuth();
   const [simulado, setSimulado] = useState<Simulado | null>(null);
   const [currentIndex, setCurrentIndex] = useState<number>(0);
   // Respostas salvas: questao_id -> alternativa marcada
@@ -36,12 +39,17 @@ export const SimuladoPage: React.FC<SimuladoPageProps> = ({ onNavigate }) => {
   const [resultado, setResultado] = useState<SimuladoResultado | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
 
-  // Inicialização do caderno de 45 questões
+  // Inicialização do caderno de 45 questões vinculado ao estudante
   useEffect(() => {
+    if (!isAuthenticated) {
+      setIsLoading(false);
+      return;
+    }
+
     async function carregarSimulado() {
       setIsLoading(true);
       try {
-        const data = await simuladoService.gerarSimulado();
+        const data = await simuladoService.gerarSimulado(user?.id);
         setSimulado(data);
       } catch (err) {
         console.error('Erro ao inicializar simulado:', err);
@@ -51,7 +59,7 @@ export const SimuladoPage: React.FC<SimuladoPageProps> = ({ onNavigate }) => {
     }
 
     carregarSimulado();
-  }, []);
+  }, [isAuthenticated, user?.id]);
 
   // Temporizador do Simulado
   useEffect(() => {
@@ -121,7 +129,7 @@ export const SimuladoPage: React.FC<SimuladoPageProps> = ({ onNavigate }) => {
       }));
 
     try {
-      const res = await simuladoService.submeterSimulado(simulado.id, payload, simulado.itens);
+      const res = await simuladoService.submeterSimulado(simulado.id, payload, simulado.itens, user?.id);
       setResultado(res);
       setShowConfirmModal(false);
     } catch (err) {
@@ -140,12 +148,68 @@ export const SimuladoPage: React.FC<SimuladoPageProps> = ({ onNavigate }) => {
     setIsTimerRunning(true);
     setIsLoading(true);
     try {
-      const data = await simuladoService.gerarSimulado();
+      const data = await simuladoService.gerarSimulado(user?.id);
       setSimulado(data);
     } finally {
       setIsLoading(false);
     }
   };
+
+  // Bloqueio de acesso para estudantes não cadastrados / não autenticados
+  if (!isAuthenticated) {
+    return (
+      <div className="container" style={{ padding: '4rem 1.25rem', textAlign: 'center' }}>
+        <div
+          className="card"
+          style={{
+            maxWidth: '560px',
+            margin: '0 auto',
+            padding: '3rem 2rem',
+            borderTop: '6px solid var(--ocean-600)',
+            boxShadow: 'var(--shadow-ocean)',
+          }}
+        >
+          <div
+            style={{
+              width: '64px',
+              height: '64px',
+              borderRadius: '50%',
+              backgroundColor: 'var(--ocean-100)',
+              color: 'var(--ocean-700)',
+              display: 'inline-flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              marginBottom: '1.25rem',
+            }}
+          >
+            <Lock size={32} />
+          </div>
+          <h1 style={{ fontSize: '1.75rem', fontWeight: 800, color: 'var(--ocean-950)', marginBottom: '0.75rem' }}>
+            Acesso Restrito ao Simulado
+          </h1>
+          <p style={{ fontSize: '1rem', color: 'var(--text-secondary)', lineHeight: '1.6', marginBottom: '2rem' }}>
+            Para realizar o <strong>Simulado Geral com 45 questões</strong> e salvar seu histórico de proficiência nas 30 habilidades da Matriz do ENEM, é necessário estar cadastrado e conectado à plataforma.
+          </p>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+            <button
+              onClick={() => onNavigate('register')}
+              className="btn btn-primary btn-lg"
+              style={{ width: '100%', fontWeight: 700 }}
+            >
+              Criar Conta Gratuita
+            </button>
+            <button
+              onClick={() => onNavigate('login')}
+              className="btn btn-outline"
+              style={{ width: '100%' }}
+            >
+              Já possui conta? Fazer Login
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   if (isLoading) {
     return (
@@ -359,6 +423,7 @@ export const SimuladoPage: React.FC<SimuladoPageProps> = ({ onNavigate }) => {
           </h1>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginTop: '0.25rem' }}>
             <span className="badge badge-ocean">Caderno Padrão ENEM</span>
+            {user && <span className="badge badge-dark">Estudante: {user.nome}</span>}
             <span style={{ fontSize: '0.875rem', fontWeight: 600, color: 'var(--text-secondary)' }}>
               Respondidas: {answeredCount} de {totalQuestions} ({progressPercent}%)
             </span>

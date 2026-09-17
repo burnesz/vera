@@ -9,6 +9,9 @@ import {
   Clock,
   Award,
   Layers,
+  UserPlus,
+  LogIn,
+  Lock,
 } from 'lucide-react';
 
 interface HomePageProps {
@@ -79,33 +82,67 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate }) => {
           </p>
 
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1rem' }}>
-            <button
-              onClick={() => onNavigate('simulado')}
-              className="btn btn-lg"
-              style={{
-                backgroundColor: 'var(--white)',
-                color: 'var(--ocean-900)',
-                fontWeight: 700,
-                boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
-              }}
-            >
-              <FileCheck2 size={20} />
-              Iniciar Simulado Geral (45 Itens)
-            </button>
+            {isAuthenticated ? (
+              <>
+                <button
+                  onClick={() => onNavigate('simulado')}
+                  className="btn btn-lg"
+                  style={{
+                    backgroundColor: 'var(--white)',
+                    color: 'var(--ocean-900)',
+                    fontWeight: 700,
+                    boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
+                  }}
+                >
+                  <FileCheck2 size={20} />
+                  Iniciar Simulado Geral (45 Itens)
+                </button>
 
-            <button
-              onClick={() => onNavigate('chat')}
-              className="btn btn-lg btn-outline"
-              style={{
-                backgroundColor: 'transparent',
-                borderColor: 'var(--white)',
-                color: 'var(--white)',
-                fontWeight: 600,
-              }}
-            >
-              <BotMessageSquare size={20} />
-              Tirar Dúvidas com a Tutora VERA
-            </button>
+                <button
+                  onClick={() => onNavigate('chat')}
+                  className="btn btn-lg btn-outline"
+                  style={{
+                    backgroundColor: 'transparent',
+                    borderColor: 'var(--white)',
+                    color: 'var(--white)',
+                    fontWeight: 600,
+                  }}
+                >
+                  <BotMessageSquare size={20} />
+                  Tirar Dúvidas com a Tutora VERA
+                </button>
+              </>
+            ) : (
+              <>
+                <button
+                  onClick={() => onNavigate('register')}
+                  className="btn btn-lg"
+                  style={{
+                    backgroundColor: 'var(--white)',
+                    color: 'var(--ocean-900)',
+                    fontWeight: 700,
+                    boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
+                  }}
+                >
+                  <UserPlus size={20} />
+                  Cadastre-se para Começar
+                </button>
+
+                <button
+                  onClick={() => onNavigate('login')}
+                  className="btn btn-lg btn-outline"
+                  style={{
+                    backgroundColor: 'transparent',
+                    borderColor: 'var(--white)',
+                    color: 'var(--white)',
+                    fontWeight: 600,
+                  }}
+                >
+                  <LogIn size={20} />
+                  Já tenho conta (Entrar)
+                </button>
+              </>
+            )}
           </div>
         </div>
 
@@ -133,6 +170,57 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate }) => {
             Treine em condições reais de prova e receba orientações didáticas passo a passo
           </p>
         </div>
+
+        {/* Banner de Aviso de Acesso Exclusivo para Estudantes Cadastrados */}
+        {!isAuthenticated && (
+          <div
+            style={{
+              backgroundColor: 'var(--ocean-50)',
+              border: '1.5px solid var(--border-ocean)',
+              borderRadius: 'var(--radius-md)',
+              padding: '1rem 1.25rem',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              gap: '1rem',
+              marginBottom: '1.75rem',
+              flexWrap: 'wrap',
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+              <div
+                style={{
+                  width: '38px',
+                  height: '38px',
+                  borderRadius: '50%',
+                  backgroundColor: 'var(--ocean-200)',
+                  color: 'var(--ocean-900)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  flexShrink: 0,
+                }}
+              >
+                <Lock size={20} />
+              </div>
+              <div>
+                <strong style={{ fontSize: '0.95rem', color: 'var(--ocean-950)' }}>
+                  Acesso Exclusivo para Estudantes Cadastrados
+                </strong>
+                <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
+                  Cadastre-se gratuitamente para gerar simulados de 45 itens e salvar seu desempenho por habilidade da Matriz do ENEM.
+                </p>
+              </div>
+            </div>
+            <button
+              onClick={() => onNavigate('register')}
+              className="btn btn-primary btn-sm"
+              style={{ fontWeight: 700 }}
+            >
+              Criar Conta Gratuita
+            </button>
+          </div>
+        )}
 
         <div
           style={{
@@ -180,11 +268,11 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate }) => {
             </div>
 
             <button
-              onClick={() => onNavigate('simulado')}
+              onClick={() => onNavigate(isAuthenticated ? 'simulado' : 'register')}
               className="btn btn-primary"
               style={{ width: '100%', justifyContent: 'space-between' }}
             >
-              <span>Começar Prova</span>
+              <span>{isAuthenticated ? 'Começar Prova' : 'Cadastre-se para Fazer'}</span>
               <ArrowRight size={18} />
             </button>
           </div>
@@ -228,11 +316,11 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate }) => {
             </div>
 
             <button
-              onClick={() => onNavigate('chat')}
+              onClick={() => onNavigate(isAuthenticated ? 'chat' : 'register')}
               className="btn btn-outline"
               style={{ width: '100%', justifyContent: 'space-between' }}
             >
-              <span>Abrir Conversa</span>
+              <span>{isAuthenticated ? 'Abrir Conversa' : 'Cadastre-se para Acessar'}</span>
               <ArrowRight size={18} />
             </button>
           </div>
