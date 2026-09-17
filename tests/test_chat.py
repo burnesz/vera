@@ -9,7 +9,42 @@ from app.services.chat_service import ChatService, ChatSessionManager
 from app.services.llm_client import LLMClient
 
 
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
+from sqlalchemy.pool import StaticPool
+from app.db.base import Base
+from app.db.session import get_db
+
+chat_test_engine = create_engine(
+    "sqlite:///:memory:",
+    connect_args={"check_same_thread": False},
+    poolclass=StaticPool,
+)
+ChatTestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=chat_test_engine)
+Base.metadata.create_all(bind=chat_test_engine)
+
+
+def override_chat_get_db():
+    db = ChatTestingSessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
+
+
+@pytest.fixture(autouse=True)
+def setup_chat_db_override():
+    previous = app.dependency_overrides.get(get_db)
+    app.dependency_overrides[get_db] = override_chat_get_db
+    yield
+    if previous:
+        app.dependency_overrides[get_db] = previous
+    else:
+        app.dependency_overrides.pop(get_db, None)
+
+
 client = TestClient(app)
+
 
 
 def test_parse_cot_response_with_tags():
@@ -191,3 +226,128 @@ def test_chat_api_endpoints(mock_llm_cls, mock_vs_cls):
         assert del_resp.json()["cleared"] is True
     finally:
         app.dependency_overrides.pop(get_current_active_user, None)
+
+
+@patch("app.services.chat_service.PineconeVectorStore")
+@patch("app.services.chat_service.LLMClient")
+def test_chat_sessions_listing_and_rename(mock_llm_cls, mock_vs_cls):
+    """Testa a listagem de sessões, persistência com usuário no banco e renomeação."""
+    mock_llm = MagicMock()
+    mock_llm.agenerate = AsyncMock(
+        return_value="<pensamento>Explicando Pitágoras.</pensamento>\n<resposta>O Teorema de Pitágoras é a² + b² = c².</resposta>"
+    )
+    mock_llm_cls.return_value = mock_llm
+
+    mock_vs = MagicMock()
+    mock_vs.search.return_value = []
+    mock_vs_cls.return_value = mock_vs
+
+    db = ChatTestingSessionLocal()
+    user_id = uuid.uuid4()
+    user = User(
+        id=user_id,
+        nome="Estudante Persistente",
+        email=f"persistente_{user_id.hex[:6]}@enem.com",
+        hashed_password="pw",
+        role="student",
+        is_ativo=True
+    )
+    db.add(user)
+    db.commit()
+
+    app.dependency_overrides[get_current_active_user] = lambda: user
+
+    try:
+        # Envia primeira mensagem
+        r1 = client.post(
+            "/api/v1/chat",
+            json={"message": "Como aplicar Pitágoras em triângulos?"}
+        )
+        assert r1.status_code == 200
+        s_id = r1.json()["session_id"]
+
+        # Lista sessões do usuário
+        r_list = client.get("/api/v1/chat/sessions")
+        assert r_list.status_code == 200
+        data_list = r_list.json()
+        assert data_list["total"] >= 1
+        found = [s for s in data_list["sessions"] if s["id"] == s_id]
+        assert len(found) == 1
+        assert "Pitágoras" in found[0]["titulo"]
+        assert found[0]["total_messages"] == 2
+
+        # Renomeia sessão
+        r_rename = client.patch(
+            f"/api/v1/chat/session/{s_id}",
+            json={"titulo": "Estudo de Geometria: Pitágoras"}
+        )
+        assert r_rename.status_code == 200
+        assert r_rename.json()["titulo"] == "Estudo de Geometria: Pitágoras"
+
+        # Consulta histórico com novo título
+        r_hist = client.get(f"/api/v1/chat/history/{s_id}")
+        assert r_hist.status_code == 200
+        assert r_hist.json()["titulo"] == "Estudo de Geometria: Pitágoras"
+
+        # Exclui a sessão
+        r_del = client.delete(f"/api/v1/chat/session/{s_id}")
+        assert r_del.status_code == 200
+
+        # Confirma que sessão não aparece mais na listagem
+        r_list_after = client.get("/api/v1/chat/sessions")
+        assert not any(s["id"] == s_id for s in r_list_after.json()["sessions"])
+    finally:
+        app.dependency_overrides.pop(get_current_active_user, None)
+        db.delete(user)
+        db.commit()
+        db.close()
+
+
+@patch("app.services.chat_service.PineconeVectorStore")
+@patch("app.services.chat_service.LLMClient")
+def test_chat_user_isolation(mock_llm_cls, mock_vs_cls):
+    """Garante isolamento estrito entre usuários: Estudante A não acessa conversas de Estudante B."""
+    mock_llm = MagicMock()
+    mock_llm.agenerate = AsyncMock(return_value="<pensamento>Segredo.</pensamento>\n<resposta>Resposta privada.</resposta>")
+    mock_llm_cls.return_value = mock_llm
+
+    mock_vs = MagicMock()
+    mock_vs.search.return_value = []
+    mock_vs_cls.return_value = mock_vs
+
+    db = ChatTestingSessionLocal()
+
+    u1 = User(id=uuid.uuid4(), nome="Aluno A", email=f"aluno_a_{uuid.uuid4().hex[:6]}@enem.com", hashed_password="pw", role="student", is_ativo=True)
+    u2 = User(id=uuid.uuid4(), nome="Aluno B", email=f"aluno_b_{uuid.uuid4().hex[:6]}@enem.com", hashed_password="pw", role="student", is_ativo=True)
+    db.add_all([u1, u2])
+    db.commit()
+
+    try:
+        # Aluno A cria sessão
+        app.dependency_overrides[get_current_active_user] = lambda: u1
+        r_a = client.post("/api/v1/chat", json={"message": "Pergunta do Aluno A"})
+        assert r_a.status_code == 200
+        sess_a_id = r_a.json()["session_id"]
+
+        # Aluno B lista sessões -> Não deve conter sess_a_id
+        app.dependency_overrides[get_current_active_user] = lambda: u2
+        r_b_list = client.get("/api/v1/chat/sessions")
+        assert r_b_list.status_code == 200
+        assert not any(s["id"] == sess_a_id for s in r_b_list.json()["sessions"])
+
+        # Aluno B tenta acessar histórico da sessão do Aluno A -> deve retornar vazio
+        r_b_hist = client.get(f"/api/v1/chat/history/{sess_a_id}")
+        assert r_b_hist.status_code == 200
+        assert r_b_hist.json()["total_messages"] == 0
+
+        # Aluno B tenta renomear sessão do Aluno A -> 404
+        r_b_ren = client.patch(f"/api/v1/chat/session/{sess_a_id}", json={"titulo": "Hackeado"})
+        assert r_b_ren.status_code == 404
+    finally:
+        app.dependency_overrides.pop(get_current_active_user, None)
+        db.delete(u1)
+        db.delete(u2)
+        db.commit()
+        db.close()
+
+
