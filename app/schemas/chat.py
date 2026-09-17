@@ -1,5 +1,6 @@
 import time
-from typing import List, Optional, Literal
+from datetime import datetime
+from typing import List, Optional, Literal, Any
 from pydantic import BaseModel, Field
 
 
@@ -7,6 +8,7 @@ class ChatMessage(BaseModel):
     """
     Representação de uma mensagem individual no histórico de conversação.
     """
+    id: Optional[str] = Field(default=None, description="Identificador único da mensagem no banco de dados")
     role: Literal["user", "assistant", "system"] = Field(..., description="Papel do remetente da mensagem")
     content: str = Field(..., description="Conteúdo textual da mensagem")
     thought: Optional[str] = Field(
@@ -14,6 +16,8 @@ class ChatMessage(BaseModel):
         description="Raciocínio interno e validação matemática passo a passo (Chain-of-Thought Scratchpad), se houver"
     )
     timestamp: float = Field(default_factory=time.time, description="Timestamp Unix da criação da mensagem")
+    created_at: Optional[datetime] = Field(default=None, description="Data/hora formatada de criação")
+    context_chunks: List[Any] = Field(default_factory=list, description="Chunks teóricos vinculados à resposta")
 
 
 class ChatContextChunk(BaseModel):
@@ -68,5 +72,33 @@ class ChatHistoryResponse(BaseModel):
     Histórico completo de mensagens de uma sessão de conversa.
     """
     session_id: str = Field(..., description="Identificador da sessão")
+    titulo: Optional[str] = Field(default=None, description="Título da conversa")
     messages: List[ChatMessage] = Field(default_factory=list, description="Lista de mensagens da sessão")
     total_messages: int = Field(..., description="Quantidade total de mensagens na sessão")
+
+
+class ChatSessionSummary(BaseModel):
+    """
+    Resumo de uma sessão de conversa para listagem no painel lateral.
+    """
+    id: str = Field(..., description="Identificador único da sessão")
+    titulo: str = Field(..., description="Título da conversa")
+    created_at: datetime = Field(..., description="Data/hora de criação")
+    updated_at: datetime = Field(..., description="Data/hora da última mensagem")
+    total_messages: int = Field(default=0, description="Quantidade total de mensagens na sessão")
+
+
+class ChatSessionListResponse(BaseModel):
+    """
+    Lista de conversas do usuário.
+    """
+    sessions: List[ChatSessionSummary] = Field(default_factory=list, description="Lista de sessões de conversa do estudante")
+    total: int = Field(..., description="Total de sessões encontradas")
+
+
+class UpdateChatSessionRequest(BaseModel):
+    """
+    Requisição para renomear uma sessão de conversa.
+    """
+    titulo: str = Field(..., min_length=1, max_length=255, description="Novo título da conversa")
+

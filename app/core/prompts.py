@@ -39,10 +39,9 @@ def parse_cot_response(raw_text: str) -> Tuple[Optional[str], str]:
 
     text = raw_text.strip()
     thought: Optional[str] = None
-    reply: str = text
 
-    # Procura bloco de pensamento delimitado por <pensamento>...</pensamento>
-    thought_match = re.search(r"<pensamento>(.*?)(?:</pensamento>|$)", text, flags=re.DOTALL | re.IGNORECASE)
+    # Procura bloco de pensamento delimitado por <pensamento>...</pensamento> ou <think>...</think>
+    thought_match = re.search(r"<(?:pensamento|think)>(.*?)(?:</(?:pensamento|think)>|$)", text, flags=re.DOTALL | re.IGNORECASE)
     if thought_match:
         thought_content = thought_match.group(1).strip()
         if thought_content:
@@ -50,25 +49,20 @@ def parse_cot_response(raw_text: str) -> Tuple[Optional[str], str]:
 
     # Procura bloco de resposta delimitado por <resposta>...</resposta>
     reply_match = re.search(r"<resposta>(.*?)(?:</resposta>|$)", text, flags=re.DOTALL | re.IGNORECASE)
-    if reply_match:
-        reply_content = reply_match.group(1).strip()
-        if reply_content:
-            reply = reply_content
-    elif thought_match:
-        # Se houve <pensamento>, mas não houve tag explícita <resposta>, extrai o texto após </pensamento>
-        end_thought = text.find("</pensamento>")
-        if end_thought != -1:
-            after_thought = text[end_thought + len("</pensamento>"):].strip()
-            if after_thought:
-                reply = after_thought
-        else:
-            # Caso anômalo: abriu tag mas não fechou
-            reply = text
+    if reply_match and reply_match.group(1).strip():
+        reply = reply_match.group(1).strip()
+    else:
+        # Remove qualquer bloco de pensamento do texto principal de forma robusta
+        reply = re.sub(r"<(?:pensamento|think)>.*?(?:</(?:pensamento|think)>|$)", "", text, flags=re.DOTALL | re.IGNORECASE).strip()
+        # Se ficou vazio (porque o modelo só emitiu dentro da tag), usa o próprio conteúdo como resposta
+        if not reply and thought:
+            reply = thought
 
-    # Limpeza residual de tags de resposta caso sobrem
-    reply = re.sub(r"</?resposta>", "", reply, flags=re.IGNORECASE).strip()
+    # Limpeza residual de quaisquer tags
+    reply = re.sub(r"</?(?:resposta|pensamento|think)>", "", reply, flags=re.IGNORECASE).strip()
 
     return thought, reply
+
 
 
 def build_chat_prompt(

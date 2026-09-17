@@ -17,6 +17,9 @@ services:
       # Conecta ao postgres na rede interna e ao Ollama no host via host.docker.internal
       - POSTGRES_SERVER=postgres
       - LLM_ENDPOINT_URL=http://host.docker.internal:11435
+    volumes:
+      - /home/soare/.cache/huggingface:/root/.cache/huggingface
+
 
   # --- Banco de Dados Relacional (PostgreSQL) ---
   postgres:
