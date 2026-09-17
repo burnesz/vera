@@ -10,6 +10,12 @@ class SimuladoCreateRequest(BaseModel):
     titulo: Optional[str] = Field(default="Simulado ENEM Matemática", max_length=255)
     descricao: Optional[str] = Field(default=None, max_length=1000)
     tipo: str = Field(default="diagnostico", description="'diagnostico' ou 'geral'")
+    proporcao_ineditas: float = Field(
+        default=0.15,
+        ge=0.0,
+        le=1.0,
+        description="Proporção de questões inéditas no caderno (padrão: 0.15 = 15%)"
+    )
 
 
 # --- Resposta do Simulado para Realização da Prova (SEM Gabarito) ---
@@ -33,6 +39,8 @@ class SimuladoResponse(BaseModel):
     descricao: Optional[str] = None
     tipo: str
     total_itens: int
+    total_enem: Optional[int] = 0
+    total_ineditas: Optional[int] = 0
     itens: List[QuestaoItemResponse]
     created_at: datetime
 

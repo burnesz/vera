@@ -9,6 +9,7 @@ from sqlalchemy import select
 
 from app.db.models.simulado import Simulado, SimuladoItem
 from app.db.models.questao_enem import QuestaoEnem
+from app.db.models.questao_inedita import QuestaoInedita
 from app.db.models.submission import SimuladoTentativa, RespostaItem
 from app.schemas.simulado import RespostaItemInput
 
@@ -30,82 +31,157 @@ def gerar_simulado_enem(
     db: Session,
     titulo: Optional[str] = None,
     tipo: str = "diagnostico",
-    descricao: Optional[str] = None
+    descricao: Optional[str] = None,
+    proporcao_ineditas: float = 0.15
 ) -> Simulado:
     """
-    Gera um novo simulado de exatamente 45 questões seguindo amostragem estratificada:
-    - Estágio 1: 1 questão de cada uma das 28 habilidades disponíveis.
-    - Estágio 2: 17 questões complementares das habilidades de maior relevância no ENEM (13 líderes + 4 sorteadas das 6 empatadas).
-    - Estágio 3: Embaralhamento com ordem 1 a 45.
-    (Sem anti-repetição por estudante, garantindo consulta rápida, desacoplada e direta).
+    Gera um novo simulado de exatamente 45 questões seguindo amostragem estratificada híbrida:
+    - Cota de Inéditas: 15% (round(45 * 0.15) = 7 questões) resgatadas da tabela questoes_ineditas.
+    - Cota de Históricas: 85% (38 questões) resgatadas da tabela questoes_enem.
+    - Cobertura ampla das habilidades da Matriz do ENEM.
+    - Complementação estratificada com base nas habilidades líderes de frequência histórica.
+    - Embaralhamento aleatório (ordem 1 a 45).
     """
-    # 1. Carrega todas as questões históricas do banco agrupadas por habilidade
-    todas_questoes = db.query(QuestaoEnem).all()
-    if not todas_questoes:
+    total_desejado = 45
+    alvo_ineditas = round(total_desejado * proporcao_ineditas)
+    alvo_historicas = total_desejado - alvo_ineditas
+
+    # 1. Carrega e seleciona a cota de Questões Inéditas
+    itens_ineditos: List[QuestaoInedita] = []
+    habs_com_inedita: Set[str] = set()
+
+    if alvo_ineditas > 0:
+        todas_ineditas = (
+            db.query(QuestaoInedita)
+            .filter(QuestaoInedita.is_validated == True)
+            .all()
+        )
+        if todas_ineditas:
+            ineditas_por_hab: Dict[str, List[QuestaoInedita]] = defaultdict(list)
+            for q in todas_ineditas:
+                ineditas_por_hab[q.habilidade_codigo].append(q)
+
+            qtd_ineditas_a_selecionar = min(alvo_ineditas, len(ineditas_por_hab))
+            habs_sorteadas = random.sample(list(ineditas_por_hab.keys()), k=qtd_ineditas_a_selecionar)
+
+            for hab in habs_sorteadas:
+                escolhida = random.choice(ineditas_por_hab[hab])
+                itens_ineditos.append(escolhida)
+                habs_com_inedita.add(hab)
+
+            logger.info(
+                f"Selecionadas {len(itens_ineditos)} questões inéditas de {alvo_ineditas} pretendidas "
+                f"cobrindo as habilidades: {sorted(habs_com_inedita)}"
+            )
+        else:
+            logger.warning("Nenhuma questão inédita validada encontrada no banco. O simulado usará 100% históricas.")
+
+    # Ajusta a cota de históricas caso não haja inéditas suficientes
+    vagas_historicas = total_desejado - len(itens_ineditos)
+
+    # 2. Carrega e seleciona a cota de Questões Históricas (ENEM)
+    todas_historicas = db.query(QuestaoEnem).all()
+    if not todas_historicas:
         raise ValueError("Nenhuma questão histórica do ENEM encontrada no banco de dados.")
 
-    questoes_por_hab: Dict[str, List[QuestaoEnem]] = defaultdict(list)
-    for q in todas_questoes:
-        questoes_por_hab[q.habilidade_codigo].append(q)
+    historicas_por_hab: Dict[str, List[QuestaoEnem]] = defaultdict(list)
+    for q in todas_historicas:
+        historicas_por_hab[q.habilidade_codigo].append(q)
 
-    habs_disponiveis = sorted(questoes_por_hab.keys())
-    total_habs = len(habs_disponiveis)
+    habs_historicas_disponiveis = sorted(historicas_por_hab.keys())
 
-    questoes_selecionadas: List[QuestaoEnem] = []
-    ids_selecionados: Set[uuid.UUID] = set()
+    itens_historicos: List[QuestaoEnem] = []
+    ids_historicos_selecionados: Set[uuid.UUID] = set()
 
-    # --- Estágio 1: Cobertura Base (1 por habilidade disponível) ---
-    for hab in habs_disponiveis:
-        escolhida = random.choice(questoes_por_hab[hab])
-        questoes_selecionadas.append(escolhida)
-        ids_selecionados.add(escolhida.id)
+    # --- Estágio 1 (Históricas): Cobertura das habilidades que ainda não receberam questão inédita ---
+    habs_sem_questao = [h for h in habs_historicas_disponiveis if h not in habs_com_inedita]
+    for hab in habs_sem_questao:
+        if len(itens_historicos) >= vagas_historicas:
+            break
+        escolhida = random.choice(historicas_por_hab[hab])
+        itens_historicos.append(escolhida)
+        ids_historicos_selecionados.add(escolhida.id)
 
-    # --- Estágio 2: Complemento Estratificado ENEM (17 vagas restantes) ---
-    vagas_extras = 45 - total_habs  # Tipicamente 45 - 28 = 17 vagas
-    if vagas_extras > 0:
-        # Filtra habilidades top que de fato existem no banco
-        top13_validas = [h for h in HABILIDADES_TOP13 if h in questoes_por_hab]
-        empatadas_validas = [h for h in HABILIDADES_EMPATADAS_14 if h in questoes_por_hab]
+    # --- Estágio 2 (Históricas): Complemento com habilidades de maior relevância ENEM ---
+    vagas_sobrando = vagas_historicas - len(itens_historicos)
+    if vagas_sobrando > 0:
+        top13_validas = [h for h in HABILIDADES_TOP13 if h in historicas_por_hab]
+        empatadas_validas = [h for h in HABILIDADES_EMPATADAS_14 if h in historicas_por_hab]
 
-        qtd_sorteio = min(len(empatadas_validas), max(0, vagas_extras - len(top13_validas)))
+        qtd_sorteio = min(len(empatadas_validas), max(0, vagas_sobrando - len(top13_validas)))
         empatadas_sorteadas = random.sample(empatadas_validas, k=qtd_sorteio) if empatadas_validas else []
 
-        habs_segunda_questao = top13_validas + empatadas_sorteadas
+        fila_prioritaria = top13_validas + empatadas_sorteadas
 
-        for hab in habs_segunda_questao[:vagas_extras]:
-            candidatas = [q for q in questoes_por_hab[hab] if q.id not in ids_selecionados]
+        # Se a fila prioritária não for suficiente, expande com outras habilidades disponíveis
+        if len(fila_prioritaria) < vagas_sobrando:
+            extras = [h for h in habs_historicas_disponiveis if h not in fila_prioritaria]
+            random.shuffle(extras)
+            fila_prioritaria.extend(extras)
+
+        # Preenche as vagas restantes
+        idx_fila = 0
+        while len(itens_historicos) < vagas_historicas:
+            hab = fila_prioritaria[idx_fila % len(fila_prioritaria)]
+            idx_fila += 1
+
+            candidatas = [q for q in historicas_por_hab[hab] if q.id not in ids_historicos_selecionados]
             if not candidatas:
-                candidatas = questoes_por_hab[hab]  # Fallback de segurança
+                candidatas = historicas_por_hab[hab]  # Fallback se todas da habilidade já foram usadas
 
             escolhida = random.choice(candidatas)
-            questoes_selecionadas.append(escolhida)
-            ids_selecionados.add(escolhida.id)
+            itens_historicos.append(escolhida)
+            ids_historicos_selecionados.add(escolhida.id)
 
-    # --- Estágio 3: Embaralhamento final ---
-    random.shuffle(questoes_selecionadas)
+    # 3. Mesclagem e Embaralhamento de todas as 45 questões
+    itens_completos: List[Dict[str, Any]] = (
+        [{"origem": "inedita", "questao": q} for q in itens_ineditos] +
+        [{"origem": "enem", "questao": q} for q in itens_historicos]
+    )
+    random.shuffle(itens_completos)
 
-    # Criação do Simulado e seus SimuladoItens
+    # 4. Criação do Simulado e gravação dos SimuladoItens
+    total_ineditas_geradas = len(itens_ineditos)
+    total_historicas_geradas = len(itens_historicos)
+
     simulado = Simulado(
         titulo=titulo or "Simulado ENEM Matemática",
-        descricao=descricao or f"Simulado de 45 questões estratificado no padrão ENEM cobrindo {total_habs} habilidades.",
+        descricao=descricao or (
+            f"Simulado de 45 questões no padrão ENEM composto por {total_historicas_geradas} questões históricas (85%) "
+            f"e {total_ineditas_geradas} questões inéditas geradas por IA (15%)."
+        ),
         tipo=tipo
     )
     db.add(simulado)
     db.flush()
 
-    for idx, q in enumerate(questoes_selecionadas, start=1):
-        item = SimuladoItem(
-            simulado_id=simulado.id,
-            ordem=idx,
-            origem_questao="enem",
-            questao_enem_id=q.id
-        )
+    for idx, item_data in enumerate(itens_completos, start=1):
+        origem = item_data["origem"]
+        q = item_data["questao"]
+
+        if origem == "inedita":
+            item = SimuladoItem(
+                simulado_id=simulado.id,
+                ordem=idx,
+                origem_questao="inedita",
+                questao_inedita_id=q.id
+            )
+        else:
+            item = SimuladoItem(
+                simulado_id=simulado.id,
+                ordem=idx,
+                origem_questao="enem",
+                questao_enem_id=q.id
+            )
         db.add(item)
 
     db.commit()
     db.refresh(simulado)
 
-    logger.info(f"Simulado '{simulado.id}' gerado com sucesso ({len(questoes_selecionadas)} questões).")
+    logger.info(
+        f"Simulado '{simulado.id}' gerado com sucesso: {len(itens_completos)} questões "
+        f"({total_historicas_geradas} históricas ENEM + {total_ineditas_geradas} inéditas IA)."
+    )
     return simulado
 
 

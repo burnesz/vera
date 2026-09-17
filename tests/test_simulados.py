@@ -11,6 +11,7 @@ from app.db.session import get_db
 from app.db.models.user import User
 from app.db.models.habilidade import HabilidadeEnem
 from app.db.models.questao_enem import QuestaoEnem
+from app.db.models.questao_inedita import QuestaoInedita
 from app.main import app
 from app.core.security import get_password_hash, create_access_token
 from app.services import simulado_service
@@ -42,7 +43,7 @@ client = TestClient(app)
 @pytest.fixture(scope="module", autouse=True)
 def setup_database_data():
     """
-    Popula as habilidades e questões de teste para as 28 habilidades disponíveis.
+    Popula as habilidades, questões históricas e questões inéditas de teste.
     """
     db = TestingSessionLocal()
     # 1. Habilidades
@@ -55,8 +56,7 @@ def setup_database_data():
         ))
     db.commit()
 
-    # 2. Popula questões para as 28 habilidades (todas exceto H06 e H20)
-    # Colocamos pelo menos 3 questões por habilidade para permitir o sorteio da 1ª e da 2ª questão
+    # 2. Popula questões históricas para as 28 habilidades (todas exceto H06 e H20)
     habs_disponiveis = [f"H{i:02d}" for i in range(1, 31) if i not in (6, 20)]
     co_item_counter = 1000
 
@@ -67,7 +67,7 @@ def setup_database_data():
                 co_item=co_item_counter,
                 ano=2020,
                 habilidade_codigo=hab_code,
-                enunciado=f"Enunciado da questão {co_item_counter} da habilidade {hab_code}.",
+                enunciado=f"Enunciado da questão histórica {co_item_counter} da habilidade {hab_code}.",
                 alternativas={
                     "A": "Alternativa A",
                     "B": "Alternativa B",
@@ -80,7 +80,26 @@ def setup_database_data():
             ))
     db.commit()
 
-    # 3. Usuário de teste
+    # 3. Popula questões inéditas para 10 habilidades (H01 a H10)
+    for hab_code in [f"H{i:02d}" for i in range(1, 11)]:
+        db.add(QuestaoInedita(
+            id=uuid.uuid4(),
+            habilidade_codigo=hab_code,
+            enunciado=f"Enunciado da questão inédita gerada por IA da habilidade {hab_code}.",
+            alternativas={
+                "A": "Alternativa Inédita A",
+                "B": "Alternativa Inédita B",
+                "C": "Alternativa Inédita C",
+                "D": "Alternativa Inédita D",
+                "E": "Alternativa Inédita E",
+            },
+            gabarito="B",
+            justificativa="Resolução demonstrando que a alternativa B é o gabarito.",
+            is_validated=True
+        ))
+    db.commit()
+
+    # 4. Usuário de teste
     test_user = User(
         id=uuid.uuid4(),
         nome="Estudante Simulado",
@@ -105,13 +124,18 @@ def auth_headers():
 
 def test_gerar_simulado_service():
     """
-    Testa geração do simulado na camada de serviço:
+    Testa geração do simulado híbrido na camada de serviço:
     - Exatamente 45 questões
-    - 28 habilidades contempladas
+    - 15% de inéditas (7 questões) e 85% de históricas (38 questões)
     - Ordens de 1 a 45 sequenciais
     """
     db = TestingSessionLocal()
-    simulado = simulado_service.gerar_simulado_enem(db, titulo="Simulado Unitário", tipo="diagnostico")
+    simulado = simulado_service.gerar_simulado_enem(
+        db,
+        titulo="Simulado Híbrido Unitário",
+        tipo="diagnostico",
+        proporcao_ineditas=0.15
+    )
 
     assert simulado.id is not None
     assert len(simulado.itens) == 45
@@ -120,11 +144,40 @@ def test_gerar_simulado_service():
     ordens = [item.ordem for item in simulado.itens]
     assert ordens == list(range(1, 46))
 
-    # Valida que todas as 28 habilidades disponíveis foram contempladas
-    habs_no_simulado = set(item.questao_enem.habilidade_codigo for item in simulado.itens)
-    assert len(habs_no_simulado) == 28
-    assert "H06" not in habs_no_simulado
-    assert "H20" not in habs_no_simulado
+    # Valida cotas de 15% inéditas (7) e 85% históricas (38)
+    ineditas_itens = [item for item in simulado.itens if item.origem_questao == "inedita"]
+    historicas_itens = [item for item in simulado.itens if item.origem_questao == "enem"]
+
+    assert len(ineditas_itens) == 7
+    assert len(historicas_itens) == 38
+
+    for item in ineditas_itens:
+        assert item.questao_inedita_id is not None
+        assert item.questao_enem_id is None
+        assert item.questao_inedita is not None
+
+    for item in historicas_itens:
+        assert item.questao_enem_id is not None
+        assert item.questao_inedita_id is None
+        assert item.questao_enem is not None
+
+    # Valida diversidade de habilidades
+    habs_no_simulado = set(
+        item.questao_enem.habilidade_codigo if item.origem_questao == "enem"
+        else item.questao_inedita.habilidade_codigo
+        for item in simulado.itens
+    )
+    assert len(habs_no_simulado) >= 28
+
+    # Testa também fallback com 0% inéditas
+    simulado_zero = simulado_service.gerar_simulado_enem(
+        db,
+        titulo="Simulado 100% ENEM",
+        proporcao_ineditas=0.0
+    )
+    assert len(simulado_zero.itens) == 45
+    assert sum(1 for i in simulado_zero.itens if i.origem_questao == "inedita") == 0
+    assert sum(1 for i in simulado_zero.itens if i.origem_questao == "enem") == 45
 
     db.close()
 
@@ -182,6 +235,8 @@ def test_api_simulado_completo(auth_headers):
     assert resp_gerar.status_code == 201
     dados_simulado = resp_gerar.json()
     assert dados_simulado["total_itens"] == 45
+    assert dados_simulado["total_ineditas"] == 7
+    assert dados_simulado["total_enem"] == 38
     assert len(dados_simulado["itens"]) == 45
     simulado_id = dados_simulado["id"]
 

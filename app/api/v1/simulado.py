@@ -39,7 +39,8 @@ def gerar_simulado(
             db=db,
             titulo=body.titulo,
             tipo=body.tipo,
-            descricao=body.descricao
+            descricao=body.descricao,
+            proporcao_ineditas=body.proporcao_ineditas
         )
     except ValueError as e:
         raise HTTPException(
@@ -48,7 +49,7 @@ def gerar_simulado(
         )
 
     itens_response = []
-    for item in simulado.itens:
+    for item in sorted(simulado.itens, key=lambda x: x.ordem):
         if item.origem_questao == "enem" and item.questao_enem:
             q = item.questao_enem
             itens_response.append(
@@ -78,12 +79,17 @@ def gerar_simulado(
                 )
             )
 
+    total_enem = sum(1 for i in itens_response if i.origem_questao == "enem")
+    total_ineditas = sum(1 for i in itens_response if i.origem_questao == "inedita")
+
     return SimuladoResponse(
         id=simulado.id,
         titulo=simulado.titulo,
         descricao=simulado.descricao,
         tipo=simulado.tipo,
         total_itens=len(itens_response),
+        total_enem=total_enem,
+        total_ineditas=total_ineditas,
         itens=itens_response,
         created_at=simulado.created_at,
     )
@@ -137,12 +143,17 @@ def obter_simulado(
                 )
             )
 
+    total_enem = sum(1 for i in itens_response if i.origem_questao == "enem")
+    total_ineditas = sum(1 for i in itens_response if i.origem_questao == "inedita")
+
     return SimuladoResponse(
         id=simulado.id,
         titulo=simulado.titulo,
         descricao=simulado.descricao,
         tipo=simulado.tipo,
         total_itens=len(itens_response),
+        total_enem=total_enem,
+        total_ineditas=total_ineditas,
         itens=itens_response,
         created_at=simulado.created_at,
     )
