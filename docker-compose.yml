@@ -27,3 +27,14 @@ services:
       - "${POSTGRES_PORT:-5432}:5432"
     volumes:
       - ./postgres_data:/var/lib/postgresql/data
+
+  # --- Módulo de Front-end (React + Vite + Nginx) ---
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: vera_frontend
+    ports:
+      - "${FRONTEND_PORT:-3000}:80"
+    depends_on:
+      - api

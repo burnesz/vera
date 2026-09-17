@@ -17,3 +17,4 @@ minio_data/
 README.md
 *.md
 tests/
+frontend/
