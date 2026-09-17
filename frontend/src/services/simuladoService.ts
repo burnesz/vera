@@ -6,6 +6,7 @@ import type {
   SimuladoResultado,
   QuestaoItem,
   AlternativaLetra,
+  RespostaItemInput,
 } from '../types/simulado';
 
 // Banco demonstrativo estuturado de 45 questões caso o backend esteja em modo offline
@@ -93,7 +94,27 @@ export const simuladoService = {
       return gerarCadernoMock45(userId);
     } catch (error) {
       console.warn('Backend indisponível ou vazio, utilizando caderno de 45 questões padrão:', error);
-      return gerarCadernoMock45(userId);
+      const mock = gerarCadernoMock45(userId);
+      const storageKey = `vera_simulados_${userId || 'demo'}`;
+      try {
+        const salvos = localStorage.getItem(storageKey);
+        const list: SimuladoResumo[] = salvos ? JSON.parse(salvos) : [];
+        if (!list.some((s) => s.id === mock.id)) {
+          list.unshift({
+            id: mock.id,
+            titulo: mock.titulo,
+            descricao: mock.descricao,
+            tipo: mock.tipo,
+            total_itens: mock.total_itens,
+            created_at: mock.created_at,
+            status: 'pendente',
+          });
+          localStorage.setItem(storageKey, JSON.stringify(list));
+        }
+      } catch {
+        // ignore
+      }
+      return mock;
     }
   },
 
@@ -107,35 +128,53 @@ export const simuladoService = {
 
   async obterResultadoSimulado(simuladoId: string, tentativaId?: string): Promise<SimuladoResultado> {
     try {
-      if (tentativaId) {
+      if (tentativaId && !tentativaId.startsWith('tentativa-mock-')) {
         return await apiFetch<SimuladoResultado>(`/simulados/tentativas/${tentativaId}`);
       }
       return await apiFetch<SimuladoResultado>(`/simulados/${simuladoId}/resultado`);
     } catch (error) {
-      console.warn('Erro ao obter resultado do simulado:', error);
+      console.warn('Erro ao obter resultado do simulado da API, tentando cache local:', error);
+      const cached = localStorage.getItem(`vera_resultado_${simuladoId}`);
+      if (cached) {
+        try {
+          return JSON.parse(cached);
+        } catch {
+          // ignore
+        }
+      }
       throw error;
     }
   },
 
   async submeterSimulado(
     simuladoId: string,
-    respostas: Array<{ questao_id: string; alternativa_marcada: AlternativaLetra | 'X' }>,
+    respostas: RespostaItemInput[],
     itens: QuestaoItem[],
     userId?: string
   ): Promise<SimuladoResultado> {
     try {
       const payload: SimuladoSubmissaoPayload = { respostas };
-      return await apiFetch<SimuladoResultado>(`/simulados/${simuladoId}/submeter`, {
+      const res = await apiFetch<SimuladoResultado>(`/simulados/${simuladoId}/submeter`, {
         method: 'POST',
         body: JSON.stringify(payload),
       });
+
+      try {
+        localStorage.setItem(`vera_resultado_${simuladoId}`, JSON.stringify(res));
+      } catch {
+        // ignore
+      }
+
+      return res;
     } catch (error) {
-      console.warn('Submissão offline/mock calculando resultado local:', error);
+      console.warn('Submissão online falhou, calculando e persistindo resultado localmente:', error);
       // Cálculo local de conferência
       let acertos = 0;
       const itensCorrecao = itens.map((item) => {
-        const resp = respostas.find((r) => r.questao_id === item.questao_id);
-        const marcada = resp?.alternativa_marcada !== 'X' ? resp?.alternativa_marcada : null;
+        const resp = respostas.find((r) => r.questao_id === item.questao_id || r.simulado_item_id === item.simulado_item_id);
+        const marcada = resp && resp.alternativa_selecionada !== 'X'
+          ? (resp.alternativa_selecionada as AlternativaLetra)
+          : null;
         // Gabarito mock fixo determinado pela ordem
         const gabaritos: AlternativaLetra[] = ['A', 'B', 'C', 'D', 'E'];
         const gabaritoOficial = gabaritos[(item.ordem - 1) % 5];
@@ -153,7 +192,7 @@ export const simuladoService = {
         };
       });
 
-      return {
+      const resultadoLocal: SimuladoResultado = {
         tentativa_id: 'tentativa-mock-' + Date.now(),
         simulado_id: simuladoId,
         user_id: userId || 'user-demo',
@@ -165,6 +204,32 @@ export const simuladoService = {
         completed_at: new Date().toISOString(),
         itens: itensCorrecao,
       };
+
+      // Atualiza lista local persistida para refletir no hub
+      const storageKey = `vera_simulados_${userId || 'demo'}`;
+      try {
+        const salvos = localStorage.getItem(storageKey);
+        if (salvos) {
+          const list: SimuladoResumo[] = JSON.parse(salvos);
+          const itemIdx = list.findIndex((s) => s.id === simuladoId);
+          if (itemIdx >= 0) {
+            list[itemIdx] = {
+              ...list[itemIdx],
+              status: 'finalizado',
+              tentativa_id: resultadoLocal.tentativa_id,
+              total_acertos: resultadoLocal.total_acertos,
+              score_percentual: resultadoLocal.score_percentual,
+              completed_at: resultadoLocal.completed_at,
+            };
+            localStorage.setItem(storageKey, JSON.stringify(list));
+          }
+        }
+        localStorage.setItem(`vera_resultado_${simuladoId}`, JSON.stringify(resultadoLocal));
+      } catch {
+        // ignore
+      }
+
+      return resultadoLocal;
     }
   },
 

@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { simuladoService } from '../services/simuladoService';
-import type { Simulado, SimuladoResumo, AlternativaLetra, SimuladoResultado } from '../types/simulado';
+import type { Simulado, SimuladoResumo, AlternativaLetra, SimuladoResultado, RespostaItemInput } from '../types/simulado';
 import { MathText } from '../components/MathText';
 import {
   Clock,
@@ -68,7 +68,6 @@ export const SimuladoPage: React.FC<SimuladoPageProps> = ({ onNavigate }) => {
 
   // Carrega a lista de simulados do estudante
   const carregarMeusSimulados = useCallback(async () => {
-    if (!isAuthenticated) return;
     setIsLoadingList(true);
     try {
       const data = await simuladoService.listarSimulados(user?.id);
@@ -78,15 +77,11 @@ export const SimuladoPage: React.FC<SimuladoPageProps> = ({ onNavigate }) => {
     } finally {
       setIsLoadingList(false);
     }
-  }, [isAuthenticated, user]);
+  }, [user]);
 
   useEffect(() => {
-    if (isAuthenticated) {
-      carregarMeusSimulados();
-    } else {
-      setIsLoadingList(false);
-    }
-  }, [isAuthenticated, carregarMeusSimulados]);
+    carregarMeusSimulados();
+  }, [carregarMeusSimulados]);
 
   // Referência mutável para submissão automática pelo temporizador
   const handleSubmitRef = React.useRef<() => void>(() => {});
@@ -291,11 +286,15 @@ export const SimuladoPage: React.FC<SimuladoPageProps> = ({ onNavigate }) => {
     if (!simulado) return;
     setIsSubmitting(true);
 
-    const payload: Array<{ questao_id: string; alternativa_marcada: AlternativaLetra | 'X' }> =
-      simulado.itens.map((item) => ({
+    const payload: RespostaItemInput[] = simulado.itens.map((item) => {
+      const marcada = (respostas[item.questao_id] || 'X') as AlternativaLetra | 'X';
+      return {
+        simulado_item_id: item.simulado_item_id,
+        alternativa_selecionada: marcada,
         questao_id: item.questao_id,
-        alternativa_marcada: (respostas[item.questao_id] || 'X') as AlternativaLetra | 'X',
-      }));
+        alternativa_marcada: marcada,
+      };
+    });
 
     try {
       const res = await simuladoService.submeterSimulado(simulado.id, payload, simulado.itens, user?.id);

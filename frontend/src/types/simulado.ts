@@ -47,6 +47,8 @@ export interface SimuladoResumo {
 }
 
 export interface RespostaItemInput {
+  simulado_item_id: string;
+  alternativa_selecionada: string;
   questao_id: string;
   alternativa_marcada: AlternativaLetra | 'X';
 }
