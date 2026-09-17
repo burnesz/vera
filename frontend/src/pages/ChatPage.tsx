@@ -202,7 +202,7 @@ export const ChatPage: React.FC<ChatPageProps> = ({ onNavigate }) => {
   };
 
   // Salva renomeação de título
-  const handleSaveRename = async (sessionId: string, e?: React.FormEvent) => {
+  const handleSaveRename = async (sessionId: string, e?: React.SyntheticEvent) => {
     if (e) e.preventDefault();
     if (!editedTitle.trim()) {
       setEditingSessionId(null);
