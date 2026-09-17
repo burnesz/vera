@@ -487,7 +487,7 @@ export const SimuladoPage: React.FC<SimuladoPageProps> = ({ onNavigate }) => {
                 {simuladosArquivados.length}
               </div>
               <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)', fontWeight: 600 }}>
-                Finalizados & Arquivados
+                Finalizados
               </div>
             </div>
           </div>
@@ -577,7 +577,7 @@ export const SimuladoPage: React.FC<SimuladoPageProps> = ({ onNavigate }) => {
             }}
           >
             <FileSpreadsheet size={18} />
-            <span>Arquivados ({simuladosArquivados.length})</span>
+            <span>Finalizados ({simuladosArquivados.length})</span>
           </button>
         </div>
 
