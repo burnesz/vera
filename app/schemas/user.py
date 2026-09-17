@@ -6,12 +6,13 @@ from pydantic import BaseModel, EmailStr, ConfigDict, Field
 
 class UserCreate(BaseModel):
     """
-    Dados necessários para cadastro de um novo usuário na plataforma.
+    Dados necessários para cadastro público de um estudante na plataforma.
+    Nota de segurança: O papel (role) é estritamente fixado como 'student' pelo backend,
+    impedindo escalonamento indevido de privilégios (Privilege Escalation).
     """
     nome: str = Field(..., min_length=2, max_length=255, description="Nome completo do usuário")
     email: EmailStr = Field(..., description="Email válido do usuário")
     password: str = Field(..., min_length=6, max_length=128, description="Senha de acesso")
-    role: str = Field(default="student", description="Papel: 'student' ou 'admin'")
 
 
 class UserResponse(BaseModel):

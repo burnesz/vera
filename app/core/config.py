@@ -66,6 +66,11 @@ class Settings(BaseSettings):
     NAMESPACE_MATERIAIS_DIDATICOS: str = "materiais_didaticos"
     NAMESPACE_QUESTOES_HISTORICAS: str = "questoes_historicas"
 
+    # Administrador Padrão (Auto-provisionamento seguro via .env no startup)
+    ADMIN_NAME: str = "Administrador VERA"
+    ADMIN_EMAIL: Optional[str] = "admin@vera.com"
+    ADMIN_PASSWORD: Optional[str] = "admin123456"
+
     model_config = SettingsConfigDict(
         env_file=".env",
         env_file_encoding="utf-8",

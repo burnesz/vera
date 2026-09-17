@@ -36,9 +36,10 @@ def register(
     db: Session = Depends(get_db)
 ) -> UserResponse:
     """
-    Cria uma nova conta de estudante ou administrador:
+    Cria uma nova conta de estudante na plataforma:
     - Valida se o e-mail já não está cadastrado.
     - Aplica hash criptográfico seguro (bcrypt) na senha.
+    - Define a role estritamente como 'student' (mitigação de Privilege Escalation).
     - Retorna os dados públicos do usuário recém-criado.
     """
     existing_user = db.query(User).filter(User.email == user_in.email).first()
@@ -53,7 +54,7 @@ def register(
         nome=user_in.nome,
         email=user_in.email,
         hashed_password=hashed_password,
-        role=user_in.role,
+        role="student",
         is_ativo=True
     )
     db.add(user)

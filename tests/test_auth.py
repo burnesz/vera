@@ -18,6 +18,7 @@ from app.core.security import (
     decode_access_token
 )
 from app.api.deps import require_admin
+from app.db.init_db import init_db
 
 
 # Configuração de banco de dados em memória isolado para os testes de API
@@ -82,6 +83,21 @@ def test_register_user_success():
     assert data["is_ativo"] is True
     assert "password" not in data
     assert "hashed_password" not in data
+
+
+def test_register_cannot_escalate_role_to_admin():
+    """Valida mitigação de Privilege Escalation: tentar registrar role='admin' é ignorado e fixado como 'student'."""
+    email = f"tentativa_admin_{uuid.uuid4().hex[:6]}@enem.com"
+    payload = {
+        "nome": "Tentativa Admin",
+        "email": email,
+        "password": "senhaSegura123",
+        "role": "admin"
+    }
+    response = client.post("/api/v1/auth/register", json=payload)
+    assert response.status_code == status.HTTP_201_CREATED
+    data = response.json()
+    assert data["role"] == "student"
 
 
 def test_register_duplicate_email():
@@ -192,3 +208,26 @@ def test_require_admin_role_check():
     with pytest.raises(HTTPException) as exc_info:
         require_admin(student_user)
     assert exc_info.value.status_code == status.HTTP_403_FORBIDDEN
+
+
+def test_init_db_auto_provisions_admin():
+    """Testa se o init_db cria o admin inicial a partir das configurações e se é idempotente."""
+    from app.core.config import settings
+    db = TestingSessionLocal()
+    try:
+        # 1. Executa init_db
+        init_db(db)
+        admin = db.query(User).filter(User.email == settings.ADMIN_EMAIL).first()
+        assert admin is not None
+        assert admin.role == "admin"
+        assert admin.nome == settings.ADMIN_NAME
+        assert admin.is_ativo is True
+        assert verify_password(settings.ADMIN_PASSWORD, admin.hashed_password) is True
+
+        # 2. Executa novamente para checar idempotência
+        init_db(db)
+        count = db.query(User).filter(User.email == settings.ADMIN_EMAIL).count()
+        assert count == 1
+    finally:
+        db.close()
+
