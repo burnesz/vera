@@ -48,6 +48,24 @@ class SimuladoResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
 
+# --- Listagem e Resumo de Simulados (Hub) ---
+
+class SimuladoResumoResponse(BaseModel):
+    id: uuid.UUID
+    titulo: str
+    descricao: Optional[str] = None
+    tipo: str
+    total_itens: int
+    created_at: datetime
+    status: str  # 'pendente' ou 'finalizado'
+    tentativa_id: Optional[uuid.UUID] = None
+    total_acertos: Optional[int] = None
+    score_percentual: Optional[float] = None
+    completed_at: Optional[datetime] = None
+
+    model_config = ConfigDict(from_attributes=True)
+
+
 # --- Submissão e Correção do Simulado ---
 
 class RespostaItemInput(BaseModel):

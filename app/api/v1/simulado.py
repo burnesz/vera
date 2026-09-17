@@ -8,6 +8,7 @@ from app.db.models.user import User
 from app.schemas.simulado import (
     SimuladoCreateRequest,
     SimuladoResponse,
+    SimuladoResumoResponse,
     QuestaoItemResponse,
     SimuladoSubmissaoRequest,
     SimuladoResultadoResponse,
@@ -16,6 +17,23 @@ from app.schemas.simulado import (
 from app.services import simulado_service
 
 router = APIRouter()
+
+
+@router.get(
+    "/",
+    response_model=List[SimuladoResumoResponse],
+    summary="Lista os simulados do estudante autenticado (em andamento e arquivados)",
+)
+def listar_simulados(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_active_user),
+):
+    """
+    Retorna a lista de simulados gerados pelo estudante autenticado.
+    Cada item indica se está 'pendente' (em andamento) ou 'finalizado' (arquivado),
+    além de notas e datas quando aplicável.
+    """
+    return simulado_service.listar_simulados_usuario(db, current_user.id)
 
 
 @router.post(
@@ -220,6 +238,25 @@ def obter_tentativa(
             detail="Acesso não autorizado a esta tentativa."
         )
 
+    return formatar_resultado_tentativa(tentativa)
+
+
+@router.get(
+    "/{simulado_id}/resultado",
+    response_model=SimuladoResultadoResponse,
+    summary="Consulta o resultado e gabarito oficial de um simulado já finalizado",
+)
+def obter_resultado_simulado(
+    simulado_id: uuid.UUID,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_active_user),
+):
+    tentativa = simulado_service.obter_resultado_simulado_por_id(db, simulado_id, current_user.id)
+    if not tentativa:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Nenhum resultado finalizado encontrado para este simulado."
+        )
     return formatar_resultado_tentativa(tentativa)
 
 

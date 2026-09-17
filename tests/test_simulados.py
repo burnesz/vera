@@ -286,3 +286,77 @@ def test_api_simulado_completo(auth_headers):
     tentativa_dados = resp_tentativa.json()
     assert tentativa_dados["tentativa_id"] == tentativa_id
     assert tentativa_dados["total_acertos"] == 45
+
+
+def test_listar_simulados_pendentes_e_arquivados(auth_headers):
+    """
+    Testa a listagem segregada de simulados pendentes e arquivados (finalizados):
+    - Simulado pendente: gerado mas sem tentativa finalizada.
+    - Simulado finalizado: gerado e com tentativa submetida.
+    - Consulta de resultado por simulado_id.
+    """
+    # 1. Gera Simulado A (não será submetido -> pendente)
+    resp_a = client.post(
+        "/api/v1/simulados/gerar",
+        json={"titulo": "Simulado Pendente de Teste"},
+        headers=auth_headers
+    )
+    assert resp_a.status_code == 201
+    simulado_a_id = resp_a.json()["id"]
+
+    # 2. Gera Simulado B (será submetido -> finalizado/arquivado)
+    resp_b = client.post(
+        "/api/v1/simulados/gerar",
+        json={"titulo": "Simulado Finalizado de Teste"},
+        headers=auth_headers
+    )
+    assert resp_b.status_code == 201
+    simulado_b_id = resp_b.json()["id"]
+    itens_b = resp_b.json()["itens"]
+
+    # Submete Simulado B
+    submissao_payload = [
+        {"simulado_item_id": item["simulado_item_id"], "alternativa_selecionada": "B"}
+        for item in itens_b
+    ]
+    resp_sub = client.post(
+        f"/api/v1/simulados/{simulado_b_id}/submeter",
+        json={"respostas": submissao_payload},
+        headers=auth_headers
+    )
+    assert resp_sub.status_code == 200
+
+    # 3. Lista simulados do usuário via GET /api/v1/simulados/
+    resp_lista = client.get("/api/v1/simulados/", headers=auth_headers)
+    assert resp_lista.status_code == 200
+    simulados = resp_lista.json()
+    assert len(simulados) >= 2
+
+    # Localiza os simulados na lista
+    sim_a = next((s for s in simulados if s["id"] == simulado_a_id), None)
+    sim_b = next((s for s in simulados if s["id"] == simulado_b_id), None)
+
+    assert sim_a is not None
+    assert sim_a["titulo"] == "Simulado Pendente de Teste"
+    assert sim_a["status"] == "pendente"
+    assert sim_a["tentativa_id"] is None
+    assert sim_a["completed_at"] is None
+
+    assert sim_b is not None
+    assert sim_b["titulo"] == "Simulado Finalizado de Teste"
+    assert sim_b["status"] == "finalizado"
+    assert sim_b["tentativa_id"] is not None
+    assert sim_b["total_acertos"] == 45
+    assert sim_b["score_percentual"] == 100.0
+    assert sim_b["completed_at"] is not None
+
+    # 4. Consulta resultado do Simulado B via rota /{simulado_id}/resultado
+    resp_res_b = client.get(f"/api/v1/simulados/{simulado_b_id}/resultado", headers=auth_headers)
+    assert resp_res_b.status_code == 200
+    assert resp_res_b.json()["simulado_id"] == simulado_b_id
+    assert resp_res_b.json()["total_acertos"] == 45
+
+    # 5. Consulta resultado do Simulado A (deve retornar 404 pois ainda está pendente)
+    resp_res_a = client.get(f"/api/v1/simulados/{simulado_a_id}/resultado", headers=auth_headers)
+    assert resp_res_a.status_code == 404
+

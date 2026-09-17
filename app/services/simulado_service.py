@@ -286,3 +286,74 @@ def obter_tentativa_com_itens(db: Session, tentativa_id: uuid.UUID) -> Optional[
         .filter(SimuladoTentativa.id == tentativa_id)
         .first()
     )
+
+
+def listar_simulados_usuario(db: Session, user_id: uuid.UUID) -> List[Dict[str, Any]]:
+    """
+    Lista todos os simulados pertencentes a um determinado usuário, ordenados pelo mais recente.
+    Identifica para cada um se está pendente (em andamento) ou finalizado (com tentativa concluída).
+    """
+    simulados = (
+        db.query(Simulado)
+        .options(
+            joinedload(Simulado.itens),
+            joinedload(Simulado.tentativas),
+        )
+        .filter(Simulado.user_id == user_id)
+        .order_by(Simulado.created_at.desc())
+        .all()
+    )
+
+    resultado = []
+    for sim in simulados:
+        # Verifica se há tentativa concluída
+        tentativas_concluidas = [
+            t for t in sim.tentativas if t.status == "completed"
+        ]
+        # Pega a mais recente se houver
+        ultima_tentativa = None
+        if tentativas_concluidas:
+            ultima_tentativa = max(
+                tentativas_concluidas,
+                key=lambda t: t.completed_at or t.started_at
+            )
+
+        status_simulado = "finalizado" if ultima_tentativa else "pendente"
+
+        resultado.append({
+            "id": sim.id,
+            "titulo": sim.titulo,
+            "descricao": sim.descricao,
+            "tipo": sim.tipo,
+            "total_itens": len(sim.itens),
+            "created_at": sim.created_at,
+            "status": status_simulado,
+            "tentativa_id": ultima_tentativa.id if ultima_tentativa else None,
+            "total_acertos": ultima_tentativa.total_acertos if ultima_tentativa else None,
+            "score_percentual": ultima_tentativa.score_percentual if ultima_tentativa else None,
+            "completed_at": ultima_tentativa.completed_at if ultima_tentativa else None,
+        })
+
+    return resultado
+
+
+def obter_resultado_simulado_por_id(db: Session, simulado_id: uuid.UUID, user_id: uuid.UUID) -> Optional[SimuladoTentativa]:
+    """
+    Recupera a tentativa concluída mais recente de um simulado específico para um usuário.
+    """
+    return (
+        db.query(SimuladoTentativa)
+        .options(
+            joinedload(SimuladoTentativa.simulado).joinedload(Simulado.itens).joinedload(SimuladoItem.questao_enem),
+            joinedload(SimuladoTentativa.simulado).joinedload(Simulado.itens).joinedload(SimuladoItem.questao_inedita),
+            joinedload(SimuladoTentativa.respostas),
+        )
+        .filter(
+            SimuladoTentativa.simulado_id == simulado_id,
+            SimuladoTentativa.user_id == user_id,
+            SimuladoTentativa.status == "completed"
+        )
+        .order_by(SimuladoTentativa.completed_at.desc())
+        .first()
+    )
+
