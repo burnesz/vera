@@ -25,6 +25,7 @@ import {
   Layers,
   Save,
   Trash2,
+  Sparkles,
 } from 'lucide-react';
 
 interface SimuladoPageProps {
@@ -1436,11 +1437,16 @@ export const SimuladoPage: React.FC<SimuladoPageProps> = ({ onNavigate }) => {
                 <span className="badge badge-ocean">
                   Habilidade {currentQuestion.habilidade_codigo}
                 </span>
-                <span className="badge badge-dark">
-                  {currentQuestion.origem_questao === 'enem'
-                    ? `ENEM ${currentQuestion.ano || 'Oficial'}`
-                    : 'Inédita VERA'}
-                </span>
+                {currentQuestion.origem_questao === 'enem' ? (
+                  <span className="badge badge-dark">
+                    ENEM {currentQuestion.ano || 'Oficial'}
+                  </span>
+                ) : (
+                  <span className="badge badge-seal-vera" title="Questão inédita gerada pela IA pedagógica VERA">
+                    <Sparkles size={13} style={{ strokeWidth: 2.2 }} />
+                    Gerado por Vera
+                  </span>
+                )}
               </div>
 
               <button
