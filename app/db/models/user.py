@@ -6,6 +6,7 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.db.base import Base, TimestampMixin
 
 if TYPE_CHECKING:
+    from app.db.models.simulado import Simulado
     from app.db.models.submission import SimuladoTentativa
     from app.db.models.history import DesempenhoHabilidade
     from app.db.models.chat import ChatSession
@@ -43,6 +44,10 @@ class User(Base, TimestampMixin):
     chat_sessions: Mapped[List["ChatSession"]] = relationship(
         "ChatSession",
         back_populates="user"
+    )
+    simulados: Mapped[List["Simulado"]] = relationship(
+        "Simulado",
+        back_populates="usuario"
     )
 
     def __repr__(self) -> str:

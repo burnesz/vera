@@ -37,6 +37,7 @@ def gerar_simulado(
     try:
         simulado = simulado_service.gerar_simulado_enem(
             db=db,
+            user_id=current_user.id,
             titulo=body.titulo,
             tipo=body.tipo,
             descricao=body.descricao,
@@ -84,6 +85,7 @@ def gerar_simulado(
 
     return SimuladoResponse(
         id=simulado.id,
+        user_id=simulado.user_id,
         titulo=simulado.titulo,
         descricao=simulado.descricao,
         tipo=simulado.tipo,
@@ -110,6 +112,13 @@ def obter_simulado(
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Simulado não encontrado."
+        )
+
+    # Garante que simulados vinculados a um usuário só possam ser acessados pelo próprio ou por admin
+    if simulado.user_id and simulado.user_id != current_user.id and current_user.role != "admin":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Acesso não autorizado a este simulado."
         )
 
     itens_response = []
@@ -148,6 +157,7 @@ def obter_simulado(
 
     return SimuladoResponse(
         id=simulado.id,
+        user_id=simulado.user_id,
         titulo=simulado.titulo,
         descricao=simulado.descricao,
         tipo=simulado.tipo,

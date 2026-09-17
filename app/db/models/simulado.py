@@ -7,6 +7,7 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.db.base import Base
 
 if TYPE_CHECKING:
+    from app.db.models.user import User
     from app.db.models.questao_enem import QuestaoEnem
     from app.db.models.questao_inedita import QuestaoInedita
     from app.db.models.submission import SimuladoTentativa
@@ -26,6 +27,12 @@ class Simulado(Base):
     titulo: Mapped[str] = mapped_column(String(255), nullable=False)
     descricao: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     tipo: Mapped[str] = mapped_column(String(50), default="diagnostico", nullable=False)
+    user_id: Mapped[Optional[uuid.UUID]] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("users.id", ondelete="SET NULL"),
+        nullable=True,
+        index=True
+    )
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         server_default=func.now(),
@@ -33,6 +40,7 @@ class Simulado(Base):
     )
 
     # Relacionamentos
+    usuario: Mapped[Optional["User"]] = relationship("User", back_populates="simulados")
     itens: Mapped[List["SimuladoItem"]] = relationship(
         "SimuladoItem",
         back_populates="simulado",

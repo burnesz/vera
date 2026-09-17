@@ -38,6 +38,7 @@ class SimuladoResponse(BaseModel):
     titulo: str
     descricao: Optional[str] = None
     tipo: str
+    user_id: Optional[uuid.UUID] = None
     total_itens: int
     total_enem: Optional[int] = 0
     total_ineditas: Optional[int] = 0

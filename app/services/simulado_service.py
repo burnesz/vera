@@ -32,7 +32,8 @@ def gerar_simulado_enem(
     titulo: Optional[str] = None,
     tipo: str = "diagnostico",
     descricao: Optional[str] = None,
-    proporcao_ineditas: float = 0.15
+    proporcao_ineditas: float = 0.15,
+    user_id: Optional[uuid.UUID] = None
 ) -> Simulado:
     """
     Gera um novo simulado de exatamente 45 questões seguindo amostragem estratificada híbrida:
@@ -145,6 +146,7 @@ def gerar_simulado_enem(
     total_historicas_geradas = len(itens_historicos)
 
     simulado = Simulado(
+        user_id=user_id,
         titulo=titulo or "Simulado ENEM Matemática",
         descricao=descricao or (
             f"Simulado de 45 questões no padrão ENEM composto por {total_historicas_geradas} questões históricas (85%) "
