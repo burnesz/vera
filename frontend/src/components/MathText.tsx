@@ -6,6 +6,20 @@ interface MathTextProps {
   className?: string;
 }
 
+interface TableBlock {
+  type: 'table';
+  headers: string[];
+  aligns: ('left' | 'center' | 'right')[];
+  rows: string[][];
+}
+
+interface TextBlock {
+  type: 'text';
+  text: string;
+}
+
+type ContentBlock = TableBlock | TextBlock;
+
 export const MathText: React.FC<MathTextProps> = ({ content, className = '' }) => {
   if (!content) return null;
 
@@ -30,12 +44,172 @@ export const MathText: React.FC<MathTextProps> = ({ content, className = '' }) =
           return renderKaTeX(rawMath, true, `block-${sIdx}`);
         }
 
-        // Segmento de texto normal com potenciais parágrafos e elementos inline
-        return renderParagraphs(section, sIdx);
+        // Segmento de texto normal com potenciais tabelas, parágrafos e elementos inline
+        return renderTextWithTables(section, sIdx);
       })}
     </div>
   );
 };
+
+// Divide uma linha delimitada por pipes em células, respeitando fórmulas de matemática inline
+function parseTableRow(line: string): string[] {
+  let trimmed = line.trim();
+  if (trimmed.startsWith('|')) {
+    trimmed = trimmed.slice(1);
+  }
+  if (trimmed.endsWith('|')) {
+    trimmed = trimmed.slice(0, -1);
+  }
+
+  const cells: string[] = [];
+  let currentCell = '';
+  let inDollar = false;
+  let inParen = false;
+
+  for (let idx = 0; idx < trimmed.length; idx++) {
+    const char = trimmed[idx];
+    const prevChar = idx > 0 ? trimmed[idx - 1] : '';
+    const nextChar = idx + 1 < trimmed.length ? trimmed[idx + 1] : '';
+
+    if (char === '$' && prevChar !== '\\') {
+      inDollar = !inDollar;
+      currentCell += char;
+    } else if (char === '\\' && nextChar === '(') {
+      inParen = true;
+      currentCell += char;
+    } else if (char === '\\' && nextChar === ')') {
+      inParen = false;
+      currentCell += char;
+    } else if (char === '|' && !inDollar && !inParen) {
+      cells.push(currentCell.trim());
+      currentCell = '';
+    } else {
+      currentCell += char;
+    }
+  }
+  cells.push(currentCell.trim());
+
+  return cells;
+}
+
+// Analisa um bloco de texto identificando tabelas Markdown e parágrafos de texto
+function parseBlocks(text: string): ContentBlock[] {
+  const allLines = text.split('\n');
+  const blocks: ContentBlock[] = [];
+  let currentTextLines: string[] = [];
+  let i = 0;
+
+  while (i < allLines.length) {
+    const line = allLines[i];
+    const nextLine = i + 1 < allLines.length ? allLines[i + 1] : null;
+    const isHeaderCandidate = line.includes('|') && line.trim().length > 0;
+    let isTableStart = false;
+    let aligns: ('left' | 'center' | 'right')[] = [];
+    let headers: string[] = [];
+
+    if (isHeaderCandidate && nextLine && nextLine.includes('|')) {
+      const delimCells = parseTableRow(nextLine);
+      if (delimCells.length > 0 && delimCells.every((c) => /^:?-+:?$/.test(c))) {
+        headers = parseTableRow(line);
+        if (headers.length > 0) {
+          isTableStart = true;
+          aligns = delimCells.map((c) => {
+            const leftColon = c.startsWith(':');
+            const rightColon = c.endsWith(':');
+            if (leftColon && rightColon) return 'center';
+            if (rightColon) return 'right';
+            return 'left';
+          });
+        }
+      }
+    }
+
+    if (isTableStart) {
+      if (currentTextLines.length > 0) {
+        blocks.push({ type: 'text', text: currentTextLines.join('\n') });
+        currentTextLines = [];
+      }
+      i += 2; // pula cabeçalho e delimitador
+      const rows: string[][] = [];
+      while (i < allLines.length) {
+        const rowLine = allLines[i];
+        if (!rowLine.trim() || !rowLine.includes('|')) {
+          break; // término da tabela
+        }
+        rows.push(parseTableRow(rowLine));
+        i++;
+      }
+      blocks.push({
+        type: 'table',
+        headers,
+        aligns,
+        rows,
+      });
+      continue;
+    }
+
+    currentTextLines.push(line);
+    i++;
+  }
+
+  if (currentTextLines.length > 0) {
+    blocks.push({ type: 'text', text: currentTextLines.join('\n') });
+  }
+
+  return blocks;
+}
+
+// Renderiza tabela estilizada
+function renderTable(table: TableBlock, key: string) {
+  return (
+    <div key={key} className="math-table-wrapper">
+      <table className="math-table">
+        <thead>
+          <tr>
+            {table.headers.map((header, hIdx) => {
+              const align = table.aligns[hIdx] || 'left';
+              return (
+                <th key={`th-${hIdx}`} style={{ textAlign: align }}>
+                  {renderInlineTokens(header)}
+                </th>
+              );
+            })}
+          </tr>
+        </thead>
+        <tbody>
+          {table.rows.map((row, rIdx) => (
+            <tr key={`tr-${rIdx}`}>
+              {row.map((cell, cIdx) => {
+                const align = table.aligns[cIdx] || 'left';
+                return (
+                  <td key={`td-${rIdx}-${cIdx}`} style={{ textAlign: align }}>
+                    {renderInlineTokens(cell)}
+                  </td>
+                );
+              })}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
+// Renderiza texto contendo tabelas e parágrafos
+function renderTextWithTables(text: string, sectionIdx: number) {
+  const blocks = parseBlocks(text);
+
+  return (
+    <React.Fragment key={`sec-${sectionIdx}`}>
+      {blocks.map((block, bIdx) => {
+        if (block.type === 'table') {
+          return renderTable(block, `tbl-${sectionIdx}-${bIdx}`);
+        }
+        return renderParagraphs(block.text, `${sectionIdx}-${bIdx}`);
+      })}
+    </React.Fragment>
+  );
+}
 
 // Renderiza uma expressão LaTeX com KaTeX (bloco ou inline)
 function renderKaTeX(math: string, displayMode: boolean, key: string) {
@@ -86,17 +260,17 @@ function renderKaTeX(math: string, displayMode: boolean, key: string) {
 }
 
 // Renderiza parágrafos de texto comum
-function renderParagraphs(text: string, sectionIdx: number) {
+function renderParagraphs(text: string, keyPrefix: string | number) {
   const paragraphs = text.split(/\n\s*\n/);
 
   return (
-    <React.Fragment key={`sec-${sectionIdx}`}>
+    <React.Fragment key={`sec-para-${keyPrefix}`}>
       {paragraphs.map((para, pIdx) => {
         if (!para.trim()) return null;
         const lines = para.split('\n');
 
         return (
-          <p key={`p-${sectionIdx}-${pIdx}`} style={{ marginBottom: '0.75rem', color: 'var(--text-primary)' }}>
+          <p key={`p-${keyPrefix}-${pIdx}`} style={{ marginBottom: '0.75rem', color: 'var(--text-primary)' }}>
             {lines.map((line, lIdx) => (
               <React.Fragment key={`l-${lIdx}`}>
                 {renderInlineTokens(line)}

@@ -294,6 +294,53 @@ a:hover {
   box-shadow: 0 4px 12px -1px rgba(168, 85, 247, 0.6), 0 2px 6px rgba(236, 72, 153, 0.45);
 }
 
+/* Tabelas de Matemática e Enunciados Markdown */
+.math-table-wrapper {
+  margin: 1.25rem 0;
+  overflow-x: auto;
+  border-radius: var(--radius-md);
+  border: 1.5px solid var(--border-medium);
+  box-shadow: var(--shadow-sm);
+  background-color: var(--white);
+}
+
+.math-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.95rem;
+  text-align: left;
+}
+
+.math-table thead {
+  background-color: var(--ocean-100);
+  border-bottom: 2px solid var(--ocean-300);
+}
+
+.math-table th {
+  padding: 0.75rem 1rem;
+  font-weight: 700;
+  color: var(--ocean-950);
+  white-space: nowrap;
+}
+
+.math-table td {
+  padding: 0.7rem 1rem;
+  color: var(--text-primary);
+  border-bottom: 1px solid var(--border-light);
+}
+
+.math-table tbody tr:nth-child(even) {
+  background-color: var(--surface-subtle);
+}
+
+.math-table tbody tr:nth-child(odd) {
+  background-color: var(--white);
+}
+
+.math-table tbody tr:hover {
+  background-color: var(--ocean-50);
+}
+
 /* Scrollbars modernos e discretos */
 ::-webkit-scrollbar {
   width: 8px;
