@@ -11,9 +11,12 @@ services:
       - postgres
     env_file:
       - .env
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     environment:
-      # Sobrescreve o host do banco para a rede interna do Docker (a URL é montada dinamicamente pelo FastAPI)
+      # Conecta ao postgres na rede interna e ao Ollama no host via host.docker.internal
       - POSTGRES_SERVER=postgres
+      - LLM_ENDPOINT_URL=http://host.docker.internal:11435
 
   # --- Banco de Dados Relacional (PostgreSQL) ---
   postgres:
