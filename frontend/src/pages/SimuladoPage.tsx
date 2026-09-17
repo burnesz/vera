@@ -24,6 +24,7 @@ import {
   FileSpreadsheet,
   Layers,
   Save,
+  Trash2,
 } from 'lucide-react';
 
 interface SimuladoPageProps {
@@ -46,6 +47,8 @@ export const SimuladoPage: React.FC<SimuladoPageProps> = ({ onNavigate }) => {
   const [isGenerating, setIsGenerating] = useState<boolean>(false);
   const [showNewModal, setShowNewModal] = useState<boolean>(false);
   const [novoTitulo, setNovoTitulo] = useState<string>('');
+  const [simuladoParaExcluir, setSimuladoParaExcluir] = useState<SimuladoResumo | null>(null);
+  const [isDeleting, setIsDeleting] = useState<boolean>(false);
 
   // Dados do Simulado Ativo (Modo Prova)
   const [simulado, setSimulado] = useState<Simulado | null>(null);
@@ -198,6 +201,29 @@ export const SimuladoPage: React.FC<SimuladoPageProps> = ({ onNavigate }) => {
       console.error('Erro ao gerar novo simulado:', err);
     } finally {
       setIsGenerating(false);
+    }
+  };
+
+  // Exclui um simulado selecionado
+  const handleExcluirSimulado = async () => {
+    if (!simuladoParaExcluir) return;
+    setIsDeleting(true);
+    try {
+      await simuladoService.excluirSimulado(simuladoParaExcluir.id, user?.id);
+      setSimulados((prev) => prev.filter((s) => s.id !== simuladoParaExcluir.id));
+      try {
+        localStorage.removeItem(`vera_timer_${simuladoParaExcluir.id}`);
+        localStorage.removeItem(`vera_answers_${simuladoParaExcluir.id}`);
+        localStorage.removeItem(`vera_simulado_revisao_${simuladoParaExcluir.id}`);
+      } catch {
+        // ignora se localStorage não disponível
+      }
+      setSimuladoParaExcluir(null);
+    } catch (err) {
+      console.error('Erro ao excluir simulado:', err);
+      alert('Não foi possível excluir o simulado. Verifique sua conexão e tente novamente.');
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -680,9 +706,42 @@ export const SimuladoPage: React.FC<SimuladoPageProps> = ({ onNavigate }) => {
                           >
                             Em Andamento
                           </span>
-                          <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
-                            {sim.total_itens} Itens
-                          </span>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
+                            <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
+                              {sim.total_itens} Itens
+                            </span>
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setSimuladoParaExcluir(sim);
+                              }}
+                              title="Excluir simulado"
+                              aria-label="Excluir simulado"
+                              style={{
+                                border: 'none',
+                                background: 'transparent',
+                                color: 'var(--text-muted)',
+                                cursor: 'pointer',
+                                padding: '4px',
+                                borderRadius: 'var(--radius-sm)',
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                transition: 'color 0.15s ease, background-color 0.15s ease',
+                              }}
+                              onMouseEnter={(e) => {
+                                e.currentTarget.style.color = '#dc2626';
+                                e.currentTarget.style.backgroundColor = '#fee2e2';
+                              }}
+                              onMouseLeave={(e) => {
+                                e.currentTarget.style.color = 'var(--text-muted)';
+                                e.currentTarget.style.backgroundColor = 'transparent';
+                              }}
+                            >
+                              <Trash2 size={16} />
+                            </button>
+                          </div>
                         </div>
 
                         <h3 style={{ fontSize: '1.15rem', fontWeight: 800, color: 'var(--ocean-950)', marginBottom: '0.4rem' }}>
@@ -811,9 +870,42 @@ export const SimuladoPage: React.FC<SimuladoPageProps> = ({ onNavigate }) => {
                         >
                           Concluído & Arquivado
                         </span>
-                        <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
-                          {sim.total_itens} Itens
-                        </span>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
+                          <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
+                            {sim.total_itens} Itens
+                          </span>
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setSimuladoParaExcluir(sim);
+                            }}
+                            title="Excluir simulado"
+                            aria-label="Excluir simulado"
+                            style={{
+                              border: 'none',
+                              background: 'transparent',
+                              color: 'var(--text-muted)',
+                              cursor: 'pointer',
+                              padding: '4px',
+                              borderRadius: 'var(--radius-sm)',
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              transition: 'color 0.15s ease, background-color 0.15s ease',
+                            }}
+                            onMouseEnter={(e) => {
+                              e.currentTarget.style.color = '#dc2626';
+                              e.currentTarget.style.backgroundColor = '#fee2e2';
+                            }}
+                            onMouseLeave={(e) => {
+                              e.currentTarget.style.color = 'var(--text-muted)';
+                              e.currentTarget.style.backgroundColor = 'transparent';
+                            }}
+                          >
+                            <Trash2 size={16} />
+                          </button>
+                        </div>
                       </div>
 
                       <h3 style={{ fontSize: '1.15rem', fontWeight: 800, color: 'var(--ocean-950)', marginBottom: '0.5rem' }}>
@@ -942,6 +1034,97 @@ export const SimuladoPage: React.FC<SimuladoPageProps> = ({ onNavigate }) => {
                   style={{ fontWeight: 700, gap: '0.5rem' }}
                 >
                   {isGenerating ? 'Gerando Caderno...' : 'Gerar e Começar'}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Modal de Confirmação de Exclusão de Simulado */}
+        {simuladoParaExcluir && (
+          <div
+            style={{
+              position: 'fixed',
+              inset: 0,
+              backgroundColor: 'rgba(4, 28, 46, 0.65)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              zIndex: 2100,
+              padding: '1rem',
+              backdropFilter: 'blur(4px)',
+            }}
+          >
+            <div
+              className="card"
+              style={{
+                width: '100%',
+                maxWidth: '460px',
+                padding: '2rem',
+                border: '2px solid var(--border-ocean)',
+                boxShadow: 'var(--shadow-xl)',
+              }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.85rem', marginBottom: '1.25rem' }}>
+                <div
+                  style={{
+                    width: '46px',
+                    height: '46px',
+                    borderRadius: '12px',
+                    backgroundColor: '#fee2e2',
+                    color: '#dc2626',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    flexShrink: 0,
+                  }}
+                >
+                  <Trash2 size={24} />
+                </div>
+                <div>
+                  <h3 style={{ fontSize: '1.25rem', fontWeight: 800, color: 'var(--ocean-950)', margin: 0 }}>
+                    Excluir Simulado
+                  </h3>
+                  <span style={{ fontSize: '0.825rem', color: 'var(--text-muted)' }}>
+                    Esta ação não poderá ser desfeita
+                  </span>
+                </div>
+              </div>
+
+              <p style={{ fontSize: '0.925rem', color: 'var(--text-secondary)', marginBottom: '1.5rem', lineHeight: 1.5 }}>
+                Tem certeza que deseja excluir o simulado <strong>"{simuladoParaExcluir.titulo}"</strong>?
+                {simuladoParaExcluir.status === 'finalizado'
+                  ? ' Todos os registros de respostas, percentuais de acerto e correções detalhadas serão permanentemente removidos.'
+                  : ' O caderno gerado e as respostas salvas em rascunho serão permanentemente removidos.'}
+              </p>
+
+              <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'flex-end' }}>
+                <button
+                  onClick={() => setSimuladoParaExcluir(null)}
+                  className="btn btn-outline"
+                  disabled={isDeleting}
+                >
+                  Cancelar
+                </button>
+                <button
+                  onClick={handleExcluirSimulado}
+                  disabled={isDeleting}
+                  style={{
+                    backgroundColor: '#dc2626',
+                    color: '#ffffff',
+                    border: 'none',
+                    borderRadius: 'var(--radius-md)',
+                    padding: '0.75rem 1.25rem',
+                    fontWeight: 700,
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.5rem',
+                    cursor: isDeleting ? 'not-allowed' : 'pointer',
+                    opacity: isDeleting ? 0.7 : 1,
+                  }}
+                >
+                  <Trash2 size={16} />
+                  {isDeleting ? 'Excluindo...' : 'Sim, Excluir'}
                 </button>
               </div>
             </div>

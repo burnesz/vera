@@ -167,4 +167,28 @@ export const simuladoService = {
       };
     }
   },
+
+  async excluirSimulado(simuladoId: string, userId?: string): Promise<void> {
+    try {
+      await apiFetch<void>(`/simulados/${simuladoId}`, {
+        method: 'DELETE',
+      });
+    } catch (error) {
+      console.warn('Erro ao excluir simulado na API:', error);
+      // Fallback para persistência local caso offline
+      const storageKey = `vera_simulados_${userId || 'demo'}`;
+      const salvos = localStorage.getItem(storageKey);
+      if (salvos) {
+        try {
+          const list: SimuladoResumo[] = JSON.parse(salvos);
+          const filtrados = list.filter((s) => s.id !== simuladoId);
+          localStorage.setItem(storageKey, JSON.stringify(filtrados));
+        } catch {
+          // ignore
+        }
+      }
+      throw error;
+    }
+  },
 };
+
