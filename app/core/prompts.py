@@ -136,3 +136,97 @@ RESPOSTA DA TUTORA VERA (Utilize obrigatoriamente <pensamento>...</pensamento> e
 Tutora VERA:"""
 
     return prompt
+
+
+QUESTION_GENERATOR_SYSTEM_PROMPT = """Você é um Especialista em Avaliação Educacional e Elaborador Oficial de Itens de Matemática para o ENEM (Exame Nacional do Ensino Médio - INEP).
+Sua missão é produzir uma QUESTÃO INÉDITA E ORIGINAL de Matemática, estritamente alinhada à Matriz de Referência do ENEM e à Habilidade solicitada.
+
+CRITÉRIOS OBRIGATÓRIOS DO ITEM (PADRÃO INEP):
+1. **Contextualização Realista:** O enunciado deve apresentar uma situação-problema autêntica do cotidiano, ambiente social, científico, financeiro, produtivo ou tecnológico. Não faça perguntas secas ou puramente teóricas desprovidas de contexto.
+2. **Comando Claro:** O parágrafo final do enunciado deve expressar uma pergunta ou comando inequívoco do que o estudante deve calcular ou identificar.
+3. **Rigor Matemático e Aritmética Exata:**
+   - Realize as contas passo a passo no `thought_scratchpad`.
+   - Escolha valores numéricos no enunciado que resultem em cálculos limpos e exatos (sem dízimas periódicas acidentais se as alternativas forem inteiras).
+   - O gabarito DEVE ser exatamente o resultado obtido na resolução matemática. A alternativa apontada como correta DEVE conter rigorosamente esse valor.
+4. **5 Alternativas (A a E):**
+   - Exatamente 1 alternativa correta (gabarito).
+   - 4 distratores plausíveis (representando erros de interpretação, equívocos conceituais, inversões de fórmulas ou cálculos parciais comuns a estudantes).
+   - As alternativas devem possuir paralelismo sintático e extensão equilibrada.
+   - NUNCA repita valores ou textos entre alternativas (unicidade estrita).
+5. **Originalidade e Ineditismo:** O item gerado DEVE SER INÉDITO. Não copie nem meramente troque números dos itens de exemplo. Use-os apenas como referência do padrão de complexidade e linguagem.
+6. **Formato de Saída (JSON Estrito):**
+   Responda EXCLUSIVAMENTE com um objeto JSON válido, sem texto antes ou depois, seguindo o schema:
+   {
+     "thought_scratchpad": "Passo a passo mental: 1. Planejamento da situação-problema; 2. Cálculos matemáticos detalhados; 3. Construção dos distratores; 4. Checagem de unicidade.",
+     "enunciado": "Texto contextualizado da questão...",
+     "alternativas": {
+       "A": "Texto alternativa A",
+       "B": "Texto alternativa B",
+       "C": "Texto alternativa C",
+       "D": "Texto alternativa D",
+       "E": "Texto alternativa E"
+     },
+     "gabarito": "Letra (A, B, C, D ou E)",
+     "justificativa": "Resolução passo a passo provando a alternativa correta e apontando a falha nos distratores."
+   }
+"""
+
+
+def build_question_generation_prompt(
+    habilidade_codigo: str,
+    habilidade_descricao: str,
+    competencia: int,
+    eixo_tematico: Optional[str] = None,
+    few_shot_exemplos: Optional[List[Dict[str, Any]]] = None
+) -> str:
+    """
+    Constrói prompt few-shot determinístico para a geração de itens inéditos de Matemática do ENEM.
+    - Injeta os metadados oficiais da habilidade (código, descrição, competência, eixo temático).
+    - Injeta questões reais do acervo histórico do ENEM como exemplos de aprendizado few-shot.
+    - Exige conformidade JSON estrita para validação automática (RN-Q01, RN-Q02).
+    """
+    # Formatação dos exemplos históricos few-shot
+    exemplos_text = ""
+    if few_shot_exemplos:
+        blocos = []
+        for idx, ex in enumerate(few_shot_exemplos, 1):
+            ano = ex.get("ano", "ENEM Histórico")
+            enunciado = ex.get("enunciado", "").strip()
+            alts = ex.get("alternativas", {})
+            gab = ex.get("gabarito", "")
+            
+            alts_str = "\n".join([f"  {k}) {v}" for k, v in sorted(alts.items())])
+            bloco = (
+                f"--- [Exemplo Real {idx} (ENEM {ano} - {habilidade_codigo})] ---\n"
+                f"Enunciado:\n{enunciado}\n"
+                f"Alternativas:\n{alts_str}\n"
+                f"Gabarito Oficial: {gab}"
+            )
+            blocos.append(bloco)
+        exemplos_text = "\n\n".join(blocos)
+    else:
+        exemplos_text = "(Nenhum exemplo histórico fornecido. Siga estritamente a descrição da habilidade.)"
+
+    prompt = f"""{QUESTION_GENERATOR_SYSTEM_PROMPT}
+
+============================================================
+ESPECIFICAÇÃO DA HABILIDADE ALVO (MATRIZ DO ENEM):
+============================================================
+- Código da Habilidade: {habilidade_codigo}
+- Competência de Área: {competencia}
+- Eixo Temático: {eixo_tematico or 'Matemática e suas Tecnologias'}
+- Descrição Oficial do INEP: {habilidade_descricao}
+
+============================================================
+EXEMPLOS HISTÓRICOS REAIS DO ENEM DESTA MESMA HABILIDADE (FEW-SHOT):
+============================================================
+{exemplos_text}
+
+============================================================
+SUA TAREFA:
+============================================================
+Gere agora uma QUESTÃO INÉDITA avaliando com precisão a habilidade {habilidade_codigo}.
+Gere estritamente o JSON com as chaves: 'thought_scratchpad', 'enunciado', 'alternativas' (A, B, C, D, E), 'gabarito', 'justificativa'.
+"""
+    return prompt
+

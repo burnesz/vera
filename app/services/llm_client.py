@@ -65,12 +65,13 @@ class LLMClient:
         max_tokens: Optional[int] = None,
         temperature: float = 0.7,
         top_p: float = 0.9,
-        repetition_penalty: float = 1.1
+        repetition_penalty: float = 1.1,
+        format: Optional[str] = None
     ) -> Tuple[str, Dict[str, Any]]:
         resolved_max_tokens = max_tokens if max_tokens is not None else settings.LLM_MAX_TOKENS
 
         url = f"{self.endpoint_url}/api/generate"
-        payload = {
+        payload: Dict[str, Any] = {
             "model": self.model_name,
             "prompt": prompt,
             "stream": False,
@@ -81,6 +82,9 @@ class LLMClient:
                 "repeat_penalty": repetition_penalty
             }
         }
+        if format:
+            payload["format"] = format
+
         return url, payload
 
     def health_check(self) -> Dict[str, Any]:
@@ -183,20 +187,22 @@ class LLMClient:
         max_tokens: Optional[int] = None,
         temperature: float = 0.7,
         top_p: float = 0.9,
-        repetition_penalty: float = 1.1
+        repetition_penalty: float = 1.1,
+        format: Optional[str] = None
     ) -> str:
         """
         Gera resposta a partir de um prompt usando política de retry com backoff exponencial.
         """
         if self.mock_mode or not self.endpoint_url:
-            return self._generate_mock_response(prompt)
+            return self._generate_mock_response(prompt, format=format)
 
         url, payload = self._build_payload_and_url(
             prompt=prompt,
             max_tokens=max_tokens,
             temperature=temperature,
             top_p=top_p,
-            repetition_penalty=repetition_penalty
+            repetition_penalty=repetition_penalty,
+            format=format
         )
 
         last_exception = None
@@ -246,20 +252,22 @@ class LLMClient:
         max_tokens: Optional[int] = None,
         temperature: float = 0.7,
         top_p: float = 0.9,
-        repetition_penalty: float = 1.1
+        repetition_penalty: float = 1.1,
+        format: Optional[str] = None
     ) -> str:
         """
         Versão assíncrona da geração de resposta no Ollama.
         """
         if self.mock_mode or not self.endpoint_url:
-            return self._generate_mock_response(prompt)
+            return self._generate_mock_response(prompt, format=format)
 
         url, payload = self._build_payload_and_url(
             prompt=prompt,
             max_tokens=max_tokens,
             temperature=temperature,
             top_p=top_p,
-            repetition_penalty=repetition_penalty
+            repetition_penalty=repetition_penalty,
+            format=format
         )
 
         import asyncio
@@ -299,10 +307,27 @@ class LLMClient:
             raise last_exception
         raise LLMConnectionError(f"Não foi possível obter resposta assíncrona após {self.max_retries} tentativas: {last_exception}")
 
-    def _generate_mock_response(self, prompt: str) -> str:
+    def _generate_mock_response(self, prompt: str, format: Optional[str] = None) -> str:
         """
-        Gera resposta didática simulada para ambiente de desenvolvimento e testes unitários.
+        Gera resposta didática ou estruturada simulada para ambiente de desenvolvimento e testes.
         """
+        import json
+
+        if format == "json" or "retorne estritamente um objeto json" in prompt.lower() or "schema json" in prompt.lower():
+            mock_question = {
+                "enunciado": "Um reservatório de água com capacidade de 1.200 litros é abastecido por uma bomba com vazão constante de 40 litros por minuto. Paralelamente, uma válvula esvazia o reservatório a uma taxa constante de 10 litros por minuto. Estando o reservatório inicialmente vazio, o tempo necessário para enchê-lo completamente é de:",
+                "alternativas": {
+                    "A": "30 minutos.",
+                    "B": "40 minutos.",
+                    "C": "50 minutos.",
+                    "D": "60 minutos.",
+                    "E": "80 minutos."
+                },
+                "gabarito": "B",
+                "justificativa": "A taxa líquida de enchimento é de 40 - 10 = 30 litros por minuto. Para atingir a capacidade total de 1.200 litros, o tempo necessário é de 1.200 / 30 = 40 minutos. Portanto, a alternativa correta é a B."
+            }
+            return json.dumps(mock_question, ensure_ascii=False)
+
         return (
             "### Análise da Questão e Diagnóstico do Erro\n\n"
             "1. **Identificação do Conceito:** A questão exige a aplicação direta das relações métricas "
