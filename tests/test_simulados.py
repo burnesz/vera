@@ -12,6 +12,8 @@ from app.db.models.user import User
 from app.db.models.habilidade import HabilidadeEnem
 from app.db.models.questao_enem import QuestaoEnem
 from app.db.models.questao_inedita import QuestaoInedita
+from app.db.models.simulado import Simulado, SimuladoItem
+from app.db.models.submission import SimuladoTentativa, RespostaItem
 from app.main import app
 from app.core.security import get_password_hash, create_access_token
 from app.services import simulado_service
@@ -359,4 +361,97 @@ def test_listar_simulados_pendentes_e_arquivados(auth_headers):
     # 5. Consulta resultado do Simulado A (deve retornar 404 pois ainda está pendente)
     resp_res_a = client.get(f"/api/v1/simulados/{simulado_a_id}/resultado", headers=auth_headers)
     assert resp_res_a.status_code == 404
+
+
+def test_excluir_simulado_fluxo_completo(auth_headers):
+    """
+    Testa a exclusão de simulados com verificação de:
+    - 404 para ID inexistente
+    - 403 para exclusão por usuário não proprietário
+    - 204 para exclusão com sucesso de simulado pendente
+    - 204 para exclusão com sucesso de simulado finalizado com tentativas e respostas
+    - Limpeza em cascata no banco de dados
+    """
+    db = TestingSessionLocal()
+    # Cria outro usuário para testar autorização
+    outro_user = db.query(User).filter_by(email="outro.estudante@teste.com").first()
+    if not outro_user:
+        outro_user = User(
+            id=uuid.uuid4(),
+            nome="Outro Estudante",
+            email="outro.estudante@teste.com",
+            hashed_password=get_password_hash("senha123"),
+            role="student",
+            is_ativo=True
+        )
+        db.add(outro_user)
+        db.commit()
+    token_outro = create_access_token(subject=str(outro_user.id), role=outro_user.role)
+    outro_headers = {"Authorization": f"Bearer {token_outro}"}
+    db.close()
+
+    # 1. 404 para ID inexistente
+    id_inexistente = uuid.uuid4()
+    resp_404 = client.delete(f"/api/v1/simulados/{id_inexistente}", headers=auth_headers)
+    assert resp_404.status_code == 404
+
+    # 2. Gera simulado com auth_headers
+    resp_gerar = client.post(
+        "/api/v1/simulados/gerar",
+        json={"titulo": "Simulado para Exclusao"},
+        headers=auth_headers
+    )
+    assert resp_gerar.status_code == 201
+    simulado_id = resp_gerar.json()["id"]
+
+    # 3. Tentativa de exclusão pelo outro usuário (403 Forbidden)
+    resp_403 = client.delete(f"/api/v1/simulados/{simulado_id}", headers=outro_headers)
+    assert resp_403.status_code == 403
+
+    # 4. Exclui o simulado com sucesso como o próprio dono (204 No Content)
+    resp_del = client.delete(f"/api/v1/simulados/{simulado_id}", headers=auth_headers)
+    assert resp_del.status_code == 204
+
+    # 5. Verifica que não existe mais na listagem nem na rota de busca
+    resp_get = client.get(f"/api/v1/simulados/{simulado_id}", headers=auth_headers)
+    assert resp_get.status_code == 404
+
+    # 6. Gera e submete um simulado (criando itens, tentativa e respostas) e depois exclui
+    resp_gerar_b = client.post(
+        "/api/v1/simulados/gerar",
+        json={"titulo": "Simulado Completo para Exclusao"},
+        headers=auth_headers
+    )
+    simulado_b_id = resp_gerar_b.json()["id"]
+    itens_b = resp_gerar_b.json()["itens"]
+
+    # Submete para criar tentativa e respostas
+    submissao_payload = [
+        {"simulado_item_id": item["simulado_item_id"], "alternativa_selecionada": "B"}
+        for item in itens_b
+    ]
+    resp_sub = client.post(
+        f"/api/v1/simulados/{simulado_b_id}/submeter",
+        json={"respostas": submissao_payload},
+        headers=auth_headers
+    )
+    assert resp_sub.status_code == 200
+    tentativa_id = resp_sub.json()["tentativa_id"]
+
+    # Exclui o simulado finalizado
+    resp_del_b = client.delete(f"/api/v1/simulados/{simulado_b_id}", headers=auth_headers)
+    assert resp_del_b.status_code == 204
+
+    # Confere no banco que simulado, itens, tentativa e respostas foram expurgados via CASCADE
+    db = TestingSessionLocal()
+    sim_db = db.query(Simulado).filter(Simulado.id == uuid.UUID(simulado_b_id)).first()
+    assert sim_db is None
+    itens_db = db.query(SimuladoItem).filter(SimuladoItem.simulado_id == uuid.UUID(simulado_b_id)).all()
+    assert len(itens_db) == 0
+    tentativa_db = db.query(SimuladoTentativa).filter(SimuladoTentativa.id == uuid.UUID(tentativa_id)).first()
+    assert tentativa_db is None
+    respostas_db = db.query(RespostaItem).filter(RespostaItem.tentativa_id == uuid.UUID(tentativa_id)).all()
+    assert len(respostas_db) == 0
+    db.close()
+
 

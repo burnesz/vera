@@ -357,3 +357,28 @@ def obter_resultado_simulado_por_id(db: Session, simulado_id: uuid.UUID, user_id
         .first()
     )
 
+
+def excluir_simulado(
+    db: Session,
+    simulado_id: uuid.UUID,
+    user_id: uuid.UUID,
+    is_admin: bool = False
+) -> bool:
+    """
+    Exclui um simulado e todos os seus registros filhos (itens, tentativas, respostas e feedbacks)
+    graças ao comportamento de cascata (CASCADE) configurado no banco e nas models.
+    Garante que apenas o dono do simulado (ou administrador) possa excluí-lo.
+    """
+    simulado = db.query(Simulado).filter(Simulado.id == simulado_id).first()
+    if not simulado:
+        return False
+
+    if not is_admin and simulado.user_id and simulado.user_id != user_id:
+        raise PermissionError("Acesso não autorizado para excluir este simulado.")
+
+    db.delete(simulado)
+    db.commit()
+    logger.info(f"Simulado '{simulado_id}' excluído com sucesso pelo usuário '{user_id}'.")
+    return True
+
+

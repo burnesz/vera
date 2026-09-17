@@ -260,6 +260,36 @@ def obter_resultado_simulado(
     return formatar_resultado_tentativa(tentativa)
 
 
+@router.delete(
+    "/{simulado_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+    summary="Exclui um simulado gerado pelo estudante e todos os seus registros associados",
+)
+def excluir_simulado(
+    simulado_id: uuid.UUID,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_active_user),
+):
+    try:
+        sucesso = simulado_service.excluir_simulado(
+            db=db,
+            simulado_id=simulado_id,
+            user_id=current_user.id,
+            is_admin=(current_user.role == "admin"),
+        )
+        if not sucesso:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Simulado não encontrado."
+            )
+    except PermissionError as e:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=str(e)
+        )
+    return None
+
+
 def formatar_resultado_tentativa(tentativa) -> SimuladoResultadoResponse:
     """
     Função auxiliar para montar o payload de resultado e conferência de gabarito.
