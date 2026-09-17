@@ -303,3 +303,109 @@ a:hover {
   h3 { font-size: 1.15rem; }
   .container { padding: 0 1rem; }
 }
+
+/* ==========================================================================
+   Workspace / Layout do Sistema Autenticado (Sidebar + Topbar)
+   ========================================================================== */
+:root {
+  --sidebar-width: 260px;
+  --topbar-height: 64px;
+}
+
+.workspace-layout {
+  display: flex;
+  min-height: 100vh;
+  background-color: #f8fafc;
+}
+
+.workspace-sidebar {
+  width: var(--sidebar-width);
+  background-color: var(--white);
+  border-right: 1.5px solid var(--border-light);
+  display: flex;
+  flex-direction: column;
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  z-index: 50;
+  transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.sidebar-nav-item {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  padding: 0.75rem 1rem;
+  border-radius: var(--radius-md);
+  color: var(--text-muted);
+  font-weight: 600;
+  font-size: 0.925rem;
+  text-decoration: none;
+  border: none;
+  background: transparent;
+  width: 100%;
+  text-align: left;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.sidebar-nav-item:hover {
+  background-color: var(--ocean-50);
+  color: var(--ocean-900);
+}
+
+.sidebar-nav-item.active {
+  background-color: var(--ocean-600);
+  color: var(--white);
+  box-shadow: 0 3px 8px rgba(2, 132, 199, 0.25);
+}
+
+.workspace-main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  background-color: #f8fafc;
+}
+
+.workspace-topbar {
+  height: var(--topbar-height);
+  background-color: var(--white);
+  border-bottom: 1.5px solid var(--border-light);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 1.75rem;
+  position: sticky;
+  top: 0;
+  z-index: 40;
+}
+
+/* Mobile Drawer Overlay */
+.sidebar-overlay {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(4, 28, 46, 0.4);
+  backdrop-filter: blur(2px);
+  z-index: 45;
+}
+
+@media (max-width: 900px) {
+  .workspace-sidebar {
+    position: fixed;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    transform: translateX(-100%);
+    box-shadow: var(--shadow-lg);
+  }
+
+  .workspace-sidebar.open {
+    transform: translateX(0);
+  }
+
+  .workspace-topbar {
+    padding: 0 1rem;
+  }
+}
+

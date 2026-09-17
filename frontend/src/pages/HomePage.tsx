@@ -1,8 +1,7 @@
 import React from 'react';
 import { useAuth } from '../context/AuthContext';
+import { StudentDashboard } from './StudentDashboard';
 import {
-  FileCheck2,
-  BotMessageSquare,
   Sparkles,
   GraduationCap,
   UserPlus,
@@ -14,28 +13,34 @@ interface HomePageProps {
 }
 
 export const HomePage: React.FC<HomePageProps> = ({ onNavigate }) => {
-  const { user, isAuthenticated } = useAuth();
+  const { isAuthenticated } = useAuth();
 
+  // Se o estudante estiver autenticado, exibe o painel de estudos (Dashboard de verdade)
+  if (isAuthenticated) {
+    return <StudentDashboard onNavigate={onNavigate} />;
+  }
+
+  // Se não estiver logado, exibe a Landing Page de apresentação da plataforma
   return (
     <div
       className="container"
       style={{
-        padding: '3rem 1.25rem 4rem',
+        padding: '3.5rem 1.25rem 4.5rem',
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
         justifyContent: 'center',
-        minHeight: 'calc(100vh - var(--header-height) - 100px)',
+        minHeight: 'calc(100vh - var(--header-height) - 120px)',
       }}
     >
-      {/* Hero Principal Simplificado */}
+      {/* Hero Principal da Landing Page */}
       <section
         style={{
           width: '100%',
           maxWidth: '960px',
           background: 'linear-gradient(135deg, var(--ocean-900) 0%, var(--ocean-700) 100%)',
           borderRadius: 'var(--radius-lg)',
-          padding: 'clamp(2rem, 5vw, 3.5rem)',
+          padding: 'clamp(2rem, 5vw, 3.75rem)',
           color: 'var(--white)',
           boxShadow: 'var(--shadow-ocean)',
           position: 'relative',
@@ -63,24 +68,22 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate }) => {
 
           <h1
             style={{
-              fontSize: 'clamp(2rem, 4.5vw, 2.75rem)',
+              fontSize: 'clamp(2rem, 4.5vw, 2.85rem)',
               fontWeight: 800,
               color: 'var(--white)',
               lineHeight: 1.15,
               marginBottom: '1.25rem',
             }}
           >
-            {isAuthenticated && user
-              ? `Olá, ${user.nome.split(' ')[0]}! Pronto para treinar?`
-              : 'Domine a Matemática do ENEM com Inteligência Pedagógica'}
+            Domine a Matemática do ENEM com Inteligência Pedagógica
           </h1>
 
           <p
             style={{
-              fontSize: '1.1rem',
+              fontSize: '1.125rem',
               color: 'var(--ocean-100)',
               lineHeight: 1.6,
-              marginBottom: '2.25rem',
+              marginBottom: '2.5rem',
               maxWidth: '640px',
             }}
           >
@@ -90,67 +93,33 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate }) => {
           </p>
 
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1rem' }}>
-            {isAuthenticated ? (
-              <>
-                <button
-                  onClick={() => onNavigate('simulado')}
-                  className="btn btn-lg"
-                  style={{
-                    backgroundColor: 'var(--white)',
-                    color: 'var(--ocean-900)',
-                    fontWeight: 700,
-                    boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
-                  }}
-                >
-                  <FileCheck2 size={20} />
-                  Iniciar Simulado Geral (45 Itens)
-                </button>
+            <button
+              onClick={() => onNavigate('register')}
+              className="btn btn-lg"
+              style={{
+                backgroundColor: 'var(--white)',
+                color: 'var(--ocean-900)',
+                fontWeight: 700,
+                boxShadow: '0 4px 14px rgba(0, 0, 0, 0.18)',
+              }}
+            >
+              <UserPlus size={20} />
+              Cadastre-se para Começar
+            </button>
 
-                <button
-                  onClick={() => onNavigate('chat')}
-                  className="btn btn-lg btn-outline"
-                  style={{
-                    backgroundColor: 'transparent',
-                    borderColor: 'var(--white)',
-                    color: 'var(--white)',
-                    fontWeight: 600,
-                  }}
-                >
-                  <BotMessageSquare size={20} />
-                  Tirar Dúvidas com a Tutora VERA
-                </button>
-              </>
-            ) : (
-              <>
-                <button
-                  onClick={() => onNavigate('register')}
-                  className="btn btn-lg"
-                  style={{
-                    backgroundColor: 'var(--white)',
-                    color: 'var(--ocean-900)',
-                    fontWeight: 700,
-                    boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
-                  }}
-                >
-                  <UserPlus size={20} />
-                  Cadastre-se para Começar
-                </button>
-
-                <button
-                  onClick={() => onNavigate('login')}
-                  className="btn btn-lg btn-outline"
-                  style={{
-                    backgroundColor: 'transparent',
-                    borderColor: 'var(--white)',
-                    color: 'var(--white)',
-                    fontWeight: 600,
-                  }}
-                >
-                  <LogIn size={20} />
-                  Já tenho conta (Entrar)
-                </button>
-              </>
-            )}
+            <button
+              onClick={() => onNavigate('login')}
+              className="btn btn-lg btn-outline"
+              style={{
+                backgroundColor: 'transparent',
+                borderColor: 'var(--white)',
+                color: 'var(--white)',
+                fontWeight: 600,
+              }}
+            >
+              <LogIn size={20} />
+              Já tenho conta (Entrar)
+            </button>
           </div>
         </div>
 
@@ -164,7 +133,7 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate }) => {
             pointerEvents: 'none',
           }}
         >
-          <GraduationCap size={340} />
+          <GraduationCap size={350} />
         </div>
       </section>
     </div>
