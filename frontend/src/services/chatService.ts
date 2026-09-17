@@ -1,5 +1,11 @@
 import { apiFetch } from './api';
-import type { ChatRequest, ChatResponse, ChatHistoryResponse } from '../types/chat';
+import type {
+  ChatRequest,
+  ChatResponse,
+  ChatHistoryResponse,
+  ChatSessionSummary,
+  ChatSessionListResponse
+} from '../types/chat';
 
 export const chatService = {
   /**
@@ -14,7 +20,20 @@ export const chatService = {
   },
 
   /**
-   * Recupera o histórico de mensagens da sessão no backend.
+   * Lista as sessões anteriores de conversa do estudante salvas no PostgreSQL.
+   */
+  async listSessions(): Promise<ChatSessionSummary[]> {
+    try {
+      const response = await apiFetch<ChatSessionListResponse>('/chat/sessions');
+      return response.sessions || [];
+    } catch (err) {
+      console.warn('Não foi possível listar sessões do chat:', err);
+      return [];
+    }
+  },
+
+  /**
+   * Recupera o histórico de mensagens de uma sessão específica no PostgreSQL.
    */
   async getHistory(sessionId: string): Promise<ChatHistoryResponse> {
     try {
@@ -25,15 +44,41 @@ export const chatService = {
   },
 
   /**
-   * Limpa o histórico de uma sessão de conversa no backend.
+   * Renomeia o título de uma conversa.
    */
-  async clearSession(sessionId: string): Promise<{ cleared: boolean }> {
+  async renameSession(sessionId: string, titulo: string): Promise<boolean> {
     try {
-      return await apiFetch<{ cleared: boolean; message: string }>(`/chat/session/${sessionId}`, {
+      await apiFetch(`/chat/session/${sessionId}`, {
+        method: 'PATCH',
+        body: JSON.stringify({ titulo }),
+      });
+      return true;
+    } catch (err) {
+      console.error('Erro ao renomear sessão de conversa:', err);
+      return false;
+    }
+  },
+
+  /**
+   * Exclui permanentemente uma sessão de conversa e todas as mensagens associadas.
+   */
+  async deleteSession(sessionId: string): Promise<boolean> {
+    try {
+      const res = await apiFetch<{ cleared: boolean; message: string }>(`/chat/session/${sessionId}`, {
         method: 'DELETE',
       });
-    } catch {
-      return { cleared: true };
+      return res.cleared;
+    } catch (err) {
+      console.error('Erro ao excluir sessão de conversa:', err);
+      return false;
     }
+  },
+
+  /**
+   * Alias para limpar/excluir histórico de sessão.
+   */
+  async clearSession(sessionId: string): Promise<{ cleared: boolean }> {
+    const success = await this.deleteSession(sessionId);
+    return { cleared: success };
   },
 };
