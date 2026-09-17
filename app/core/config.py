@@ -15,10 +15,11 @@ class Settings(BaseSettings):
     JWT_ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 1440  # 24 horas
 
-    # LLM Remote Serving (Colab + Tunnel) - RN-INF01
-    LLM_ENDPOINT_URL: str = ""
-    LLM_API_KEY: str = ""
-    LLM_TIMEOUT_SECONDS: float = 60.0
+    # LLM Serving (Local Ollama) - RN-INF01
+    LLM_ENDPOINT_URL: str = "http://localhost:11434"
+    LLM_MODEL: str = "qwen2.5:7b-instruct-q4_K_M"
+    LLM_PROVIDER: str = "ollama"
+    LLM_TIMEOUT_SECONDS: float = 120.0
     LLM_MAX_TOKENS: int = 1024
 
     # Vector Store (Pinecone)

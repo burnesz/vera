@@ -1,6 +1,6 @@
 import time
 import logging
-from typing import Dict, Any, Optional
+from typing import Dict, Any, Optional, Tuple
 import httpx
 
 from app.core.config import settings
@@ -14,7 +14,7 @@ class LLMError(Exception):
 
 
 class LLMConnectionError(LLMError):
-    """Exceção levantada quando o túnel ou servidor remoto está inacessível (RN-INF02)."""
+    """Exceção levantada quando o servidor local Ollama está inacessível (RN-INF02)."""
     pass
 
 
@@ -30,66 +30,92 @@ class LLMResponseError(LLMError):
 
 class LLMClient:
     """
-    Gateway de comunicação com o modelo de linguagem (Qwen 2.5) servido remotamente.
+    Gateway de comunicação com o modelo de linguagem (Qwen 2.5) servido localmente via Ollama.
     Atende aos requisitos de infraestrutura e resiliência:
-    - RN-INF01: URL dinâmica e configurável via settings.
-    - RN-INF02: Health-check com fallback gracioso.
-    - RN-INF03: Retry com backoff exponencial para estabilidade de rede.
-    - RN-INF04: Autenticação via header X-API-Key.
-    - RN-INF06: Suporte a modo mock para desenvolvimento/testes locais desacoplados.
+    - RN-INF01: URL e modelo configuráveis via settings / variáveis de ambiente.
+    - RN-INF02: Health-check prévio via API do Ollama (/api/tags) para conferir status e modelo ativo.
+    - RN-INF03: Retry com backoff exponencial para estabilidade operacional.
+    - RN-INF06: Suporte a modo mock para desenvolvimento e testes desacoplados.
     """
 
     def __init__(
         self,
         endpoint_url: Optional[str] = None,
-        api_key: Optional[str] = None,
+        model_name: Optional[str] = None,
         timeout_seconds: Optional[float] = None,
         max_retries: int = 3,
-        mock_mode: bool = False
+        mock_mode: bool = False,
+        **kwargs: Any
     ):
         self.endpoint_url = (endpoint_url or settings.LLM_ENDPOINT_URL).rstrip("/")
-        self.api_key = api_key or settings.LLM_API_KEY
+        self.model_name = model_name or getattr(settings, "LLM_MODEL", "qwen2.5:7b-instruct-q4_K_M")
         self.timeout_seconds = timeout_seconds or settings.LLM_TIMEOUT_SECONDS
         self.max_retries = max_retries
         self.mock_mode = mock_mode
 
     @property
     def headers(self) -> Dict[str, str]:
-        headers = {
-            "Content-Type": "application/json",
-            "ngrok-skip-browser-warning": "1"
+        return {
+            "Content-Type": "application/json"
         }
-        if self.api_key:
-            headers["X-API-Key"] = self.api_key
-        return headers
+
+    def _build_payload_and_url(
+        self,
+        prompt: str,
+        max_tokens: Optional[int] = None,
+        temperature: float = 0.7,
+        top_p: float = 0.9,
+        repetition_penalty: float = 1.1
+    ) -> Tuple[str, Dict[str, Any]]:
+        resolved_max_tokens = max_tokens if max_tokens is not None else settings.LLM_MAX_TOKENS
+
+        url = f"{self.endpoint_url}/api/generate"
+        payload = {
+            "model": self.model_name,
+            "prompt": prompt,
+            "stream": False,
+            "options": {
+                "num_predict": resolved_max_tokens,
+                "temperature": temperature,
+                "top_p": top_p,
+                "repeat_penalty": repetition_penalty
+            }
+        }
+        return url, payload
 
     def health_check(self) -> Dict[str, Any]:
         """
-        Executa verificação de disponibilidade no endpoint remoto (GET /health).
-        Retorna dicionário com status e tempo de resposta.
+        Executa verificação de disponibilidade no servidor Ollama local (GET /api/tags).
+        Retorna dicionário com status, modelo verificado e tempo de resposta.
         """
         if self.mock_mode or not self.endpoint_url:
             return {"status": "mock", "healthy": True, "message": "Modo Mock ativo"}
 
-        url = f"{self.endpoint_url}/health"
+        url = f"{self.endpoint_url}/api/tags"
         start_time = time.time()
         try:
             with httpx.Client(timeout=10.0) as client:
                 response = client.get(url, headers=self.headers)
                 latency_ms = round((time.time() - start_time) * 1000, 2)
                 if response.status_code == 200:
+                    data = response.json() if response.text and response.headers.get("content-type", "").startswith("application/json") else {}
+                    models = [m.get("name") for m in data.get("models", [])]
+                    model_available = any(self.model_name in m for m in models) if self.model_name else True
                     return {
                         "status": "healthy",
                         "healthy": True,
+                        "provider": "ollama",
+                        "model": self.model_name,
+                        "model_available": model_available,
                         "latency_ms": latency_ms,
-                        "details": response.json() if response.text else {}
+                        "details": data
                     }
                 return {
                     "status": "unhealthy",
                     "healthy": False,
                     "status_code": response.status_code,
                     "latency_ms": latency_ms,
-                    "message": f"Servidor remoto retornou HTTP {response.status_code}"
+                    "message": f"Servidor Ollama retornou HTTP {response.status_code}"
                 }
         except httpx.TimeoutException:
             return {
@@ -101,35 +127,41 @@ class LLMClient:
             return {
                 "status": "error",
                 "healthy": False,
-                "message": f"Falha de conexão com o túnel do LLM ({e})"
+                "message": f"Falha de conexão com o servidor Ollama ({e})"
             }
 
     async def ahealth_check(self) -> Dict[str, Any]:
         """
-        Versão assíncrona do health check.
+        Versão assíncrona do health check do Ollama local.
         """
         if self.mock_mode or not self.endpoint_url:
             return {"status": "mock", "healthy": True, "message": "Modo Mock ativo"}
 
-        url = f"{self.endpoint_url}/health"
+        url = f"{self.endpoint_url}/api/tags"
         start_time = time.time()
         try:
             async with httpx.AsyncClient(timeout=10.0) as client:
                 response = await client.get(url, headers=self.headers)
                 latency_ms = round((time.time() - start_time) * 1000, 2)
                 if response.status_code == 200:
+                    data = response.json() if response.text and response.headers.get("content-type", "").startswith("application/json") else {}
+                    models = [m.get("name") for m in data.get("models", [])]
+                    model_available = any(self.model_name in m for m in models) if self.model_name else True
                     return {
                         "status": "healthy",
                         "healthy": True,
+                        "provider": "ollama",
+                        "model": self.model_name,
+                        "model_available": model_available,
                         "latency_ms": latency_ms,
-                        "details": response.json() if response.text else {}
+                        "details": data
                     }
                 return {
                     "status": "unhealthy",
                     "healthy": False,
                     "status_code": response.status_code,
                     "latency_ms": latency_ms,
-                    "message": f"Servidor remoto retornou HTTP {response.status_code}"
+                    "message": f"Servidor Ollama retornou HTTP {response.status_code}"
                 }
         except httpx.TimeoutException:
             return {
@@ -141,13 +173,13 @@ class LLMClient:
             return {
                 "status": "error",
                 "healthy": False,
-                "message": f"Falha de conexão com o túnel do LLM ({e})"
+                "message": f"Falha de conexão com o servidor Ollama ({e})"
             }
 
     def generate(
         self,
         prompt: str,
-        session_id: Optional[str] = "default",
+        session_id: Optional[str] = None,
         max_tokens: Optional[int] = None,
         temperature: float = 0.7,
         top_p: float = 0.9,
@@ -159,22 +191,18 @@ class LLMClient:
         if self.mock_mode or not self.endpoint_url:
             return self._generate_mock_response(prompt)
 
-        resolved_max_tokens = max_tokens if max_tokens is not None else settings.LLM_MAX_TOKENS
-
-        url = f"{self.endpoint_url}/generate"
-        payload = {
-            "prompt": prompt,
-            "session_id": session_id or "default",
-            "max_tokens": resolved_max_tokens,
-            "temperature": temperature,
-            "top_p": top_p,
-            "repetition_penalty": repetition_penalty
-        }
+        url, payload = self._build_payload_and_url(
+            prompt=prompt,
+            max_tokens=max_tokens,
+            temperature=temperature,
+            top_p=top_p,
+            repetition_penalty=repetition_penalty
+        )
 
         last_exception = None
         for attempt in range(1, self.max_retries + 1):
             try:
-                logger.info(f"Enviando requisição de geração ao LLM (tentativa {attempt}/{self.max_retries}, max_tokens={resolved_max_tokens})...")
+                logger.info(f"Enviando requisição ao Ollama ({url}, tentativa {attempt}/{self.max_retries})...")
                 with httpx.Client(timeout=self.timeout_seconds) as client:
                     response = client.post(url, json=payload, headers=self.headers)
 
@@ -182,7 +210,7 @@ class LLMClient:
                         data = response.json()
                         if "response" in data:
                             return data["response"]
-                        raise LLMResponseError(f"Formato de resposta inesperado do LLM: {data}")
+                        raise LLMResponseError(f"Formato de resposta inesperado do Ollama: {data}")
 
                     if response.status_code in [502, 503, 504]:
                         logger.warning(f"Servidor retornou HTTP {response.status_code} na tentativa {attempt}.")
@@ -214,29 +242,25 @@ class LLMClient:
     async def agenerate(
         self,
         prompt: str,
-        session_id: Optional[str] = "default",
+        session_id: Optional[str] = None,
         max_tokens: Optional[int] = None,
         temperature: float = 0.7,
         top_p: float = 0.9,
         repetition_penalty: float = 1.1
     ) -> str:
         """
-        Versão assíncrona da geração de resposta.
+        Versão assíncrona da geração de resposta no Ollama.
         """
         if self.mock_mode or not self.endpoint_url:
             return self._generate_mock_response(prompt)
 
-        resolved_max_tokens = max_tokens if max_tokens is not None else settings.LLM_MAX_TOKENS
-
-        url = f"{self.endpoint_url}/generate"
-        payload = {
-            "prompt": prompt,
-            "session_id": session_id or "default",
-            "max_tokens": resolved_max_tokens,
-            "temperature": temperature,
-            "top_p": top_p,
-            "repetition_penalty": repetition_penalty
-        }
+        url, payload = self._build_payload_and_url(
+            prompt=prompt,
+            max_tokens=max_tokens,
+            temperature=temperature,
+            top_p=top_p,
+            repetition_penalty=repetition_penalty
+        )
 
         import asyncio
         last_exception = None
@@ -249,7 +273,7 @@ class LLMClient:
                         data = response.json()
                         if "response" in data:
                             return data["response"]
-                        raise LLMResponseError(f"Formato de resposta inesperado do LLM: {data}")
+                        raise LLMResponseError(f"Formato de resposta inesperado do Ollama: {data}")
 
                     if response.status_code in [502, 503, 504]:
                         logger.warning(f"Servidor retornou HTTP {response.status_code} na tentativa {attempt}.")

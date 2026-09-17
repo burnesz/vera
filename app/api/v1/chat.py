@@ -32,7 +32,7 @@ async def chat_with_vera(
     except LLMConnectionError as e:
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail=f"Serviço de LLM temporariamente indisponível. Verifique a conexão com o túnel remoto ({e})."
+            detail=f"Serviço de LLM temporariamente indisponível. Verifique se o daemon do Ollama está ativo ({e})."
         )
     except LLMTimeoutError as e:
         raise HTTPException(

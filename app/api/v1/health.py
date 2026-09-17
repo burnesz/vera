@@ -11,7 +11,7 @@ async def health_check() -> Dict[str, Any]:
     """
     Verificação abrangente do estado de saúde dos componentes do sistema VERA:
     - Status da API FastAPI
-    - Status e latência do servidor LLM remoto (Colab + túnel ngrok - RN-INF02)
+    - Status e latência do servidor LLM local (Ollama - RN-INF02)
     - Configurações de serviços
     """
     llm_client = LLMClient()
@@ -26,6 +26,7 @@ async def health_check() -> Dict[str, Any]:
             "version": settings.VERSION,
             "status": "online"
         },
+        "llm": llm_health,
         "llm_remote": llm_health,
         "vector_store": {
             "index_name": settings.PINECONE_INDEX_NAME,
