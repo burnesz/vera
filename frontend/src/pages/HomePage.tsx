@@ -4,14 +4,9 @@ import {
   FileCheck2,
   BotMessageSquare,
   Sparkles,
-  ArrowRight,
   GraduationCap,
-  Clock,
-  Award,
-  Layers,
   UserPlus,
   LogIn,
-  Lock,
 } from 'lucide-react';
 
 interface HomePageProps {
@@ -22,21 +17,32 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate }) => {
   const { user, isAuthenticated } = useAuth();
 
   return (
-    <div className="container" style={{ padding: '2.5rem 1.25rem 4rem' }}>
-      {/* Hero Section */}
+    <div
+      className="container"
+      style={{
+        padding: '3rem 1.25rem 4rem',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        minHeight: 'calc(100vh - var(--header-height) - 100px)',
+      }}
+    >
+      {/* Hero Principal Simplificado */}
       <section
         style={{
+          width: '100%',
+          maxWidth: '960px',
           background: 'linear-gradient(135deg, var(--ocean-900) 0%, var(--ocean-700) 100%)',
           borderRadius: 'var(--radius-lg)',
-          padding: '3rem 2.5rem',
+          padding: 'clamp(2rem, 5vw, 3.5rem)',
           color: 'var(--white)',
-          marginBottom: '3rem',
           boxShadow: 'var(--shadow-ocean)',
           position: 'relative',
           overflow: 'hidden',
         }}
       >
-        <div style={{ maxWidth: '780px', position: 'relative', zIndex: 2 }}>
+        <div style={{ maxWidth: '720px', position: 'relative', zIndex: 2 }}>
           <div
             style={{
               display: 'inline-flex',
@@ -57,11 +63,11 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate }) => {
 
           <h1
             style={{
-              fontSize: 'clamp(2rem, 4vw, 2.75rem)',
+              fontSize: 'clamp(2rem, 4.5vw, 2.75rem)',
               fontWeight: 800,
               color: 'var(--white)',
               lineHeight: 1.15,
-              marginBottom: '1rem',
+              marginBottom: '1.25rem',
             }}
           >
             {isAuthenticated && user
@@ -74,11 +80,13 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate }) => {
               fontSize: '1.1rem',
               color: 'var(--ocean-100)',
               lineHeight: 1.6,
-              marginBottom: '2rem',
-              maxWidth: '680px',
+              marginBottom: '2.25rem',
+              maxWidth: '640px',
             }}
           >
-            Simulados com o caderno completo de <strong>45 questões</strong>, diagnósticos detalhados por habilidade da Matriz de Referência e tutoria interativa com Chain-of-Thought.
+            Simulados com o caderno completo de <strong>45 questões</strong>, diagnósticos
+            detalhados por habilidade da Matriz de Referência e tutoria interativa
+            com Chain-of-Thought.
           </p>
 
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1rem' }}>
@@ -150,303 +158,13 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate }) => {
         <div
           style={{
             position: 'absolute',
-            right: '-40px',
-            bottom: '-40px',
+            right: '-30px',
+            bottom: '-30px',
             opacity: 0.08,
             pointerEvents: 'none',
           }}
         >
-          <GraduationCap size={360} />
-        </div>
-      </section>
-
-      {/* Seção de Módulos Principais */}
-      <section style={{ marginBottom: '3.5rem' }}>
-        <div style={{ marginBottom: '1.75rem' }}>
-          <h2 style={{ fontSize: '1.75rem', fontWeight: 800, color: 'var(--ocean-950)' }}>
-            Recursos Principais da Plataforma
-          </h2>
-          <p style={{ color: 'var(--text-muted)', fontSize: '0.95rem' }}>
-            Treine em condições reais de prova e receba orientações didáticas passo a passo
-          </p>
-        </div>
-
-        {/* Banner de Aviso de Acesso Exclusivo para Estudantes Cadastrados */}
-        {!isAuthenticated && (
-          <div
-            style={{
-              backgroundColor: 'var(--ocean-50)',
-              border: '1.5px solid var(--border-ocean)',
-              borderRadius: 'var(--radius-md)',
-              padding: '1rem 1.25rem',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              gap: '1rem',
-              marginBottom: '1.75rem',
-              flexWrap: 'wrap',
-            }}
-          >
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-              <div
-                style={{
-                  width: '38px',
-                  height: '38px',
-                  borderRadius: '50%',
-                  backgroundColor: 'var(--ocean-200)',
-                  color: 'var(--ocean-900)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  flexShrink: 0,
-                }}
-              >
-                <Lock size={20} />
-              </div>
-              <div>
-                <strong style={{ fontSize: '0.95rem', color: 'var(--ocean-950)' }}>
-                  Acesso Exclusivo para Estudantes Cadastrados
-                </strong>
-                <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
-                  Cadastre-se gratuitamente para gerar simulados de 45 itens e salvar seu desempenho por habilidade da Matriz do ENEM.
-                </p>
-              </div>
-            </div>
-            <button
-              onClick={() => onNavigate('register')}
-              className="btn btn-primary btn-sm"
-              style={{ fontWeight: 700 }}
-            >
-              Criar Conta Gratuita
-            </button>
-          </div>
-        )}
-
-        <div
-          style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))',
-            gap: '1.75rem',
-          }}
-        >
-          {/* Card 1: Simulado Geral */}
-          <div
-            className="card"
-            style={{
-              display: 'flex',
-              flexDirection: 'column',
-              justifyContent: 'space-between',
-              borderTop: '4px solid var(--ocean-600)',
-            }}
-          >
-            <div>
-              <div
-                style={{
-                  width: '48px',
-                  height: '48px',
-                  borderRadius: '12px',
-                  backgroundColor: 'var(--ocean-100)',
-                  color: 'var(--ocean-700)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  marginBottom: '1.25rem',
-                }}
-              >
-                <FileCheck2 size={26} />
-              </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
-                <span className="badge badge-ocean">Caderno Oficial</span>
-                <span className="badge badge-dark">45 Questões</span>
-              </div>
-              <h3 style={{ fontSize: '1.35rem', fontWeight: 800, color: 'var(--text-primary)', marginBottom: '0.75rem' }}>
-                Simulado Geral de Matemática
-              </h3>
-              <p style={{ color: 'var(--text-secondary)', fontSize: '0.925rem', lineHeight: 1.6, marginBottom: '1.25rem' }}>
-                Realize um teste completo no modelo do segundo dia do ENEM. Acompanhe o tempo pelo cronômetro integrado, navegue pela grade de 45 questões e receba o gabarito detalhado.
-              </p>
-            </div>
-
-            <button
-              onClick={() => onNavigate(isAuthenticated ? 'simulado' : 'register')}
-              className="btn btn-primary"
-              style={{ width: '100%', justifyContent: 'space-between' }}
-            >
-              <span>{isAuthenticated ? 'Começar Prova' : 'Cadastre-se para Fazer'}</span>
-              <ArrowRight size={18} />
-            </button>
-          </div>
-
-          {/* Card 2: Chatbot Especialista */}
-          <div
-            className="card"
-            style={{
-              display: 'flex',
-              flexDirection: 'column',
-              justifyContent: 'space-between',
-              borderTop: '4px solid var(--ocean-500)',
-            }}
-          >
-            <div>
-              <div
-                style={{
-                  width: '48px',
-                  height: '48px',
-                  borderRadius: '12px',
-                  backgroundColor: 'var(--ocean-100)',
-                  color: 'var(--ocean-700)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  marginBottom: '1.25rem',
-                }}
-              >
-                <BotMessageSquare size={26} />
-              </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
-                <span className="badge badge-ocean">RAG + CoT</span>
-                <span className="badge badge-success">Online</span>
-              </div>
-              <h3 style={{ fontSize: '1.35rem', fontWeight: 800, color: 'var(--text-primary)', marginBottom: '0.75rem' }}>
-                Tutora VERA (IA Especialista)
-              </h3>
-              <p style={{ color: 'var(--text-secondary)', fontSize: '0.925rem', lineHeight: 1.6, marginBottom: '1.25rem' }}>
-                Converse com a tutora inteligente treinada para explicar erros, apresentar resoluções guiadas em fórmulas matemáticas e sugerir estratégias práticas para o ENEM.
-              </p>
-            </div>
-
-            <button
-              onClick={() => onNavigate(isAuthenticated ? 'chat' : 'register')}
-              className="btn btn-outline"
-              style={{ width: '100%', justifyContent: 'space-between' }}
-            >
-              <span>{isAuthenticated ? 'Abrir Conversa' : 'Cadastre-se para Acessar'}</span>
-              <ArrowRight size={18} />
-            </button>
-          </div>
-
-          {/* Card 3: Matriz de Referência */}
-          <div
-            className="card"
-            style={{
-              display: 'flex',
-              flexDirection: 'column',
-              justifyContent: 'space-between',
-              borderTop: '4px solid var(--ocean-800)',
-            }}
-          >
-            <div>
-              <div
-                style={{
-                  width: '48px',
-                  height: '48px',
-                  borderRadius: '12px',
-                  backgroundColor: 'var(--ocean-100)',
-                  color: 'var(--ocean-700)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  marginBottom: '1.25rem',
-                }}
-              >
-                <Layers size={26} />
-              </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
-                <span className="badge badge-ocean">INEP / ENEM</span>
-                <span className="badge badge-dark">H01 – H30</span>
-              </div>
-              <h3 style={{ fontSize: '1.35rem', fontWeight: 800, color: 'var(--text-primary)', marginBottom: '0.75rem' }}>
-                Matriz de Referência Oficial
-              </h3>
-              <p style={{ color: 'var(--text-secondary)', fontSize: '0.925rem', lineHeight: 1.6, marginBottom: '1.25rem' }}>
-                Todas as questões e feedbacks pedagógicos da plataforma são rigorosamente ancorados nas 7 Competências de Área e 30 Habilidades oficiais de Matemática do INEP.
-              </p>
-            </div>
-
-            <div
-              style={{
-                backgroundColor: 'var(--ocean-50)',
-                borderRadius: 'var(--radius-md)',
-                padding: '0.75rem 1rem',
-                fontSize: '0.85rem',
-                color: 'var(--ocean-900)',
-                fontWeight: 600,
-                textAlign: 'center',
-              }}
-            >
-              30 Habilidades Cadastradas no Sistema
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Destaques Técnicos do Projeto (TCC) */}
-      <section
-        style={{
-          backgroundColor: 'var(--white)',
-          borderRadius: 'var(--radius-lg)',
-          border: '1px solid var(--border-light)',
-          padding: '2rem 2.5rem',
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
-          gap: '2rem',
-        }}
-      >
-        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-          <div
-            style={{
-              padding: '0.85rem',
-              backgroundColor: 'var(--ocean-100)',
-              borderRadius: 'var(--radius-md)',
-              color: 'var(--ocean-700)',
-            }}
-          >
-            <Clock size={28} />
-          </div>
-          <div>
-            <div style={{ fontSize: '1.4rem', fontWeight: 800, color: 'var(--text-primary)' }}>45 Itens</div>
-            <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)', fontWeight: 500 }}>
-              Padrão Prova Oficial
-            </div>
-          </div>
-        </div>
-
-        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-          <div
-            style={{
-              padding: '0.85rem',
-              backgroundColor: 'var(--ocean-100)',
-              borderRadius: 'var(--radius-md)',
-              color: 'var(--ocean-700)',
-            }}
-          >
-            <Layers size={28} />
-          </div>
-          <div>
-            <div style={{ fontSize: '1.4rem', fontWeight: 800, color: 'var(--text-primary)' }}>30 Habilidades</div>
-            <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)', fontWeight: 500 }}>
-              Cobertura Integral (H01–H30)
-            </div>
-          </div>
-        </div>
-
-        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-          <div
-            style={{
-              padding: '0.85rem',
-              backgroundColor: 'var(--ocean-100)',
-              borderRadius: 'var(--radius-md)',
-              color: 'var(--ocean-700)',
-            }}
-          >
-            <Award size={28} />
-          </div>
-          <div>
-            <div style={{ fontSize: '1.4rem', fontWeight: 800, color: 'var(--text-primary)' }}>100% Gratuito</div>
-            <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)', fontWeight: 500 }}>
-              Inferência Local e Ética
-            </div>
-          </div>
+          <GraduationCap size={340} />
         </div>
       </section>
     </div>

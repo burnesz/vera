@@ -9,7 +9,6 @@ import {
   UserPlus,
   Menu,
   X,
-  Lock,
 } from 'lucide-react';
 
 interface NavbarProps {
@@ -98,52 +97,41 @@ export const Navbar: React.FC<NavbarProps> = ({ currentPage, onNavigate }) => {
           </div>
         </div>
 
-        {/* Desktop Navigation Links */}
-        <nav
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '0.75rem',
-          }}
-          className="desktop-nav"
-        >
-          <button
-            onClick={() => handleNav('home')}
-            className={`btn ${currentPage === 'home' ? 'btn-primary' : 'btn-ghost'}`}
+        {/* Desktop Navigation Links (Exibidos apenas para estudantes autenticados) */}
+        {isAuthenticated && (
+          <nav
             style={{
-              fontWeight: currentPage === 'home' ? 700 : 500,
-              fontSize: '0.925rem',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.75rem',
             }}
+            className="desktop-nav"
           >
-            Início
-          </button>
+            <button
+              onClick={() => handleNav('simulado')}
+              className={`btn ${currentPage === 'simulado' ? 'btn-primary' : 'btn-ghost'}`}
+              style={{
+                fontWeight: currentPage === 'simulado' ? 700 : 500,
+                fontSize: '0.925rem',
+              }}
+            >
+              <FileCheck2 size={18} />
+              Simulado Geral (45)
+            </button>
 
-          <button
-            onClick={() => handleNav('simulado')}
-            className={`btn ${currentPage === 'simulado' ? 'btn-primary' : 'btn-ghost'}`}
-            style={{
-              fontWeight: currentPage === 'simulado' ? 700 : 500,
-              fontSize: '0.925rem',
-            }}
-          >
-            <FileCheck2 size={18} />
-            Simulado Geral (45)
-            {!isAuthenticated && <Lock size={13} style={{ opacity: 0.6 }} />}
-          </button>
-
-          <button
-            onClick={() => handleNav('chat')}
-            className={`btn ${currentPage === 'chat' ? 'btn-primary' : 'btn-ghost'}`}
-            style={{
-              fontWeight: currentPage === 'chat' ? 700 : 500,
-              fontSize: '0.925rem',
-            }}
-          >
-            <BotMessageSquare size={18} />
-            Tutora VERA
-            {!isAuthenticated && <Lock size={13} style={{ opacity: 0.6 }} />}
-          </button>
-        </nav>
+            <button
+              onClick={() => handleNav('chat')}
+              className={`btn ${currentPage === 'chat' ? 'btn-primary' : 'btn-ghost'}`}
+              style={{
+                fontWeight: currentPage === 'chat' ? 700 : 500,
+                fontSize: '0.925rem',
+              }}
+            >
+              <BotMessageSquare size={18} />
+              Tutora VERA
+            </button>
+          </nav>
+        )}
 
         {/* Auth Actions (Desktop) */}
         <div
@@ -247,38 +235,29 @@ export const Navbar: React.FC<NavbarProps> = ({ currentPage, onNavigate }) => {
           }}
           className="mobile-menu"
         >
-          <button
-            onClick={() => handleNav('home')}
-            className={`btn ${currentPage === 'home' ? 'btn-primary' : 'btn-ghost'}`}
-            style={{ justifyContent: 'flex-start', width: '100%' }}
-          >
-            Início
-          </button>
-          <button
-            onClick={() => handleNav('simulado')}
-            className={`btn ${currentPage === 'simulado' ? 'btn-primary' : 'btn-ghost'}`}
-            style={{ justifyContent: 'flex-start', width: '100%', gap: '0.65rem' }}
-          >
-            <FileCheck2 size={18} />
-            <span>Simulado Geral (45 Questões)</span>
-            {!isAuthenticated && <Lock size={14} style={{ marginLeft: 'auto', opacity: 0.6 }} />}
-          </button>
-          <button
-            onClick={() => handleNav('chat')}
-            className={`btn ${currentPage === 'chat' ? 'btn-primary' : 'btn-ghost'}`}
-            style={{ justifyContent: 'flex-start', width: '100%', gap: '0.65rem' }}
-          >
-            <BotMessageSquare size={18} />
-            <span>Tutora Especialista VERA</span>
-            {!isAuthenticated && <Lock size={14} style={{ marginLeft: 'auto', opacity: 0.6 }} />}
-          </button>
-
-          <div style={{ height: '1px', backgroundColor: 'var(--border-light)', margin: '0.5rem 0' }} />
-
           {isAuthenticated && user ? (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+              <button
+                onClick={() => handleNav('simulado')}
+                className={`btn ${currentPage === 'simulado' ? 'btn-primary' : 'btn-ghost'}`}
+                style={{ justifyContent: 'flex-start', width: '100%', gap: '0.65rem' }}
+              >
+                <FileCheck2 size={18} />
+                <span>Simulado Geral (45 Questões)</span>
+              </button>
+              <button
+                onClick={() => handleNav('chat')}
+                className={`btn ${currentPage === 'chat' ? 'btn-primary' : 'btn-ghost'}`}
+                style={{ justifyContent: 'flex-start', width: '100%', gap: '0.65rem' }}
+              >
+                <BotMessageSquare size={18} />
+                <span>Tutora Especialista VERA</span>
+              </button>
+
+              <div style={{ height: '1px', backgroundColor: 'var(--border-light)', margin: '0.25rem 0' }} />
+
               <div style={{ fontSize: '0.9rem', fontWeight: 600, color: 'var(--text-primary)' }}>
-                Conectado como: <strong>{user.nome}</strong> ({user.email})
+                Conectado como: <strong>{user.nome}</strong>
               </div>
               <button
                 onClick={() => {
