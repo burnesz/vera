@@ -84,7 +84,7 @@ const AppContent: React.FC = () => {
             onOpenSidebar={() => setSidebarOpen(true)}
           />
 
-          <main style={{ flex: 1 }}>
+          <main style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
             {currentPage === 'home' && <HomePage onNavigate={navigateTo} />}
             {currentPage === 'simulado' && <SimuladoPage onNavigate={navigateTo} />}
             {currentPage === 'chat' && <ChatPage onNavigate={navigateTo} />}
@@ -93,18 +93,20 @@ const AppContent: React.FC = () => {
             )}
           </main>
 
-          <footer
-            style={{
-              padding: '1.25rem 2rem',
-              textAlign: 'center',
-              color: 'var(--text-muted)',
-              fontSize: '0.8rem',
-              borderTop: '1px solid var(--border-light)',
-              backgroundColor: 'var(--white)',
-            }}
-          >
-            VERA © 2026 — Plataforma RAG para Matemática no ENEM • Ambiente do Estudante
-          </footer>
+          {currentPage !== 'chat' && (
+            <footer
+              style={{
+                padding: '1.25rem 2rem',
+                textAlign: 'center',
+                color: 'var(--text-muted)',
+                fontSize: '0.8rem',
+                borderTop: '1px solid var(--border-light)',
+                backgroundColor: 'var(--white)',
+              }}
+            >
+              VERA © 2026 — Plataforma RAG para Matemática no ENEM • Ambiente do Estudante
+            </footer>
+          )}
         </div>
       </div>
     );
