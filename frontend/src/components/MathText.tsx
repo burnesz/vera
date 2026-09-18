@@ -61,35 +61,11 @@ function parseTableRow(line: string): string[] {
     trimmed = trimmed.slice(0, -1);
   }
 
-  const cells: string[] = [];
-  let currentCell = '';
-  let inDollar = false;
-  let inParen = false;
+  // Mascara pipes '|' que estejam estritamente dentro de expressões matemáticas LaTeX para não quebrar colunas
+  const mathMaskRegex = /(\\\([\s\S]*?\\\)|\$\$[\s\S]*?\$\$|(?<![a-zA-Z\\])\$(?!\s)[^\n$]+?(?<!\s)\$(?!\d))/g;
+  const masked = trimmed.replace(mathMaskRegex, (match) => match.replace(/\|/g, '\uFFF0'));
 
-  for (let idx = 0; idx < trimmed.length; idx++) {
-    const char = trimmed[idx];
-    const prevChar = idx > 0 ? trimmed[idx - 1] : '';
-    const nextChar = idx + 1 < trimmed.length ? trimmed[idx + 1] : '';
-
-    if (char === '$' && prevChar !== '\\') {
-      inDollar = !inDollar;
-      currentCell += char;
-    } else if (char === '\\' && nextChar === '(') {
-      inParen = true;
-      currentCell += char;
-    } else if (char === '\\' && nextChar === ')') {
-      inParen = false;
-      currentCell += char;
-    } else if (char === '|' && !inDollar && !inParen) {
-      cells.push(currentCell.trim());
-      currentCell = '';
-    } else {
-      currentCell += char;
-    }
-  }
-  cells.push(currentCell.trim());
-
-  return cells;
+  return masked.split('|').map((cell) => cell.replace(/\uFFF0/g, '|').trim());
 }
 
 // Analisa um bloco de texto identificando tabelas Markdown e parágrafos de texto
@@ -288,10 +264,10 @@ function renderParagraphs(text: string, keyPrefix: string | number) {
 function renderInlineTokens(text: string): React.ReactNode[] {
   // Regex captura:
   // 1. \( ... \)
-  // 2. $ ... $
-  // 3. ** ... **
-  // 4. * ... *
-  const inlineRegex = /(\\\([\s\S]*?\\\)|\$[^$]+?\$|\*\*[^*]+?\*\*|\*[^*]+?\*)/g;
+  // 2. ** ... **
+  // 3. * ... *
+  // 4. $ ... $ (delimitador LaTeX inline estrito: não precedido por letras/moedas como R$, não seguido/precedido por espaços, e fecha sem dígito subsequente)
+  const inlineRegex = /(\\\([\s\S]*?\\\)|\*\*[^*]+?\*\*|\*[^*]+?\*|(?<![a-zA-Z\\])\$(?!\s)[^\n$]+?(?<!\s)\$(?!\d))/g;
   const parts = text.split(inlineRegex);
 
   return parts.map((part, index) => {
