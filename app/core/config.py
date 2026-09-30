@@ -64,7 +64,8 @@ class Settings(BaseSettings):
 
     # Namespaces Pinecone (RN-VETOR01)
     NAMESPACE_MATERIAIS_DIDATICOS: str = "materiais_didaticos"
-    NAMESPACE_QUESTOES_HISTORICAS: str = "questoes_historicas"
+    NAMESPACE_QUESTOES_ENEM: str = "questoes_enem"
+    NAMESPACE_QUESTOES_HISTORICAS: str = "questoes_enem"
 
     # Administrador Padrão (Auto-provisionamento seguro via .env no startup)
     ADMIN_NAME: str = "Administrador VERA"

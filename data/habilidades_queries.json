@@ -1,0 +1,212 @@
+[
+  {
+    "competencia": "Competência de área 1 - Construir significados para os números naturais, inteiros, racionais e reais.",
+    "habilidade": "H1",
+    "habilidade_codigo": "H01",
+    "descricao_original": "Reconhecer, no contexto social, diferentes significados e representações dos números e operações - naturais, inteiros, racionais ou reais.",
+    "query": "Reconhecer em situações do cotidiano diferentes significados e representações de números naturais, inteiros, racionais e reais, como frações, decimais, porcentagens e números negativos, e interpretar o sentido das operações aritméticas nesses contextos sociais."
+  },
+  {
+    "competencia": "Competência de área 1 - Construir significados para os números naturais, inteiros, racionais e reais.",
+    "habilidade": "H2",
+    "habilidade_codigo": "H02",
+    "descricao_original": "Identificar padrões numéricos ou princípios de contagem.",
+    "query": "Identificar padrões e regularidades em sequências numéricas e progressões aritméticas ou geométricas, ou aplicar princípios de contagem, como o princípio multiplicativo, para determinar o número de possibilidades, agrupamentos ou termos de uma sequência."
+  },
+  {
+    "competencia": "Competência de área 1 - Construir significados para os números naturais, inteiros, racionais e reais.",
+    "habilidade": "H3",
+    "habilidade_codigo": "H03",
+    "descricao_original": "Resolver situação-problema envolvendo conhecimentos numéricos.",
+    "query": "Resolver situação-problema contextualizada que exige cálculos com números racionais e reais, envolvendo operações, razões, porcentagem, juros, divisibilidade, fatoração ou desigualdades, como em compras, descontos, orçamentos e divisão de quantidades."
+  },
+  {
+    "competencia": "Competência de área 1 - Construir significados para os números naturais, inteiros, racionais e reais.",
+    "habilidade": "H4",
+    "habilidade_codigo": "H04",
+    "descricao_original": "Avaliar a razoabilidade de um resultado numérico na construção de argumentos sobre afirmações quantitativas.",
+    "query": "Avaliar a razoabilidade de um resultado numérico, por meio de estimativas e comparações de valores, para julgar a validade de afirmações quantitativas e construir argumentos que sustentem ou refutem conclusões baseadas em números."
+  },
+  {
+    "competencia": "Competência de área 1 - Construir significados para os números naturais, inteiros, racionais e reais.",
+    "habilidade": "H5",
+    "habilidade_codigo": "H05",
+    "descricao_original": "Avaliar propostas de intervenção na realidade utilizando conhecimentos numéricos.",
+    "query": "Avaliar e comparar propostas de intervenção em situações reais, como planos de pagamento, tarifas ou distribuição de recursos, usando cálculos com porcentagens, razões e proporções para decidir qual alternativa é mais vantajosa ou viável."
+  },
+  {
+    "competencia": "Competência de área 2 - Utilizar o conhecimento geométrico para realizar a leitura e a representação da realidade e agir sobre ela.",
+    "habilidade": "H6",
+    "habilidade_codigo": "H06",
+    "descricao_original": "Interpretar a localização e a movimentação de pessoas/objetos no espaço tridimensional e sua representação no espaço bidimensional.",
+    "query": "Interpretar a localização e a movimentação de pessoas ou objetos no espaço tridimensional a partir de suas representações planas, como vistas, projeções, planificações, plantas baixas e mapas, relacionando posições, trajetos e pontos de vista."
+  },
+  {
+    "competencia": "Competência de área 2 - Utilizar o conhecimento geométrico para realizar a leitura e a representação da realidade e agir sobre ela.",
+    "habilidade": "H7",
+    "habilidade_codigo": "H07",
+    "descricao_original": "Identificar características de figuras planas ou espaciais.",
+    "query": "Identificar características e propriedades de figuras geométricas planas e espaciais, como polígonos, circunferências, prismas, pirâmides, cilindros, cones e esferas, reconhecendo elementos como lados, ângulos, faces, arestas, vértices, simetrias e posições de retas."
+  },
+  {
+    "competencia": "Competência de área 2 - Utilizar o conhecimento geométrico para realizar a leitura e a representação da realidade e agir sobre ela.",
+    "habilidade": "H8",
+    "habilidade_codigo": "H08",
+    "descricao_original": "Resolver situação-problema que envolva conhecimentos geométricos de espaço e forma.",
+    "query": "Resolver situação-problema de espaço e forma aplicando semelhança e congruência de triângulos, teorema de Tales, relações métricas no triângulo, trigonometria do ângulo agudo e propriedades de ângulos e circunferências em contextos práticos."
+  },
+  {
+    "competencia": "Competência de área 2 - Utilizar o conhecimento geométrico para realizar a leitura e a representação da realidade e agir sobre ela.",
+    "habilidade": "H9",
+    "habilidade_codigo": "H09",
+    "descricao_original": "Utilizar conhecimentos geométricos de espaço e forma na seleção de argumentos propostos como solução de problemas do cotidiano.",
+    "query": "Selecionar, entre argumentos ou soluções propostas para um problema do cotidiano, aquele justificado corretamente por propriedades geométricas de espaço e forma, como semelhança, simetria, ângulos e características de figuras planas e espaciais."
+  },
+  {
+    "competencia": "Competência de área 3 - Construir noções de grandezas e medidas para a compreensão da realidade e a solução de problemas do cotidiano.",
+    "habilidade": "H10",
+    "habilidade_codigo": "H10",
+    "descricao_original": "Identificar relações entre grandezas e unidades de medida.",
+    "query": "Identificar relações entre grandezas e suas unidades de medida, realizando conversões entre unidades de comprimento, área, volume, capacidade, massa e tempo e reconhecendo a unidade adequada para expressar cada grandeza."
+  },
+  {
+    "competencia": "Competência de área 3 - Construir noções de grandezas e medidas para a compreensão da realidade e a solução de problemas do cotidiano.",
+    "habilidade": "H11",
+    "habilidade_codigo": "H11",
+    "descricao_original": "Utilizar a noção de escalas na leitura de representação de situação do cotidiano.",
+    "query": "Utilizar a noção de escala para ler e interpretar mapas, plantas, maquetes e desenhos técnicos, convertendo medidas do desenho em medidas reais, e vice-versa, a partir da razão entre as dimensões representadas e as verdadeiras."
+  },
+  {
+    "competencia": "Competência de área 3 - Construir noções de grandezas e medidas para a compreensão da realidade e a solução de problemas do cotidiano.",
+    "habilidade": "H12",
+    "habilidade_codigo": "H12",
+    "descricao_original": "Resolver situação-problema que envolva medidas de grandezas.",
+    "query": "Resolver situação-problema que envolva o cálculo de medidas de grandezas, como perímetros, áreas de superfícies, volumes e capacidades de recipientes, em contextos como construção, reforma, embalagens e armazenamento de líquidos."
+  },
+  {
+    "competencia": "Competência de área 3 - Construir noções de grandezas e medidas para a compreensão da realidade e a solução de problemas do cotidiano.",
+    "habilidade": "H13",
+    "habilidade_codigo": "H13",
+    "descricao_original": "Avaliar o resultado de uma medição na construção de um argumento consistente.",
+    "query": "Avaliar a precisão e a adequação do resultado de uma medição, considerando o instrumento, a unidade utilizada e possíveis erros ou aproximações, para usá-lo na construção de um argumento consistente sobre dimensões ou quantidades."
+  },
+  {
+    "competencia": "Competência de área 3 - Construir noções de grandezas e medidas para a compreensão da realidade e a solução de problemas do cotidiano.",
+    "habilidade": "H14",
+    "habilidade_codigo": "H14",
+    "descricao_original": "Avaliar proposta de intervenção na realidade utilizando conhecimentos geométricos relacionados a grandezas e medidas.",
+    "query": "Avaliar propostas de intervenção na realidade, como projetos de reforma, ocupação de terrenos ou fabricação de embalagens, com base em cálculos geométricos de comprimentos, áreas e volumes, decidindo qual opção atende melhor às condições exigidas."
+  },
+  {
+    "competencia": "Competência de área 4 - Construir noções de variação de grandezas para a compreensão da realidade e a solução de problemas do cotidiano.",
+    "habilidade": "H15",
+    "habilidade_codigo": "H15",
+    "descricao_original": "Identificar a relação de dependência entre grandezas.",
+    "query": "Identificar a relação de dependência entre grandezas em situações do cotidiano, reconhecendo a variável dependente e a independente e descrevendo, de forma qualitativa, como a variação de uma grandeza afeta a outra."
+  },
+  {
+    "competencia": "Competência de área 4 - Construir noções de variação de grandezas para a compreensão da realidade e a solução de problemas do cotidiano.",
+    "habilidade": "H16",
+    "habilidade_codigo": "H16",
+    "descricao_original": "Resolver situação-problema envolvendo a variação de grandezas, direta ou inversamente proporcionais.",
+    "query": "Resolver situação-problema com grandezas diretamente ou inversamente proporcionais, usando razões, proporções e regra de três simples ou composta, como em receitas, consumo de combustível, velocidade e tempo ou divisão proporcional de valores."
+  },
+  {
+    "competencia": "Competência de área 4 - Construir noções de variação de grandezas para a compreensão da realidade e a solução de problemas do cotidiano.",
+    "habilidade": "H17",
+    "habilidade_codigo": "H17",
+    "descricao_original": "Analisar informações envolvendo a variação de grandezas como recurso para a construção de argumentação.",
+    "query": "Analisar informações sobre a variação de grandezas proporcionais ou não proporcionais, comparando taxas e razões, para construir ou avaliar argumentos e justificar conclusões sobre como uma grandeza se altera quando outra varia."
+  },
+  {
+    "competencia": "Competência de área 4 - Construir noções de variação de grandezas para a compreensão da realidade e a solução de problemas do cotidiano.",
+    "habilidade": "H18",
+    "habilidade_codigo": "H18",
+    "descricao_original": "Avaliar propostas de intervenção na realidade envolvendo variação de grandezas.",
+    "query": "Avaliar propostas de intervenção na realidade que dependem da variação proporcional entre grandezas, como ajuste de produção, consumo, custo ou tempo de execução, escolhendo a alternativa mais adequada com base em razões e proporções."
+  },
+  {
+    "competencia": "Competência de área 5 - Modelar e resolver problemas que envolvem variáveis socioeconômicas ou técnico-científicas, usando representações algébricas.",
+    "habilidade": "H19",
+    "habilidade_codigo": "H19",
+    "descricao_original": "Identificar representações algébricas que expressem a relação entre grandezas.",
+    "query": "Identificar a expressão algébrica, fórmula ou lei de formação de uma função que representa a relação entre grandezas descrita em uma situação real, como funções do primeiro e do segundo graus, exponenciais ou logarítmicas."
+  },
+  {
+    "competencia": "Competência de área 5 - Modelar e resolver problemas que envolvem variáveis socioeconômicas ou técnico-científicas, usando representações algébricas.",
+    "habilidade": "H20",
+    "habilidade_codigo": "H20",
+    "descricao_original": "Interpretar gráfico cartesiano que represente relações entre grandezas.",
+    "query": "Interpretar gráfico cartesiano que representa a relação entre duas grandezas, analisando crescimento, decrescimento, taxa de variação, pontos de máximo e mínimo, intersecções com os eixos e o significado desses elementos no contexto."
+  },
+  {
+    "competencia": "Competência de área 5 - Modelar e resolver problemas que envolvem variáveis socioeconômicas ou técnico-científicas, usando representações algébricas.",
+    "habilidade": "H21",
+    "habilidade_codigo": "H21",
+    "descricao_original": "Resolver situação-problema cuja modelagem envolva conhecimentos algébricos.",
+    "query": "Resolver situação-problema modelando-a algebricamente por meio de equações, inequações, sistemas de equações ou funções polinomiais, exponenciais, logarítmicas e trigonométricas, e interpretar a solução obtida no contexto do problema."
+  },
+  {
+    "competencia": "Competência de área 5 - Modelar e resolver problemas que envolvem variáveis socioeconômicas ou técnico-científicas, usando representações algébricas.",
+    "habilidade": "H22",
+    "habilidade_codigo": "H22",
+    "descricao_original": "Utilizar conhecimentos algébricos/geométricos como recurso para a construção de argumentação.",
+    "query": "Utilizar conhecimentos algébricos e geométricos do plano cartesiano, como equações de retas e circunferências, paralelismo e perpendicularidade, para construir ou validar argumentos matemáticos sobre relações entre grandezas."
+  },
+  {
+    "competencia": "Competência de área 5 - Modelar e resolver problemas que envolvem variáveis socioeconômicas ou técnico-científicas, usando representações algébricas.",
+    "habilidade": "H23",
+    "habilidade_codigo": "H23",
+    "descricao_original": "Avaliar propostas de intervenção na realidade utilizando conhecimentos algébricos.",
+    "query": "Avaliar propostas de intervenção na realidade, como planos de tarifas, contratos ou modelos de custo e receita, comparando funções e expressões algébricas para determinar a partir de que valor uma alternativa se torna mais vantajosa."
+  },
+  {
+    "competencia": "Competência de área 6 - Interpretar informações de natureza científica e social obtidas da leitura de gráficos e tabelas, realizando previsão de tendência, extrapolação, interpolação e interpretação.",
+    "habilidade": "H24",
+    "habilidade_codigo": "H24",
+    "descricao_original": "Utilizar informações expressas em gráficos ou tabelas para fazer inferências.",
+    "query": "Fazer inferências a partir de dados apresentados em gráficos de barras, de setores, de linhas ou em tabelas, identificando tendências e realizando previsões, interpolações ou extrapolações sobre fenômenos científicos e sociais."
+  },
+  {
+    "competencia": "Competência de área 6 - Interpretar informações de natureza científica e social obtidas da leitura de gráficos e tabelas, realizando previsão de tendência, extrapolação, interpolação e interpretação.",
+    "habilidade": "H25",
+    "habilidade_codigo": "H25",
+    "descricao_original": "Resolver problema com dados apresentados em tabelas ou gráficos.",
+    "query": "Resolver problema cujos dados numéricos estão em tabelas ou gráficos, extraindo valores, calculando diferenças, totais, razões ou porcentagens e comparando informações para obter a resposta solicitada."
+  },
+  {
+    "competencia": "Competência de área 6 - Interpretar informações de natureza científica e social obtidas da leitura de gráficos e tabelas, realizando previsão de tendência, extrapolação, interpolação e interpretação.",
+    "habilidade": "H26",
+    "habilidade_codigo": "H26",
+    "descricao_original": "Analisar informações expressas em gráficos ou tabelas como recurso para a construção de argumentos.",
+    "query": "Analisar criticamente informações expressas em gráficos e tabelas para construir ou avaliar argumentos, verificando se conclusões e afirmações sobre dados científicos ou sociais são sustentadas pela leitura correta das representações."
+  },
+  {
+    "competencia": "Competência de área 7 - Compreender o caráter aleatório e não-determinístico dos fenômenos naturais e sociais e utilizar instrumentos adequados para medidas, determinação de amostras e cálculos de probabilidade para interpretar informações de variáveis apresentadas em uma distribuição estatística.",
+    "habilidade": "H27",
+    "habilidade_codigo": "H27",
+    "descricao_original": "Calcular medidas de tendência central ou de dispersão de um conjunto de dados expressos em uma tabela de frequências de dados agrupados (não em classes) ou em gráficos.",
+    "query": "Calcular média aritmética, média ponderada, moda, mediana, variância ou desvio padrão de um conjunto de dados apresentados em tabela de frequências, sem agrupamento em classes, ou em gráficos."
+  },
+  {
+    "competencia": "Competência de área 7 - Compreender o caráter aleatório e não-determinístico dos fenômenos naturais e sociais e utilizar instrumentos adequados para medidas, determinação de amostras e cálculos de probabilidade para interpretar informações de variáveis apresentadas em uma distribuição estatística.",
+    "habilidade": "H28",
+    "habilidade_codigo": "H28",
+    "descricao_original": "Resolver situação-problema que envolva conhecimentos de estatística e probabilidade.",
+    "query": "Resolver situação-problema de estatística e probabilidade, calculando a probabilidade de eventos simples, complementares ou sucessivos, ou interpretando medidas estatísticas, em contextos como sorteios, jogos, pesquisas e controle de qualidade."
+  },
+  {
+    "competencia": "Competência de área 7 - Compreender o caráter aleatório e não-determinístico dos fenômenos naturais e sociais e utilizar instrumentos adequados para medidas, determinação de amostras e cálculos de probabilidade para interpretar informações de variáveis apresentadas em uma distribuição estatística.",
+    "habilidade": "H29",
+    "habilidade_codigo": "H29",
+    "descricao_original": "Utilizar conhecimentos de estatística e probabilidade como recurso para a construção de argumentação.",
+    "query": "Utilizar medidas estatísticas e cálculos de probabilidade para construir argumentos consistentes, comparando chances de eventos ou o comportamento de conjuntos de dados para justificar ou contestar afirmações e conclusões."
+  },
+  {
+    "competencia": "Competência de área 7 - Compreender o caráter aleatório e não-determinístico dos fenômenos naturais e sociais e utilizar instrumentos adequados para medidas, determinação de amostras e cálculos de probabilidade para interpretar informações de variáveis apresentadas em uma distribuição estatística.",
+    "habilidade": "H30",
+    "habilidade_codigo": "H30",
+    "descricao_original": "Avaliar propostas de intervenção na realidade utilizando conhecimentos de estatística e probabilidade.",
+    "query": "Avaliar propostas de intervenção na realidade com base em estatística e probabilidade, comparando médias, dispersões ou chances de sucesso de diferentes alternativas para escolher a decisão mais adequada ou segura."
+  }
+]

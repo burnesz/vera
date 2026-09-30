@@ -1,12 +1,15 @@
 """
 Serviço de geração e gerenciamento de Questões Inéditas de Matemática para o ENEM.
-Implementa o fluxo de 4 etapas previsto na Seção 8 do pré-projeto / AGENTS.md:
+Implementa o fluxo RAG de 4 etapas previsto na Seção 8 do pré-projeto / AGENTS.md:
 1. Entrada: Habilidade-alvo da Matriz de Referência do ENEM.
-2. Retrieval: Resgate determinístico de exemplos históricos no PostgreSQL (questoes_enem).
-3. Geração: Prompt estruturado com CoT, few-shot e formato JSON estrito no LLM local.
+2. Retrieval RAG: Resgate semântico dos Top-3 itens históricos no Pinecone (namespace questoes_enem)
+   ancorado nas queries otimizadas pelo Claude.
+3. Geração: Prompt estruturado com CoT, three-shot e formato JSON estrito no LLM local (Ollama).
 4. Validação Estrutural Automática: Unicidade das alternativas, formato e gabarito (RN-Q01, RN-Q02).
 """
 
+import os
+import json
 import time
 import logging
 import uuid
@@ -14,10 +17,12 @@ from typing import List, Dict, Any, Optional, Callable
 from sqlalchemy.orm import Session
 from sqlalchemy import func
 
+from app.core.config import settings
 from app.db.models.habilidade import HabilidadeEnem
 from app.db.models.questao_enem import QuestaoEnem
 from app.db.models.questao_inedita import QuestaoInedita
 from app.services.llm_client import LLMClient
+from app.services.vectorstore import PineconeVectorStore
 from app.services.question_validator import validate_questao_inedita
 from app.core.prompts import build_question_generation_prompt
 from app.schemas.question import (
@@ -30,25 +35,58 @@ logger = logging.getLogger(__name__)
 
 class QuestionService:
     """
-    Serviço orquestrador para geração, validação e persistência de itens inéditos.
+    Serviço orquestrador para geração, validação e persistência de itens inéditos via RAG.
     """
 
-    def __init__(self, llm_client: Optional[LLMClient] = None):
+    def __init__(
+        self,
+        llm_client: Optional[LLMClient] = None,
+        vector_store: Optional[PineconeVectorStore] = None,
+        queries_path: str = "data/habilidades_queries.json"
+    ):
         self.llm_client = llm_client or LLMClient()
+        self.vector_store = vector_store or PineconeVectorStore()
+        self.queries_path = queries_path
+        self._habilidades_queries = self._load_habilidades_queries()
+
+    def _load_habilidades_queries(self) -> Dict[str, Dict[str, Any]]:
+        """
+        Carrega as queries semânticas expandidas das 30 habilidades do ENEM geradas pelo Claude.
+        """
+        mapping = {}
+        if os.path.exists(self.queries_path):
+            try:
+                with open(self.queries_path, "r", encoding="utf-8") as f:
+                    items = json.load(f)
+                for item in items:
+                    hab_cod = item.get("habilidade_codigo") or item.get("habilidade", "")
+                    clean = hab_cod.strip().upper()
+                    mapping[clean] = item
+                    if clean.startswith("H"):
+                        num_part = clean[1:]
+                        if num_part.isdigit():
+                            alt_key = f"H{int(num_part)}"
+                            alt_key_padded = f"H{int(num_part):02d}"
+                            mapping[alt_key] = item
+                            mapping[alt_key_padded] = item
+            except Exception as e:
+                logger.warning(f"Erro ao carregar queries semânticas de '{self.queries_path}': {e}")
+        return mapping
 
     def retrieve_few_shot_examples(
         self,
         db: Session,
         habilidade_codigo: str,
-        k: int = 2
+        k: int = 3
     ) -> List[QuestaoEnem]:
         """
-        Recupera determinística ou aleatoriamente itens reais do acervo histórico (questoes_enem)
-        da mesma habilidade oficial para servirem de contexto few-shot.
-        Atende à Seção 3.3 (Decisão de Engenharia: Questões no PostgreSQL).
+        Recupera determinística ou aleatoriamente itens reais do acervo relacional (questoes_enem)
+        da mesma habilidade oficial para servirem de fallback.
         """
         clean_hab = habilidade_codigo.strip().upper()
-        # Seleciona k questões aleatórias do banco relacional com a mesma habilidade
+        if clean_hab.startswith("H") and clean_hab[1:].isdigit():
+            clean_hab = f"H{int(clean_hab[1:]):02d}"
+
         exemplos = (
             db.query(QuestaoEnem)
             .filter(QuestaoEnem.habilidade_codigo == clean_hab)
@@ -58,45 +96,116 @@ class QuestionService:
         )
         return exemplos
 
+    def retrieve_rag_few_shot_examples(
+        self,
+        habilidade_codigo: str,
+        k: int = 3,
+        db: Optional[Session] = None
+    ) -> List[Dict[str, Any]]:
+        """
+        Recupera as Top-k questões históricas do ENEM mais similares semanticamente no Pinecone
+        (namespace 'questoes_enem') utilizando a query expandida da habilidade.
+        """
+        clean_hab = habilidade_codigo.strip().upper()
+        if clean_hab.startswith("H") and clean_hab[1:].isdigit():
+            clean_hab = f"H{int(clean_hab[1:]):02d}"
+
+        hab_data = self._habilidades_queries.get(clean_hab)
+        if hab_data and hab_data.get("query"):
+            query_text = hab_data["query"]
+        else:
+            query_text = f"Questão de matemática do ENEM avaliando a habilidade {clean_hab}."
+
+        try:
+            results = self.vector_store.search(
+                query=query_text,
+                namespace=settings.NAMESPACE_QUESTOES_ENEM,
+                top_k=k
+            )
+
+            few_shot_dicts = []
+            for r in results:
+                meta = r.get("metadata", {})
+                enunciado = meta.get("text") or r.get("text", "")
+                alternativas = {
+                    "A": meta.get("alt_a", ""),
+                    "B": meta.get("alt_b", ""),
+                    "C": meta.get("alt_c", ""),
+                    "D": meta.get("alt_d", ""),
+                    "E": meta.get("alt_e", "")
+                }
+                few_shot_dicts.append({
+                    "co_item": meta.get("co_item"),
+                    "ano": meta.get("ano", "ENEM"),
+                    "habilidade_origem": meta.get("habilidade_codigo"),
+                    "enunciado": enunciado,
+                    "alternativas": alternativas,
+                    "gabarito": meta.get("gabarito", ""),
+                    "score": r.get("score", 0.0)
+                })
+
+            if few_shot_dicts:
+                scores_str = ", ".join([f"{x['score']:.3f}" for x in few_shot_dicts])
+                logger.info(
+                    f"RAG: {len(few_shot_dicts)} exemplos resgatados no Pinecone para {clean_hab} (scores: [{scores_str}])."
+                )
+                return few_shot_dicts
+
+        except Exception as e:
+            logger.warning(f"Falha na recuperação RAG via Pinecone para {clean_hab}: {e}. Acionando fallback relacional...")
+
+        # Fallback relacional no PostgreSQL caso Pinecone falhe ou não retorne resultados
+        if db:
+            itens_db = self.retrieve_few_shot_examples(db, clean_hab, k=k)
+            return [
+                {
+                    "ano": item.ano,
+                    "enunciado": item.enunciado,
+                    "alternativas": item.alternativas,
+                    "gabarito": item.gabarito,
+                    "score": 1.0
+                }
+                for item in itens_db
+            ]
+
+        return []
+
     def generate_single_questao_inedita(
         self,
         db: Session,
         habilidade_codigo: str,
-        num_few_shot: int = 2,
+        num_few_shot: int = 3,
         max_attempts: int = 3,
         temperature: float = 0.7,
         top_p: float = 0.9
     ) -> QuestaoInedita:
         """
-        Executa o pipeline completo de geração de uma questão inédita:
-        1. Validação da habilidade.
-        2. Retrieval relacional no PostgreSQL.
-        3. Geração de item via Ollama local (format='json').
+        Executa o pipeline RAG completo de geração de uma questão inédita:
+        1. Validação da habilidade na Matriz oficial.
+        2. Retrieval RAG semântico dos Top-3 exemplos no namespace 'questoes_enem' do Pinecone.
+        3. Geração de item via Ollama local (format='json') com Three-Shot e CoT.
         4. Validação estrutural rigorosa (RN-Q01, RN-Q02) com política de re-tentativa.
         5. Persistência no PostgreSQL na tabela questoes_ineditas.
         """
         clean_hab = habilidade_codigo.strip().upper()
+        if clean_hab.startswith("H") and clean_hab[1:].isdigit():
+            clean_hab = f"H{int(clean_hab[1:]):02d}"
 
         # 1. Valida se a habilidade existe na Matriz oficial
         habilidade = db.get(HabilidadeEnem, clean_hab)
         if not habilidade:
             raise ValueError(f"Habilidade '{clean_hab}' não encontrada na Matriz de Referência do ENEM.")
 
-        # 2. Retrieval determinístico de exemplos históricos no PostgreSQL
-        few_shot_itens = self.retrieve_few_shot_examples(db, clean_hab, k=num_few_shot)
-        few_shot_dicts = [
-            {
-                "ano": item.ano,
-                "enunciado": item.enunciado,
-                "alternativas": item.alternativas,
-                "gabarito": item.gabarito
-            }
-            for item in few_shot_itens
-        ]
+        # 2. Retrieval RAG semântico no Pinecone (Top-k exemplos mais similares)
+        few_shot_dicts = self.retrieve_rag_few_shot_examples(
+            habilidade_codigo=clean_hab,
+            k=num_few_shot,
+            db=db
+        )
 
         logger.info(
             f"Gerando questão inédita para {clean_hab} "
-            f"({len(few_shot_dicts)} exemplos few-shot recuperados do PostgreSQL)..."
+            f"({len(few_shot_dicts)} exemplos RAG three-shot)..."
         )
 
         # 3. Montagem do prompt estruturado
@@ -162,7 +271,7 @@ class QuestionService:
         db: Session,
         habilidades: Optional[List[str]] = None,
         count_per_habilidade: int = 1,
-        num_few_shot: int = 2,
+        num_few_shot: int = 3,
         on_progress: Optional[Callable[[str, int, int, bool, Optional[str]], None]] = None
     ) -> BatchPopulationSummary:
         """

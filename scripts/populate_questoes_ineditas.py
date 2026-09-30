@@ -39,7 +39,7 @@ logger = logging.getLogger("vera.populate")
 
 def parse_args():
     parser = argparse.ArgumentParser(
-        description="Povoamento da tabela questoes_ineditas usando o LLM local via Ollama."
+        description="Povoamento da tabela questoes_ineditas usando pipeline RAG no Pinecone e LLM local via Ollama."
     )
     parser.add_argument(
         "--habilidades",
@@ -56,8 +56,8 @@ def parse_args():
     parser.add_argument(
         "--few-shot-k",
         type=int,
-        default=2,
-        help="Quantidade de exemplos históricos reais do ENEM a injetar no prompt (padrão: 2)."
+        default=3,
+        help="Quantidade de exemplos históricos recuperados via RAG (Pinecone) para o prompt (padrão: 3 - Three-Shot)."
     )
     parser.add_argument(
         "--mock",
