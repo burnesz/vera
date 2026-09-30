@@ -313,6 +313,19 @@ class LLMClient:
         """
         import json
 
+        if "justificativa pedagógica" in prompt.lower() or "gabarito oficial confirmado" in prompt.lower():
+            mock_just = {
+                "justificativa": "A taxa líquida de enchimento é calculada pela diferença entre a vazão de entrada (40 L/min) e a de saída (10 L/min), resultando em 30 L/min. Para atingir 1200 L, divide-se 1200 por 30, obtendo-se exatamente 40 minutos. Os distratores representam erros comuns de desconsiderar a válvula de saída ou somar taxas erroneamente."
+            }
+            return json.dumps(mock_just, ensure_ascii=False)
+
+        if "solver" in prompt.lower():
+            mock_pot = {
+                "enunciado": "Um reservatório com capacidade de 1200 litros é abastecido a uma taxa de 40 litros por minuto, enquanto uma válvula esvazia a 10 litros por minuto. Estando inicialmente vazio, qual é o tempo necessário, em minutos, para enchê-lo completamente?",
+                "solver": "def resolver():\n    capacidade = 1200\n    entrada = 40\n    saida = 10\n    taxa_liquida = entrada - saida\n    tempo_total = capacidade / taxa_liquida\n    d1 = capacidade / entrada  # 30 (esqueceu a saída)\n    d2 = capacidade / saida    # 120 (usou apenas a saída)\n    d3 = tempo_total + 10      # 50 (somou taxa)\n    d4 = tempo_total + 20      # 60 (erro de cálculo)\n    return {'correta': tempo_total, 'distratores': [d1, d2, d3, d4]}"
+            }
+            return json.dumps(mock_pot, ensure_ascii=False)
+
         if format == "json" or "retorne estritamente um objeto json" in prompt.lower() or "schema json" in prompt.lower():
             mock_question = {
                 "enunciado": "Um reservatório de água com capacidade de 1.200 litros é abastecido por uma bomba com vazão constante de 40 litros por minuto. Paralelamente, uma válvula esvazia o reservatório a uma taxa constante de 10 litros por minuto. Estando o reservatório inicialmente vazio, o tempo necessário para enchê-lo completamente é de:",
@@ -327,6 +340,7 @@ class LLMClient:
                 "justificativa": "A taxa líquida de enchimento é de 40 - 10 = 30 litros por minuto. Para atingir a capacidade total de 1.200 litros, o tempo necessário é de 1.200 / 30 = 40 minutos. Portanto, a alternativa correta é a B."
             }
             return json.dumps(mock_question, ensure_ascii=False)
+
 
         return (
             "### Análise da Questão e Diagnóstico do Erro\n\n"

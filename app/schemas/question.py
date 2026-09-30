@@ -9,6 +9,48 @@ from datetime import datetime
 from pydantic import BaseModel, Field, field_validator, ConfigDict
 
 
+class QuestaoEnunciadoSolverOutput(BaseModel):
+    """
+    Schema estruturado para a Fase 1 da geração Program-Aided (PoT):
+    O modelo produz exclusivamente o enunciado e o código Python do solver.
+    """
+    enunciado: str = Field(
+        ...,
+        description="Texto contextualizado da questão com comando final inequívoco."
+    )
+    solver: str = Field(
+        ...,
+        description="Função Python def resolver() calculando a resposta exata ('correta') e 4 distratores plausíveis ('distratores')."
+    )
+
+    @field_validator("enunciado")
+    @classmethod
+    def validate_enunciado(cls, v: str) -> str:
+        clean = v.strip()
+        if len(clean) < 30:
+            raise ValueError("O enunciado deve conter uma situação-problema completa (mínimo de 30 caracteres).")
+        return clean
+
+    @field_validator("solver")
+    @classmethod
+    def validate_solver(cls, v: str) -> str:
+        clean = v.strip()
+        if "def resolver" not in clean:
+            raise ValueError("O código do solver deve definir obrigatoriamente a função 'def resolver()'.")
+        return clean
+
+
+class QuestaoJustificativaOutput(BaseModel):
+    """
+    Schema estruturado para a Fase 2 da geração Program-Aided (PoT):
+    O modelo redige a justificativa pedagógica com gabarito já conhecido e fixado por código.
+    """
+    justificativa: str = Field(
+        ...,
+        description="Explicação pedagógica passo a passo comprovando o gabarito e apontando o erro nos distratores."
+    )
+
+
 class QuestaoIneditaLLMOutput(BaseModel):
     """
     Schema estrito para a saída estruturada do LLM Qwen 2.5 via Ollama (format='json').

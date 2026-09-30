@@ -234,3 +234,149 @@ Gere estritamente o JSON com as chaves: 'thought_scratchpad', 'enunciado', 'alte
 """
     return prompt
 
+
+# ==============================================================================
+# PROMPTS PARA ARQUITETURA PROGRAM-AIDED (PoT: ENUNCIADO + SOLVER EM PYTHON)
+# ==============================================================================
+
+POT_QUESTION_GENERATOR_SYSTEM_PROMPT = """Você é um Elaborador Oficial de Itens de Matemática para o ENEM e Engenheiro de Software Educacional.
+Sua missão é conceber uma QUESTÃO INÉDITA de Matemática no padrão ENEM através da abordagem Program-Aided Generation.
+
+VOCÊ NÃO DEVE GERAR AS ALTERNATIVAS (A-E) NEM A LETRA DO GABARITO.
+O gabarito e as alternativas serão calculados e embaralhados automaticamente por código Python!
+
+SUA PRODUÇÃO CONSISTE EXCLUSIVAMENTE EM DOIS CAMPOS (JSON):
+1. **enunciado**: Uma situação-problema autêntica, realista e contextualizada do cotidiano brasileiro, finalizando com um comando inequívoco do que o estudante deve calcular.
+   - Use notação matemática direta e limpa (ex: 'R$ 50,00', '3/4', 'x^2', '20%') sem comandos LaTeX complexos que quebrem o JSON.
+2. **solver**: Uma função em Python puro chamada `def resolver():` que:
+   - Modela com precisão exata os cálculos do enunciado.
+   - Utiliza OBRIGATORIAMENTE os mesmos números informados no texto do enunciado.
+   - Calcula a grandeza exata solicitada pelo comando final ('correta').
+   - Calcula 4 distratores plausíveis baseados em erros conceituais ou de cálculo comuns ('distratores').
+   - Retorna OBRIGATORIAMENTE um dicionário no formato:
+     return {'correta': <numero>, 'distratores': [<d1>, <d2>, <d3>, <d4>]}
+
+REGRAS RÍGIDAS DE CONSISTÊNCIA:
+- Todo número numérico usado no solver (antes do return) DEVE constar no texto do enunciado (exceto constantes neutras como 0, 1, 2, 10, 100, 3.14).
+- Os 4 distratores e a resposta correta DEVEM ser 5 números distintos (nunca gere valores repetidos).
+- O comando final da questão deve pedir EXATAMENTE o número calculado na chave 'correta'. Se o comando pede o valor total de N itens, 'correta' DEVE ser o valor total, não o valor unitário!
+"""
+
+POT_FEW_SHOT_EXAMPLE = """--- [EXEMPLO DE REFERÊNCIA DE FORMATO (ENEM)] ---
+{
+  "enunciado": "Uma gráfica cobra R$ 80,00 para imprimir um lote de 500 panfletos promocionais. Para encomendas maiores, a empresa oferece um desconto progressivo: a cada 500 panfletos adicionais encomendados, o valor cobrado por lote tem uma redução de 10% em relação ao preço inicial do lote. Um comerciante encomendou um total de 2 000 panfletos nessa gráfica. Qual é o valor total, em reais, pago pelo comerciante por essa encomenda?",
+  "solver": "def resolver():\\n    preco_base = 80.0\\n    total_panfletos = 2000\\n    tamanho_lote = 500\\n    desconto_percentual = 0.10\\n    num_lotes = total_panfletos / tamanho_lote  # 4 lotes\\n    lotes_adicionais = num_lotes - 1  # 3 lotes adicionais\\n    preco_lote_adicional = preco_base * (1 - desconto_percentual)  # 72.0\\n    # Valor total: 1 lote base + 3 lotes com desconto\\n    total_correto = preco_base + (lotes_adicionais * preco_lote_adicional)\\n    # Distratores plausíveis:\\n    d1 = num_lotes * preco_base  # 320.0 (sem desconto)\\n    d2 = num_lotes * preco_lote_adicional  # 288.0 (aplicou desconto em todos os lotes)\\n    d3 = preco_lote_adicional  # 72.0 (calculou apenas o preço de um lote)\\n    d4 = preco_base + (num_lotes * preco_lote_adicional * desconto_percentual)  # erro parcial\\n    return {'correta': total_correto, 'distratores': [d1, d2, d3, d4]}"
+}
+"""
+
+
+def build_enunciado_solver_prompt(
+    habilidade_codigo: str,
+    habilidade_descricao: str,
+    competencia: int,
+    eixo_tematico: Optional[str] = None,
+    exemplo_referencia: Optional[Dict[str, Any]] = None,
+    feedback_erro: Optional[str] = None
+) -> str:
+    """
+    Constrói prompt estruturado para a Fase 1 da geração PoT (Enunciado + Solver em Python).
+    """
+    ref_text = ""
+    if exemplo_referencia:
+        ano = exemplo_referencia.get("ano", "ENEM")
+        enun = exemplo_referencia.get("enunciado", "").strip()
+        gab = exemplo_referencia.get("gabarito", "")
+        ref_text = (
+            f"--- [Questão Histórica do ENEM para Ancoragem Isomórfica (ENEM {ano})] ---\n"
+            f"Enunciado Real: {enun}\n"
+            f"Gabarito Oficial: {gab}\n"
+            f"(Crie uma questão inédita ISOMÓRFICA: com mesma lógica matemática e nível de complexidade, "
+            f"porém com um novo contexto do cotidiano e novos dados numéricos)."
+        )
+    else:
+        ref_text = "(Siga estritamente os conceitos pedagógicos da habilidade alvo)."
+
+    secao_feedback = ""
+    if feedback_erro:
+        secao_feedback = f"""
+============================================================
+ATENÇÃO - CORREÇÃO OBRIGATÓRIA DA TENTATIVA ANTERIOR:
+Sua tentativa anterior foi rejeitada com o seguinte erro:
+"{feedback_erro}"
+Corrija o enunciado e a função solver() para eliminar rigorosamente esse erro.
+============================================================
+"""
+
+    prompt = f"""{POT_QUESTION_GENERATOR_SYSTEM_PROMPT}
+
+============================================================
+ESPECIFICAÇÃO DA HABILIDADE ALVO (MATRIZ DO ENEM):
+============================================================
+- Código da Habilidade: {habilidade_codigo}
+- Competência de Área: {competencia}
+- Eixo Temático: {eixo_tematico or 'Matemática e suas Tecnologias'}
+- Descrição Oficial do INEP: {habilidade_descricao}
+
+{ref_text}
+
+{POT_FEW_SHOT_EXAMPLE}
+{secao_feedback}
+============================================================
+SUA TAREFA:
+============================================================
+Gere agora uma QUESTÃO INÉDITA para a habilidade {habilidade_codigo}.
+Responda EXCLUSIVAMENTE em formato JSON com as chaves 'enunciado' e 'solver':
+{{
+  "enunciado": "Texto contextualizado da questão com comando final inequívoco...",
+  "solver": "def resolver():\\n    # código com variáveis com os números do enunciado\\n    return {{'correta': ..., 'distratores': [d1, d2, d3, d4]}}"
+}}
+"""
+    return prompt
+
+
+def build_justificativa_prompt(
+    enunciado: str,
+    alternativas: Dict[str, str],
+    gabarito: str,
+    solver_code: Optional[str] = None
+) -> str:
+    """
+    Constrói prompt para a Fase 2 da geração PoT:
+    O modelo redige a justificativa pedagógica passo a passo com alternativas e gabarito já fixados por código.
+    """
+    alts_formatted = "\n".join([f"  {k}) {v}" for k, v in sorted(alternativas.items())])
+    correta_valor = alternativas.get(gabarito, "")
+
+    codigo_sec = ""
+    if solver_code:
+        codigo_sec = f"\nCódigo de Resolução Validado:\n```python\n{solver_code}\n```\n"
+
+    prompt = f"""Você é um Professor Especialista em Avaliação Educacional e Matemática do ENEM.
+Sua missão é redigir a JUSTIFICATIVA PEDAGÓGICA de uma questão cujo gabarito oficial já foi matematicamente calculado e comprovado por código.
+
+============================================================
+DADOS DA QUESTÃO:
+============================================================
+Enunciado:
+{enunciado}
+
+Alternativas:
+{alts_formatted}
+
+Gabarito Oficial Confirmado: Alternativa {gabarito} ({correta_valor})
+{codigo_sec}
+============================================================
+SUA TAREFA:
+============================================================
+Escreva a justificativa didática demonstrando:
+1. A resolução matemática passo a passo que comprova por que a alternativa {gabarito} ({correta_valor}) é a correta;
+2. Breve explicação do porquê os distratores representam erros ou passos parciais comuns de estudantes.
+
+Responda EXCLUSIVAMENTE com um JSON no seguinte schema:
+{{
+  "justificativa": "Texto da resolução passo a passo provando a alternativa {gabarito}..."
+}}
+"""
+    return prompt
+
+

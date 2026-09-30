@@ -23,12 +23,29 @@ from app.db.models.questao_enem import QuestaoEnem
 from app.db.models.questao_inedita import QuestaoInedita
 from app.services.llm_client import LLMClient
 from app.services.vectorstore import PineconeVectorStore
-from app.services.question_validator import validate_questao_inedita
-from app.core.prompts import build_question_generation_prompt
+from app.services.question_validator import (
+    validate_questao_inedita,
+    extract_json_from_text,
+    sanitize_latex_json_text,
+    sanitize_parsed_dict_values
+)
+from app.services.code_executor import (
+    execute_solver_code,
+    validate_solver_consistency,
+    assemble_alternatives_and_gabarito
+)
+from app.core.prompts import (
+    build_question_generation_prompt,
+    build_enunciado_solver_prompt,
+    build_justificativa_prompt
+)
 from app.schemas.question import (
+    QuestaoEnunciadoSolverOutput,
+    QuestaoJustificativaOutput,
     BatchPopulationSummary,
     BatchPopulationItemResult
 )
+from pydantic import ValidationError
 
 logger = logging.getLogger(__name__)
 
@@ -176,16 +193,22 @@ class QuestionService:
         habilidade_codigo: str,
         num_few_shot: int = 3,
         max_attempts: int = 3,
-        temperature: float = 0.7,
-        top_p: float = 0.9
+        temperature: float = 0.2,
+        top_p: float = 0.9,
+        use_pot: bool = True
     ) -> QuestaoInedita:
         """
-        Executa o pipeline RAG completo de geração de uma questão inédita:
-        1. Validação da habilidade na Matriz oficial.
-        2. Retrieval RAG semântico dos Top-3 exemplos no namespace 'questoes_enem' do Pinecone.
-        3. Geração de item via Ollama local (format='json') com Three-Shot e CoT.
-        4. Validação estrutural rigorosa (RN-Q01, RN-Q02) com política de re-tentativa.
-        5. Persistência no PostgreSQL na tabela questoes_ineditas.
+        Executa o pipeline RAG de geração de uma questão inédita:
+        1. Validação da habilidade na Matriz oficial do ENEM.
+        2. Retrieval RAG semântico dos Top-k exemplos no namespace 'questoes_enem' do Pinecone.
+        3. Geração via Program-Aided Generation (PoT):
+           - Fase 1: LLM gera situação-problema e def resolver() em Python.
+           - Execução isolada em subprocess com timeout e verificação de AST de segurança.
+           - Validação de nexo numérico (groundedness) e unicidade estrita das 5 alternativas.
+           - Embaralhamento programático das alternativas e definição determinística do gabarito.
+           - Fase 2: LLM redige justificativa pedagógica com gabarito comprovado.
+        4. Fallback/Modo comparativo: Caso use_pot=False, executa geração clássica de 1 fase com CoT e validação.
+        5. Persistência na tabela questoes_ineditas no PostgreSQL.
         """
         clean_hab = habilidade_codigo.strip().upper()
         if clean_hab.startswith("H") and clean_hab[1:].isdigit():
@@ -203,12 +226,232 @@ class QuestionService:
             db=db
         )
 
+        if use_pot:
+            return self._generate_pot_item(
+                db=db,
+                habilidade=habilidade,
+                few_shot_dicts=few_shot_dicts,
+                max_attempts=max_attempts,
+                temperature=temperature,
+                top_p=top_p
+            )
+        else:
+            return self._generate_traditional_item(
+                db=db,
+                habilidade=habilidade,
+                few_shot_dicts=few_shot_dicts,
+                max_attempts=max_attempts,
+                temperature=temperature if temperature != 0.2 else 0.7,
+                top_p=top_p
+            )
+
+    def _generate_pot_item(
+        self,
+        db: Session,
+        habilidade: HabilidadeEnem,
+        few_shot_dicts: List[Dict[str, Any]],
+        max_attempts: int = 3,
+        temperature: float = 0.2,
+        top_p: float = 0.9
+    ) -> QuestaoInedita:
+        """
+        Geração Program-Aided (PoT) com execução de código, checagem de nexo numérico
+        e montagem algorítmica de alternativas/gabarito.
+        """
+        clean_hab = habilidade.codigo
         logger.info(
-            f"Gerando questão inédita para {clean_hab} "
+            f"Gerando questão inédita via PoT para {clean_hab} "
+            f"({len(few_shot_dicts)} exemplos RAG para ancoragem)..."
+        )
+
+        last_error: Optional[str] = None
+        referencia_enem = few_shot_dicts[0] if few_shot_dicts else None
+
+        for attempt in range(1, max_attempts + 1):
+            logger.info(f"PoT: Tentativa {attempt}/{max_attempts} para {clean_hab}...")
+
+            # --- FASE 1: LLM GERA ENUNCIADO E SOLVER ---
+            prompt_pot = build_enunciado_solver_prompt(
+                habilidade_codigo=habilidade.codigo,
+                habilidade_descricao=habilidade.descricao,
+                competencia=habilidade.competencia,
+                eixo_tematico=habilidade.eixo_tematico,
+                exemplo_referencia=referencia_enem,
+                feedback_erro=last_error
+            )
+
+            try:
+                raw_pot_output = self.llm_client.generate(
+                    prompt=prompt_pot,
+                    max_tokens=1024,
+                    temperature=temperature,
+                    top_p=top_p,
+                    format="json"
+                )
+            except Exception as e:
+                last_error = f"Falha na chamada ao LLM (Fase 1 PoT): {e}"
+                logger.warning(f"Tentativa {attempt}/{max_attempts} falhou na inferência: {e}")
+                continue
+
+            # Parsing e decodificação JSON com sanitização de LaTeX
+            try:
+                json_str = extract_json_from_text(raw_pot_output)
+                sanitized_json = sanitize_latex_json_text(json_str)
+                parsed_data = json.loads(sanitized_json, strict=False)
+                parsed_data = sanitize_parsed_dict_values(parsed_data)
+            except Exception as e:
+                last_error = f"Erro ao decodificar JSON gerado pelo LLM: {e}"
+                logger.warning(f"Tentativa {attempt}/{max_attempts} falhou no JSON: {e}")
+                continue
+
+            # Suporte resiliente a modelos ou mocks legados que retornaram formato tradicional
+            if "solver" not in parsed_data and "alternativas" in parsed_data and "gabarito" in parsed_data:
+                logger.info("Detectado formato com alternativas prontas (sem solver). Validando via RN-Q01/Q02...")
+                is_valid, err_msg, validated_item = validate_questao_inedita(
+                    raw_output=raw_pot_output,
+                    few_shot_exemplos=few_shot_dicts
+                )
+                if is_valid and validated_item:
+                    nova_questao = QuestaoInedita(
+                        id=uuid.uuid4(),
+                        habilidade_codigo=habilidade.codigo,
+                        enunciado=validated_item.enunciado,
+                        alternativas=validated_item.alternativas,
+                        gabarito=validated_item.gabarito,
+                        justificativa=validated_item.justificativa,
+                        thought_scratchpad=validated_item.thought_scratchpad,
+                        is_validated=True
+                    )
+                    db.add(nova_questao)
+                    db.commit()
+                    db.refresh(nova_questao)
+                    return nova_questao
+                else:
+                    last_error = err_msg
+                    continue
+
+            # Validação do Schema Pydantic da Fase 1
+            try:
+                pot_output = QuestaoEnunciadoSolverOutput(**parsed_data)
+            except ValidationError as e:
+                last_error = f"Erro no schema do solver: {e.errors()}"
+                logger.warning(f"Tentativa {attempt}/{max_attempts} falhou no schema Pydantic: {e}")
+                continue
+
+            # --- EXECUÇÃO DO SOLVER EM SUBPROCESS ISOLADO ---
+            try:
+                solver_result = execute_solver_code(pot_output.solver, timeout=5)
+            except Exception as e:
+                last_error = f"Erro na execução da função resolver(): {e}"
+                logger.warning(f"Tentativa {attempt}/{max_attempts} falhou na execução do código: {e}")
+                continue
+
+            # --- CHECAGEM DE CONSISTÊNCIA E NEXO NUMÉRICO (GROUNDEDNESS) ---
+            try:
+                formatted_values = validate_solver_consistency(
+                    enunciado=pot_output.enunciado,
+                    code=pot_output.solver,
+                    result=solver_result
+                )
+            except Exception as e:
+                last_error = f"Erro de consistência matemática ou nexo numérico: {e}"
+                logger.warning(f"Tentativa {attempt}/{max_attempts} falhou na checagem de nexo: {e}")
+                continue
+
+            # --- MONTAGEM ALGORÍTMICA DE ALTERNATIVAS E GABARITO ---
+            alternativas, gabarito = assemble_alternatives_and_gabarito(formatted_values)
+
+            # --- FASE 2: GERAÇÃO DA JUSTIFICATIVA PEDAGÓGICA ---
+            justificativa_texto = self._generate_justificativa_fase2(
+                enunciado=pot_output.enunciado,
+                alternativas=alternativas,
+                gabarito=gabarito,
+                solver_code=pot_output.solver
+            )
+
+            logger.info(
+                f"Item PoT para {clean_hab} gerado e comprovado com sucesso na tentativa {attempt}! "
+                f"Gabarito: {gabarito} ({alternativas[gabarito]})."
+            )
+
+            # --- PERSISTÊNCIA NO POSTGRESQL ---
+            nova_questao = QuestaoInedita(
+                id=uuid.uuid4(),
+                habilidade_codigo=habilidade.codigo,
+                enunciado=pot_output.enunciado,
+                alternativas=alternativas,
+                gabarito=gabarito,
+                justificativa=justificativa_texto,
+                thought_scratchpad=f"# Solver Python validado via PoT:\n{pot_output.solver}",
+                is_validated=True
+            )
+            db.add(nova_questao)
+            db.commit()
+            db.refresh(nova_questao)
+            return nova_questao
+
+        raise ValueError(
+            f"RN-Q01 (PoT): Não foi possível gerar uma questão inédita válida para {clean_hab} após {max_attempts} tentativas. "
+            f"Último erro: {last_error}"
+        )
+
+    def _generate_justificativa_fase2(
+        self,
+        enunciado: str,
+        alternativas: Dict[str, str],
+        gabarito: str,
+        solver_code: str
+    ) -> str:
+        """
+        Fase 2 do PoT: Redige a justificativa pedagógica com gabarito comprovado por código.
+        """
+        prompt_just = build_justificativa_prompt(
+            enunciado=enunciado,
+            alternativas=alternativas,
+            gabarito=gabarito,
+            solver_code=solver_code
+        )
+
+        try:
+            raw_just = self.llm_client.generate(
+                prompt=prompt_just,
+                max_tokens=600,
+                temperature=0.3,
+                top_p=0.9,
+                format="json"
+            )
+            json_str = extract_json_from_text(raw_just)
+            sanitized = sanitize_latex_json_text(json_str)
+            parsed = json.loads(sanitized, strict=False)
+            parsed = sanitize_parsed_dict_values(parsed)
+            just_obj = QuestaoJustificativaOutput(**parsed)
+            return just_obj.justificativa
+        except Exception as e:
+            logger.warning(f"Aviso ao gerar justificativa estruturada na Fase 2: {e}. Usando fallback formatado.")
+            correta_val = alternativas.get(gabarito, "")
+            return (
+                f"A alternativa correta é a {gabarito} ({correta_val}), "
+                f"conforme resolução matemática comprovada pelo solver da questão."
+            )
+
+    def _generate_traditional_item(
+        self,
+        db: Session,
+        habilidade: HabilidadeEnem,
+        few_shot_dicts: List[Dict[str, Any]],
+        max_attempts: int = 3,
+        temperature: float = 0.7,
+        top_p: float = 0.9
+    ) -> QuestaoInedita:
+        """
+        Geração clássica de 1 fase com CoT e validação via validate_questao_inedita.
+        """
+        clean_hab = habilidade.codigo
+        logger.info(
+            f"Gerando questão inédita (modo tradicional) para {clean_hab} "
             f"({len(few_shot_dicts)} exemplos RAG three-shot)..."
         )
 
-        # 3. Montagem do prompt estruturado
         prompt = build_question_generation_prompt(
             habilidade_codigo=habilidade.codigo,
             habilidade_descricao=habilidade.descricao,
@@ -219,9 +462,8 @@ class QuestionService:
 
         last_error = None
         for attempt in range(1, max_attempts + 1):
-            logger.info(f"Tentativa {attempt}/{max_attempts} de geração para {clean_hab}...")
+            logger.info(f"Tentativa tradicional {attempt}/{max_attempts} de geração para {clean_hab}...")
 
-            # 4. Inferência via LLM com formato JSON estrito
             raw_output = self.llm_client.generate(
                 prompt=prompt,
                 max_tokens=1024,
@@ -230,7 +472,6 @@ class QuestionService:
                 format="json"
             )
 
-            # 5. Validação estrutural automática (RN-Q01, RN-Q02)
             is_valid, error_msg, validated_item = validate_questao_inedita(
                 raw_output=raw_output,
                 few_shot_exemplos=few_shot_dicts
@@ -238,8 +479,6 @@ class QuestionService:
 
             if is_valid and validated_item:
                 logger.info(f"Item para {clean_hab} gerado e validado com sucesso na tentativa {attempt}!")
-
-                # 6. Persistência no PostgreSQL
                 nova_questao = QuestaoInedita(
                     id=uuid.uuid4(),
                     habilidade_codigo=habilidade.codigo,
@@ -250,7 +489,6 @@ class QuestionService:
                     thought_scratchpad=validated_item.thought_scratchpad,
                     is_validated=True
                 )
-
                 db.add(nova_questao)
                 db.commit()
                 db.refresh(nova_questao)
@@ -272,6 +510,7 @@ class QuestionService:
         habilidades: Optional[List[str]] = None,
         count_per_habilidade: int = 1,
         num_few_shot: int = 3,
+        use_pot: bool = True,
         on_progress: Optional[Callable[[str, int, int, bool, Optional[str]], None]] = None
     ) -> BatchPopulationSummary:
         """
@@ -302,7 +541,8 @@ class QuestionService:
                         db=db,
                         habilidade_codigo=hab_code,
                         num_few_shot=num_few_shot,
-                        max_attempts=3
+                        max_attempts=3,
+                        use_pot=use_pot
                     )
                     elapsed = round(time.time() - op_start, 2)
                     total_success += 1

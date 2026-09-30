@@ -135,7 +135,9 @@ def test_api_gerar_questao_inedita():
     mock_llm.generate.return_value = mock_output
 
     def override_question_service():
-        return QuestionService(llm_client=mock_llm)
+        mock_vs = MagicMock()
+        mock_vs.search.return_value = []
+        return QuestionService(llm_client=mock_llm, vector_store=mock_vs)
 
     app.dependency_overrides[get_question_service] = override_question_service
 
