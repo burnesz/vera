@@ -137,21 +137,31 @@ Sua missão é produzir uma QUESTÃO INÉDITA E ORIGINAL de Matemática, estrita
 
 CRITÉRIOS OBRIGATÓRIOS DO ITEM (PADRÃO INEP):
 1. **Contextualização Realista:** O enunciado deve apresentar uma situação-problema autêntica do cotidiano, ambiente social, científico, financeiro, produtivo ou tecnológico. Não faça perguntas secas ou puramente teóricas desprovidas de contexto.
-2. **Comando Claro:** O parágrafo final do enunciado deve expressar uma pergunta ou comando inequívoco do que o estudante deve calcular ou identificar.
+2. **Comando Claro e Alinhamento Estrito com o Gabarito:**
+   - O parágrafo final do enunciado deve expressar uma pergunta ou comando inequívoco do que o estudante deve calcular ou identificar.
+   - REGRA DE OURO DE ALINHAMENTO: A alternativa correta (gabarito) DEVE responder exatamente à pergunta formulada no comando final.
+   - CUIDADO COM PROBLEMAS MULTIPASSO: Se o enunciado pede o "valor TOTAL de N unidades", o gabarito NÃO PODE ser o valor unitário intermediário! Se a questão envolve mais de uma etapa de cálculo (ex: calcular valor unitário e depois multiplicar pela quantidade comprada), você DEVE obrigatoriamente executar TODOS os passos até a grandeza final pedida. Valores de etapas intermediárias devem ser colocados apenas como distratores, JAMAIS como gabarito.
 3. **Rigor Matemático e Aritmética Exata:**
-   - Realize as contas passo a passo no `thought_scratchpad`.
+   - No `thought_scratchpad`, execute obrigatoriamente os seguintes passos:
+     Etapa 1: Planejamento dos dados e da situação-problema.
+     Etapa 2: Resolução matemática detalhada com todas as contas intermediárias.
+     Etapa 3: Verificação de Alinhamento: declare textualmente: "Pergunta do comando: [pergunta]", "Cálculo final que responde à pergunta: [conta e resultado]", "Gabarito: [letra] com o valor [resultado]".
+     Etapa 4: Construção dos 4 distratores (incluindo possíveis erros de parada em passos intermediários).
    - Escolha valores numéricos no enunciado que resultem em cálculos limpos e exatos (sem dízimas periódicas acidentais se as alternativas forem inteiras).
-   - O gabarito DEVE ser exatamente o resultado obtido na resolução matemática. A alternativa apontada como correta DEVE conter rigorosamente esse valor.
+   - O gabarito DEVE conter rigorosamente a resposta obtida na resolução matemática final.
 4. **5 Alternativas (A a E):**
    - Exatamente 1 alternativa correta (gabarito).
    - 4 distratores plausíveis (representando erros de interpretação, equívocos conceituais, inversões de fórmulas ou cálculos parciais comuns a estudantes).
    - As alternativas devem possuir paralelismo sintático e extensão equilibrada.
    - NUNCA repita valores ou textos entre alternativas (unicidade estrita).
-5. **Originalidade e Ineditismo:** O item gerado DEVE SER INÉDITO. Não copie nem meramente troque números dos itens de exemplo. Use-os apenas como referência do padrão de complexidade e linguagem.
-6. **Formato de Saída (JSON Estrito):**
+5. **Formatação de LaTeX dentro do JSON (OBRIGATÓRIO):**
+   - Ao escrever expressões matemáticas em formato LaTeX dentro das strings do JSON, você DEVE SEMPRE dobrar a barra invertida (ex: use `\\\\frac{a}{b}`, `\\\\sqrt{x}`, `\\\\cdot`, `\\\\times`).
+   - NUNCA utilize barra simples (como `\\frac`), pois a barra simples é interpretada como caractere de controle (como form feed `\\f`) e corrompe o JSON.
+6. **Originalidade e Ineditismo:** O item gerado DEVE SER INÉDITO. Não copie nem meramente troque números dos itens de exemplo. Use-os apenas como referência do padrão de complexidade e linguagem.
+7. **Formato de Saída (JSON Estrito):**
    Responda EXCLUSIVAMENTE com um objeto JSON válido, sem texto antes ou depois, seguindo o schema:
    {
-     "thought_scratchpad": "Passo a passo mental: 1. Planejamento da situação-problema; 2. Cálculos matemáticos detalhados; 3. Construção dos distratores; 4. Checagem de unicidade.",
+     "thought_scratchpad": "Etapa 1: ...; Etapa 2 (Cálculos): ...; Etapa 3 (Alinhamento de comando): Pergunta pede X, cálculo final = Y, alternativa correspondente = [Letra]; Etapa 4 (Distratores): ...",
      "enunciado": "Texto contextualizado da questão...",
      "alternativas": {
        "A": "Texto alternativa A",

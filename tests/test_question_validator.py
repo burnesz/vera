@@ -112,3 +112,52 @@ def test_validate_questao_inedita_anti_plagiarism():
     is_valid, error, item = validate_questao_inedita(payload_copiado, few_shot_exemplos=[exemplo_historico])
     assert is_valid is False
     assert "excessivamente similar" in error or "ineditismo" in error
+
+
+def test_validate_questao_inedita_sanitizes_corrupted_latex():
+    """Valida se o validador repara form feed residual e comandos LaTeX corrompidos."""
+    raw_corrupted_json = (
+        '{\n'
+        '  "thought_scratchpad": "Etapa 1: V(x) = 50 - \\frac{1}{4}x^2",\n'
+        '  "enunciado": "Em uma loja, o valor unitário é V(x) = 50 - \\x0crac{1}{4}x^2. Calcule para x=4.",\n'
+        '  "alternativas": {\n'
+        '    "A": "46",\n'
+        '    "B": "48",\n'
+        '    "C": "50",\n'
+        '    "D": "52",\n'
+        '    "E": "54"\n'
+        '  },\n'
+        '  "gabarito": "A",\n'
+        '  "justificativa": "Para x=4, V(4) = 50 - 4 = 46. Alternativa A."\n'
+        '}'
+    )
+
+    is_valid, error, item = validate_questao_inedita(raw_corrupted_json)
+    assert is_valid is True
+    assert item is not None
+    # Garante que \x0crac foi restaurado para \frac
+    assert "\\frac" in item.enunciado or r"\frac" in item.enunciado
+    assert "\x0c" not in item.enunciado
+
+
+def test_validate_questao_inedita_rejects_shortcut_reasoning():
+    """Valida se o validador rejeita questão onde o comando pede valor total mas o gabarito é o unitário."""
+    payload_shortcut = {
+        "thought_scratchpad": "Calculando: V(8) = 34. Total: 8 * 34 = 272.",
+        "enunciado": "Uma loja vende camisas cujo valor unitário com desconto é dado por V(x). Qual será o valor total pago por 8 camisas?",
+        "alternativas": {
+            "A": "34",  # Erro! 34 é o valor unitário, não o total pedido
+            "B": "50",
+            "C": "272",
+            "D": "300",
+            "E": "350"
+        },
+        "gabarito": "A",  # Erro! Gabarito deveria ser C (272)
+        "justificativa": "Calculamos V(8) = 34. Logo a alternativa A está correta."
+    }
+
+    is_valid, error, item = validate_questao_inedita(payload_shortcut)
+    assert is_valid is False
+    assert item is None
+    assert "Shortcut Reasoning" in error or "Inconsistência semântica" in error
+
