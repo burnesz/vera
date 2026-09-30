@@ -38,7 +38,7 @@ class Settings(BaseSettings):
     R2_BUCKET_NAME: str = "vera"
 
     # Chunking Strategy (RN-CHUNK01, RN-CHUNK02)
-    CHUNK_SIZE: int = 800
+    CHUNK_SIZE: int = 1200
     CHUNK_OVERLAP: int = 150
 
     # PostgreSQL Relational Database

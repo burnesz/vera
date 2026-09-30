@@ -33,15 +33,34 @@ class EmbeddingService:
     def embed_documents(self, texts: List[str]) -> List[List[float]]:
         """
         Gera embeddings para passagens de documentos com o prefixo 'passage: '.
+        Sanitiza strings para UTF-8 válido e trata falhas de forma resiliente.
         """
-        prefixed_texts = [
-            f"passage: {str(t).strip()}" if t is not None and str(t).strip() else "passage: "
-            for t in texts
-        ]
-        embeddings = self.model.encode(prefixed_texts, normalize_embeddings=True, show_progress_bar=False)
-        if hasattr(embeddings, "tolist"):
-            return embeddings.tolist()
-        return embeddings
+        sanitized_texts = []
+        for t in texts:
+            if t is None:
+                clean = ""
+            else:
+                s = str(t).replace("\x00", " ").strip()
+                # Remove surrogates e caracteres que quebram o tokenizer Rust
+                clean = s.encode("utf-8", "ignore").decode("utf-8", "ignore").strip()
+            sanitized_texts.append(f"passage: {clean}" if clean else "passage: ")
+
+        try:
+            embeddings = self.model.encode(sanitized_texts, normalize_embeddings=True, show_progress_bar=False)
+            if hasattr(embeddings, "tolist"):
+                return embeddings.tolist()
+            return embeddings
+        except Exception as e:
+            logger.warning(f"Falha ao codificar lote de embeddings ({e}). Processando item a item de contingência...")
+            results = []
+            for text_item in sanitized_texts:
+                try:
+                    emb = self.model.encode([text_item], normalize_embeddings=True, show_progress_bar=False)
+                    results.append(emb[0].tolist() if hasattr(emb[0], "tolist") else emb[0])
+                except Exception as inner_e:
+                    logger.error(f"Ignorando texto corrompido que falhou no tokenizer: {inner_e}")
+                    results.append([0.0] * settings.EMBEDDING_DIMENSION)
+            return results
 
     def embed_query(self, query: str) -> List[float]:
         """
@@ -53,6 +72,22 @@ class EmbeddingService:
         if hasattr(embedding, "tolist"):
             return embedding.tolist()
         return embedding
+
+
+_cross_encoder_model = None
+
+
+def get_cross_encoder(model_name: str = "BAAI/bge-reranker-v2-m3"):
+    """
+    Carrega e mantém em cache singleton o modelo CrossEncoder para reranking.
+    Garante carregamento único na aplicação.
+    """
+    global _cross_encoder_model
+    if _cross_encoder_model is None:
+        from sentence_transformers import CrossEncoder
+        logger.info(f"Carregando modelo CrossEncoder '{model_name}' (singleton)...")
+        _cross_encoder_model = CrossEncoder(model_name)
+    return _cross_encoder_model
 
 
 class PineconeVectorStore:
@@ -141,21 +176,40 @@ class PineconeVectorStore:
 
         return total_upserted
 
+    def clear_namespace(self, namespace: str) -> None:
+        """
+        Remove todos os vetores de um namespace específico no Pinecone.
+        """
+        logger.info(f"Limpando todos os vetores do namespace '{namespace}'...")
+        try:
+            self.index.delete(delete_all=True, namespace=namespace)
+            logger.info(f"Namespace '{namespace}' limpo com sucesso no Pinecone.")
+        except Exception as e:
+            logger.error(f"Erro ao limpar namespace '{namespace}': {e}")
+            raise
+
     def search(
         self,
         query: str,
         namespace: str = settings.NAMESPACE_MATERIAIS_DIDATICOS,
         top_k: int = 5,
-        filter_dict: Optional[Dict[str, Any]] = None
+        filter_dict: Optional[Dict[str, Any]] = None,
+        rerank: bool = False,
+        rerank_top_k: int = 4
     ) -> List[Dict[str, Any]]:
         """
         Executa busca por similaridade de cosseno com suporte a filtros de metadados.
+        Se rerank=True, busca os top_k=25 candidatos iniciais no Pinecone, aplica
+        o CrossEncoder BAAI/bge-reranker-v2-m3 e devolve os top 4 mais aderentes.
         """
         query_vector = self.embedding_service.embed_query(query)
         
+        # Se rerank for solicitado, busca top_k=25 candidatos no Pinecone
+        pinecone_k = 25 if rerank else top_k
+
         response = self.index.query(
             vector=query_vector,
-            top_k=top_k,
+            top_k=pinecone_k,
             namespace=namespace,
             filter=filter_dict,
             include_metadata=True
@@ -169,5 +223,19 @@ class PineconeVectorStore:
                 "text": match.get("metadata", {}).get("text", ""),
                 "metadata": match.get("metadata", {})
             })
+
+        # Re-ranqueamento neural com CrossEncoder
+        if rerank and results:
+            cross_encoder = get_cross_encoder()
+            pairs = [[query, r.get("text", "")] for r in results]
+            rerank_scores = cross_encoder.predict(pairs)
+
+            for r, score_val in zip(results, rerank_scores):
+                r["original_score"] = r["score"]
+                r["score"] = float(score_val)
+                r["reranked"] = True
+
+            results.sort(key=lambda x: x["score"], reverse=True)
+            return results[:rerank_top_k]
 
         return results

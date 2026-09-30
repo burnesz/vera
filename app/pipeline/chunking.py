@@ -31,11 +31,36 @@ def parse_metadata_from_filename(filename: str) -> Dict[str, Any]:
     return metadata
 
 
+HEADER_REGEX = re.compile(
+    r"MATEM[ÁA]TICA\s+e\s+suas\s+tecnologias\s+[\w\d]+\s+VOLUME\s+[\w\d]+",
+    re.IGNORECASE
+)
+REF_TITLE_REGEX = re.compile(
+    r"^(?:refer[êe]ncias|bibliografia|liga[çc][õo]es\s+externas)\b",
+    re.IGNORECASE
+)
+DISCARD_ELEMENT_TYPES = {"Header", "Footer", "PageNumber"}
+
+
+def _has_reference_signals(text: str) -> bool:
+    """Verifica se o texto possui >= 2 sinais típicos de referências bibliográficas/links."""
+    sinais = 0
+    if re.search(r"https?://|www\.", text, re.IGNORECASE):
+        sinais += 1
+    if re.search(r"\bdoi:\s*\S+", text, re.IGNORECASE):
+        sinais += 1
+    if re.search(r"\bisbn\b", text, re.IGNORECASE):
+        sinais += 1
+    if re.search(r"consultado\s+em", text, re.IGNORECASE):
+        sinais += 1
+    return sinais >= 2
+
+
 class MaterialChunker:
     """
     Segmentador estruturado de materiais didáticos com Unstructured (RN-CHUNK01, RN-CHUNK02).
     Utiliza partição de elementos (Title, NarrativeText, ListItem) e chunk_by_title,
-    com fallback resiliente para pypdf.
+    com fallback resiliente para pypdf e filtragem de ruídos/referências.
     """
 
     def __init__(
@@ -45,6 +70,7 @@ class MaterialChunker:
     ):
         self.chunk_size = chunk_size or settings.CHUNK_SIZE
         self.chunk_overlap = chunk_overlap or settings.CHUNK_OVERLAP
+        self.fallback_count: int = 0
 
         if self.chunk_overlap >= self.chunk_size:
             raise ValueError("chunk_overlap não pode ser maior ou igual a chunk_size")
@@ -91,7 +117,8 @@ class MaterialChunker:
         doc_metadata: Dict[str, Any]
     ) -> List[Dict[str, Any]]:
         """
-        Processa o PDF usando a biblioteca Unstructured com partição estruturada e chunk_by_title.
+        Processa o PDF usando a biblioteca Unstructured com partição estruturada e chunk_by_title,
+        filtrando elementos indesejados antes da segmentação.
         """
         from unstructured.partition.pdf import partition_pdf
         from unstructured.chunking.title import chunk_by_title
@@ -103,8 +130,50 @@ class MaterialChunker:
             include_page_breaks=True
         )
 
+        filtered_elements = []
+        discarded_after_ref_count = 0
+        found_references = False
+
+        for el in elements:
+            el_type = type(el).__name__
+
+            # 1. Descartar Header, Footer e PageNumber
+            if el_type in DISCARD_ELEMENT_TYPES:
+                continue
+
+            el_text = str(getattr(el, "text", "") or "").strip()
+            if not el_text:
+                continue
+
+            # 2. Se já encontramos o título de referências/bibliografia, descarta ele e tudo depois
+            if found_references:
+                discarded_after_ref_count += 1
+                continue
+
+            # 3. Detectar início da seção "Referências|Bibliografia|Ligações externas"
+            if (el_type == "Title" or len(el_text.split()) <= 4) and REF_TITLE_REGEX.search(el_text):
+                found_references = True
+                discarded_after_ref_count += 1
+                continue
+
+            # 4. Remover cabeçalho padrão por regex
+            cleaned_text = HEADER_REGEX.sub("", el_text).strip()
+            if not cleaned_text:
+                continue
+
+            if cleaned_text != el_text:
+                el.text = cleaned_text
+
+            filtered_elements.append(el)
+
+        if discarded_after_ref_count > 0:
+            logger.info(
+                f"'{filename}': Seção de referências/bibliografia detectada. "
+                f"Descartados {discarded_after_ref_count} elementos subsequentes."
+            )
+
         composite_chunks = chunk_by_title(
-            elements,
+            filtered_elements,
             max_characters=self.chunk_size,
             overlap=self.chunk_overlap,
             combine_text_under_n_chars=150
@@ -133,7 +202,8 @@ class MaterialChunker:
                     "topic": doc_metadata["topic"],
                     "page_number": page_num,
                     "chunk_index": idx,
-                    "source_type": doc_metadata["source_type"]
+                    "source_type": doc_metadata["source_type"],
+                    "extractor": "unstructured"
                 }
             })
 
@@ -148,6 +218,7 @@ class MaterialChunker:
     ) -> List[Dict[str, Any]]:
         """
         Processamento de fallback usando pypdf caso Unstructured não esteja disponível.
+        Aplica filtros equivalentes de texto (cabeçalho, referências e tamanho mínimo de palavras).
         """
         from pypdf import PdfReader
 
@@ -156,17 +227,40 @@ class MaterialChunker:
         chunks_data = []
         chunk_counter = 0
         doc_slug = re.sub(r"[^a-zA-Z0-9]", "_", doc_metadata["title"].lower())
+        found_references = False
 
         for page_idx, page in enumerate(reader.pages):
+            if found_references:
+                break
+
             page_text = page.extract_text() or ""
+            # Remover cabeçalho institucional por regex
+            page_text = HEADER_REGEX.sub("", page_text)
             cleaned_text = re.sub(r"\s+", " ", page_text).strip()
             if not cleaned_text:
                 continue
+
+            # Detecta seção de referências no início da página
+            first_words = " ".join(cleaned_text.split()[:5])
+            if REF_TITLE_REGEX.search(first_words):
+                logger.info(f"Fallback pypdf: Seção de referências detectada na página {page_idx + 1} de '{filename}'. Truncando leitura.")
+                found_references = True
+                break
 
             text_splits = self._split_text_fallback(cleaned_text)
             page_num = page_idx + 1
 
             for split in text_splits:
+                # Regras de descarte no fallback pypdf:
+                # 1. Menos de 15 palavras
+                words = [w for w in split.split() if w.strip()]
+                if len(words) < 15:
+                    continue
+
+                # 2. >= 2 sinais de referência (URL, doi:, ISBN, "Consultado em")
+                if _has_reference_signals(split):
+                    continue
+
                 chunk_counter += 1
                 chunk_id = f"mat_{doc_slug}_p{page_num}_c{chunk_counter}_{uuid.uuid4().hex[:6]}"
 
@@ -179,7 +273,8 @@ class MaterialChunker:
                         "topic": doc_metadata["topic"],
                         "page_number": page_num,
                         "chunk_index": chunk_counter,
-                        "source_type": doc_metadata["source_type"]
+                        "source_type": doc_metadata["source_type"],
+                        "extractor": "pypdf"
                     }
                 })
 
@@ -193,12 +288,16 @@ class MaterialChunker:
     ) -> List[Dict[str, Any]]:
         """
         Processa o PDF didático. Tenta utilizar o Unstructured prioritariamente;
-        caso ocorra qualquer exceção ou ausência de módulos, utiliza o fallback.
+        caso ocorra qualquer exceção ou ausência de módulos, utiliza o fallback e registra a contagem.
         """
         doc_metadata = parse_metadata_from_filename(filename)
         
         try:
             return self._process_with_unstructured(filename, pdf_bytes, doc_metadata)
         except Exception as e:
-            logger.warning(f"Unstructured falhou para '{filename}' ({e}). Acionando fallback pypdf...")
+            self.fallback_count += 1
+            logger.warning(
+                f"Unstructured falhou para '{filename}' ({e}). Acionando fallback pypdf... "
+                f"(Total acumulado de PDFs em fallback: {self.fallback_count})"
+            )
             return self._process_with_fallback(filename, pdf_bytes, doc_metadata)

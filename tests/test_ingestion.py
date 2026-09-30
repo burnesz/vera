@@ -46,12 +46,14 @@ def test_chunker_overlap_validation():
 
 
 def test_chunker_process_with_fallback():
-    chunker = MaterialChunker(chunk_size=200, chunk_overlap=30)
+    chunker = MaterialChunker(chunk_size=300, chunk_overlap=30)
     doc_metadata = {"filename": "test.pdf", "title": "Teste", "topic": "Teste", "source_type": "materiais_didaticos"}
     
     with patch("pypdf.PdfReader") as mock_reader_cls:
         mock_page = MagicMock()
-        mock_page.extract_text.return_value = "Definição de Trigonometria e seno, cosseno e tangente."
+        mock_page.extract_text.return_value = (
+            "Definição de Trigonometria e seno, cosseno e tangente no triângulo retângulo e círculo trigonométrico para o ENEM."
+        )
         mock_reader = MagicMock()
         mock_reader.pages = [mock_page]
         mock_reader_cls.return_value = mock_reader
@@ -59,7 +61,94 @@ def test_chunker_process_with_fallback():
         chunks = chunker._process_with_fallback("test.pdf", b"%PDF-mock", doc_metadata)
         assert len(chunks) == 1
         assert chunks[0]["metadata"]["title"] == "Teste"
+        assert chunks[0]["metadata"]["extractor"] == "pypdf"
         assert "Trigonometria" in chunks[0]["text"]
+
+
+def test_chunker_fallback_filters_references_and_short():
+    chunker = MaterialChunker(chunk_size=300, chunk_overlap=30)
+    doc_metadata = {"filename": "test.pdf", "title": "Teste", "topic": "Teste", "source_type": "materiais_didaticos"}
+
+    with patch("pypdf.PdfReader") as mock_reader_cls:
+        # Página 1 com referência e link (>= 2 sinais: https:// e Consultado em e ISBN)
+        mock_p1 = MagicMock()
+        mock_p1.extract_text.return_value = (
+            "Referência com link https://site.com/artigo ISBN 978-85-1234 e Consultado em 2024 para testes."
+        )
+        # Página 2 com texto curto (< 15 palavras)
+        mock_p2 = MagicMock()
+        mock_p2.extract_text.return_value = "Texto muito curto para virar chunk."
+
+        # Página 3 com texto didático válido (> 15 palavras e sem referências)
+        mock_p3 = MagicMock()
+        mock_p3.extract_text.return_value = (
+            "A função afim é uma função polinomial do primeiro grau definida por f(x) = ax + b com a diferente de zero."
+        )
+
+        mock_reader = MagicMock()
+        mock_reader.pages = [mock_p1, mock_p2, mock_p3]
+        mock_reader_cls.return_value = mock_reader
+
+        chunks = chunker._process_with_fallback("test.pdf", b"%PDF-mock", doc_metadata)
+        # Deve reter apenas a página 3
+        assert len(chunks) == 1
+        assert "função afim" in chunks[0]["text"]
+
+
+def test_chunker_unstructured_filters():
+    chunker = MaterialChunker(chunk_size=1200, chunk_overlap=150)
+    doc_metadata = {"filename": "apostila.pdf", "title": "Apostila", "topic": "Apostila", "source_type": "materiais_didaticos"}
+
+    class MockElement:
+        def __init__(self, type_name, text):
+            self._type_name = type_name
+            self.text = text
+        def __repr__(self):
+            return f"<{self._type_name}: {self.text}>"
+
+    # Mock types
+    class Header(MockElement): pass
+    class Footer(MockElement): pass
+    class PageNumber(MockElement): pass
+    class Title(MockElement): pass
+    class NarrativeText(MockElement): pass
+
+    mock_elements = [
+        Header("Header", "Cabeçalho da Página 1"),
+        Title("Title", "MATEMÁTICA e suas tecnologias 02 VOLUME 3 Introdução"),
+        NarrativeText("NarrativeText", "MATEMÁTICA e suas tecnologias 02 VOLUME 3 Conteúdo pedagógico de logaritmos e suas propriedades operatórias fundamentais."),
+        PageNumber("PageNumber", "1"),
+        Footer("Footer", "Rodapé da Página 1"),
+        Title("Title", "Referências"),
+        NarrativeText("NarrativeText", "https://site.org/livro-de-matematica Springer 2020"),
+        NarrativeText("NarrativeText", "Mais uma referência ignorada."),
+    ]
+
+    mock_pdf_mod = MagicMock()
+    mock_pdf_mod.partition_pdf.return_value = mock_elements
+
+    with patch.dict("sys.modules", {"unstructured.partition.pdf": mock_pdf_mod}), \
+         patch("unstructured.chunking.title.chunk_by_title") as mock_chunk_by_title:
+
+        mock_chunk = MagicMock()
+        mock_chunk.text = "Conteúdo pedagógico de logaritmos e suas propriedades operatórias fundamentais."
+        mock_chunk.metadata.page_number = 1
+        mock_chunk_by_title.return_value = [mock_chunk]
+
+        chunks = chunker._process_with_unstructured("apostila.pdf", b"%PDF-fake", doc_metadata)
+
+        # Verifica o que foi passado para chunk_by_title:
+        # Apenas os elementos válidos antes de "Referências", sem Header/Footer/PageNumber e com cabeçalho limpo
+        filtered_passed = mock_chunk_by_title.call_args[0][0]
+        passed_texts = [getattr(el, "text", "") for el in filtered_passed]
+
+        assert not any("Cabeçalho" in t for t in passed_texts)
+        assert not any("Rodapé" in t for t in passed_texts)
+        assert not any("Referências" in t for t in passed_texts)
+        assert not any("Springer" in t for t in passed_texts)
+        assert not any("VOLUME" in t for t in passed_texts)
+        assert any("Conteúdo pedagógico" in t for t in passed_texts)
+        assert chunks[0]["metadata"]["extractor"] == "unstructured"
 
 
 def test_embedding_service_prefixes():

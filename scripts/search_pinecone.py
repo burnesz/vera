@@ -51,14 +51,19 @@ def main():
         "-n", "--namespace",
         type=str,
         default=settings.NAMESPACE_MATERIAIS_DIDATICOS,
-        choices=[settings.NAMESPACE_MATERIAIS_DIDATICOS, settings.NAMESPACE_QUESTOES_ENEM],
-        help=f"Namespace do Pinecone a ser consultado (padrão: '{settings.NAMESPACE_MATERIAIS_DIDATICOS}')"
+        help=f"Namespace do Pinecone a ser consultado (ex: '{settings.NAMESPACE_MATERIAIS_DIDATICOS}', 'materiais_didaticos_v2', '{settings.NAMESPACE_QUESTOES_ENEM}')"
     )
     parser.add_argument(
         "-k", "--top-k",
         type=int,
-        default=3,
-        help="Quantidade de resultados mais similares a retornar (padrão: 3)"
+        default=4,
+        help="Quantidade de resultados a retornar (padrão: 4)"
+    )
+    parser.add_argument(
+        "--rerank",
+        action=argparse.BooleanOptionalAction,
+        default=True,
+        help="Ativa ou desativa o re-ranqueamento com BAAI/bge-reranker-v2-m3 (padrão: ativo)"
     )
     parser.add_argument(
         "--json",
@@ -80,6 +85,7 @@ def main():
         print(f"• Query:      \"{search_query}\"")
         print(f"• Namespace:  {args.namespace}")
         print(f"• Top-K:      {args.top_k}")
+        print(f"• Rerank:     {'Ativo (BAAI/bge-reranker-v2-m3)' if args.rerank else 'Desativado (cosseno puro)'}")
         print("=" * 80)
         print("Carregando modelo de embeddings e consultando índice...")
 
@@ -88,7 +94,9 @@ def main():
         results = vs.search(
             query=search_query,
             namespace=args.namespace,
-            top_k=args.top_k
+            top_k=args.top_k,
+            rerank=args.rerank,
+            rerank_top_k=args.top_k
         )
     except Exception as e:
         if args.json:
@@ -113,8 +121,10 @@ def main():
         doc_id = item.get("id", "N/A")
         full_text = item.get("text", "") or meta.get("text", "")
 
+        score_label = f"Score Rerank: {score:.4f} (Original Pinecone: {item.get('original_score', 0.0):.4f})" if item.get("reranked") else f"Score de Similaridade: {score:.4f}"
+
         print("=" * 80)
-        print(f"📌 RESULTADO {idx}/{len(results)} — Score de Similaridade: {score:.4f} (ID: {doc_id})")
+        print(f"📌 RESULTADO {idx}/{len(results)} — {score_label} (ID: {doc_id})")
         print("=" * 80)
 
         # Metadados específicos do namespace

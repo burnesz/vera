@@ -1,8 +1,11 @@
-import argparse
-import logging
+import os
 import sys
 import time
+import argparse
+import logging
 from typing import List, Dict, Any, Optional
+
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../..")))
 
 from app.core.config import settings
 from app.services.storage import R2StorageService
@@ -19,20 +22,27 @@ logger = logging.getLogger("vera.pipeline.ingestion")
 
 def run_materials_ingestion(
     prefix: str = "",
+    namespace: str = settings.NAMESPACE_MATERIAIS_DIDATICOS,
     batch_size: int = 50,
+    clear_namespace: bool = False,
     dry_run: bool = False
 ) -> Dict[str, Any]:
     """
     Executa o pipeline completo de ingestão dos materiais didáticos teóricos:
     1. Conecta ao Cloudflare R2 e lista os PDFs.
     2. Baixa cada PDF e executa parsing + chunking semântico.
-    3. Gera embeddings com intfloat/multilingual-e5-base.
-    4. Indexa os vetores no namespace 'materiais_didaticos' do Pinecone.
+    3. Gera embeddings com intfloat/multilingual-e5-large.
+    4. Indexa os vetores no namespace especificado do Pinecone (opcionalmente limpando o anterior).
     """
     start_time = time.time()
     logger.info("=" * 70)
     logger.info("INICIANDO PIPELINE DE INGESTÃO DE MATERIAIS DIDÁTICOS (R2 -> PINECONE)")
+    logger.info(f"Namespace alvo: '{namespace}' | Limpar antes: {clear_namespace} | Dry-run: {dry_run}")
     logger.info("=" * 70)
+
+    if clear_namespace and not dry_run:
+        vs = PineconeVectorStore()
+        vs.clear_namespace(namespace=namespace)
 
     # 1. Conexão com R2
     storage = R2StorageService()
@@ -84,17 +94,17 @@ def run_materials_ingestion(
             vector_store = PineconeVectorStore()
             total_upserted = vector_store.upsert_chunks(
                 chunks=all_chunks,
-                namespace=settings.NAMESPACE_MATERIAIS_DIDATICOS,
+                namespace=namespace,
                 batch_size=batch_size
             )
-            logger.info(f"Sucesso: {total_upserted} vetores indexados no namespace '{settings.NAMESPACE_MATERIAIS_DIDATICOS}'.")
+            logger.info(f"Sucesso: {total_upserted} vetores indexados no namespace '{namespace}'.")
 
     elapsed_time = time.time() - start_time
     logger.info("=" * 70)
     logger.info(f"PIPELINE CONCLUÍDO EM {elapsed_time:.2f}s")
     logger.info(f"Arquivos processados: {processed_files}/{len(pdf_files)}")
     logger.info(f"Total de chunks: {total_chunks}")
-    logger.info(f"Vetores indexados no Pinecone: {total_upserted}")
+    logger.info(f"Vetores indexados no Pinecone: {total_upserted} (Namespace: '{namespace}')")
     logger.info("=" * 70)
 
     return {
@@ -111,7 +121,9 @@ def run_materials_ingestion(
 def main():
     parser = argparse.ArgumentParser(description="Pipeline de Ingestão de Materiais Didáticos VERA (R2 -> Pinecone)")
     parser.add_argument("--prefix", type=str, default="", help="Prefixo opcional de busca no bucket R2")
+    parser.add_argument("--namespace", type=str, default=settings.NAMESPACE_MATERIAIS_DIDATICOS, help="Namespace de destino no Pinecone")
     parser.add_argument("--batch-size", type=int, default=50, help="Tamanho do lote de embeddings e upsert (padrão: 50)")
+    parser.add_argument("--clear", action="store_true", help="Limpa todos os vetores do namespace especificado antes de reindexar")
     parser.add_argument("--dry-run", action="store_true", help="Executa o parsing e chunking sem enviar ao Pinecone")
     parser.add_argument("--test-query", type=str, default=None, help="Executa uma busca teste no Pinecone após a ingestão")
 
@@ -119,14 +131,16 @@ def main():
 
     results = run_materials_ingestion(
         prefix=args.prefix,
+        namespace=args.namespace,
         batch_size=args.batch_size,
+        clear_namespace=args.clear,
         dry_run=args.dry_run
     )
 
     if args.test_query:
         logger.info(f"\nTestando consulta no Pinecone: '{args.test_query}'...")
         vs = PineconeVectorStore()
-        search_res = vs.search(query=args.test_query, namespace=settings.NAMESPACE_MATERIAIS_DIDATICOS, top_k=3)
+        search_res = vs.search(query=args.test_query, namespace=args.namespace, top_k=3)
         for i, res in enumerate(search_res, 1):
             logger.info(f"\n[Resultado {i} - Score: {res['score']:.4f}]")
             logger.info(f"Documento: {res['metadata'].get('document_name')} | Tópico: {res['metadata'].get('topic')}")
