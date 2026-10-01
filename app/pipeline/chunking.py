@@ -5,6 +5,7 @@ import logging
 from typing import List, Dict, Any, Optional
 
 from app.core.config import settings
+from app.core.sanitizer import sanitize_utf8_string, sanitize_metadata
 
 logger = logging.getLogger(__name__)
 
@@ -15,14 +16,14 @@ def parse_metadata_from_filename(filename: str) -> Dict[str, Any]:
     Não realiza mapeamento artificial de habilidades, preservando a recuperação puramente semântica.
     Exemplo: 'ENEM_MAT_03_ciclo-trigonometrico.pdf' -> título/tópico 'Ciclo Trigonométrico'
     """
-    clean_name = filename.split("/")[-1].replace(".pdf", "")
+    clean_name = sanitize_utf8_string(filename.split("/")[-1].replace(".pdf", ""))
     
     # Remove prefixos comuns como ENEM_MAT_XX_ ou TEO_MT-VX_ para gerar um título legível
     formatted_topic = re.sub(r"^(ENEM_MAT_\d+_|TEO_[A-Z0-9\-_]+_)", "", clean_name, flags=re.IGNORECASE)
-    formatted_topic = formatted_topic.replace("-", " ").replace("_", " ").strip().title()
+    formatted_topic = sanitize_utf8_string(formatted_topic.replace("-", " ").replace("_", " ").strip().title())
 
     metadata = {
-        "filename": filename.split("/")[-1],
+        "filename": sanitize_utf8_string(filename.split("/")[-1]),
         "title": formatted_topic if formatted_topic else clean_name,
         "topic": formatted_topic if formatted_topic else clean_name,
         "source_type": "materiais_didaticos"
@@ -71,6 +72,7 @@ class MaterialChunker:
         self.chunk_size = chunk_size or settings.CHUNK_SIZE
         self.chunk_overlap = chunk_overlap or settings.CHUNK_OVERLAP
         self.fallback_count: int = 0
+        self._unstructured_available: Optional[bool] = None
 
         if self.chunk_overlap >= self.chunk_size:
             raise ValueError("chunk_overlap não pode ser maior ou igual a chunk_size")
@@ -127,7 +129,8 @@ class MaterialChunker:
         elements = partition_pdf(
             file=io.BytesIO(pdf_bytes),
             strategy="fast",
-            include_page_breaks=True
+            include_page_breaks=True,
+            languages=["por"]
         )
 
         filtered_elements = []
@@ -141,7 +144,7 @@ class MaterialChunker:
             if el_type in DISCARD_ELEMENT_TYPES:
                 continue
 
-            el_text = str(getattr(el, "text", "") or "").strip()
+            el_text = sanitize_utf8_string(str(getattr(el, "text", "") or "").strip())
             if not el_text:
                 continue
 
@@ -157,7 +160,7 @@ class MaterialChunker:
                 continue
 
             # 4. Remover cabeçalho padrão por regex
-            cleaned_text = HEADER_REGEX.sub("", el_text).strip()
+            cleaned_text = sanitize_utf8_string(HEADER_REGEX.sub("", el_text).strip())
             if not cleaned_text:
                 continue
 
@@ -183,7 +186,7 @@ class MaterialChunker:
         doc_slug = re.sub(r"[^a-zA-Z0-9]", "_", doc_metadata["title"].lower())
 
         for idx, chunk in enumerate(composite_chunks, 1):
-            text = str(chunk.text).strip()
+            text = sanitize_utf8_string(str(chunk.text).strip())
             if not text:
                 continue
 
@@ -191,12 +194,12 @@ class MaterialChunker:
             if hasattr(chunk, "metadata") and getattr(chunk.metadata, "page_number", None):
                 page_num = chunk.metadata.page_number
 
-            chunk_id = f"mat_{doc_slug}_p{page_num}_c{idx}_{uuid.uuid4().hex[:6]}"
+            chunk_id = sanitize_utf8_string(f"mat_{doc_slug}_p{page_num}_c{idx}_{uuid.uuid4().hex[:6]}")
 
             chunks_data.append({
                 "id": chunk_id,
                 "text": text,
-                "metadata": {
+                "metadata": sanitize_metadata({
                     "document_name": doc_metadata["filename"],
                     "title": doc_metadata["title"],
                     "topic": doc_metadata["topic"],
@@ -204,7 +207,7 @@ class MaterialChunker:
                     "chunk_index": idx,
                     "source_type": doc_metadata["source_type"],
                     "extractor": "unstructured"
-                }
+                })
             })
 
         logger.info(f"Unstructured: {len(chunks_data)} chunks gerados para '{filename}'.")
@@ -233,10 +236,10 @@ class MaterialChunker:
             if found_references:
                 break
 
-            page_text = page.extract_text() or ""
+            page_text = sanitize_utf8_string(page.extract_text() or "")
             # Remover cabeçalho institucional por regex
             page_text = HEADER_REGEX.sub("", page_text)
-            cleaned_text = re.sub(r"\s+", " ", page_text).strip()
+            cleaned_text = sanitize_utf8_string(re.sub(r"\s+", " ", page_text).strip())
             if not cleaned_text:
                 continue
 
@@ -251,6 +254,7 @@ class MaterialChunker:
             page_num = page_idx + 1
 
             for split in text_splits:
+                split = sanitize_utf8_string(split)
                 # Regras de descarte no fallback pypdf:
                 # 1. Menos de 15 palavras
                 words = [w for w in split.split() if w.strip()]
@@ -262,12 +266,12 @@ class MaterialChunker:
                     continue
 
                 chunk_counter += 1
-                chunk_id = f"mat_{doc_slug}_p{page_num}_c{chunk_counter}_{uuid.uuid4().hex[:6]}"
+                chunk_id = sanitize_utf8_string(f"mat_{doc_slug}_p{page_num}_c{chunk_counter}_{uuid.uuid4().hex[:6]}")
 
                 chunks_data.append({
                     "id": chunk_id,
                     "text": split,
-                    "metadata": {
+                    "metadata": sanitize_metadata({
                         "document_name": doc_metadata["filename"],
                         "title": doc_metadata["title"],
                         "topic": doc_metadata["topic"],
@@ -275,7 +279,7 @@ class MaterialChunker:
                         "chunk_index": chunk_counter,
                         "source_type": doc_metadata["source_type"],
                         "extractor": "pypdf"
-                    }
+                    })
                 })
 
         logger.info(f"Fallback pypdf: {len(chunks_data)} chunks gerados para '{filename}'.")
@@ -291,9 +295,22 @@ class MaterialChunker:
         caso ocorra qualquer exceção ou ausência de módulos, utiliza o fallback e registra a contagem.
         """
         doc_metadata = parse_metadata_from_filename(filename)
-        
+
+        if self._unstructured_available is False:
+            return self._process_with_fallback(filename, pdf_bytes, doc_metadata)
+
         try:
-            return self._process_with_unstructured(filename, pdf_bytes, doc_metadata)
+            res = self._process_with_unstructured(filename, pdf_bytes, doc_metadata)
+            self._unstructured_available = True
+            return res
+        except (ImportError, ModuleNotFoundError) as e:
+            self._unstructured_available = False
+            self.fallback_count += 1
+            logger.info(
+                f"Dependências do Unstructured para PDF ausentes ({e}). "
+                f"Utilizando fallback resiliente via pypdf para este e os próximos materiais."
+            )
+            return self._process_with_fallback(filename, pdf_bytes, doc_metadata)
         except Exception as e:
             self.fallback_count += 1
             logger.warning(

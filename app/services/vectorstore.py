@@ -2,6 +2,7 @@ import logging
 from typing import List, Dict, Any, Optional
 
 from app.core.config import settings
+from app.core.sanitizer import sanitize_utf8_string, sanitize_metadata
 
 import os
 import torch
@@ -37,12 +38,7 @@ class EmbeddingService:
         """
         sanitized_texts = []
         for t in texts:
-            if t is None:
-                clean = ""
-            else:
-                s = str(t).replace("\x00", " ").strip()
-                # Remove surrogates e caracteres que quebram o tokenizer Rust
-                clean = s.encode("utf-8", "ignore").decode("utf-8", "ignore").strip()
+            clean = sanitize_utf8_string(t)
             sanitized_texts.append(f"passage: {clean}" if clean else "passage: ")
 
         try:
@@ -66,7 +62,7 @@ class EmbeddingService:
         """
         Gera embedding para consulta de busca com o prefixo 'query: '.
         """
-        clean_query = str(query).strip() if query else ""
+        clean_query = sanitize_utf8_string(query)
         prefixed_query = f"query: {clean_query}"
         embedding = self.model.encode(prefixed_query, normalize_embeddings=True, show_progress_bar=False)
         if hasattr(embedding, "tolist"):
@@ -142,6 +138,8 @@ class PineconeVectorStore:
     ) -> int:
         """
         Gera embeddings e faz o upsert dos chunks no Pinecone em lotes.
+        Sanitiza rigorosamente IDs, textos e metadados contra caracteres surrogates
+        e bytes nulos, evitando erros de serialização no orjson do Pinecone.
         """
         if not chunks:
             logger.warning("Nenhum chunk fornecido para upsert.")
@@ -153,19 +151,27 @@ class PineconeVectorStore:
 
         for i in range(0, total_chunks, batch_size):
             batch = chunks[i : i + batch_size]
-            valid_batch = [c for c in batch if c and c.get("text") and str(c["text"]).strip()]
+            valid_batch = []
+            for c in batch:
+                if not c or not c.get("text"):
+                    continue
+                clean_text = sanitize_utf8_string(c["text"])
+                if clean_text:
+                    valid_batch.append((c, clean_text))
+
             if not valid_batch:
                 continue
 
-            texts = [str(c["text"]).strip() for c in valid_batch]
+            texts = [item[1] for item in valid_batch]
             embeddings = self.embedding_service.embed_documents(texts)
 
             vectors = []
-            for item, emb in zip(valid_batch, embeddings):
-                metadata = dict(item.get("metadata", {}))
-                metadata["text"] = str(item["text"])[:3000]
+            for (item, clean_text), emb in zip(valid_batch, embeddings):
+                metadata = sanitize_metadata(dict(item.get("metadata", {})))
+                metadata["text"] = clean_text[:3000]
+                vector_id = sanitize_utf8_string(str(item.get("id", "")))
                 vectors.append({
-                    "id": str(item["id"]),
+                    "id": vector_id,
                     "values": emb,
                     "metadata": metadata
                 })

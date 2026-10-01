@@ -236,3 +236,85 @@ def test_run_materials_ingestion_dry_run(mock_chunker_cls, mock_storage_cls):
     assert result["processed_files"] == 1
     assert result["total_chunks"] == 1
     assert result["total_vectors_upserted"] == 0
+
+
+def test_utf8_sanitizer_removes_surrogates_and_null_bytes():
+    from app.core.sanitizer import sanitize_utf8_string, sanitize_metadata
+    import orjson
+
+    # String com surrogates inválidos e byte nulo
+    corrupted_str = "Fórmula: \ud800 x² + y² = r² \udfff \x00 Fim"
+    cleaned = sanitize_utf8_string(corrupted_str)
+    
+    assert "\ud800" not in cleaned
+    assert "\udfff" not in cleaned
+    assert "\x00" not in cleaned
+    assert "x² + y² = r²" in cleaned
+
+    # orjson.dumps deve serializar sem lançar TypeError
+    dumped = orjson.dumps({"text": cleaned})
+    assert b"x\xc2\xb2 + y\xc2\xb2 = r\xc2\xb2" in dumped
+
+    # Metadados aninhados
+    meta = {
+        "title": "Álgebra \ud800",
+        "page_number": 42,
+        "score": 0.99,
+        "nested": {"topic": "Função \udfff afim"},
+        "tags": ["tag1", "tag_\x00_2"]
+    }
+    cleaned_meta = sanitize_metadata(meta)
+    assert cleaned_meta["page_number"] == 42
+    assert cleaned_meta["score"] == 0.99
+    assert cleaned_meta["title"] == "Álgebra"
+    assert cleaned_meta["nested"]["topic"] == "Função  afim"
+    
+    dumped_meta = orjson.dumps(cleaned_meta)
+    assert isinstance(dumped_meta, bytes)
+
+
+def test_pinecone_upsert_sanitizes_surrogates_preventing_orjson_error():
+    import orjson
+    from app.services.vectorstore import PineconeVectorStore
+
+    mock_embedding_service = MagicMock()
+    mock_embedding_service.embed_documents.return_value = [[0.1] * 1024]
+
+    mock_pc = MagicMock()
+    mock_index = MagicMock()
+    mock_pc.list_indexes.return_value = [{"name": "vera-math-index"}]
+    mock_pc.Index.return_value = mock_index
+
+    # Simula o comportamento do cliente HTTP do Pinecone com orjson
+    def fake_upsert(vectors, namespace):
+        # Validação estrita de orjson idêntica à do Pinecone SDK
+        orjson.dumps({"vectors": vectors, "namespace": namespace})
+        return {"upserted_count": len(vectors)}
+
+    mock_index.upsert.side_effect = fake_upsert
+
+    vector_store = PineconeVectorStore(
+        api_key="fake-key",
+        index_name="vera-math-index",
+        embedding_service=mock_embedding_service
+    )
+    vector_store._pc = mock_pc
+    vector_store._index = mock_index
+
+    corrupted_chunks = [
+        {
+            "id": "chunk_corrupted_\ud800_1",
+            "text": "Geometria com caracteres surrogates \ud800\udfff e byte nulo \x00 no texto.",
+            "metadata": {
+                "title": "Trigonometria \ud800",
+                "topic": "Ciclo \udfff",
+                "page_number": 1
+            }
+        }
+    ]
+
+    # Não deve lançar TypeError: str is not valid UTF-8: surrogates not allowed
+    count = vector_store.upsert_chunks(corrupted_chunks, namespace="materiais_didaticos", batch_size=50)
+    assert count == 1
+    mock_index.upsert.assert_called_once()
+
