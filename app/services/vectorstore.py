@@ -185,14 +185,18 @@ class PineconeVectorStore:
     def clear_namespace(self, namespace: str) -> None:
         """
         Remove todos os vetores de um namespace específico no Pinecone.
+        Se o namespace não existir ou já estiver vazio (404), trata graciosamente como sucesso.
         """
         logger.info(f"Limpando todos os vetores do namespace '{namespace}'...")
         try:
             self.index.delete(delete_all=True, namespace=namespace)
             logger.info(f"Namespace '{namespace}' limpo com sucesso no Pinecone.")
         except Exception as e:
-            logger.error(f"Erro ao limpar namespace '{namespace}': {e}")
-            raise
+            if "404" in str(e) or "not found" in str(e).lower():
+                logger.info(f"Namespace '{namespace}' já está vazio ou não existe no Pinecone.")
+            else:
+                logger.error(f"Erro ao limpar namespace '{namespace}': {e}")
+                raise
 
     def search(
         self,

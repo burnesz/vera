@@ -41,6 +41,9 @@ REF_TITLE_REGEX = re.compile(
     re.IGNORECASE
 )
 DISCARD_ELEMENT_TYPES = {"Header", "Footer", "PageNumber"}
+# Número mínimo de palavras que um chunk do Unstructured deve conter para ser indexado.
+# Garante que fragmentos residuais (ex: títulos isolados sem corpo) não poluam o namespace.
+MIN_WORDS_UNSTRUCTURED = 20
 
 
 def _has_reference_signals(text: str) -> bool:
@@ -59,18 +62,37 @@ def _has_reference_signals(text: str) -> bool:
 
 class MaterialChunker:
     """
-    Segmentador estruturado de materiais didáticos com Unstructured (RN-CHUNK01, RN-CHUNK02).
-    Utiliza partição de elementos (Title, NarrativeText, ListItem) e chunk_by_title,
-    com fallback resiliente para pypdf e filtragem de ruídos/referências.
+    Segmentador estruturado de materiais didáticos (RN-CHUNK01, RN-CHUNK02).
+
+    Hierarquia de extratores:
+    1. **Unstructured** (prioridade): particionamento semântico via chunk_by_title.
+       - `max_characters` (= CHUNK_SIZE): limite rígido.
+       - `new_after_n_chars` (= CHUNK_SIZE * 0.75): limite suave para evitar cortes prematuros.
+       - `combine_text_under_n_chars` (= 400): fusão agressiva de elementos curtos.
+       - Filtro pós-chunking: descarta chunks < MIN_WORDS_UNSTRUCTURED palavras.
+    2. **PyMuPDF** (fallback): extrator alternativo ativado quando o Unstructured
+       retorna 0 chunks (PDF detectado como 'complexo') ou lança exceção.
+       - Extrai texto por blocos com ordem de leitura natural.
+       - Normaliza símbolos Unicode matemáticos para notação LaTeX inline.
+       - Detecta regiões de imagem candidatas a fórmulas e aplica OCR via pix2tex
+         (LaTeX-OCR) quando `formula_extraction_enabled=True`.
+       - Fórmulas reconhecidas são inseridas no texto como `$$LaTeX$$`.
+       - Chunking via janela deslizante com overlap, igual ao fallback pypdf.
     """
 
     def __init__(
         self,
         chunk_size: Optional[int] = None,
-        chunk_overlap: Optional[int] = None
+        chunk_overlap: Optional[int] = None,
+        formula_extraction_enabled: Optional[bool] = None,
     ):
         self.chunk_size = chunk_size or settings.CHUNK_SIZE
         self.chunk_overlap = chunk_overlap or settings.CHUNK_OVERLAP
+        self.formula_extraction_enabled = (
+            formula_extraction_enabled
+            if formula_extraction_enabled is not None
+            else settings.FORMULA_EXTRACTION_ENABLED
+        )
         self.fallback_count: int = 0
         self._unstructured_available: Optional[bool] = None
 
@@ -175,19 +197,34 @@ class MaterialChunker:
                 f"Descartados {discarded_after_ref_count} elementos subsequentes."
             )
 
+        # new_after_n_chars: limite suave — evita quebrar em títulos enquanto o chunk
+        # ainda está pequeno; só inicia novo chunk após atingir 75% do limite máximo.
+        soft_limit = int(self.chunk_size * 0.75)
+
         composite_chunks = chunk_by_title(
             filtered_elements,
             max_characters=self.chunk_size,
+            new_after_n_chars=soft_limit,
             overlap=self.chunk_overlap,
-            combine_text_under_n_chars=150
+            # Fusão agressiva: elementos menores que 400 chars são sempre fundidos com
+            # o próximo, evitando chunks de uma única frase ou título isolado.
+            combine_text_under_n_chars=400,
         )
 
         chunks_data = []
+        skipped_short = 0
         doc_slug = re.sub(r"[^a-zA-Z0-9]", "_", doc_metadata["title"].lower())
 
         for idx, chunk in enumerate(composite_chunks, 1):
             text = sanitize_utf8_string(str(chunk.text).strip())
             if not text:
+                continue
+
+            # Filtro pós-chunking: descarta fragmentos residuais com poucas palavras
+            # (ex: título isolado que sobrou após uma seção de referências)
+            word_count = len([w for w in text.split() if w.strip()])
+            if word_count < MIN_WORDS_UNSTRUCTURED:
+                skipped_short += 1
                 continue
 
             page_num = 1
@@ -210,6 +247,11 @@ class MaterialChunker:
                 })
             })
 
+        if skipped_short > 0:
+            logger.info(
+                f"Unstructured: {skipped_short} chunk(s) residuais descartados "
+                f"(< {MIN_WORDS_UNSTRUCTURED} palavras) em '{filename}'."
+            )
         logger.info(f"Unstructured: {len(chunks_data)} chunks gerados para '{filename}'.")
         return chunks_data
 
@@ -220,70 +262,146 @@ class MaterialChunker:
         doc_metadata: Dict[str, Any]
     ) -> List[Dict[str, Any]]:
         """
-        Processamento de fallback usando pypdf caso Unstructured não esteja disponível.
-        Aplica filtros equivalentes de texto (cabeçalho, referências e tamanho mínimo de palavras).
+        Fallback de extração: delega para _process_with_pymupdf, que usa PyMuPDF
+        com normalização Unicode→LaTeX e OCR de fórmulas-imagem via pix2tex.
+        Mantém a assinatura original para compatibilidade com process_pdf_material.
         """
-        from pypdf import PdfReader
+        return self._process_with_pymupdf(filename, pdf_bytes, doc_metadata)
 
-        logger.info(f"Executando fallback com pypdf para '{filename}'...")
-        reader = PdfReader(io.BytesIO(pdf_bytes))
-        chunks_data = []
+    def _process_with_pymupdf(
+        self,
+        filename: str,
+        pdf_bytes: bytes,
+        doc_metadata: Dict[str, Any]
+    ) -> List[Dict[str, Any]]:
+        """
+        Extração estruturada via PyMuPDF com suporte a fórmulas matemáticas.
+
+        - Texto: extraído por blocos (ordem de leitura natural) com normalização
+          de símbolos Unicode para notação LaTeX inline.
+        - Fórmulas-imagem: detectadas por bounding box e convertidas para LaTeX
+          via pix2tex quando FORMULA_EXTRACTION_ENABLED=True; inseridas no texto
+          como blocos `$$LaTeX$$` antes do parágrafo adjacente.
+        - Chunking: janela deslizante com overlap (mesmo algoritmo do fallback pypdf).
+        - Filtragem: cabeçalhos institucionais, seção de referências e chunks < 15 palavras.
+        - Campo `has_formulas` nos metadados indica se o chunk contém fórmulas LaTeX.
+        """
+        import pymupdf
+        from app.pipeline.formula_extractor import FormulaExtractor, normalize_unicode_math
+
+        logger.info(
+            f"Processando '{filename}' com PyMuPDF"
+            f"{' + pix2tex (fórmulas)' if self.formula_extraction_enabled else ''} ..."
+        )
+
+        extractor = FormulaExtractor(enabled=self.formula_extraction_enabled)
+        doc = pymupdf.open(stream=pdf_bytes, filetype="pdf")
+        chunks_data: List[Dict[str, Any]] = []
         chunk_counter = 0
         doc_slug = re.sub(r"[^a-zA-Z0-9]", "_", doc_metadata["title"].lower())
         found_references = False
+        all_formula_regions: List[Dict[str, Any]] = []  # acumula para log final
 
-        for page_idx, page in enumerate(reader.pages):
-            if found_references:
-                break
+        try:
+            for page_idx, page in enumerate(doc):
+                if found_references:
+                    break
 
-            page_text = sanitize_utf8_string(page.extract_text() or "")
-            # Remover cabeçalho institucional por regex
-            page_text = HEADER_REGEX.sub("", page_text)
-            cleaned_text = sanitize_utf8_string(re.sub(r"\s+", " ", page_text).strip())
-            if not cleaned_text:
-                continue
+                page_num = page_idx + 1
 
-            # Detecta seção de referências no início da página
-            first_words = " ".join(cleaned_text.split()[:5])
-            if REF_TITLE_REGEX.search(first_words):
-                logger.info(f"Fallback pypdf: Seção de referências detectada na página {page_idx + 1} de '{filename}'. Truncando leitura.")
-                found_references = True
-                break
+                # 1. Detecta regiões de imagem candidatas a fórmulas (bounding boxes)
+                formula_regions = extractor.process_page(page)
+                # Indexa as fórmulas por posição vertical para inserção no texto
+                formula_regions_sorted = sorted(formula_regions, key=lambda r: r["bbox"][1])
+                all_formula_regions.extend(formula_regions_sorted)
 
-            text_splits = self._split_text_fallback(cleaned_text)
-            page_num = page_idx + 1
+                # 2. Extrai texto por blocos (sort=True → ordem de leitura)
+                blocks = page.get_text("blocks", sort=True)
+                page_parts: List[str] = []
+                formula_inserted = set()
 
-            for split in text_splits:
-                split = sanitize_utf8_string(split)
-                # Regras de descarte no fallback pypdf:
-                # 1. Menos de 15 palavras
-                words = [w for w in split.split() if w.strip()]
-                if len(words) < 15:
-                    continue
+                for block in blocks:
+                    bx0, by0, bx1, by1, raw_text = block[0], block[1], block[2], block[3], block[4]
 
-                # 2. >= 2 sinais de referência (URL, doi:, ISBN, "Consultado em")
-                if _has_reference_signals(split):
-                    continue
+                    # Insere placeholder de fórmulas cujo bounding box está acima
+                    # do topo deste bloco de texto (dentro de margem de 40pt)
+                    for i, formula in enumerate(formula_regions_sorted):
+                        if i in formula_inserted:
+                            continue
+                        fx0, fy0, fx1, fy1 = formula["bbox"]
+                        if fy1 <= by0 + 40:
+                            page_parts.append(f"$${formula['latex']}$$")
+                            formula_inserted.add(i)
 
-                chunk_counter += 1
-                chunk_id = sanitize_utf8_string(f"mat_{doc_slug}_p{page_num}_c{chunk_counter}_{uuid.uuid4().hex[:6]}")
+                    text = sanitize_utf8_string((raw_text or "").strip())
+                    text = HEADER_REGEX.sub("", text).strip()
+                    text = sanitize_utf8_string(text)
+                    if not text:
+                        continue
 
-                chunks_data.append({
-                    "id": chunk_id,
-                    "text": split,
-                    "metadata": sanitize_metadata({
-                        "document_name": doc_metadata["filename"],
-                        "title": doc_metadata["title"],
-                        "topic": doc_metadata["topic"],
-                        "page_number": page_num,
-                        "chunk_index": chunk_counter,
-                        "source_type": doc_metadata["source_type"],
-                        "extractor": "pypdf"
+                    # Detecta início da seção de referências
+                    first_words = " ".join(text.split()[:5])
+                    if REF_TITLE_REGEX.search(first_words):
+                        logger.info(
+                            f"PyMuPDF: Seção de referências detectada na página {page_num} "
+                            f"de '{filename}'. Truncando leitura."
+                        )
+                        found_references = True
+                        break
+
+                    # Normaliza símbolos Unicode matemáticos → LaTeX
+                    text = normalize_unicode_math(text)
+                    page_parts.append(text)
+
+                # Adiciona fórmulas restantes que ficaram após o último bloco de texto
+                for i, formula in enumerate(formula_regions_sorted):
+                    if i not in formula_inserted:
+                        page_parts.append(f"$${formula['latex']}$$")
+
+                full_page_text = sanitize_utf8_string("\n".join(page_parts))
+                has_formulas = "$$" in full_page_text
+
+                # 3. Divide em chunks usando a janela deslizante
+                for split in self._split_text_fallback(full_page_text):
+                    split = sanitize_utf8_string(split)
+                    words = [w for w in split.split() if w.strip()]
+                    if len(words) < 15:
+                        continue
+                    if _has_reference_signals(split):
+                        continue
+
+                    chunk_counter += 1
+                    chunk_id = sanitize_utf8_string(
+                        f"mat_{doc_slug}_p{page_num}_c{chunk_counter}_{uuid.uuid4().hex[:6]}"
+                    )
+                    chunks_data.append({
+                        "id": chunk_id,
+                        "text": split,
+                        "metadata": sanitize_metadata({
+                            "document_name": doc_metadata["filename"],
+                            "title": doc_metadata["title"],
+                            "topic": doc_metadata["topic"],
+                            "page_number": page_num,
+                            "chunk_index": chunk_counter,
+                            "source_type": doc_metadata["source_type"],
+                            "extractor": "pymupdf",
+                            "has_formulas": has_formulas,
+                        })
                     })
-                })
+        finally:
+            doc.close()
 
-        logger.info(f"Fallback pypdf: {len(chunks_data)} chunks gerados para '{filename}'.")
+        recognized = sum(1 for f in all_formula_regions if f["recognized"])
+        if all_formula_regions:
+            logger.info(
+                f"PyMuPDF: {len(chunks_data)} chunks gerados para '{filename}' "
+                f"({recognized}/{len(all_formula_regions)} fórmulas reconhecidas via pix2tex)."
+            )
+        else:
+            logger.info(f"PyMuPDF: {len(chunks_data)} chunks gerados para '{filename}'.")
+
         return chunks_data
+
 
     def process_pdf_material(
         self,
@@ -292,29 +410,49 @@ class MaterialChunker:
     ) -> List[Dict[str, Any]]:
         """
         Processa o PDF didático. Tenta utilizar o Unstructured prioritariamente;
-        caso ocorra qualquer exceção ou ausência de módulos, utiliza o fallback e registra a contagem.
+        caso ocorra qualquer exceção, ausência de módulos, ou retorno vazio
+        (ex: PDF com muitos ops gráficos que o Unstructured abandona), utiliza o
+        fallback pypdf e registra a contagem.
         """
         doc_metadata = parse_metadata_from_filename(filename)
 
         if self._unstructured_available is False:
-            return self._process_with_fallback(filename, pdf_bytes, doc_metadata)
+            return self._process_with_pymupdf(filename, pdf_bytes, doc_metadata)
 
         try:
             res = self._process_with_unstructured(filename, pdf_bytes, doc_metadata)
             self._unstructured_available = True
+
+            # Fallback automático quando Unstructured retorna 0 chunks.
+            # Causa mais comum: PDFs com alto número de ops gráficos fazem o Unstructured
+            # detectar o documento como "muito complexo" e abandonar a extração de texto
+            # (falling back to hi_res without text extraction), produzindo 0 elementos.
+            # PyMuPDF consegue extrair a camada de texto nesses casos e ainda recupera
+            # fórmulas-imagem via pix2tex.
+            if not res:
+                self.fallback_count += 1
+                logger.warning(
+                    f"Unstructured retornou 0 chunks para '{filename}' "
+                    f"(possível PDF com muitos ops gráficos detectado como complexo). "
+                    f"Acionando fallback PyMuPDF... "
+                    f"(Total acumulado de PDFs em fallback: {self.fallback_count})"
+                )
+                return self._process_with_pymupdf(filename, pdf_bytes, doc_metadata)
+
             return res
         except (ImportError, ModuleNotFoundError) as e:
             self._unstructured_available = False
             self.fallback_count += 1
             logger.info(
                 f"Dependências do Unstructured para PDF ausentes ({e}). "
-                f"Utilizando fallback resiliente via pypdf para este e os próximos materiais."
+                f"Utilizando fallback resiliente via PyMuPDF para este e os próximos materiais."
             )
-            return self._process_with_fallback(filename, pdf_bytes, doc_metadata)
+            return self._process_with_pymupdf(filename, pdf_bytes, doc_metadata)
         except Exception as e:
             self.fallback_count += 1
             logger.warning(
-                f"Unstructured falhou para '{filename}' ({e}). Acionando fallback pypdf... "
+                f"Unstructured falhou para '{filename}' ({e}). Acionando fallback PyMuPDF... "
                 f"(Total acumulado de PDFs em fallback: {self.fallback_count})"
             )
-            return self._process_with_fallback(filename, pdf_bytes, doc_metadata)
+            return self._process_with_pymupdf(filename, pdf_bytes, doc_metadata)
+

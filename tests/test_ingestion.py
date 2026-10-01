@@ -46,53 +46,76 @@ def test_chunker_overlap_validation():
 
 
 def test_chunker_process_with_fallback():
-    chunker = MaterialChunker(chunk_size=300, chunk_overlap=30)
+    """_process_with_fallback delega para _process_with_pymupdf."""
+    chunker = MaterialChunker(chunk_size=300, chunk_overlap=30, formula_extraction_enabled=False)
     doc_metadata = {"filename": "test.pdf", "title": "Teste", "topic": "Teste", "source_type": "materiais_didaticos"}
-    
-    with patch("pypdf.PdfReader") as mock_reader_cls:
-        mock_page = MagicMock()
-        mock_page.extract_text.return_value = (
-            "Definição de Trigonometria e seno, cosseno e tangente no triângulo retângulo e círculo trigonométrico para o ENEM."
-        )
-        mock_reader = MagicMock()
-        mock_reader.pages = [mock_page]
-        mock_reader_cls.return_value = mock_reader
 
+    # Bloco de texto com 18 palavras (> 15 min) e sem ref
+    text_block = (
+        "Definição de Trigonometria e seno, cosseno e tangente no triângulo retângulo "
+        "e círculo trigonométrico para o ENEM."
+    )
+    # Formato de bloco retornado por page.get_text("blocks"): (x0, y0, x1, y1, text, block_no, block_type)
+    mock_block = (0, 0, 100, 20, text_block, 0, 0)
+
+    mock_page = MagicMock()
+    mock_page.rect = MagicMock(width=595, height=842)
+    mock_page.get_text.return_value = [mock_block]
+    mock_page.get_images.return_value = []
+
+    mock_doc = MagicMock()
+    mock_doc.__iter__ = MagicMock(return_value=iter([mock_page]))
+    mock_doc.__enter__ = MagicMock(return_value=mock_doc)
+    mock_doc.__exit__ = MagicMock(return_value=False)
+    mock_doc.close = MagicMock()
+
+    with patch("pymupdf.open", return_value=mock_doc):
         chunks = chunker._process_with_fallback("test.pdf", b"%PDF-mock", doc_metadata)
-        assert len(chunks) == 1
-        assert chunks[0]["metadata"]["title"] == "Teste"
-        assert chunks[0]["metadata"]["extractor"] == "pypdf"
-        assert "Trigonometria" in chunks[0]["text"]
+
+    assert len(chunks) == 1
+    assert chunks[0]["metadata"]["title"] == "Teste"
+    assert chunks[0]["metadata"]["extractor"] == "pymupdf"
+    assert "Trigonometria" in chunks[0]["text"]
+    assert "has_formulas" in chunks[0]["metadata"]
 
 
 def test_chunker_fallback_filters_references_and_short():
-    chunker = MaterialChunker(chunk_size=300, chunk_overlap=30)
+    """PyMuPDF fallback deve descartar chunks curtos e com sinais de referência."""
+    chunker = MaterialChunker(chunk_size=300, chunk_overlap=30, formula_extraction_enabled=False)
     doc_metadata = {"filename": "test.pdf", "title": "Teste", "topic": "Teste", "source_type": "materiais_didaticos"}
 
-    with patch("pypdf.PdfReader") as mock_reader_cls:
-        # Página 1 com referência e link (>= 2 sinais: https:// e Consultado em e ISBN)
-        mock_p1 = MagicMock()
-        mock_p1.extract_text.return_value = (
-            "Referência com link https://site.com/artigo ISBN 978-85-1234 e Consultado em 2024 para testes."
-        )
-        # Página 2 com texto curto (< 15 palavras)
-        mock_p2 = MagicMock()
-        mock_p2.extract_text.return_value = "Texto muito curto para virar chunk."
+    ref_block = (0, 0, 100, 20, "Referência https://site.com/artigo ISBN 978-85-1234 e Consultado em 2024.", 0, 0)
+    short_block = (0, 30, 100, 50, "Texto muito curto.", 1, 0)
+    valid_block = (
+        0, 60, 100, 80,
+        "A função afim é uma função polinomial do primeiro grau definida por f(x) = ax + b com a diferente de zero.",
+        2, 0
+    )
 
-        # Página 3 com texto didático válido (> 15 palavras e sem referências)
-        mock_p3 = MagicMock()
-        mock_p3.extract_text.return_value = (
-            "A função afim é uma função polinomial do primeiro grau definida por f(x) = ax + b com a diferente de zero."
-        )
+    def make_page(blocks):
+        p = MagicMock()
+        p.rect = MagicMock(width=595, height=842)
+        p.get_text.return_value = blocks
+        p.get_images.return_value = []
+        return p
 
-        mock_reader = MagicMock()
-        mock_reader.pages = [mock_p1, mock_p2, mock_p3]
-        mock_reader_cls.return_value = mock_reader
+    pages = [
+        make_page([ref_block]),
+        make_page([short_block]),
+        make_page([valid_block]),
+    ]
 
+    mock_doc = MagicMock()
+    mock_doc.__iter__ = MagicMock(return_value=iter(pages))
+    mock_doc.close = MagicMock()
+
+    with patch("pymupdf.open", return_value=mock_doc):
         chunks = chunker._process_with_fallback("test.pdf", b"%PDF-mock", doc_metadata)
-        # Deve reter apenas a página 3
-        assert len(chunks) == 1
-        assert "função afim" in chunks[0]["text"]
+
+    # Deve reter apenas o bloco válido da página 3
+    assert len(chunks) == 1
+    assert "função afim" in chunks[0]["text"]
+
 
 
 def test_chunker_unstructured_filters():
@@ -131,14 +154,17 @@ def test_chunker_unstructured_filters():
          patch("unstructured.chunking.title.chunk_by_title") as mock_chunk_by_title:
 
         mock_chunk = MagicMock()
-        mock_chunk.text = "Conteúdo pedagógico de logaritmos e suas propriedades operatórias fundamentais."
+        # Texto com >= 20 palavras para passar o filtro MIN_WORDS_UNSTRUCTURED
+        mock_chunk.text = (
+            "Conteúdo pedagógico de logaritmos e suas propriedades operatórias fundamentais. "
+            "O logaritmo de um número é o expoente ao qual a base deve ser elevada para obter esse número."
+        )
         mock_chunk.metadata.page_number = 1
         mock_chunk_by_title.return_value = [mock_chunk]
 
         chunks = chunker._process_with_unstructured("apostila.pdf", b"%PDF-fake", doc_metadata)
 
-        # Verifica o que foi passado para chunk_by_title:
-        # Apenas os elementos válidos antes de "Referências", sem Header/Footer/PageNumber e com cabeçalho limpo
+        # Verifica filtros de elementos aplicados antes de chunk_by_title
         filtered_passed = mock_chunk_by_title.call_args[0][0]
         passed_texts = [getattr(el, "text", "") for el in filtered_passed]
 
@@ -149,6 +175,97 @@ def test_chunker_unstructured_filters():
         assert not any("VOLUME" in t for t in passed_texts)
         assert any("Conteúdo pedagógico" in t for t in passed_texts)
         assert chunks[0]["metadata"]["extractor"] == "unstructured"
+
+        # Verifica que os novos parâmetros de qualidade são passados ao chunk_by_title
+        call_kwargs = mock_chunk_by_title.call_args[1]
+        assert call_kwargs["combine_text_under_n_chars"] == 400, (
+            "combine_text_under_n_chars deve ser 400 para fundir elementos curtos agressivamente"
+        )
+        assert "new_after_n_chars" in call_kwargs, (
+            "new_after_n_chars (limite suave) deve ser passado para evitar cortes prematuros"
+        )
+        assert call_kwargs["new_after_n_chars"] == int(1200 * 0.75)
+
+
+def test_chunker_unstructured_min_words_filter():
+    """Chunks residuais com menos de MIN_WORDS_UNSTRUCTURED palavras devem ser descartados."""
+    from app.pipeline.chunking import MIN_WORDS_UNSTRUCTURED
+
+    chunker = MaterialChunker(chunk_size=1200, chunk_overlap=150)
+    doc_metadata = {"filename": "apostila.pdf", "title": "Apostila", "topic": "Apostila", "source_type": "materiais_didaticos"}
+
+    mock_pdf_mod = MagicMock()
+    mock_pdf_mod.partition_pdf.return_value = []
+
+    with patch.dict("sys.modules", {"unstructured.partition.pdf": mock_pdf_mod}), \
+         patch("unstructured.chunking.title.chunk_by_title") as mock_chunk_by_title:
+
+        # chunk curto (5 palavras — abaixo do limiar)
+        short_chunk = MagicMock()
+        short_chunk.text = "Tópico introdutório de geometria."
+        short_chunk.metadata.page_number = 1
+
+        # chunk válido com 25 palavras
+        long_chunk = MagicMock()
+        long_chunk.text = (
+            "A geometria analítica estuda figuras geométricas usando sistemas de coordenadas "
+            "e equações algébricas. É essencial para resolver questões do ENEM envolvendo "
+            "retas, círculos e parábolas no plano cartesiano."
+        )
+        long_chunk.metadata.page_number = 2
+
+        mock_chunk_by_title.return_value = [short_chunk, long_chunk]
+
+        chunks = chunker._process_with_unstructured("apostila.pdf", b"%PDF-fake", doc_metadata)
+
+        # Apenas o chunk longo deve sobreviver
+        assert len(chunks) == 1, (
+            f"Esperado 1 chunk após filtro de {MIN_WORDS_UNSTRUCTURED} palavras mínimas, obtido {len(chunks)}"
+        )
+        assert "geometria analítica" in chunks[0]["text"]
+
+
+def test_process_pdf_material_fallback_on_empty_unstructured():
+    """
+    Quando Unstructured retorna 0 chunks (PDF com muitos ops gráficos),
+    process_pdf_material deve acionar o fallback PyMuPDF automaticamente.
+    """
+    chunker = MaterialChunker(chunk_size=1200, chunk_overlap=150, formula_extraction_enabled=False)
+
+    mock_pdf_mod = MagicMock()
+    mock_pdf_mod.partition_pdf.return_value = []
+
+    text_block = (
+        0, 0, 100, 20,
+        "A progressão geométrica é uma sequência numérica em que cada termo é obtido "
+        "multiplicando o anterior por uma razão constante, chamada de razão da PG.",
+        0, 0
+    )
+    mock_page = MagicMock()
+    mock_page.rect = MagicMock(width=595, height=842)
+    mock_page.get_text.return_value = [text_block]
+    mock_page.get_images.return_value = []
+
+    mock_doc = MagicMock()
+    mock_doc.__iter__ = MagicMock(return_value=iter([mock_page]))
+    mock_doc.close = MagicMock()
+
+    with patch.dict("sys.modules", {"unstructured.partition.pdf": mock_pdf_mod}), \
+         patch("unstructured.chunking.title.chunk_by_title", return_value=[]), \
+         patch("pymupdf.open", return_value=mock_doc):
+
+        result = chunker.process_pdf_material(
+            "raw/ENEM_MAT_01_progressao-geometrica.pdf",
+            b"%PDF-mock"
+        )
+
+    assert len(result) == 1, (
+        "Fallback PyMuPDF deve ser acionado quando Unstructured retorna 0 chunks"
+    )
+    assert result[0]["metadata"]["extractor"] == "pymupdf"
+    assert chunker.fallback_count == 1
+
+
 
 
 def test_embedding_service_prefixes():
@@ -317,4 +434,25 @@ def test_pinecone_upsert_sanitizes_surrogates_preventing_orjson_error():
     count = vector_store.upsert_chunks(corrupted_chunks, namespace="materiais_didaticos", batch_size=50)
     assert count == 1
     mock_index.upsert.assert_called_once()
+
+
+def test_clear_namespace_handles_404():
+    from app.services.vectorstore import PineconeVectorStore
+
+    mock_pc = MagicMock()
+    mock_index = MagicMock()
+    mock_pc.list_indexes.return_value = [{"name": "vera-math-index"}]
+    mock_pc.Index.return_value = mock_index
+
+    # Simula erro 404 do Pinecone quando o namespace não existe
+    mock_index.delete.side_effect = Exception("[404] Namespace not found")
+
+    vector_store = PineconeVectorStore(api_key="fake-key", index_name="vera-math-index")
+    vector_store._pc = mock_pc
+    vector_store._index = mock_index
+
+    # Não deve subir exceção
+    vector_store.clear_namespace("materiais_didaticos")
+    mock_index.delete.assert_called_once_with(delete_all=True, namespace="materiais_didaticos")
+
 

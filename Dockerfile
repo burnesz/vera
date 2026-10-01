@@ -14,6 +14,11 @@ WORKDIR /app
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
+# Pré-baixa o modelo pix2tex (~150 MB) durante o build para evitar download em runtime.
+# O modelo é necessário para OCR de fórmulas matemáticas nos PDFs didáticos.
+RUN python -c "from pix2tex.cli import LatexOCR; LatexOCR()" || \
+    echo "[WARN] pix2tex model download falhou — será tentado em runtime."
+
 # Copia todo o código do projeto para o contêiner
 COPY . .
 

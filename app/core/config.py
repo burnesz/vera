@@ -40,6 +40,9 @@ class Settings(BaseSettings):
     # Chunking Strategy (RN-CHUNK01, RN-CHUNK02)
     CHUNK_SIZE: int = 1200
     CHUNK_OVERLAP: int = 150
+    # Extração de fórmulas-imagem via pix2tex (LaTeX-OCR).
+    # Desabilitar se pix2tex não estiver instalado ou para acelerar a ingestão.
+    FORMULA_EXTRACTION_ENABLED: bool = True
 
     # PostgreSQL Relational Database
     DATABASE_URL: Optional[str] = None
