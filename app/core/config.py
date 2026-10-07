@@ -44,6 +44,9 @@ class Settings(BaseSettings):
     # Desabilitar se pix2tex não estiver instalado ou para acelerar a ingestão.
     FORMULA_EXTRACTION_ENABLED: bool = True
 
+    # RAG / Chat Query Rewriting
+    ENABLE_QUERY_REWRITING: bool = True
+
     # PostgreSQL Relational Database
     DATABASE_URL: Optional[str] = None
     POSTGRES_SERVER: str = "localhost"

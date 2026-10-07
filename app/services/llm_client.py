@@ -313,6 +313,14 @@ class LLMClient:
         """
         import json
 
+        if "consulta de busca reescrita" in prompt.lower() or "otimizador de consultas de busca" in prompt.lower():
+            # Extrai a última mensagem do prompt se possível
+            if "última mensagem do estudante:" in prompt.lower():
+                part = prompt.split("Última mensagem do estudante:")[-1].split("Consulta de busca reescrita:")[0].strip()
+                if part:
+                    return f"{part} propriedades e fórmulas"
+            return "teorema e propriedades de matemática"
+
         if "justificativa pedagógica" in prompt.lower() or "gabarito oficial confirmado" in prompt.lower():
             mock_just = {
                 "justificativa": "A taxa líquida de enchimento é calculada pela diferença entre a vazão de entrada (40 L/min) e a de saída (10 L/min), resultando em 30 L/min. Para atingir 1200 L, divide-se 1200 por 30, obtendo-se exatamente 40 minutos. Os distratores representam erros comuns de desconsiderar a válvula de saída ou somar taxas erroneamente."

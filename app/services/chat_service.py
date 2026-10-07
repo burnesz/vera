@@ -8,7 +8,12 @@ from sqlalchemy.orm import Session
 from sqlalchemy import func
 
 from app.core.config import settings
-from app.core.prompts import build_chat_prompt, parse_cot_response
+from app.core.prompts import (
+    build_chat_prompt,
+    parse_cot_response,
+    build_query_rewrite_prompt,
+    clean_rewritten_query,
+)
 from app.db.models.chat import ChatSession, ChatMessageModel
 from app.schemas.chat import (
     ChatMessage,
@@ -145,6 +150,70 @@ class ChatService:
             logger.warning(f"Não foi possível resgatar contexto do Pinecone ({e}). Continuando sem chunks teóricos...")
             return []
 
+    def rewrite_query(
+        self,
+        user_message: str,
+        history_msgs: Optional[List[ChatMessage]] = None,
+        force: bool = False
+    ) -> str:
+        """
+        Reescreve a pergunta do estudante usando LLM para resolver anáforas e torná-la
+        autocontida para recuperação vetorial no Pinecone.
+        Se não houver histórico e force=False, utiliza diretamente a mensagem original.
+        """
+        clean_msg = user_message.strip()
+        if (not history_msgs and not force) or not clean_msg:
+            return clean_msg
+
+        try:
+            history_data = [m.model_dump() for m in history_msgs] if history_msgs else []
+            prompt = build_query_rewrite_prompt(
+                user_message=clean_msg,
+                history_messages=history_data
+            )
+            raw_response = self.llm_client.generate(
+                prompt=prompt,
+                max_tokens=60,
+                temperature=0.0
+            )
+            rewritten = clean_rewritten_query(raw_response, fallback=clean_msg)
+            logger.info(f"Chat Query Rewriting: '{clean_msg}' -> '{rewritten}'")
+            return rewritten
+        except Exception as e:
+            logger.warning(f"Falha ao reescrever query via LLM ({e}). Usando mensagem original.")
+            return clean_msg
+
+    async def arewrite_query(
+        self,
+        user_message: str,
+        history_msgs: Optional[List[ChatMessage]] = None,
+        force: bool = False
+    ) -> str:
+        """
+        Versão assíncrona da reescrita de query com LLM para o Chatbot.
+        """
+        clean_msg = user_message.strip()
+        if (not history_msgs and not force) or not clean_msg:
+            return clean_msg
+
+        try:
+            history_data = [m.model_dump() for m in history_msgs] if history_msgs else []
+            prompt = build_query_rewrite_prompt(
+                user_message=clean_msg,
+                history_messages=history_data
+            )
+            raw_response = await self.llm_client.agenerate(
+                prompt=prompt,
+                max_tokens=60,
+                temperature=0.0
+            )
+            rewritten = clean_rewritten_query(raw_response, fallback=clean_msg)
+            logger.info(f"Chat Query Rewriting (async): '{clean_msg}' -> '{rewritten}'")
+            return rewritten
+        except Exception as e:
+            logger.warning(f"Falha ao reescrever query via LLM assíncrono ({e}). Usando mensagem original.")
+            return clean_msg
+
     def _get_or_create_db_session(self, session_id: Optional[str], initial_message: str) -> str:
         """
         Garante a existência da sessão no PostgreSQL se houver conexão ativa com o banco.
@@ -264,27 +333,32 @@ class ChatService:
         # 1. Recupera histórico recente
         history_msgs = self._get_history_for_prompt(session_id, limit=8)
 
-        # 2. Resgata contexto teórico no Pinecone
+        # 2. Otimização da busca vetorial via LLM (Query Rewriting com resolução de anáforas)
+        search_query = request.message
+        if getattr(settings, "ENABLE_QUERY_REWRITING", True) and history_msgs:
+            search_query = self.rewrite_query(request.message, history_msgs)
+
+        # 3. Resgata contexto teórico no Pinecone
         context_chunks = self._retrieve_context(
-            query=request.message,
+            query=search_query,
             top_k=request.top_k_context
         )
 
-        # 3. Monta o prompt CoT com histórico e materiais teóricos
+        # 4. Monta o prompt CoT com histórico e materiais teóricos
         prompt = build_chat_prompt(
             user_message=request.message,
             history_messages=[m.model_dump() for m in history_msgs],
             context_chunks=[c.model_dump() for c in context_chunks]
         )
 
-        # 4. Inferência via LLM
+        # 5. Inferência via LLM
         reply_raw = self.llm_client.generate(prompt=prompt, session_id=None)
         elapsed_time = round(time.time() - start_time, 2)
 
-        # 5. Separa raciocínio (thought) da resposta didática final
+        # 6. Separa raciocínio (thought) da resposta didática final
         thought, clean_reply = parse_cot_response(reply_raw)
 
-        # 6. Grava em banco de dados e memória volátil
+        # 7. Grava em banco de dados e memória volátil
         self._save_interaction_to_db(
             session_id=session_id,
             user_message=request.message,
@@ -300,6 +374,7 @@ class ChatService:
             thought=thought,
             session_id=session_id,
             context_chunks=context_chunks,
+            rewritten_query=search_query,
             inference_time_seconds=elapsed_time
         )
 
@@ -314,27 +389,32 @@ class ChatService:
         # 1. Recupera histórico recente
         history_msgs = self._get_history_for_prompt(session_id, limit=8)
 
-        # 2. Resgata contexto teórico no Pinecone
+        # 2. Otimização da busca vetorial via LLM (Query Rewriting com resolução de anáforas)
+        search_query = request.message
+        if getattr(settings, "ENABLE_QUERY_REWRITING", True) and history_msgs:
+            search_query = await self.arewrite_query(request.message, history_msgs)
+
+        # 3. Resgata contexto teórico no Pinecone
         context_chunks = self._retrieve_context(
-            query=request.message,
+            query=search_query,
             top_k=request.top_k_context
         )
 
-        # 3. Monta o prompt CoT com histórico e materiais teóricos
+        # 4. Monta o prompt CoT com histórico e materiais teóricos
         prompt = build_chat_prompt(
             user_message=request.message,
             history_messages=[m.model_dump() for m in history_msgs],
             context_chunks=[c.model_dump() for c in context_chunks]
         )
 
-        # 4. Inferência assíncrona via LLM
+        # 5. Inferência assíncrona via LLM
         reply_raw = await self.llm_client.agenerate(prompt=prompt, session_id=None)
         elapsed_time = round(time.time() - start_time, 2)
 
-        # 5. Separa raciocínio (thought) da resposta didática final
+        # 6. Separa raciocínio (thought) da resposta didática final
         thought, clean_reply = parse_cot_response(reply_raw)
 
-        # 6. Grava em banco de dados e memória volátil
+        # 7. Grava em banco de dados e memória volátil
         self._save_interaction_to_db(
             session_id=session_id,
             user_message=request.message,
@@ -350,6 +430,7 @@ class ChatService:
             thought=thought,
             session_id=session_id,
             context_chunks=context_chunks,
+            rewritten_query=search_query,
             inference_time_seconds=elapsed_time
         )
 

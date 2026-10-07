@@ -64,6 +64,10 @@ class ChatResponse(BaseModel):
         default_factory=list,
         description="Trechos teóricos resgatados do Pinecone que fundamentaram a resposta"
     )
+    rewritten_query: Optional[str] = Field(
+        default=None,
+        description="Consulta utilizada para busca vetorial no Pinecone (original ou reescrita via LLM)"
+    )
     inference_time_seconds: float = Field(..., description="Tempo de inferência e processamento em segundos")
 
 

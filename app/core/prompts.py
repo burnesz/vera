@@ -64,6 +64,77 @@ def parse_cot_response(raw_text: str) -> Tuple[Optional[str], str]:
     return thought, reply
 
 
+QUERY_REWRITE_SYSTEM_PROMPT = """Você é um especialista em recuperação de informação (RAG) de Matemática para o ENEM.
+Sua única tarefa é reescrever a última mensagem do estudante em uma consulta de busca independente, autocontida e otimizada para busca vetorial em materiais didáticos de Matemática.
+
+Diretrizes obrigatórias:
+1. Resolva pronomes, elipses e referências ao histórico (ex.: "ele", "essa fórmula", "e se dobrar o raio" -> explicite o conceito ou objeto matemático).
+2. Se a mensagem já for independente e autocontida, preserve o conceito matemático central.
+3. Se a mensagem for puramente social ou sem conteúdo matemático (ex.: "olá", "obrigado", "tchau"), retorne a própria mensagem.
+4. NÃO responda à pergunta do estudante.
+5. Retorne EXCLUSIVAMENTE a consulta de busca em uma única linha, sem aspas, explicações, saudações ou prefixos como "Consulta:" ou "Query:"."""
+
+
+def clean_rewritten_query(raw_text: str, fallback: str) -> str:
+    """
+    Higieniza a saída do LLM para a consulta reescrita:
+    - Remove tags de CoT (<pensamento>, <think>, <resposta>) caso emitidas.
+    - Remove prefixos como 'Consulta de busca:', 'Query:', 'Busca:', etc.
+    - Remove aspas e quebras de linha excedentes.
+    - Garante fallback caso o LLM retorne vazio.
+    """
+    if not raw_text or not raw_text.strip():
+        return fallback.strip()
+
+    text = raw_text.strip()
+    text = re.sub(r"<(?:pensamento|think)>.*?(?:</(?:pensamento|think)>|$)", "", text, flags=re.DOTALL | re.IGNORECASE).strip()
+    text = re.sub(r"</?(?:resposta|pensamento|think)>", "", text, flags=re.IGNORECASE).strip()
+
+    lines = [line.strip() for line in text.splitlines() if line.strip()]
+    if not lines:
+        return fallback.strip()
+
+    first_line = lines[0]
+    first_line = re.sub(
+        r"^(?:consulta(?: de busca)?|query|busca|reescrita|pergunta reescrita)\s*:\s*",
+        "",
+        first_line,
+        flags=re.IGNORECASE
+    ).strip()
+    first_line = first_line.strip("\"'`")
+
+    return first_line if first_line else fallback.strip()
+
+
+def build_query_rewrite_prompt(
+    user_message: str,
+    history_messages: Optional[List[Dict[str, Any]]] = None,
+    max_history_turns: int = 4,
+    max_history_chars: int = 250
+) -> str:
+    """
+    Constrói prompt enxuto e objetivo para reescrita de query com resolução de anáforas (Query Rewriting).
+    """
+    history_lines = []
+    if history_messages:
+        for msg in history_messages[-max_history_turns:]:
+            role = "Estudante" if msg.get("role") == "user" else "Tutora VERA"
+            content = str(msg.get("content", "")).strip()
+            trimmed = content[:max_history_chars] + ("..." if len(content) > max_history_chars else "")
+            history_lines.append(f"{role}: {trimmed}")
+
+    history_str = "\n".join(history_lines) if history_lines else "(Sem histórico prévio)"
+
+    return f"""{QUERY_REWRITE_SYSTEM_PROMPT}
+
+Histórico recente:
+{history_str}
+
+Última mensagem do estudante:
+{user_message.strip()}
+
+Consulta de busca reescrita:"""
+
 
 def build_chat_prompt(
     user_message: str,
