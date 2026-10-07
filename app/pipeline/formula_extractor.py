@@ -153,14 +153,28 @@ class FormulaExtractor:
     def _load_model(self) -> bool:
         """
         Carrega o modelo pix2tex na primeira chamada.
+        Configura automaticamente execução em GPU (CUDA) se disponível.
         Retorna True se bem-sucedido, False caso contrário.
         """
+        if not self.enabled:
+            return False
         if self._model is not None:
             return True
         try:
+            import torch
+            from munch import Munch
             from pix2tex.cli import LatexOCR
-            self._model = LatexOCR()
-            logger.info("pix2tex (LaTeX-OCR) carregado com sucesso para extração de fórmulas.")
+
+            use_cuda = torch.cuda.is_available()
+            ocr_args = Munch({
+                'config': 'settings/config.yaml',
+                'checkpoint': 'checkpoints/weights.pth',
+                'no_cuda': not use_cuda,
+                'no_resize': False
+            })
+            self._model = LatexOCR(ocr_args)
+            device_name = "GPU (CUDA)" if use_cuda else "CPU"
+            logger.info(f"pix2tex (LaTeX-OCR) carregado com sucesso no dispositivo {device_name} para extração de fórmulas.")
             return True
         except ImportError:
             logger.warning(

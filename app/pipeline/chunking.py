@@ -41,8 +41,9 @@ REF_TITLE_REGEX = re.compile(
     re.IGNORECASE
 )
 DISCARD_ELEMENT_TYPES = {"Header", "Footer", "PageNumber"}
-# Número mínimo de palavras que um chunk do Unstructured deve conter para ser indexado.
-# Garante que fragmentos residuais (ex: títulos isolados sem corpo) não poluam o namespace.
+# Número mínimo de palavras que qualquer chunk (Unstructured ou PyMuPDF) deve conter.
+# Garante que fragmentos residuais e títulos isolados (ex: 'Prefácio', 'Definição') sejam descartados.
+MIN_CHUNK_WORDS = 15
 MIN_WORDS_UNSTRUCTURED = 20
 
 
@@ -315,47 +316,113 @@ class MaterialChunker:
                 formula_regions_sorted = sorted(formula_regions, key=lambda r: r["bbox"][1])
                 all_formula_regions.extend(formula_regions_sorted)
 
-                # 2. Extrai texto por blocos (sort=True → ordem de leitura)
-                blocks = page.get_text("blocks", sort=True)
+                # 2. Extrai texto por blocos (preservando sobrescritos/subscritos via spans)
+                text_data = page.get_text("dict", sort=True)
                 page_parts: List[str] = []
                 formula_inserted = set()
 
-                for block in blocks:
-                    bx0, by0, bx1, by1, raw_text = block[0], block[1], block[2], block[3], block[4]
-
-                    # Insere placeholder de fórmulas cujo bounding box está acima
-                    # do topo deste bloco de texto (dentro de margem de 40pt)
-                    for i, formula in enumerate(formula_regions_sorted):
-                        if i in formula_inserted:
+                if isinstance(text_data, dict):
+                    raw_blocks = text_data.get("blocks", [])
+                    for block in raw_blocks:
+                        if "lines" not in block:
                             continue
-                        fx0, fy0, fx1, fy1 = formula["bbox"]
-                        if fy1 <= by0 + 40:
-                            page_parts.append(f"$${formula['latex']}$$")
-                            formula_inserted.add(i)
+                        bx0, by0, bx1, by1 = block.get("bbox", (0, 0, 0, 0))
 
-                    text = sanitize_utf8_string((raw_text or "").strip())
-                    text = HEADER_REGEX.sub("", text).strip()
-                    text = sanitize_utf8_string(text)
-                    if not text:
-                        continue
+                        # Insere fórmulas RECONHECIDAS cujo bounding box está acima
+                        # do topo deste bloco de texto (dentro de margem de 40pt)
+                        for i, formula in enumerate(formula_regions_sorted):
+                            if i in formula_inserted or not formula.get("recognized"):
+                                continue
+                            fx0, fy0, fx1, fy1 = formula["bbox"]
+                            if fy1 <= by0 + 40:
+                                page_parts.append(f"$${formula['latex']}$$")
+                                formula_inserted.add(i)
 
-                    # Detecta início da seção de referências
-                    first_words = " ".join(text.split()[:5])
-                    if REF_TITLE_REGEX.search(first_words):
-                        logger.info(
-                            f"PyMuPDF: Seção de referências detectada na página {page_num} "
-                            f"de '{filename}'. Truncando leitura."
-                        )
-                        found_references = True
-                        break
+                        lines_text = []
+                        for line in block.get("lines", []):
+                            spans = line.get("spans", [])
+                            if not spans:
+                                continue
+                            base_size = max(s.get("size", 10.0) for s in spans)
+                            base_origins = [s.get("origin", (0, 0))[1] for s in spans if s.get("size", 0) >= base_size - 0.5]
+                            base_origin_y = sum(base_origins) / len(base_origins) if base_origins else 0.0
 
-                    # Normaliza símbolos Unicode matemáticos → LaTeX
-                    text = normalize_unicode_math(text)
-                    page_parts.append(text)
+                            line_parts = []
+                            for span in spans:
+                                span_text = span.get("text", "")
+                                size = span.get("size", base_size)
+                                origin_y = span.get("origin", (0, 0))[1]
+                                cleaned = span_text.strip()
 
-                # Adiciona fórmulas restantes que ficaram após o último bloco de texto
+                                is_super = (size < base_size * 0.92) and (origin_y < base_origin_y - 1.5)
+                                is_sub = (size < base_size * 0.92) and (origin_y > base_origin_y + 1.5)
+
+                                if is_super and cleaned:
+                                    if cleaned.startswith("[") and cleaned.endswith("]"):
+                                        line_parts.append(cleaned)
+                                    else:
+                                        line_parts.append(f"^{{{cleaned}}}")
+                                elif is_sub and cleaned:
+                                    line_parts.append(f"_{{{cleaned}}}")
+                                else:
+                                    line_parts.append(span_text)
+                            lines_text.append("".join(line_parts))
+
+                        raw_text = "\n".join(lines_text)
+                        text = sanitize_utf8_string(raw_text.strip())
+                        text = HEADER_REGEX.sub("", text).strip()
+                        text = sanitize_utf8_string(text)
+                        if not text:
+                            continue
+
+                        # Detecta início da seção de referências
+                        first_words = " ".join(text.split()[:5])
+                        if REF_TITLE_REGEX.search(first_words):
+                            logger.info(
+                                f"PyMuPDF: Seção de referências detectada na página {page_num} "
+                                f"de '{filename}'. Truncando leitura."
+                            )
+                            found_references = True
+                            break
+
+                        # Normaliza símbolos Unicode matemáticos → LaTeX
+                        text = normalize_unicode_math(text)
+                        page_parts.append(text)
+                else:
+                    # Fallback para mocks ou retorno direto em tuplas
+                    blocks = page.get_text("blocks", sort=True) if not isinstance(text_data, list) else text_data
+                    for block in blocks:
+                        bx0, by0, bx1, by1, raw_text = block[0], block[1], block[2], block[3], block[4]
+
+                        for i, formula in enumerate(formula_regions_sorted):
+                            if i in formula_inserted or not formula.get("recognized"):
+                                continue
+                            fx0, fy0, fx1, fy1 = formula["bbox"]
+                            if fy1 <= by0 + 40:
+                                page_parts.append(f"$${formula['latex']}$$")
+                                formula_inserted.add(i)
+
+                        text = sanitize_utf8_string((raw_text or "").strip())
+                        text = HEADER_REGEX.sub("", text).strip()
+                        text = sanitize_utf8_string(text)
+                        if not text:
+                            continue
+
+                        first_words = " ".join(text.split()[:5])
+                        if REF_TITLE_REGEX.search(first_words):
+                            logger.info(
+                                f"PyMuPDF: Seção de referências detectada na página {page_num} "
+                                f"de '{filename}'. Truncando leitura."
+                            )
+                            found_references = True
+                            break
+
+                        text = normalize_unicode_math(text)
+                        page_parts.append(text)
+
+                # Adiciona fórmulas restantes que foram efetivamente RECONHECIDAS
                 for i, formula in enumerate(formula_regions_sorted):
-                    if i not in formula_inserted:
+                    if i not in formula_inserted and formula.get("recognized"):
                         page_parts.append(f"$${formula['latex']}$$")
 
                 full_page_text = sanitize_utf8_string("\n".join(page_parts))
@@ -365,7 +432,7 @@ class MaterialChunker:
                 for split in self._split_text_fallback(full_page_text):
                     split = sanitize_utf8_string(split)
                     words = [w for w in split.split() if w.strip()]
-                    if len(words) < 15:
+                    if len(words) < MIN_CHUNK_WORDS:
                         continue
                     if _has_reference_signals(split):
                         continue

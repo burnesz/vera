@@ -25,7 +25,8 @@ def run_materials_ingestion(
     namespace: str = settings.NAMESPACE_MATERIAIS_DIDATICOS,
     batch_size: int = 50,
     clear_namespace: bool = False,
-    dry_run: bool = False
+    dry_run: bool = False,
+    formula_extraction_enabled: Optional[bool] = None,
 ) -> Dict[str, Any]:
     """
     Executa o pipeline completo de ingestão dos materiais didáticos teóricos:
@@ -37,7 +38,8 @@ def run_materials_ingestion(
     start_time = time.time()
     logger.info("=" * 70)
     logger.info("INICIANDO PIPELINE DE INGESTÃO DE MATERIAIS DIDÁTICOS (R2 -> PINECONE)")
-    logger.info(f"Namespace alvo: '{namespace}' | Limpar antes: {clear_namespace} | Dry-run: {dry_run}")
+    ocr_status = "Desabilitado" if formula_extraction_enabled is False else "Habilitado"
+    logger.info(f"Namespace alvo: '{namespace}' | Limpar antes: {clear_namespace} | Dry-run: {dry_run} | OCR de fórmulas: {ocr_status}")
     logger.info("=" * 70)
 
     if clear_namespace and not dry_run:
@@ -62,7 +64,7 @@ def run_materials_ingestion(
     logger.info(f"Total de {len(pdf_files)} materiais identificados no R2 para processamento.")
 
     # 2. Parsing e Chunking
-    chunker = MaterialChunker()
+    chunker = MaterialChunker(formula_extraction_enabled=formula_extraction_enabled)
     all_chunks: List[Dict[str, Any]] = []
     processed_files = 0
     failed_files = []
@@ -125,6 +127,7 @@ def main():
     parser.add_argument("--batch-size", type=int, default=50, help="Tamanho do lote de embeddings e upsert (padrão: 50)")
     parser.add_argument("--clear", action="store_true", help="Limpa todos os vetores do namespace especificado antes de reindexar")
     parser.add_argument("--dry-run", action="store_true", help="Executa o parsing e chunking sem enviar ao Pinecone")
+    parser.add_argument("--no-ocr", action="store_true", help="Desabilita OCR de fórmulas em imagens (usa texto e LaTeX nativo, muito mais rápido)")
     parser.add_argument("--test-query", type=str, default=None, help="Executa uma busca teste no Pinecone após a ingestão")
 
     args = parser.parse_args()
@@ -134,7 +137,8 @@ def main():
         namespace=args.namespace,
         batch_size=args.batch_size,
         clear_namespace=args.clear,
-        dry_run=args.dry_run
+        dry_run=args.dry_run,
+        formula_extraction_enabled=False if args.no_ocr else None,
     )
 
     if args.test_query:
