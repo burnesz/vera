@@ -145,6 +145,56 @@ def _jaccard_similarity(text_a: str, text_b: str) -> float:
     return intersection / union if union > 0 else 0.0
 
 
+TABLE_INDICATOR_PATTERNS = [
+    r"\btabela\s+a\s+seguir\b",
+    r"\btabela\s+abaixo\b",
+    r"\bquadro\s+a\s+seguir\b",
+    r"\bquadro\s+abaixo\b",
+    r"\bapresentados?\s+na\s+tabela\b",
+    r"\bapresentadas?\s+na\s+tabela\b",
+    r"\bconstam\s+na\s+tabela\b",
+    r"\bconstam\s+no\s+quadro\b",
+    r"\bdados\s+da\s+tabela\b",
+    r"\bna\s+seguinte\s+tabela\b",
+    r"\bno\s+seguinte\s+quadro\b",
+    r"\bconforme\s+a\s+tabela\b",
+    r"\bconforme\s+o\s+quadro\b",
+    r"\bmostrad[oa]s?\s+na\s+tabela\b",
+    r"\bmostrad[oa]s?\s+no\s+quadro\b",
+    r"\bobservando\s+a\s+tabela\b",
+    r"\bobservando\s+o\s+quadro\b",
+    r"\bsegundo\s+a\s+tabela\b",
+]
+
+
+def check_table_markdown_structure(enunciado: str) -> Tuple[bool, Optional[str]]:
+    """
+    Verifica se enunciados que anunciam uma tabela possuem estrutura de tabela em Markdown válida.
+    Evita que o LLM achate dados tabulares em texto corrido e confuso.
+    """
+    clean_text = enunciado.lower()
+    announces_table = any(re.search(pat, clean_text) for pat in TABLE_INDICATOR_PATTERNS)
+    if not announces_table:
+        return True, None
+
+    # Verifica linhas com pipes
+    lines = [line.strip() for line in enunciado.split("\n") if line.strip()]
+    pipe_lines = [l for l in lines if "|" in l]
+    # Linha delimitadora clássica do Markdown: ex | --- | --- | ou |:---|:---:|
+    has_delimiter = any(re.search(r"\|?\s*:?-{2,}:?\s*\|", l) for l in pipe_lines)
+
+    if len(pipe_lines) >= 3 and has_delimiter:
+        return True, None
+
+    msg = (
+        "Problema de formatação tabular: O enunciado menciona a apresentação de uma tabela "
+        "(ex: 'tabela a seguir/abaixo'), mas não contém uma tabela estruturada em Markdown válida. "
+        "Você DEVE OBRIGATORIAMENTE formatar os dados tabulares como uma tabela Markdown "
+        "(com cabeçalho '| Col 1 | Col 2 |', delimitador '| :--- | :---: |' e linhas de dados separadas por '\\n')."
+    )
+    return False, msg
+
+
 def validate_questao_inedita(
     raw_output: Union[str, Dict[str, Any]],
     few_shot_exemplos: Optional[List[Dict[str, Any]]] = None
@@ -158,6 +208,7 @@ def validate_questao_inedita(
     5. Unicidade estrita das alternativas (RN-Q01: ausência de alternativas duplicadas).
     6. Verificação de originalidade (não plagiar enunciados dos exemplos few-shot fornecidos).
     7. Validação semântica de alinhamento comando-gabarito (mitigação de shortcut reasoning).
+    8. Validação estrutural de tabelas Markdown quando anunciadas.
 
     Retorna: (is_valid, error_message, parsed_model_or_none)
     """
@@ -216,6 +267,12 @@ def validate_questao_inedita(
     )
     if not is_aligned:
         return False, align_error, None
+
+    # 5. Validação estrutural de tabelas Markdown quando anunciadas
+    is_table_valid, table_error = check_table_markdown_structure(validated_item.enunciado)
+    if not is_table_valid:
+        logger.warning(table_error)
+        return False, table_error, None
 
     return True, None, validated_item
 

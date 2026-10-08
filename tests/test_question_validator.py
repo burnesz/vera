@@ -161,3 +161,76 @@ def test_validate_questao_inedita_rejects_shortcut_reasoning():
     assert item is None
     assert "Shortcut Reasoning" in error or "Inconsistência semântica" in error
 
+
+def test_check_table_markdown_structure_valid():
+    """Valida que uma questão contendo tabela Markdown válida é aprovada."""
+    from app.services.question_validator import check_table_markdown_structure
+
+    enunciado_com_tabela = (
+        "A tabela a seguir apresenta os dados de vendas de uma loja em três meses:\n\n"
+        "| Mês | Vendas (unidades) | Faturamento (R$) |\n"
+        "| :--- | :---: | :---: |\n"
+        "| Janeiro | 100 | 5 000 |\n"
+        "| Fevereiro | 150 | 7 500 |\n"
+        "| Março | 200 | 10 000 |\n\n"
+        "Qual foi o faturamento médio mensal?"
+    )
+
+    is_valid, error = check_table_markdown_structure(enunciado_com_tabela)
+    assert is_valid is True
+    assert error is None
+
+
+def test_check_table_markdown_structure_flattened_fails():
+    """Valida que uma questão que anuncia 'tabela a seguir' mas achata em texto corrido é rejeitada."""
+    from app.services.question_validator import check_table_markdown_structure
+
+    # Exemplo similar ao caso real f1e07d2c-0bb4-40fa-851b-9f7c7b7f2f9d
+    enunciado_achatado = (
+        "Um restaurante registra o número de clientes em três dias da semana. "
+        "Os dados são apresentados na tabela a seguir. Número de Clientes Segunda-feira em abril 120 "
+        "Quarta-feira 80 Sexta-feira 200. Qual foi o total?"
+    )
+
+    is_valid, error = check_table_markdown_structure(enunciado_achatado)
+    assert is_valid is False
+    assert "Problema de formatação tabular" in error
+    assert "tabela Markdown" in error
+
+
+def test_check_table_markdown_structure_without_table_passes():
+    """Valida que questões regulares sem menção a tabela passam sem interferência."""
+    from app.services.question_validator import check_table_markdown_structure
+
+    enunciado_comum = (
+        "Uma gráfica cobra R$ 80,00 para imprimir um lote de 500 panfletos. "
+        "Qual o valor total de 2000 panfletos?"
+    )
+
+    is_valid, error = check_table_markdown_structure(enunciado_comum)
+    assert is_valid is True
+    assert error is None
+
+
+def test_validate_questao_inedita_rejects_unstructured_table():
+    """Valida que a validação completa via validate_questao_inedita rejeita tabela sem formatação Markdown."""
+    payload_tabela_achatada = {
+        "thought_scratchpad": "Cálculos da tabela",
+        "enunciado": "Os dados de produção constam na tabela a seguir. Turno Manha 10 Tarde 20 Noite 30. Qual a produção total?",
+        "alternativas": {
+            "A": "40",
+            "B": "50",
+            "C": "60",
+            "D": "70",
+            "E": "80"
+        },
+        "gabarito": "C",
+        "justificativa": "10 + 20 + 30 = 60. Alternativa C."
+    }
+
+    is_valid, error, item = validate_questao_inedita(payload_tabela_achatada)
+    assert is_valid is False
+    assert item is None
+    assert "Problema de formatação tabular" in error
+
+

@@ -228,8 +228,15 @@ CRITÉRIOS OBRIGATÓRIOS DO ITEM (PADRÃO INEP):
 5. **Formatação de LaTeX dentro do JSON (OBRIGATÓRIO):**
    - Ao escrever expressões matemáticas em formato LaTeX dentro das strings do JSON, você DEVE SEMPRE dobrar a barra invertida (ex: use `\\\\frac{a}{b}`, `\\\\sqrt{x}`, `\\\\cdot`, `\\\\times`).
    - NUNCA utilize barra simples (como `\\frac`), pois a barra simples é interpretada como caractere de controle (como form feed `\\f`) e corrompe o JSON.
-6. **Originalidade e Ineditismo:** O item gerado DEVE SER INÉDITO. Não copie nem meramente troque números dos itens de exemplo. Use-os apenas como referência do padrão de complexidade e linguagem.
-7. **Formato de Saída (JSON Estrito):**
+6. **Formatação de Tabelas em Markdown (OBRIGATÓRIO):**
+   - Se o problema envolver dados tabulares, comparativos ou o texto anunciar uma tabela ("tabela a seguir", "quadro abaixo", "apresentados na tabela", etc.), você DEVE OBRIGATORIAMENTE formatar esses dados como uma Tabela Markdown limpa:
+     | Coluna 1 | Coluna 2 | Coluna 3 |
+     | :--- | :---: | :---: |
+     | Item A | 100 | 200 |
+     | Item B | 150 | 250 |
+   - Utilize quebras de linha (`\\n`) entre as linhas da tabela. NUNCA junte ou achate os dados da tabela em uma linha contínua de texto corrido.
+7. **Originalidade e Ineditismo:** O item gerado DEVE SER INÉDITO. Não copie nem meramente troque números dos itens de exemplo. Use-os apenas como referência do padrão de complexidade e linguagem.
+8. **Formato de Saída (JSON Estrito):**
    Responda EXCLUSIVAMENTE com um objeto JSON válido, sem texto antes ou depois, seguindo o schema:
    {
      "thought_scratchpad": "Etapa 1: ...; Etapa 2 (Cálculos): ...; Etapa 3 (Alinhamento de comando): Pergunta pede X, cálculo final = Y, alternativa correspondente = [Letra]; Etapa 4 (Distratores): ...",
@@ -319,6 +326,12 @@ O gabarito e as alternativas serão calculados e embaralhados automaticamente po
 SUA PRODUÇÃO CONSISTE EXCLUSIVAMENTE EM DOIS CAMPOS (JSON):
 1. **enunciado**: Uma situação-problema autêntica, realista e contextualizada do cotidiano brasileiro, finalizando com um comando inequívoco do que o estudante deve calcular.
    - Use notação matemática direta e limpa (ex: 'R$ 50,00', '3/4', 'x^2', '20%') sem comandos LaTeX complexos que quebrem o JSON.
+   - ESTRUTURAÇÃO DE TABELAS EM MARKDOWN (OBRIGATÓRIO): Se o problema envolver dados tabulares, comparativos ou o texto anunciar uma tabela ('tabela a seguir', 'quadro abaixo', 'conforme a tabela', etc.), você DEVE OBRIGATORIAMENTE formatar esses dados como uma Tabela Markdown limpa e estruturada com pipes '|' e quebras de linha '\\n':
+     | Categoria | Valor A | Valor B |
+     | :--- | :---: | :---: |
+     | Item 1 | 100 | 200 |
+     | Item 2 | 150 | 250 |
+     NUNCA achate dados de tabela em texto corrido com espaços.
 2. **solver**: Uma função em Python puro chamada `def resolver():` que:
    - Modela com precisão exata os cálculos do enunciado.
    - Utiliza OBRIGATORIAMENTE os mesmos números informados no texto do enunciado.
@@ -333,10 +346,16 @@ REGRAS RÍGIDAS DE CONSISTÊNCIA:
 - O comando final da questão deve pedir EXATAMENTE o número calculado na chave 'correta'. Se o comando pede o valor total de N itens, 'correta' DEVE ser o valor total, não o valor unitário!
 """
 
-POT_FEW_SHOT_EXAMPLE = """--- [EXEMPLO DE REFERÊNCIA DE FORMATO (ENEM)] ---
+POT_FEW_SHOT_EXAMPLE = """--- [EXEMPLO 1 (PROBLEMA COM DADOS EM TEXTO)] ---
 {
   "enunciado": "Uma gráfica cobra R$ 80,00 para imprimir um lote de 500 panfletos promocionais. Para encomendas maiores, a empresa oferece um desconto progressivo: a cada 500 panfletos adicionais encomendados, o valor cobrado por lote tem uma redução de 10% em relação ao preço inicial do lote. Um comerciante encomendou um total de 2 000 panfletos nessa gráfica. Qual é o valor total, em reais, pago pelo comerciante por essa encomenda?",
   "solver": "def resolver():\\n    preco_base = 80.0\\n    total_panfletos = 2000\\n    tamanho_lote = 500\\n    desconto_percentual = 0.10\\n    num_lotes = total_panfletos / tamanho_lote  # 4 lotes\\n    lotes_adicionais = num_lotes - 1  # 3 lotes adicionais\\n    preco_lote_adicional = preco_base * (1 - desconto_percentual)  # 72.0\\n    # Valor total: 1 lote base + 3 lotes com desconto\\n    total_correto = preco_base + (lotes_adicionais * preco_lote_adicional)\\n    # Distratores plausíveis:\\n    d1 = num_lotes * preco_base  # 320.0 (sem desconto)\\n    d2 = num_lotes * preco_lote_adicional  # 288.0 (aplicou desconto em todos os lotes)\\n    d3 = preco_lote_adicional  # 72.0 (calculou apenas o preço de um lote)\\n    d4 = preco_base + (num_lotes * preco_lote_adicional * desconto_percentual)  # erro parcial\\n    return {'correta': total_correto, 'distratores': [d1, d2, d3, d4]}"
+}
+
+--- [EXEMPLO 2 (PROBLEMA COM TABELA EM MARKDOWN)] ---
+{
+  "enunciado": "A tabela a seguir apresenta os dados de vendas de ingressos de um teatro ao longo de três dias:\\n\\n| Dia da Semana | Ingressos Inteira | Ingressos Meia |\\n| :--- | :---: | :---: |\\n| Sexta-feira | 120 | 80 |\\n| Sábado | 200 | 150 |\\n| Domingo | 160 | 90 |\\n\\nO valor do ingresso inteira é R$ 50,00 e o da meia-entrada é R$ 25,00. Qual foi a arrecadação total, em reais, obtida no sábado?",
+  "solver": "def resolver():\\n    inteira_sabado = 200\\n    meia_sabado = 150\\n    preco_inteira = 50.0\\n    preco_meia = 25.0\\n    total_sabado = (inteira_sabado * preco_inteira) + (meia_sabado * preco_meia)  # 13750.0\\n    d1 = inteira_sabado * preco_inteira  # 10000.0 (somente inteiras)\\n    d2 = meia_sabado * preco_meia  # 3750.0 (somente meias)\\n    d3 = (inteira_sabado + meia_sabado) * preco_inteira  # 17500.0 (todas como inteira)\\n    d4 = (inteira_sabado + meia_sabado) * preco_meia  # 8750.0 (todas como meia)\\n    return {'correta': total_sabado, 'distratores': [d1, d2, d3, d4]}"
 }
 """
 

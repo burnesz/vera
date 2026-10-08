@@ -60,12 +60,15 @@ class Settings(BaseSettings):
         """
         Monta a DATABASE_URL dinamicamente caso não tenha sido fornecida explicitamente.
         Garante fonte única da verdade com as variáveis POSTGRES_*.
+        Garante o uso explícito do driver psycopg2 para compatibilidade com SQLAlchemy 2.x+.
         """
         if not self.DATABASE_URL:
             self.DATABASE_URL = (
-                f"postgresql://{self.POSTGRES_USER}:{self.POSTGRES_PASSWORD}"
+                f"postgresql+psycopg2://{self.POSTGRES_USER}:{self.POSTGRES_PASSWORD}"
                 f"@{self.POSTGRES_SERVER}:{self.POSTGRES_PORT}/{self.POSTGRES_DB}"
             )
+        elif self.DATABASE_URL.startswith("postgresql://"):
+            self.DATABASE_URL = self.DATABASE_URL.replace("postgresql://", "postgresql+psycopg2://", 1)
         return self
 
     # Namespaces Pinecone (RN-VETOR01)

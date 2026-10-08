@@ -25,6 +25,7 @@ from app.services.llm_client import LLMClient
 from app.services.vectorstore import PineconeVectorStore
 from app.services.question_validator import (
     validate_questao_inedita,
+    check_table_markdown_structure,
     extract_json_from_text,
     sanitize_latex_json_text,
     sanitize_parsed_dict_values
@@ -336,6 +337,13 @@ class QuestionService:
             except ValidationError as e:
                 last_error = f"Erro no schema do solver: {e.errors()}"
                 logger.warning(f"Tentativa {attempt}/{max_attempts} falhou no schema Pydantic: {e}")
+                continue
+
+            # Validação estrutural de formatação de tabela Markdown (se anunciada)
+            is_table_valid, table_err = check_table_markdown_structure(pot_output.enunciado)
+            if not is_table_valid:
+                last_error = table_err
+                logger.warning(f"Tentativa {attempt}/{max_attempts} falhou na formatação da tabela: {table_err}")
                 continue
 
             # --- EXECUÇÃO DO SOLVER EM SUBPROCESS ISOLADO ---
