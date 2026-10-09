@@ -13,6 +13,7 @@ import json
 import time
 import logging
 import uuid
+import random
 from typing import List, Dict, Any, Optional, Callable
 from sqlalchemy.orm import Session
 from sqlalchemy import func
@@ -192,7 +193,7 @@ class QuestionService:
         self,
         db: Session,
         habilidade_codigo: str,
-        num_few_shot: int = 3,
+        num_few_shot: int = 2,
         max_attempts: int = 3,
         temperature: float = 0.2,
         top_p: float = 0.9,
@@ -266,7 +267,7 @@ class QuestionService:
         )
 
         last_error: Optional[str] = None
-        referencia_enem = few_shot_dicts[0] if few_shot_dicts else None
+        referencia_enem = random.choice(few_shot_dicts) if few_shot_dicts else None
 
         for attempt in range(1, max_attempts + 1):
             logger.info(f"PoT: Tentativa {attempt}/{max_attempts} para {clean_hab}...")
@@ -517,7 +518,7 @@ class QuestionService:
         db: Session,
         habilidades: Optional[List[str]] = None,
         count_per_habilidade: int = 1,
-        num_few_shot: int = 3,
+        num_few_shot: int = 2,
         use_pot: bool = True,
         on_progress: Optional[Callable[[str, int, int, bool, Optional[str]], None]] = None
     ) -> BatchPopulationSummary:

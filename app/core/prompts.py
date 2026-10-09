@@ -224,7 +224,8 @@ CRITÉRIOS OBRIGATÓRIOS DO ITEM (PADRÃO INEP):
    - Exatamente 1 alternativa correta (gabarito).
    - 4 distratores plausíveis (representando erros de interpretação, equívocos conceituais, inversões de fórmulas ou cálculos parciais comuns a estudantes).
    - As alternativas devem possuir paralelismo sintático e extensão equilibrada.
-   - NUNCA repita valores ou textos entre alternativas (unicidade estrita).
+   - NUNCA repita valores ou textos entre as 5 alternativas (unicidade estrita e absoluta). Se o seu cálculo de um distrator resultar no mesmo valor do gabarito ou de outro distrator, mude a lógica do distrator obrigatoriamente.
+   - Todo número presente na lógica matemática (mesmo que seja um multiplicador de distrator) deve ter nexo com o texto. Não invente números mágicos soltos (ex: `+ 15`) para criar distratores.
 5. **Formatação de LaTeX dentro do JSON (OBRIGATÓRIO):**
    - Ao escrever expressões matemáticas em formato LaTeX dentro das strings do JSON, você DEVE SEMPRE dobrar a barra invertida (ex: use `\\\\frac{a}{b}`, `\\\\sqrt{x}`, `\\\\cdot`, `\\\\times`).
    - NUNCA utilize barra simples (como `\\frac`), pois a barra simples é interpretada como caractere de controle (como form feed `\\f`) e corrompe o JSON.
@@ -317,45 +318,27 @@ Gere estritamente o JSON com as chaves: 'thought_scratchpad', 'enunciado', 'alte
 # PROMPTS PARA ARQUITETURA PROGRAM-AIDED (PoT: ENUNCIADO + SOLVER EM PYTHON)
 # ==============================================================================
 
-POT_QUESTION_GENERATOR_SYSTEM_PROMPT = """Você é um Elaborador Oficial de Itens de Matemática para o ENEM e Engenheiro de Software Educacional.
-Sua missão é conceber uma QUESTÃO INÉDITA de Matemática no padrão ENEM através da abordagem Program-Aided Generation.
+POT_QUESTION_GENERATOR_SYSTEM_PROMPT = """Você é um Elaborador de Itens de Matemática para o ENEM.
+Gere uma QUESTÃO INÉDITA estruturada em JSON (enunciado + solver em Python).
+O solver calculará a resposta correta e 4 distratores; NÃO gere gabarito ou letras A-E.
 
-VOCÊ NÃO DEVE GERAR AS ALTERNATIVAS (A-E) NEM A LETRA DO GABARITO.
-O gabarito e as alternativas serão calculados e embaralhados automaticamente por código Python!
-
-SUA PRODUÇÃO CONSISTE EXCLUSIVAMENTE EM DOIS CAMPOS (JSON):
-1. **enunciado**: Uma situação-problema autêntica, realista e contextualizada do cotidiano brasileiro, finalizando com um comando inequívoco do que o estudante deve calcular.
-   - Use notação matemática direta e limpa (ex: 'R$ 50,00', '3/4', 'x^2', '20%') sem comandos LaTeX complexos que quebrem o JSON.
-   - ESTRUTURAÇÃO DE TABELAS EM MARKDOWN (OBRIGATÓRIO): Se o problema envolver dados tabulares, comparativos ou o texto anunciar uma tabela ('tabela a seguir', 'quadro abaixo', 'conforme a tabela', etc.), você DEVE OBRIGATORIAMENTE formatar esses dados como uma Tabela Markdown limpa e estruturada com pipes '|' e quebras de linha '\\n':
-     | Categoria | Valor A | Valor B |
-     | :--- | :---: | :---: |
-     | Item 1 | 100 | 200 |
-     | Item 2 | 150 | 250 |
-     NUNCA achate dados de tabela em texto corrido com espaços.
-2. **solver**: Uma função em Python puro chamada `def resolver():` que:
-   - Modela com precisão exata os cálculos do enunciado.
-   - Utiliza OBRIGATORIAMENTE os mesmos números informados no texto do enunciado.
-   - Calcula a grandeza exata solicitada pelo comando final ('correta').
-   - Calcula 4 distratores plausíveis baseados em erros conceituais ou de cálculo comuns ('distratores').
-   - Retorna OBRIGATORIAMENTE um dicionário no formato:
-     return {'correta': <numero>, 'distratores': [<d1>, <d2>, <d3>, <d4>]}
-
-REGRAS RÍGIDAS DE CONSISTÊNCIA:
-- Todo número numérico usado no solver (antes do return) DEVE constar no texto do enunciado (exceto constantes neutras como 0, 1, 2, 10, 100, 3.14).
-- Os 4 distratores e a resposta correta DEVEM ser 5 números distintos (nunca gere valores repetidos).
-- O comando final da questão deve pedir EXATAMENTE o número calculado na chave 'correta'. Se o comando pede o valor total de N itens, 'correta' DEVE ser o valor total, não o valor unitário!
+REGRAS ESTRITAS:
+1. ENUNCIADO: Situação-problema realista com comando final claro.
+   - SEJA CRIATIVO NO CONTEXTO. NUNCA comece as questões sempre com a mesma estrutura sintática (ex: "Um restaurante...", "Uma empresa...", "Um fabricante..."). Varie a narrativa, o sujeito e a forma de iniciar o texto!
+   - NUNCA use palavras como "solver", "python", "algoritmo", "código", "distrator" ou "gabarito" no enunciado!
+   - Tabelas devem usar Markdown limpo (com pipes e quebras de linha \\n).
+2. SOLVER (Python puro): 
+   - Modela os cálculos da grandeza solicitada no enunciado.
+   - Retorna: return {'correta': <numero>, 'distratores': [<d1>, <d2>, <d3>, <d4>]}
+3. NEXO E COMPLETUDE: Todo dado ou número usado no solver (exceto constantes universais) DEVE estar visível no texto do enunciado. Um aluno não pode adivinhar o que não está escrito.
+4. COERÊNCIA FÍSICA E MATEMÁTICA: O problema deve ser factível e ter lógica no mundo real.
+5. EXCLUSIVIDADE: Gere APENAS o JSON válido, sem comentários antes ou depois.
 """
 
-POT_FEW_SHOT_EXAMPLE = """--- [EXEMPLO 1 (PROBLEMA COM DADOS EM TEXTO)] ---
+POT_FEW_SHOT_EXAMPLE = """--- [EXEMPLO DE SAÍDA ESPERADA] ---
 {
-  "enunciado": "Uma gráfica cobra R$ 80,00 para imprimir um lote de 500 panfletos promocionais. Para encomendas maiores, a empresa oferece um desconto progressivo: a cada 500 panfletos adicionais encomendados, o valor cobrado por lote tem uma redução de 10% em relação ao preço inicial do lote. Um comerciante encomendou um total de 2 000 panfletos nessa gráfica. Qual é o valor total, em reais, pago pelo comerciante por essa encomenda?",
-  "solver": "def resolver():\\n    preco_base = 80.0\\n    total_panfletos = 2000\\n    tamanho_lote = 500\\n    desconto_percentual = 0.10\\n    num_lotes = total_panfletos / tamanho_lote  # 4 lotes\\n    lotes_adicionais = num_lotes - 1  # 3 lotes adicionais\\n    preco_lote_adicional = preco_base * (1 - desconto_percentual)  # 72.0\\n    # Valor total: 1 lote base + 3 lotes com desconto\\n    total_correto = preco_base + (lotes_adicionais * preco_lote_adicional)\\n    # Distratores plausíveis:\\n    d1 = num_lotes * preco_base  # 320.0 (sem desconto)\\n    d2 = num_lotes * preco_lote_adicional  # 288.0 (aplicou desconto em todos os lotes)\\n    d3 = preco_lote_adicional  # 72.0 (calculou apenas o preço de um lote)\\n    d4 = preco_base + (num_lotes * preco_lote_adicional * desconto_percentual)  # erro parcial\\n    return {'correta': total_correto, 'distratores': [d1, d2, d3, d4]}"
-}
-
---- [EXEMPLO 2 (PROBLEMA COM TABELA EM MARKDOWN)] ---
-{
-  "enunciado": "A tabela a seguir apresenta os dados de vendas de ingressos de um teatro ao longo de três dias:\\n\\n| Dia da Semana | Ingressos Inteira | Ingressos Meia |\\n| :--- | :---: | :---: |\\n| Sexta-feira | 120 | 80 |\\n| Sábado | 200 | 150 |\\n| Domingo | 160 | 90 |\\n\\nO valor do ingresso inteira é R$ 50,00 e o da meia-entrada é R$ 25,00. Qual foi a arrecadação total, em reais, obtida no sábado?",
-  "solver": "def resolver():\\n    inteira_sabado = 200\\n    meia_sabado = 150\\n    preco_inteira = 50.0\\n    preco_meia = 25.0\\n    total_sabado = (inteira_sabado * preco_inteira) + (meia_sabado * preco_meia)  # 13750.0\\n    d1 = inteira_sabado * preco_inteira  # 10000.0 (somente inteiras)\\n    d2 = meia_sabado * preco_meia  # 3750.0 (somente meias)\\n    d3 = (inteira_sabado + meia_sabado) * preco_inteira  # 17500.0 (todas como inteira)\\n    d4 = (inteira_sabado + meia_sabado) * preco_meia  # 8750.0 (todas como meia)\\n    return {'correta': total_sabado, 'distratores': [d1, d2, d3, d4]}"
+  "enunciado": "Uma gráfica cobra R$ 80,00 para imprimir um lote de 500 panfletos. A cada lote de 500 panfletos adicionais, o valor desse lote sofre redução de 10% do preço inicial. Um comerciante encomendou 2 000 panfletos. Qual é o valor total, em reais, pago pelo comerciante?",
+  "solver": "def resolver():\\n    preco_base = 80.0\\n    tamanho_lote = 500\\n    total_panfletos = 2000\\n    desc = 0.10\\n    num_lotes = total_panfletos / tamanho_lote\\n    lotes_ad = num_lotes - 1\\n    preco_ad = preco_base * (1 - desc)\\n    total = preco_base + (lotes_ad * preco_ad)\\n    d1 = num_lotes * preco_base\\n    d2 = num_lotes * preco_ad\\n    d3 = preco_ad\\n    d4 = preco_base + (num_lotes * preco_ad * desc)\\n    return {'correta': total, 'distratores': [d1, d2, d3, d4]}"
 }
 """
 
@@ -437,12 +420,8 @@ def build_justificativa_prompt(
     alts_formatted = "\n".join([f"  {k}) {v}" for k, v in sorted(alternativas.items())])
     correta_valor = alternativas.get(gabarito, "")
 
-    codigo_sec = ""
-    if solver_code:
-        codigo_sec = f"\nCódigo de Resolução Validado:\n```python\n{solver_code}\n```\n"
-
-    prompt = f"""Você é um Professor Especialista em Avaliação Educacional e Matemática do ENEM.
-Sua missão é redigir a JUSTIFICATIVA PEDAGÓGICA de uma questão cujo gabarito oficial já foi matematicamente calculado e comprovado por código.
+    prompt = f"""Você é um Professor de Matemática focado no ENEM.
+Escreva a JUSTIFICATIVA PEDAGÓGICA de uma questão didaticamente para um aluno.
 
 ============================================================
 DADOS DA QUESTÃO:
@@ -454,13 +433,17 @@ Alternativas:
 {alts_formatted}
 
 Gabarito Oficial Confirmado: Alternativa {gabarito} ({correta_valor})
-{codigo_sec}
+
 ============================================================
 SUA TAREFA:
 ============================================================
-Escreva a justificativa didática demonstrando:
-1. A resolução matemática passo a passo que comprova por que a alternativa {gabarito} ({correta_valor}) é a correta;
-2. Breve explicação do porquê os distratores representam erros ou passos parciais comuns de estudantes.
+Escreva a justificativa didática como um ser humano:
+1. Explique passo a passo por que a alternativa {gabarito} é a correta.
+2. Explique os erros conceituais dos distratores.
+
+REGRAS ESTRITAS CONTRA VAZAMENTO:
+- NUNCA mencione palavras como "solver", "python", "código", "algoritmo", "gerado" ou "calculado automaticamente".
+- O texto deve parecer escrito inteiramente por um humano, como uma resolução de apostila.
 
 Responda EXCLUSIVAMENTE com um JSON no seguinte schema:
 {{

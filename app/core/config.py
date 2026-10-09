@@ -19,8 +19,9 @@ class Settings(BaseSettings):
     LLM_ENDPOINT_URL: str = "http://localhost:11434"
     LLM_MODEL: str = "qwen2.5:7b-instruct-q4_K_M"
     LLM_PROVIDER: str = "ollama"
-    LLM_TIMEOUT_SECONDS: float = 120.0
+    LLM_TIMEOUT_SECONDS: float = 300.0
     LLM_MAX_TOKENS: int = 1024
+    LLM_NUM_CTX: int = 8192
 
     # Vector Store (Pinecone)
     PINECONE_API_KEY: str = ""

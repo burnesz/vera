@@ -33,11 +33,8 @@ BLOCKED_CALLS = {
 
 # Constantes numéricas matemáticas, geométricas e temporais neutras permitidas no código
 ALLOWED_NUMERIC_CONSTANTS: Set[float] = {
-    float(i) for i in range(51)
-} | {
-    60.0, 70.0, 80.0, 90.0, 100.0, 180.0, 200.0, 360.0, 365.0, 500.0, 1000.0,
-    0.01, 0.02, 0.05, 0.1, 0.2, 0.25, 0.5, 0.75, 0.8, 1.1, 1.2, 1.25, 1.5, 2.5,
-    3.14, 3.1415, 3.1416
+    0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 10.0, 12.0, 24.0, 60.0, 100.0, 180.0, 360.0, 365.0, 1000.0,
+    0.5, 0.1, 0.01, 3.14, 3.1415, 3.1416
 }
 
 

@@ -56,8 +56,8 @@ def parse_args():
     parser.add_argument(
         "--few-shot-k",
         type=int,
-        default=3,
-        help="Quantidade de exemplos históricos recuperados via RAG (Pinecone) para o prompt (padrão: 3 - Three-Shot)."
+        default=2,
+        help="Quantidade de exemplos históricos recuperados via RAG (Pinecone) para o prompt (padrão: 2)."
     )
     parser.add_argument(
         "--mock",

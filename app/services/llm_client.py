@@ -65,7 +65,7 @@ class LLMClient:
         max_tokens: Optional[int] = None,
         temperature: float = 0.7,
         top_p: float = 0.9,
-        repetition_penalty: float = 1.1,
+        repetition_penalty: float = 1.0,
         format: Optional[str] = None
     ) -> Tuple[str, Dict[str, Any]]:
         resolved_max_tokens = max_tokens if max_tokens is not None else settings.LLM_MAX_TOKENS
@@ -79,7 +79,8 @@ class LLMClient:
                 "num_predict": resolved_max_tokens,
                 "temperature": temperature,
                 "top_p": top_p,
-                "repeat_penalty": repetition_penalty
+                "repeat_penalty": repetition_penalty,
+                "num_ctx": settings.LLM_NUM_CTX
             }
         }
         if format:
@@ -187,7 +188,7 @@ class LLMClient:
         max_tokens: Optional[int] = None,
         temperature: float = 0.7,
         top_p: float = 0.9,
-        repetition_penalty: float = 1.1,
+        repetition_penalty: float = 1.0,
         format: Optional[str] = None
     ) -> str:
         """
@@ -252,7 +253,7 @@ class LLMClient:
         max_tokens: Optional[int] = None,
         temperature: float = 0.7,
         top_p: float = 0.9,
-        repetition_penalty: float = 1.1,
+        repetition_penalty: float = 1.0,
         format: Optional[str] = None
     ) -> str:
         """
