@@ -335,10 +335,10 @@ REGRAS ESTRITAS:
 5. EXCLUSIVIDADE: Gere APENAS o JSON válido, sem comentários antes ou depois.
 """
 
-POT_FEW_SHOT_EXAMPLE = """--- [EXEMPLO DE SAÍDA ESPERADA] ---
+POT_FEW_SHOT_EXAMPLE = """--- [EXEMPLO DE SAÍDA ESPERADA (FORMATO OBRIGATÓRIO)] ---
 {
-  "enunciado": "Uma gráfica cobra R$ 80,00 para imprimir um lote de 500 panfletos. A cada lote de 500 panfletos adicionais, o valor desse lote sofre redução de 10% do preço inicial. Um comerciante encomendou 2 000 panfletos. Qual é o valor total, em reais, pago pelo comerciante?",
-  "solver": "def resolver():\\n    preco_base = 80.0\\n    tamanho_lote = 500\\n    total_panfletos = 2000\\n    desc = 0.10\\n    num_lotes = total_panfletos / tamanho_lote\\n    lotes_ad = num_lotes - 1\\n    preco_ad = preco_base * (1 - desc)\\n    total = preco_base + (lotes_ad * preco_ad)\\n    d1 = num_lotes * preco_base\\n    d2 = num_lotes * preco_ad\\n    d3 = preco_ad\\n    d4 = preco_base + (num_lotes * preco_ad * desc)\\n    return {'correta': total, 'distratores': [d1, d2, d3, d4]}"
+  "enunciado": "Seu texto contextualizado aqui, terminando com uma pergunta clara...",
+  "solver": "def resolver():\\n    # cálculos baseados nos dados numéricos do enunciado\\n    # ...\\n    return {'correta': valor_correto, 'distratores': [d1, d2, d3, d4]}"
 }
 """
 
@@ -348,24 +348,27 @@ def build_enunciado_solver_prompt(
     habilidade_descricao: str,
     competencia: int,
     eixo_tematico: Optional[str] = None,
-    exemplo_referencia: Optional[Dict[str, Any]] = None,
+    exemplos_referencia: Optional[List[Dict[str, Any]]] = None,
     feedback_erro: Optional[str] = None
 ) -> str:
     """
     Constrói prompt estruturado para a Fase 1 da geração PoT (Enunciado + Solver em Python).
     """
     ref_text = ""
-    if exemplo_referencia:
-        ano = exemplo_referencia.get("ano", "ENEM")
-        enun = exemplo_referencia.get("enunciado", "").strip()
-        gab = exemplo_referencia.get("gabarito", "")
-        ref_text = (
-            f"--- [Questão Histórica do ENEM para Ancoragem Isomórfica (ENEM {ano})] ---\n"
-            f"Enunciado Real: {enun}\n"
-            f"Gabarito Oficial: {gab}\n"
-            f"(Crie uma questão inédita ISOMÓRFICA: com mesma lógica matemática e nível de complexidade, "
-            f"porém com um novo contexto do cotidiano e novos dados numéricos)."
-        )
+    if exemplos_referencia:
+        blocos = []
+        for idx, ex in enumerate(exemplos_referencia, 1):
+            ano = ex.get("ano", "ENEM")
+            enun = ex.get("enunciado", "").strip()
+            gab = ex.get("gabarito", "")
+            bloco = (
+                f"--- [Questão Histórica do ENEM {idx} para Ancoragem Isomórfica (ENEM {ano})] ---\n"
+                f"Enunciado Real: {enun}\n"
+                f"Gabarito Oficial: {gab}"
+            )
+            blocos.append(bloco)
+        
+        ref_text = "\n\n".join(blocos) + "\n\n(Crie uma questão inédita ISOMÓRFICA: com mesma lógica matemática e nível de complexidade das questões acima, porém com um novo contexto do cotidiano e novos dados numéricos)."
     else:
         ref_text = "(Siga estritamente os conceitos pedagógicos da habilidade alvo)."
 

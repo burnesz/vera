@@ -267,7 +267,6 @@ class QuestionService:
         )
 
         last_error: Optional[str] = None
-        referencia_enem = random.choice(few_shot_dicts) if few_shot_dicts else None
 
         for attempt in range(1, max_attempts + 1):
             logger.info(f"PoT: Tentativa {attempt}/{max_attempts} para {clean_hab}...")
@@ -278,7 +277,7 @@ class QuestionService:
                 habilidade_descricao=habilidade.descricao,
                 competencia=habilidade.competencia,
                 eixo_tematico=habilidade.eixo_tematico,
-                exemplo_referencia=referencia_enem,
+                exemplos_referencia=few_shot_dicts,
                 feedback_erro=last_error
             )
 
