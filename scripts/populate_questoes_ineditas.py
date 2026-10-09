@@ -138,7 +138,7 @@ def main():
                         db=db,
                         habilidade_codigo=hab_code,
                         num_few_shot=args.few_shot_k,
-                        max_attempts=3,
+                        max_attempts=4,
                         use_pot=not args.traditional
                     )
                     tempo_gasto = time.time() - t0

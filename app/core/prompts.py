@@ -229,19 +229,16 @@ CRITÉRIOS OBRIGATÓRIOS DO ITEM (PADRÃO INEP):
 5. **Formatação de LaTeX dentro do JSON (OBRIGATÓRIO):**
    - Ao escrever expressões matemáticas em formato LaTeX dentro das strings do JSON, você DEVE SEMPRE dobrar a barra invertida (ex: use `\\\\frac{a}{b}`, `\\\\sqrt{x}`, `\\\\cdot`, `\\\\times`).
    - NUNCA utilize barra simples (como `\\frac`), pois a barra simples é interpretada como caractere de controle (como form feed `\\f`) e corrompe o JSON.
-6. **Formatação de Tabelas em Markdown (OBRIGATÓRIO):**
-   - Se o problema envolver dados tabulares, comparativos ou o texto anunciar uma tabela ("tabela a seguir", "quadro abaixo", "apresentados na tabela", etc.), você DEVE OBRIGATORIAMENTE formatar esses dados como uma Tabela Markdown limpa:
-     | Coluna 1 | Coluna 2 | Coluna 3 |
-     | :--- | :---: | :---: |
-     | Item A | 100 | 200 |
-     | Item B | 150 | 250 |
-   - Utilize quebras de linha (`\\n`) entre as linhas da tabela. NUNCA junte ou achate os dados da tabela em uma linha contínua de texto corrido.
-7. **Originalidade e Ineditismo:** O item gerado DEVE SER INÉDITO. Não copie nem meramente troque números dos itens de exemplo. Use-os apenas como referência do padrão de complexidade e linguagem.
-8. **Formato de Saída (JSON Estrito):**
+6. FORMATAÇÃO DE TABELAS:
+   - Se o problema envolver dados tabulares ou o texto anunciar uma tabela, NUNCA tente formatá-la em Markdown no enunciado.
+   - Em vez disso, coloque APENAS os dados estruturados no campo JSON 'tabela_dados' (uma lista de objetos/dicionários). O sistema desenhará a tabela para você.
+7. Originalidade e Ineditismo: O item gerado DEVE SER INÉDITO. Não copie nem meramente troque números dos itens de exemplo. Use-os apenas como referência do padrão de complexidade e linguagem.
+8. Formato de Saída (JSON Estrito):
    Responda EXCLUSIVAMENTE com um objeto JSON válido, sem texto antes ou depois, seguindo o schema:
    {
      "thought_scratchpad": "Etapa 1: ...; Etapa 2 (Cálculos): ...; Etapa 3 (Alinhamento de comando): Pergunta pede X, cálculo final = Y, alternativa correspondente = [Letra]; Etapa 4 (Distratores): ...",
      "enunciado": "Texto contextualizado da questão...",
+     "tabela_dados": [{"Item": "A", "Valor": 100}],
      "alternativas": {
        "A": "Texto alternativa A",
        "B": "Texto alternativa B",
@@ -324,20 +321,26 @@ O solver calculará a resposta correta e 4 distratores; NÃO gere gabarito ou le
 
 REGRAS ESTRITAS:
 1. ENUNCIADO: Situação-problema realista com comando final claro.
-   - SEJA CRIATIVO NO CONTEXTO. NUNCA comece as questões sempre com a mesma estrutura sintática (ex: "Um restaurante...", "Uma empresa...", "Um fabricante..."). Varie a narrativa, o sujeito e a forma de iniciar o texto!
+   - SEJA CRIATIVO NO CONTEXTO. NUNCA comece as questões sempre com a mesma estrutura sintática. Varie a narrativa e o sujeito!
    - NUNCA use palavras como "solver", "python", "algoritmo", "código", "distrator" ou "gabarito" no enunciado!
-   - Tabelas devem usar Markdown limpo (com pipes e quebras de linha \\n).
-2. SOLVER (Python puro): 
+2. FORMATAÇÃO DE TABELAS:
+   - Se o problema envolver dados tabulares ou anunciar uma tabela ("tabela a seguir", "quadro abaixo", etc.), NUNCA tente formatá-la em Markdown no enunciado.
+   - Em vez disso, coloque APENAS os dados estruturados no campo JSON 'tabela_dados' (lista de dicionários). O sistema desenhará a tabela para você.
+3. SOLVER (Python puro): 
    - Modela os cálculos da grandeza solicitada no enunciado.
    - Retorna: return {'correta': <numero>, 'distratores': [<d1>, <d2>, <d3>, <d4>]}
-3. NEXO E COMPLETUDE: Todo dado ou número usado no solver (exceto constantes universais) DEVE estar visível no texto do enunciado. Um aluno não pode adivinhar o que não está escrito.
-4. COERÊNCIA FÍSICA E MATEMÁTICA: O problema deve ser factível e ter lógica no mundo real.
-5. EXCLUSIVIDADE: Gere APENAS o JSON válido, sem comentários antes ou depois.
+4. NEXO E COMPLETUDE: Todo dado ou número usado no solver (exceto constantes universais) DEVE estar visível no texto do enunciado ou na tabela_dados.
+5. COERÊNCIA FÍSICA E MATEMÁTICA: O problema deve ser factível e ter lógica no mundo real.
+6. EXCLUSIVIDADE: Gere APENAS o JSON válido, sem comentários antes ou depois.
 """
 
 POT_FEW_SHOT_EXAMPLE = """--- [EXEMPLO DE SAÍDA ESPERADA (FORMATO OBRIGATÓRIO)] ---
 {
-  "enunciado": "Seu texto contextualizado aqui, terminando com uma pergunta clara...",
+  "enunciado": "Seu texto contextualizado aqui terminando com uma pergunta clara...",
+  "tabela_dados": [
+    {"Produto": "A", "Preço": 10.00},
+    {"Produto": "B", "Preço": 20.00}
+  ],
   "solver": "def resolver():\\n    # cálculos baseados nos dados numéricos do enunciado\\n    # ...\\n    return {'correta': valor_correto, 'distratores': [d1, d2, d3, d4]}"
 }
 """
@@ -401,9 +404,10 @@ ESPECIFICAÇÃO DA HABILIDADE ALVO (MATRIZ DO ENEM):
 SUA TAREFA:
 ============================================================
 Gere agora uma QUESTÃO INÉDITA para a habilidade {habilidade_codigo}.
-Responda EXCLUSIVAMENTE em formato JSON com as chaves 'enunciado' e 'solver':
+Responda EXCLUSIVAMENTE em formato JSON com as chaves 'enunciado', 'tabela_dados' (opcional) e 'solver':
 {{
   "enunciado": "Texto contextualizado da questão com comando final inequívoco...",
+  "tabela_dados": [{{"Coluna1": "A", "Coluna2": 10}}],
   "solver": "def resolver():\\n    # código com variáveis com os números do enunciado\\n    return {{'correta': ..., 'distratores': [d1, d2, d3, d4]}}"
 }}
 """
@@ -451,6 +455,112 @@ REGRAS ESTRITAS CONTRA VAZAMENTO:
 Responda EXCLUSIVAMENTE com um JSON no seguinte schema:
 {{
   "justificativa": "Texto da resolução passo a passo provando a alternativa {gabarito}..."
+}}
+"""
+    return prompt
+
+
+def build_auto_validation_prompt(
+    enunciado: str,
+    alternativas: Dict[str, str],
+    gabarito: str
+) -> str:
+    """
+    Constrói prompt para a Fase de Auto-Validação da Geração PoT.
+    A LLM deve resolver a questão gerada (sem saber que foi ela mesma quem gerou)
+    para atestar a qualidade e apontar qualquer falha (ambiguidade, erro).
+    """
+    alts_formatted = "\n".join([f"  {k}) {v}" for k, v in sorted(alternativas.items())])
+    
+    prompt = f"""Você é um Revisor Técnico e Pedagógico Oficial do INEP para questões do ENEM.
+Uma questão foi submetida e precisa ser rigidamente avaliada antes de ir para os alunos.
+
+============================================================
+QUESTÃO SUBMETIDA:
+============================================================
+Enunciado:
+{enunciado}
+
+Alternativas Disponíveis:
+{alts_formatted}
+
+Gabarito Pretendido pela Banca: {gabarito}
+
+============================================================
+SUA TAREFA DE AVALIAÇÃO:
+============================================================
+Analise a questão criticamente e resolva-a passo a passo na sua justificativa_resolucao.
+Você DEVE verificar rigorosamente:
+1. Faz sentido semanticamente e tem coerência matemática/lógica?
+2. O texto está livre de qualquer ambiguidade ou comando duplo?
+3. Há informações suficientes para resolver ou falta algum dado numérico?
+4. O texto está livre de erros de português e livre de "vazamentos de prompt" (palavras absurdas para um aluno como: solver, python, código, distratores, gerar)?
+5. Ao você resolver passo a passo, a resposta exata se encontra nas alternativas, e corresponde ao gabarito pretendido?
+
+Se houver QUALQUER erro, seja implacável. Marque 'aprovada' como false e escreva em 'feedback_correcao' exatamente o que quem elaborou a questão precisa consertar no enunciado ou na lógica.
+
+Responda EXCLUSIVAMENTE em formato JSON contendo exatamente as chaves do schema abaixo. Não coloque nenhum texto fora do JSON.
+Schema esperado:
+{{
+  "faz_sentido_semanticamente": bool,
+  "sem_ambiguidade": bool,
+  "informacao_suficiente": bool,
+  "sem_erros_vazamentos": bool,
+  "resposta_nas_alternativas": bool,
+  "justificativa_resolucao": "Sua resolução passo a passo detalhada",
+  "feedback_correcao": "O que corrigir (se houver erro), senao null",
+  "aprovada": bool
+}}
+"""
+    return prompt
+
+
+def build_correction_prompt(
+    habilidade_codigo: str,
+    habilidade_descricao: str,
+    enunciado_anterior: str,
+    solver_anterior: str,
+    feedback_erro: str
+) -> str:
+    """
+    Constrói prompt de Correção (Stateful Correction).
+    Em vez de recriar do zero, pede para a LLM consertar o que deu errado com base no feedback.
+    """
+    prompt = f"""Você é um Elaborador de Itens de Matemática para o ENEM.
+Você produziu uma QUESTÃO INÉDITA estruturada em JSON (enunciado + solver em Python).
+No entanto, a sua questão foi rejeitada na revisão rigorosa.
+
+============================================================
+ESPECIFICAÇÃO DA HABILIDADE ALVO:
+============================================================
+- Código: {habilidade_codigo}
+- Descrição: {habilidade_descricao}
+
+============================================================
+O QUE VOCÊ PRODUZIU ANTERIORMENTE:
+============================================================
+ENUNCIADO:
+{enunciado_anterior}
+
+SOLVER PYTHON:
+{solver_anterior}
+
+============================================================
+FEEDBACK DA REVISÃO (ERRO ENCONTRADO):
+============================================================
+{feedback_erro}
+
+============================================================
+SUA TAREFA DE CORREÇÃO:
+============================================================
+Modifique o ENUNCIADO e/ou o SOLVER APENAS O SUFICIENTE para corrigir o problema apontado na revisão.
+Mantenha o mesmo contexto original o máximo possível. Lembre-se que o solver calcula e retorna {{'correta': ..., 'distratores': [...]}}.
+
+Responda EXCLUSIVAMENTE em formato JSON com as chaves 'enunciado', 'tabela_dados' (opcional) e 'solver':
+{{
+  "enunciado": "Novo texto contextualizado já corrigido...",
+  "tabela_dados": [{{"Coluna1": "A", "Coluna2": 10}}],
+  "solver": "def resolver():\\n    # lógica em python corrigida\\n    return {{'correta': ..., 'distratores': [d1, d2, d3, d4]}}"
 }}
 """
     return prompt

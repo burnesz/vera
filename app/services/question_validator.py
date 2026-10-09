@@ -169,30 +169,9 @@ TABLE_INDICATOR_PATTERNS = [
 
 def check_table_markdown_structure(enunciado: str) -> Tuple[bool, Optional[str]]:
     """
-    Verifica se enunciados que anunciam uma tabela possuem estrutura de tabela em Markdown válida.
-    Evita que o LLM achate dados tabulares em texto corrido e confuso.
+    Desativado: Agora as tabelas são tratadas nativamente no JSON via 'tabela_dados'.
     """
-    clean_text = enunciado.lower()
-    announces_table = any(re.search(pat, clean_text) for pat in TABLE_INDICATOR_PATTERNS)
-    if not announces_table:
-        return True, None
-
-    # Verifica linhas com pipes
-    lines = [line.strip() for line in enunciado.split("\n") if line.strip()]
-    pipe_lines = [l for l in lines if "|" in l]
-    # Linha delimitadora clássica do Markdown: ex | --- | --- | ou |:---|:---:|
-    has_delimiter = any(re.search(r"\|?\s*:?-{2,}:?\s*\|", l) for l in pipe_lines)
-
-    if len(pipe_lines) >= 3 and has_delimiter:
-        return True, None
-
-    msg = (
-        "Problema de formatação tabular: O enunciado menciona a apresentação de uma tabela "
-        "(ex: 'tabela a seguir/abaixo'), mas não contém uma tabela estruturada em Markdown válida. "
-        "Você DEVE OBRIGATORIAMENTE formatar os dados tabulares como uma tabela Markdown "
-        "(com cabeçalho '| Col 1 | Col 2 |', delimitador '| :--- | :---: |' e linhas de dados separadas por '\\n')."
-    )
-    return False, msg
+    return True, None
 
 
 def validate_questao_inedita(
@@ -234,6 +213,19 @@ def validate_questao_inedita(
     # 2. Validação via Pydantic Schema (inclui validação de alternativas e unicidade - RN-Q01 e RN-Q02)
     try:
         validated_item = QuestaoIneditaLLMOutput.model_validate(data)
+        
+        if validated_item.tabela_dados:
+            try:
+                md_table = "\n\n"
+                keys = list(validated_item.tabela_dados[0].keys())
+                md_table += "| " + " | ".join(keys) + " |\n"
+                md_table += "| " + " | ".join(["---"] * len(keys)) + " |\n"
+                for row in validated_item.tabela_dados:
+                    md_table += "| " + " | ".join([str(row.get(k, "")) for k in keys]) + " |\n"
+                validated_item.enunciado += md_table
+            except Exception as e:
+                logger.warning(f"Aviso ao converter tabela_dados para Markdown no modo tradicional: {e}")
+                
     except ValidationError as e:
         error_details = []
         for err in e.errors():

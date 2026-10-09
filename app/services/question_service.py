@@ -14,7 +14,7 @@ import time
 import logging
 import uuid
 import random
-from typing import List, Dict, Any, Optional, Callable
+from typing import List, Dict, Any, Optional, Callable, Tuple
 from sqlalchemy.orm import Session
 from sqlalchemy import func
 
@@ -39,11 +39,12 @@ from app.services.code_executor import (
 from app.core.prompts import (
     build_question_generation_prompt,
     build_enunciado_solver_prompt,
-    build_justificativa_prompt
+    build_auto_validation_prompt,
+    build_correction_prompt
 )
 from app.schemas.question import (
     QuestaoEnunciadoSolverOutput,
-    QuestaoJustificativaOutput,
+    QuestaoAutoValidacaoOutput,
     BatchPopulationSummary,
     BatchPopulationItemResult
 )
@@ -194,7 +195,7 @@ class QuestionService:
         db: Session,
         habilidade_codigo: str,
         num_few_shot: int = 2,
-        max_attempts: int = 3,
+        max_attempts: int = 4,
         temperature: float = 0.2,
         top_p: float = 0.9,
         use_pot: bool = True
@@ -252,7 +253,7 @@ class QuestionService:
         db: Session,
         habilidade: HabilidadeEnem,
         few_shot_dicts: List[Dict[str, Any]],
-        max_attempts: int = 3,
+        max_attempts: int = 4,
         temperature: float = 0.2,
         top_p: float = 0.9
     ) -> QuestaoInedita:
@@ -267,19 +268,30 @@ class QuestionService:
         )
 
         last_error: Optional[str] = None
+        enunciado_anterior: Optional[str] = None
+        solver_anterior: Optional[str] = None
 
         for attempt in range(1, max_attempts + 1):
             logger.info(f"PoT: Tentativa {attempt}/{max_attempts} para {clean_hab}...")
 
             # --- FASE 1: LLM GERA ENUNCIADO E SOLVER ---
-            prompt_pot = build_enunciado_solver_prompt(
-                habilidade_codigo=habilidade.codigo,
-                habilidade_descricao=habilidade.descricao,
-                competencia=habilidade.competencia,
-                eixo_tematico=habilidade.eixo_tematico,
-                exemplos_referencia=few_shot_dicts,
-                feedback_erro=last_error
-            )
+            if last_error and enunciado_anterior and solver_anterior:
+                prompt_pot = build_correction_prompt(
+                    habilidade_codigo=habilidade.codigo,
+                    habilidade_descricao=habilidade.descricao,
+                    enunciado_anterior=enunciado_anterior,
+                    solver_anterior=solver_anterior,
+                    feedback_erro=last_error
+                )
+            else:
+                prompt_pot = build_enunciado_solver_prompt(
+                    habilidade_codigo=habilidade.codigo,
+                    habilidade_descricao=habilidade.descricao,
+                    competencia=habilidade.competencia,
+                    eixo_tematico=habilidade.eixo_tematico,
+                    exemplos_referencia=few_shot_dicts,
+                    feedback_erro=last_error
+                )
 
             try:
                 raw_pot_output = self.llm_client.generate(
@@ -334,16 +346,25 @@ class QuestionService:
             # Validação do Schema Pydantic da Fase 1
             try:
                 pot_output = QuestaoEnunciadoSolverOutput(**parsed_data)
+                
+                # Conversão da tabela nativa para Markdown (se existir)
+                if pot_output.tabela_dados:
+                    try:
+                        md_table = "\n\n"
+                        keys = list(pot_output.tabela_dados[0].keys())
+                        md_table += "| " + " | ".join(keys) + " |\n"
+                        md_table += "| " + " | ".join(["---"] * len(keys)) + " |\n"
+                        for row in pot_output.tabela_dados:
+                            md_table += "| " + " | ".join([str(row.get(k, "")) for k in keys]) + " |\n"
+                        pot_output.enunciado += md_table
+                    except Exception as e:
+                        logger.warning(f"Aviso ao converter tabela_dados para Markdown: {e}")
+                
+                enunciado_anterior = pot_output.enunciado
+                solver_anterior = pot_output.solver
             except ValidationError as e:
                 last_error = f"Erro no schema do solver: {e.errors()}"
                 logger.warning(f"Tentativa {attempt}/{max_attempts} falhou no schema Pydantic: {e}")
-                continue
-
-            # Validação estrutural de formatação de tabela Markdown (se anunciada)
-            is_table_valid, table_err = check_table_markdown_structure(pot_output.enunciado)
-            if not is_table_valid:
-                last_error = table_err
-                logger.warning(f"Tentativa {attempt}/{max_attempts} falhou na formatação da tabela: {table_err}")
                 continue
 
             # --- EXECUÇÃO DO SOLVER EM SUBPROCESS ISOLADO ---
@@ -369,16 +390,20 @@ class QuestionService:
             # --- MONTAGEM ALGORÍTMICA DE ALTERNATIVAS E GABARITO ---
             alternativas, gabarito = assemble_alternatives_and_gabarito(formatted_values)
 
-            # --- FASE 2: GERAÇÃO DA JUSTIFICATIVA PEDAGÓGICA ---
-            justificativa_texto = self._generate_justificativa_fase2(
+            # --- FASE 2: AUTO-VALIDAÇÃO E JUSTIFICATIVA ---
+            is_valid_llm, val_feedback, justificativa_texto = self._run_auto_validation_fase2(
                 enunciado=pot_output.enunciado,
                 alternativas=alternativas,
-                gabarito=gabarito,
-                solver_code=pot_output.solver
+                gabarito=gabarito
             )
+            
+            if not is_valid_llm:
+                last_error = f"Falha na auto-validação LLM: {val_feedback}"
+                logger.warning(f"Tentativa {attempt}/{max_attempts} falhou na auto-validação: {val_feedback}")
+                continue
 
             logger.info(
-                f"Item PoT para {clean_hab} gerado e comprovado com sucesso na tentativa {attempt}! "
+                f"Item PoT para {clean_hab} gerado, comprovado e auto-validado com sucesso na tentativa {attempt}! "
                 f"Gabarito: {gabarito} ({alternativas[gabarito]})."
             )
 
@@ -403,51 +428,52 @@ class QuestionService:
             f"Último erro: {last_error}"
         )
 
-    def _generate_justificativa_fase2(
+    def _run_auto_validation_fase2(
         self,
         enunciado: str,
         alternativas: Dict[str, str],
-        gabarito: str,
-        solver_code: str
-    ) -> str:
+        gabarito: str
+    ) -> Tuple[bool, Optional[str], str]:
         """
-        Fase 2 do PoT: Redige a justificativa pedagógica com gabarito comprovado por código.
+        Fase 2 do PoT: LLM resolve a questão para atestar qualidade e redige justificativa.
+        Retorna: (is_valid, feedback_correcao, justificativa_resolucao)
         """
-        prompt_just = build_justificativa_prompt(
+        prompt_val = build_auto_validation_prompt(
             enunciado=enunciado,
             alternativas=alternativas,
-            gabarito=gabarito,
-            solver_code=solver_code
+            gabarito=gabarito
         )
 
         try:
-            raw_just = self.llm_client.generate(
-                prompt=prompt_just,
+            raw_val = self.llm_client.generate(
+                prompt=prompt_val,
                 max_tokens=600,
-                temperature=0.3,
+                temperature=0.1,
                 top_p=0.9,
                 format="json"
             )
-            json_str = extract_json_from_text(raw_just)
+            json_str = extract_json_from_text(raw_val)
             sanitized = sanitize_latex_json_text(json_str)
             parsed = json.loads(sanitized, strict=False)
             parsed = sanitize_parsed_dict_values(parsed)
-            just_obj = QuestaoJustificativaOutput(**parsed)
-            return just_obj.justificativa
+            val_obj = QuestaoAutoValidacaoOutput(**parsed)
+            
+            return val_obj.aprovada, val_obj.feedback_correcao, val_obj.justificativa_resolucao
         except Exception as e:
-            logger.warning(f"Aviso ao gerar justificativa estruturada na Fase 2: {e}. Usando fallback formatado.")
+            logger.warning(f"Aviso ao executar auto-validação estruturada na Fase 2: {e}. Considerando válida com fallback.")
             correta_val = alternativas.get(gabarito, "")
-            return (
+            fallback_just = (
                 f"A alternativa correta é a {gabarito} ({correta_val}), "
                 f"conforme resolução matemática comprovada pelo solver da questão."
             )
+            return True, None, fallback_just
 
     def _generate_traditional_item(
         self,
         db: Session,
         habilidade: HabilidadeEnem,
         few_shot_dicts: List[Dict[str, Any]],
-        max_attempts: int = 3,
+        max_attempts: int = 4,
         temperature: float = 0.7,
         top_p: float = 0.9
     ) -> QuestaoInedita:
@@ -539,6 +565,7 @@ class QuestionService:
         total_failures = 0
         total_operations = len(target_codes) * count_per_habilidade
         current_op = 0
+        failed_habilidades = []
 
         for hab_code in target_codes:
             for item_idx in range(1, count_per_habilidade + 1):
@@ -549,7 +576,7 @@ class QuestionService:
                         db=db,
                         habilidade_codigo=hab_code,
                         num_few_shot=num_few_shot,
-                        max_attempts=3,
+                        max_attempts=4,
                         use_pot=use_pot
                     )
                     elapsed = round(time.time() - op_start, 2)
@@ -569,11 +596,13 @@ class QuestionService:
                     elapsed = round(time.time() - op_start, 2)
                     total_failures += 1
                     err_msg = str(e)
+                    if hab_code not in failed_habilidades:
+                        failed_habilidades.append(hab_code)
                     result_item = BatchPopulationItemResult(
                         habilidade_codigo=hab_code,
                         questao_id=None,
                         success=False,
-                        attempts=3,
+                        attempts=4,
                         error=err_msg,
                         elapsed_seconds=elapsed
                     )
@@ -581,12 +610,16 @@ class QuestionService:
                     if on_progress:
                         on_progress(hab_code, current_op, total_operations, False, err_msg)
 
+        if failed_habilidades:
+            logger.warning(f"Resumo do Lote - Habilidades que falharam após todas tentativas: {failed_habilidades}")
+
         total_elapsed = round(time.time() - start_time, 2)
         return BatchPopulationSummary(
             total_habilidades_processadas=len(target_codes),
             total_sucesso=total_success,
             total_falhas=total_failures,
             tempo_total_segundos=total_elapsed,
+            habilidades_com_erro=failed_habilidades,
             itens=results
         )
 

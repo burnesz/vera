@@ -18,6 +18,10 @@ class QuestaoEnunciadoSolverOutput(BaseModel):
         ...,
         description="Texto contextualizado da questão com comando final inequívoco."
     )
+    tabela_dados: Optional[List[Dict[str, Any]]] = Field(
+        None,
+        description="Se o problema envolver tabela de dados, coloque-a aqui como uma lista de dicionários (cada dicionário é uma linha)."
+    )
     solver: str = Field(
         ...,
         description="Função Python def resolver() calculando a resposta exata ('correta') e 4 distratores plausíveis ('distratores')."
@@ -51,6 +55,21 @@ class QuestaoJustificativaOutput(BaseModel):
     )
 
 
+class QuestaoAutoValidacaoOutput(BaseModel):
+    """
+    Schema para a Fase de Auto-Validação da questão inédita gerada.
+    A LLM testa a questão, resolve e verifica problemas de ambiguidade ou sentido.
+    """
+    faz_sentido_semanticamente: bool = Field(..., description="A questão faz sentido no mundo real e tem coerência?")
+    sem_ambiguidade: bool = Field(..., description="A questão está livre de ambiguidades e dupla interpretação?")
+    informacao_suficiente: bool = Field(..., description="Todas as informações necessárias para resolver estão presentes no texto?")
+    sem_erros_vazamentos: bool = Field(..., description="O texto está livre de erros de português e NÃO contém palavras como 'solver', 'python', 'código' ou 'variável'?")
+    resposta_nas_alternativas: bool = Field(..., description="Ao resolver mentalmente, a resposta obtida se encontra entre as alternativas fornecidas?")
+    justificativa_resolucao: str = Field(..., description="Sua resolução passo a passo detalhada e didática provando qual é a alternativa correta e o erro das outras.")
+    feedback_correcao: Optional[str] = Field(None, description="Se qualquer validação acima for falsa, explique detalhadamente O QUE DEVE SER CORRIGIDO no enunciado ou código.")
+    aprovada: bool = Field(..., description="True APENAS SE todas as 5 checagens booleanas acima forem True.")
+
+
 class QuestaoIneditaLLMOutput(BaseModel):
     """
     Schema estrito para a saída estruturada do LLM Qwen 2.5 via Ollama (format='json').
@@ -59,6 +78,10 @@ class QuestaoIneditaLLMOutput(BaseModel):
     enunciado: str = Field(
         ...,
         description="Texto-base contextualizado e comando da questão, no padrão do ENEM."
+    )
+    tabela_dados: Optional[List[Dict[str, Any]]] = Field(
+        None,
+        description="Se o problema envolver tabela de dados, coloque-a aqui como uma lista de dicionários (cada dicionário é uma linha)."
     )
     alternativas: Dict[str, str] = Field(
         ...,
@@ -183,4 +206,5 @@ class BatchPopulationSummary(BaseModel):
     total_sucesso: int
     total_falhas: int
     tempo_total_segundos: float
+    habilidades_com_erro: List[str] = Field(default_factory=list, description="Lista de códigos das habilidades que falharam em todas as tentativas")
     itens: List[BatchPopulationItemResult]
