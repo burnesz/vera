@@ -139,3 +139,42 @@ def test_retrieve_rag_few_shot_fallback():
         assert examples[0]["score"] == 1.0
     finally:
         db.close()
+
+
+def test_retrieve_rag_few_shot_pinecone_sample_top10():
+    """Valida busca de top-10 no Pinecone e amostragem de 2 itens distintos."""
+    mock_vector_store = MagicMock()
+    # Mock com 10 itens candidatos
+    candidatos_10 = [
+        {
+            "id": f"q_{i}",
+            "score": round(0.90 - i * 0.02, 2),
+            "text": f"Enunciado {i}",
+            "metadata": {
+                "ano": 2010 + i,
+                "co_item": 100 + i,
+                "habilidade_codigo": "H01",
+                "gabarito": "A",
+                "alt_a": "A", "alt_b": "B", "alt_c": "C", "alt_d": "D", "alt_e": "E",
+                "text": f"Enunciado {i}"
+            }
+        }
+        for i in range(10)
+    ]
+    mock_vector_store.search.return_value = candidatos_10
+
+    service = QuestionService(vector_store=mock_vector_store)
+    examples = service.retrieve_rag_few_shot_examples(
+        habilidade_codigo="H01",
+        k=2,
+        top_candidates=10
+    )
+
+    mock_vector_store.search.assert_called_once()
+    assert mock_vector_store.search.call_args[1]["top_k"] == 10
+    assert len(examples) == 2
+    # Verifica que foram sorteados elementos válidos da lista
+    anos_retornados = [e["ano"] for e in examples]
+    assert len(set(anos_retornados)) == 2
+    # Verifica ordenação por score
+    assert examples[0]["score"] >= examples[1]["score"]

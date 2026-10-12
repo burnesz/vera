@@ -122,12 +122,14 @@ class QuestionService:
     def retrieve_rag_few_shot_examples(
         self,
         habilidade_codigo: str,
-        k: int = 3,
+        k: int = 2,
+        top_candidates: int = 10,
         db: Optional[Session] = None
     ) -> List[Dict[str, Any]]:
         """
-        Recupera as Top-k questões históricas do ENEM mais similares semanticamente no Pinecone
-        (namespace 'questoes_enem') utilizando a query expandida da habilidade.
+        Recupera os Top-candidates (padrão 10) itens históricos do ENEM mais similares
+        semanticamente no Pinecone (namespace 'questoes_enem') e sorteia k exemplos (padrão 2)
+        para compor o contexto few-shot, maximizando a diversidade e relevância.
         """
         clean_hab = habilidade_codigo.strip().upper()
         if clean_hab.startswith("H") and clean_hab[1:].isdigit():
@@ -139,11 +141,13 @@ class QuestionService:
         else:
             query_text = f"Questão de matemática do ENEM avaliando a habilidade {clean_hab}."
 
+        fetch_limit = max(top_candidates, k)
+
         try:
             results = self.vector_store.search(
                 query=query_text,
                 namespace=settings.NAMESPACE_QUESTOES_ENEM,
-                top_k=k
+                top_k=fetch_limit
             )
 
             few_shot_dicts = []
@@ -168,9 +172,15 @@ class QuestionService:
                 })
 
             if few_shot_dicts:
+                total_encontrados = len(few_shot_dicts)
+                if total_encontrados > k:
+                    few_shot_dicts = random.sample(few_shot_dicts, k=k)
+                    few_shot_dicts.sort(key=lambda x: x.get("score", 0.0), reverse=True)
+
                 scores_str = ", ".join([f"{x['score']:.3f}" for x in few_shot_dicts])
                 logger.info(
-                    f"RAG: {len(few_shot_dicts)} exemplos resgatados no Pinecone para {clean_hab} (scores: [{scores_str}])."
+                    f"RAG: {len(few_shot_dicts)} exemplos sorteados dentre os Top-{total_encontrados} "
+                    f"do Pinecone para {clean_hab} (scores: [{scores_str}])."
                 )
                 return few_shot_dicts
 
