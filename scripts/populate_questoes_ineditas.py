@@ -74,6 +74,18 @@ def parse_args():
         action="store_true",
         help="Pula habilidades que já possuam a quantidade solicitada de questões no banco."
     )
+    parser.add_argument(
+        "--tema",
+        type=str,
+        default=None,
+        help="Fixa um tema contextual específico (se omitido, sorteia aleatoriamente a cada questão)."
+    )
+    parser.add_argument(
+        "--abertura",
+        type=str,
+        default=None,
+        help="Fixa um estilo de abertura narrativa específico (se omitido, sorteia aleatoriamente a cada questão)."
+    )
     return parser.parse_args()
 
 
@@ -139,7 +151,9 @@ def main():
                         habilidade_codigo=hab_code,
                         num_few_shot=args.few_shot_k,
                         max_attempts=4,
-                        use_pot=not args.traditional
+                        use_pot=not args.traditional,
+                        tema=args.tema,
+                        abertura=args.abertura
                     )
                     tempo_gasto = time.time() - t0
                     sucessos += 1

@@ -252,12 +252,46 @@ CRITÉRIOS OBRIGATÓRIOS DO ITEM (PADRÃO INEP):
 """
 
 
+TEMAS_COTIDIANO: List[str] = [
+    "Saúde pública, medicina ou nutrição",
+    "Práticas esportivas, atletas ou competições",
+    "Mobilidade urbana, transporte coletivo ou trânsito",
+    "Energia renovável, consumo elétrico ou sustentabilidade",
+    "Economia doméstica, planejamento financeiro ou compras",
+    "Recursos hídricos, meio ambiente ou meteorologia",
+    "Agropecuária, produção de alimentos ou cultivo",
+    "Tecnologia da informação, telecomunicações ou dados",
+    "Comércio, varejo ou gestão de estoque",
+    "Planejamento urbano, saneamento ou habitação",
+]
+
+FORMAS_ABERTURA: List[str] = [
+    "Inicie apresentando um dado estatístico, taxa percentual ou levantamento recente",
+    "Inicie contextualizando o cenário geográfico (ex: 'Em um município...', 'Em determinada região...')",
+    "Inicie a partir de uma notícia, reportagem ou estudo acadêmico",
+    "Inicie descrevendo um processo técnico, produtivo ou medição laboratorial",
+    "Inicie com uma situação de tomada de decisão ou orçamento familiar",
+    "Inicie relatando um evento comemorativo, competição ou atividade recreativa",
+]
+
+
+def sortear_contexto_criativo() -> Tuple[str, str]:
+    """
+    Sorteia aleatoriamente um tema do cotidiano e uma estrutura narrativa de abertura
+    para diversificar os enunciados e quebrar vícios sintáticos na LLM.
+    """
+    import random
+    return random.choice(TEMAS_COTIDIANO), random.choice(FORMAS_ABERTURA)
+
+
 def build_question_generation_prompt(
     habilidade_codigo: str,
     habilidade_descricao: str,
     competencia: int,
     eixo_tematico: Optional[str] = None,
-    few_shot_exemplos: Optional[List[Dict[str, Any]]] = None
+    few_shot_exemplos: Optional[List[Dict[str, Any]]] = None,
+    tema: Optional[str] = None,
+    abertura: Optional[str] = None
 ) -> str:
     """
     Constrói prompt few-shot determinístico para a geração de itens inéditos de Matemática do ENEM.
@@ -287,6 +321,15 @@ def build_question_generation_prompt(
     else:
         exemplos_text = "(Nenhum exemplo histórico fornecido. Siga estritamente a descrição da habilidade.)"
 
+    diretriz_criativa = ""
+    if tema or abertura:
+        linhas_criativas = []
+        if tema:
+            linhas_criativas.append(f"- Contexto temático sugerido: {tema}.")
+        if abertura:
+            linhas_criativas.append(f"- Abertura narrativa: {abertura}. (Evite começar com 'Um [profissional] está...').")
+        diretriz_criativa = "\n" + "\n".join(linhas_criativas)
+
     prompt = f"""{QUESTION_GENERATOR_SYSTEM_PROMPT}
 
 ============================================================
@@ -305,7 +348,7 @@ EXEMPLOS HISTÓRICOS REAIS DO ENEM DESTA MESMA HABILIDADE (FEW-SHOT):
 ============================================================
 SUA TAREFA:
 ============================================================
-Gere agora uma QUESTÃO INÉDITA avaliando com precisão a habilidade {habilidade_codigo}.
+Gere agora uma QUESTÃO INÉDITA avaliando com precisão a habilidade {habilidade_codigo}.{diretriz_criativa}
 Gere estritamente o JSON com as chaves: 'thought_scratchpad', 'enunciado', 'alternativas' (A, B, C, D, E), 'gabarito', 'justificativa'.
 """
     return prompt
@@ -352,7 +395,9 @@ def build_enunciado_solver_prompt(
     competencia: int,
     eixo_tematico: Optional[str] = None,
     exemplos_referencia: Optional[List[Dict[str, Any]]] = None,
-    feedback_erro: Optional[str] = None
+    feedback_erro: Optional[str] = None,
+    tema: Optional[str] = None,
+    abertura: Optional[str] = None
 ) -> str:
     """
     Constrói prompt estruturado para a Fase 1 da geração PoT (Enunciado + Solver em Python).
@@ -386,6 +431,15 @@ Corrija o enunciado e a função solver() para eliminar rigorosamente esse erro.
 ============================================================
 """
 
+    diretriz_criativa = ""
+    if tema or abertura:
+        linhas_criativas = []
+        if tema:
+            linhas_criativas.append(f"- Contexto temático sugerido: {tema}.")
+        if abertura:
+            linhas_criativas.append(f"- Abertura narrativa: {abertura}. (Evite começar com 'Um [profissional] está...').")
+        diretriz_criativa = "\n" + "\n".join(linhas_criativas)
+
     prompt = f"""{POT_QUESTION_GENERATOR_SYSTEM_PROMPT}
 
 ============================================================
@@ -403,7 +457,7 @@ ESPECIFICAÇÃO DA HABILIDADE ALVO (MATRIZ DO ENEM):
 ============================================================
 SUA TAREFA:
 ============================================================
-Gere agora uma QUESTÃO INÉDITA para a habilidade {habilidade_codigo}.
+Gere agora uma QUESTÃO INÉDITA para a habilidade {habilidade_codigo}.{diretriz_criativa}
 Responda EXCLUSIVAMENTE em formato JSON com as chaves 'enunciado', 'tabela_dados' (opcional) e 'solver':
 {{
   "enunciado": "Texto contextualizado da questão com comando final inequívoco...",

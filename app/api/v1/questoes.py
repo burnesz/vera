@@ -44,7 +44,9 @@ def gerar_questao_inedita(
             db=db,
             habilidade_codigo=request.habilidade_codigo,
             num_few_shot=request.num_few_shot_examples,
-            max_attempts=3
+            max_attempts=3,
+            tema=request.tema,
+            abertura=request.abertura
         )
         return questao
     except ValueError as e:

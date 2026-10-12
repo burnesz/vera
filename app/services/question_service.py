@@ -40,7 +40,10 @@ from app.core.prompts import (
     build_question_generation_prompt,
     build_enunciado_solver_prompt,
     build_auto_validation_prompt,
-    build_correction_prompt
+    build_correction_prompt,
+    sortear_contexto_criativo,
+    TEMAS_COTIDIANO,
+    FORMAS_ABERTURA
 )
 from app.schemas.question import (
     QuestaoEnunciadoSolverOutput,
@@ -198,7 +201,9 @@ class QuestionService:
         max_attempts: int = 4,
         temperature: float = 0.2,
         top_p: float = 0.9,
-        use_pot: bool = True
+        use_pot: bool = True,
+        tema: Optional[str] = None,
+        abertura: Optional[str] = None
     ) -> QuestaoInedita:
         """
         Executa o pipeline RAG de geração de uma questão inédita:
@@ -222,7 +227,11 @@ class QuestionService:
         if not habilidade:
             raise ValueError(f"Habilidade '{clean_hab}' não encontrada na Matriz de Referência do ENEM.")
 
-        # 2. Retrieval RAG semântico no Pinecone (Top-k exemplos mais similares)
+        # 2. Sorteia contexto criativo caso não tenha sido fixado
+        if not tema and not abertura:
+            tema, abertura = sortear_contexto_criativo()
+
+        # 3. Retrieval RAG semântico no Pinecone (Top-k exemplos mais similares)
         few_shot_dicts = self.retrieve_rag_few_shot_examples(
             habilidade_codigo=clean_hab,
             k=num_few_shot,
@@ -236,7 +245,9 @@ class QuestionService:
                 few_shot_dicts=few_shot_dicts,
                 max_attempts=max_attempts,
                 temperature=temperature,
-                top_p=top_p
+                top_p=top_p,
+                tema=tema,
+                abertura=abertura
             )
         else:
             return self._generate_traditional_item(
@@ -245,7 +256,9 @@ class QuestionService:
                 few_shot_dicts=few_shot_dicts,
                 max_attempts=max_attempts,
                 temperature=temperature if temperature != 0.2 else 0.7,
-                top_p=top_p
+                top_p=top_p,
+                tema=tema,
+                abertura=abertura
             )
 
     def _generate_pot_item(
@@ -255,16 +268,21 @@ class QuestionService:
         few_shot_dicts: List[Dict[str, Any]],
         max_attempts: int = 4,
         temperature: float = 0.2,
-        top_p: float = 0.9
+        top_p: float = 0.9,
+        tema: Optional[str] = None,
+        abertura: Optional[str] = None
     ) -> QuestaoInedita:
         """
         Geração Program-Aided (PoT) com execução de código, checagem de nexo numérico
         e montagem algorítmica de alternativas/gabarito.
         """
         clean_hab = habilidade.codigo
+        if not tema and not abertura:
+            tema, abertura = sortear_contexto_criativo()
+
         logger.info(
             f"Gerando questão inédita via PoT para {clean_hab} "
-            f"({len(few_shot_dicts)} exemplos RAG para ancoragem)..."
+            f"(Tema: '{tema}' | Abertura: '{abertura}' | {len(few_shot_dicts)} exemplos RAG para ancoragem)..."
         )
 
         last_error: Optional[str] = None
@@ -290,7 +308,9 @@ class QuestionService:
                     competencia=habilidade.competencia,
                     eixo_tematico=habilidade.eixo_tematico,
                     exemplos_referencia=few_shot_dicts,
-                    feedback_erro=last_error
+                    feedback_erro=last_error,
+                    tema=tema,
+                    abertura=abertura
                 )
 
             try:
@@ -475,15 +495,20 @@ class QuestionService:
         few_shot_dicts: List[Dict[str, Any]],
         max_attempts: int = 4,
         temperature: float = 0.7,
-        top_p: float = 0.9
+        top_p: float = 0.9,
+        tema: Optional[str] = None,
+        abertura: Optional[str] = None
     ) -> QuestaoInedita:
         """
         Geração clássica de 1 fase com CoT e validação via validate_questao_inedita.
         """
         clean_hab = habilidade.codigo
+        if not tema and not abertura:
+            tema, abertura = sortear_contexto_criativo()
+
         logger.info(
             f"Gerando questão inédita (modo tradicional) para {clean_hab} "
-            f"({len(few_shot_dicts)} exemplos RAG three-shot)..."
+            f"(Tema: '{tema}' | Abertura: '{abertura}' | {len(few_shot_dicts)} exemplos RAG three-shot)..."
         )
 
         prompt = build_question_generation_prompt(
@@ -491,7 +516,9 @@ class QuestionService:
             habilidade_descricao=habilidade.descricao,
             competencia=habilidade.competencia,
             eixo_tematico=habilidade.eixo_tematico,
-            few_shot_exemplos=few_shot_dicts
+            few_shot_exemplos=few_shot_dicts,
+            tema=tema,
+            abertura=abertura
         )
 
         last_error = None

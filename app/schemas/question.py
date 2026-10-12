@@ -171,6 +171,14 @@ class QuestaoGenerateRequest(BaseModel):
         le=5,
         description="Quantidade de itens reais de treino do PostgreSQL a injetar no prompt (padrão 2)"
     )
+    tema: Optional[str] = Field(
+        None,
+        description="Tema contextual opcional (ex: 'Saúde', 'Transporte'). Se omitido, é sorteado aleatoriamente."
+    )
+    abertura: Optional[str] = Field(
+        None,
+        description="Estilo de abertura narrativa opcional (ex: 'dado estatístico', 'notícia'). Se omitido, é sorteado aleatoriamente."
+    )
 
 
 class BatchPopulationRequest(BaseModel):
