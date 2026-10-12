@@ -414,52 +414,6 @@ Responda EXCLUSIVAMENTE em formato JSON com as chaves 'enunciado', 'tabela_dados
     return prompt
 
 
-def build_justificativa_prompt(
-    enunciado: str,
-    alternativas: Dict[str, str],
-    gabarito: str,
-    solver_code: Optional[str] = None
-) -> str:
-    """
-    Constrói prompt para a Fase 2 da geração PoT:
-    O modelo redige a justificativa pedagógica passo a passo com alternativas e gabarito já fixados por código.
-    """
-    alts_formatted = "\n".join([f"  {k}) {v}" for k, v in sorted(alternativas.items())])
-    correta_valor = alternativas.get(gabarito, "")
-
-    prompt = f"""Você é um Professor de Matemática focado no ENEM.
-Escreva a JUSTIFICATIVA PEDAGÓGICA de uma questão didaticamente para um aluno.
-
-============================================================
-DADOS DA QUESTÃO:
-============================================================
-Enunciado:
-{enunciado}
-
-Alternativas:
-{alts_formatted}
-
-Gabarito Oficial Confirmado: Alternativa {gabarito} ({correta_valor})
-
-============================================================
-SUA TAREFA:
-============================================================
-Escreva a justificativa didática como um ser humano:
-1. Explique passo a passo por que a alternativa {gabarito} é a correta.
-2. Explique os erros conceituais dos distratores.
-
-REGRAS ESTRITAS CONTRA VAZAMENTO:
-- NUNCA mencione palavras como "solver", "python", "código", "algoritmo", "gerado" ou "calculado automaticamente".
-- O texto deve parecer escrito inteiramente por um humano, como uma resolução de apostila.
-
-Responda EXCLUSIVAMENTE com um JSON no seguinte schema:
-{{
-  "justificativa": "Texto da resolução passo a passo provando a alternativa {gabarito}..."
-}}
-"""
-    return prompt
-
-
 def build_auto_validation_prompt(
     enunciado: str,
     alternativas: Dict[str, str],
