@@ -207,11 +207,11 @@ QUESTION_GENERATOR_SYSTEM_PROMPT = """Você é um Especialista em Avaliação Ed
 Sua missão é produzir uma QUESTÃO INÉDITA E ORIGINAL de Matemática, estritamente alinhada à Matriz de Referência do ENEM e à Habilidade solicitada.
 
 CRITÉRIOS OBRIGATÓRIOS DO ITEM (PADRÃO INEP):
-1. **Contextualização Realista:** O enunciado deve apresentar uma situação-problema autêntica do cotidiano, ambiente social, científico, financeiro, produtivo ou tecnológico. Não faça perguntas secas ou puramente teóricas desprovidas de contexto.
+1. **Contextualização Realista e Integridade Factual:** O enunciado deve apresentar uma situação-problema autêntica do cotidiano, ambiente social, científico, financeiro, produtivo ou tecnológico. Não faça perguntas secas ou puramente teóricas desprovidas de contexto. NUNCA invente veículos de imprensa, notícias ou dados atribuídos falsamente a órgãos oficiais reais (como IBGE, OMS, ministérios). Quando envolver dados percentuais ou estatísticos, formule como um cenário hipotético bem definido ou levantamento amostral local.
 2. **Comando Claro e Alinhamento Estrito com o Gabarito:**
    - O parágrafo final do enunciado deve expressar uma pergunta ou comando inequívoco do que o estudante deve calcular ou identificar.
    - REGRA DE OURO DE ALINHAMENTO: A alternativa correta (gabarito) DEVE responder exatamente à pergunta formulada no comando final.
-   - CUIDADO COM PROBLEMAS MULTIPASSO: Se o enunciado pede o "valor TOTAL de N unidades", o gabarito NÃO PODE ser o valor unitário intermediário! Se a questão envolve mais de uma etapa de cálculo (ex: calcular valor unitário e depois multiplicar pela quantidade comprada), você DEVE obrigatoriamente executar TODOS os passos até a grandeza final pedida. Valores de etapas intermediárias devem ser colocados apenas como distratores, JAMAIS como gabarito.
+   - CUIDADO COM PROBLEMAS MULTIPASSO: Se o enunciado pede o "valor TOTAL de N unidades", o gabarito NÃO PODE ser o valor unitário intermediário! Se a questão envolve mais de uma etapa de cálculo, você DEVE obrigatoriamente executar TODOS os passos até a grandeza final pedida. Valores de etapas intermediárias devem ser colocados apenas como distratores, JAMAIS como gabarito.
 3. **Rigor Matemático e Aritmética Exata:**
    - No `thought_scratchpad`, execute obrigatoriamente os seguintes passos:
      Etapa 1: Planejamento dos dados e da situação-problema.
@@ -266,12 +266,13 @@ TEMAS_COTIDIANO: List[str] = [
 ]
 
 FORMAS_ABERTURA: List[str] = [
-    "Inicie apresentando um dado estatístico, taxa percentual ou levantamento recente",
-    "Inicie contextualizando o cenário geográfico (ex: 'Em um município...', 'Em determinada região...')",
-    "Inicie a partir de uma notícia, reportagem ou estudo acadêmico",
-    "Inicie descrevendo um processo técnico, produtivo ou medição laboratorial",
-    "Inicie com uma situação de tomada de decisão ou orçamento familiar",
-    "Inicie relatando um evento comemorativo, competição ou atividade recreativa",
+    "Inicie apresentando o resultado de uma pesquisa amostral ou levantamento local (ex: 'Em uma pesquisa com 400 clientes...', 'Um levantamento sobre o consumo de água em um condomínio revelou...')",
+    "Inicie contextualizando o cenário territorial ou comunitário (ex: 'Em um município...', 'Para interligar dois distritos agrícolas...', 'Uma cooperativa local...')",
+    "Inicie descrevendo um processo técnico, produtivo ou logístico (ex: 'Uma linha de envase industrial...', 'Um centro de distribuição organiza o transporte...')",
+    "Inicie com uma situação prática de tomada de decisão financeira ou orçamento (ex: 'Um consumidor compara duas opções de parcelamento...', 'Para o orçamento de uma reforma...')",
+    "Inicie apresentando um ensaio técnico, medição laboratorial ou monitoramento periódico (ex: 'Durante o monitoramento da vazão de um reservatório...', 'Em um teste de rendimento térmico...')",
+    "Inicie relatando o regulamento de uma competição, sistema de pontuação ou evento recreativo (ex: 'Em um torneio escolar...', 'Uma gincana comunitária...')",
+    "Inicie com o dimensionamento de um projeto de arquitetura, embalagem ou armazenamento (ex: 'Uma fábrica projeta uma embalagem cilíndrica...', 'O projeto de um galpão de armazenamento...')",
 ]
 
 
@@ -374,7 +375,8 @@ REGRAS ESTRITAS:
    - Retorna: return {'correta': <numero>, 'distratores': [<d1>, <d2>, <d3>, <d4>]}
 4. NEXO E COMPLETUDE: Todo dado ou número usado no solver (exceto constantes universais) DEVE estar visível no texto do enunciado ou na tabela_dados.
 5. COERÊNCIA FÍSICA E MATEMÁTICA: O problema deve ser factível e ter lógica no mundo real.
-6. EXCLUSIVIDADE: Gere APENAS o JSON válido, sem comentários antes ou depois.
+6. INTEGRIDADE FACTUAL: NUNCA invente notícias de veículos de imprensa, nomes de pesquisadores ou dados atribuídos falsamente a órgãos oficiais reais (como IBGE, OMS, ministérios). Quando o problema envolver dados percentuais ou estatísticos, contextualize-os como cenários hipotéticos bem definidos ou pesquisas amostrais locais (ex: 'Uma pesquisa de satisfação em uma loja com 400 clientes...', 'Um levantamento sobre o consumo elétrico em um condomínio...').
+7. EXCLUSIVIDADE: Gere APENAS o JSON válido, sem comentários antes ou depois.
 """
 
 POT_FEW_SHOT_EXAMPLE = """--- [EXEMPLO DE SAÍDA ESPERADA (FORMATO OBRIGATÓRIO)] ---

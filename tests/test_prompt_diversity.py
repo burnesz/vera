@@ -26,7 +26,7 @@ def test_sortear_contexto_criativo():
 def test_build_enunciado_solver_prompt_com_diretriz_criativa():
     """Valida injeção enxuta de tema e abertura no prompt PoT da Fase 1."""
     tema_teste = "Energia renovável, consumo elétrico ou sustentabilidade"
-    abertura_teste = "Inicie apresentando um dado estatístico, taxa percentual ou levantamento recente"
+    abertura_teste = "Inicie apresentando o resultado de uma pesquisa amostral ou levantamento local"
 
     prompt = build_enunciado_solver_prompt(
         habilidade_codigo="H01",
@@ -37,7 +37,7 @@ def test_build_enunciado_solver_prompt_com_diretriz_criativa():
     )
 
     assert "Contexto temático sugerido: Energia renovável" in prompt
-    assert "Abertura narrativa: Inicie apresentando um dado estatístico" in prompt
+    assert "Abertura narrativa: Inicie apresentando o resultado de uma pesquisa amostral" in prompt
     assert "Evite começar com 'Um [profissional] está...'" in prompt
     assert "Gere agora uma QUESTÃO INÉDITA para a habilidade H01." in prompt
 
