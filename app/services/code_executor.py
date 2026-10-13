@@ -166,6 +166,126 @@ def format_number(val: Any) -> str:
     return formatted.replace(".", ",")
 
 
+def auto_heal_distractors(
+    correta_val: Any,
+    distratores_vals: List[Any]
+) -> List[str]:
+    """
+    Auto-Healing Algorítmico Determinístico (Abordagem 1 / Decisão DSR):
+    Quando a função resolver() retorna distratores com duplicatas entre si ou que
+    colidem com a resposta correta, esta função recupera a questão em tempo de execução
+    sem necessidade de nova inferência no LLM:
+    1. Preserva a resposta correta e todos os distratores que já são únicos.
+    2. Identifica os valores em colisão ou faltantes.
+    3. Infere a escala e natureza dos dados (inteiros ou decimais, passo delta característico).
+    4. Gera substitutos plausíveis baseados em erros cognitivos típicos do ENEM
+       (progressão de escala, variações de delta, proporções clássicas, etc.).
+    5. Retorna exatamente 4 strings formatadas de distratores, garantindo unicidade estrita
+       em conjunto com a resposta correta (total de 5 opções mutuamente exclusivas).
+    """
+    correta_str = format_number(correta_val)
+    seen: Set[str] = {correta_str}
+    accepted: List[str] = []
+
+    for d in distratores_vals:
+        d_str = format_number(d)
+        if d_str not in seen:
+            seen.add(d_str)
+            accepted.append(d_str)
+
+    if len(accepted) == 4:
+        return accepted
+
+    # Tenta resolver numericamente via inferência da distribuição
+    try:
+        c_num = float(correta_val)
+        all_nums: List[float] = [c_num]
+        for d in distratores_vals:
+            try:
+                all_nums.append(float(d))
+            except (ValueError, TypeError):
+                pass
+
+        is_int = c_num.is_integer() and all(n.is_integer() for n in all_nums)
+        unique_floats = sorted(list(set(all_nums)))
+
+        # Calcula passo delta característico da questão
+        if len(unique_floats) >= 2:
+            diffs = [
+                unique_floats[i + 1] - unique_floats[i]
+                for i in range(len(unique_floats) - 1)
+                if unique_floats[i + 1] - unique_floats[i] > 1e-4
+            ]
+            delta = min(diffs) if diffs else 1.0
+        else:
+            base = abs(c_num) if abs(c_num) > 0 else 1.0
+            delta = max(1.0, round(base * 0.2)) if is_int else round(base * 0.2, 2)
+            if delta == 0:
+                delta = 1.0
+
+        if is_int and delta < 1.0:
+            delta = 1.0
+
+        min_val = min(unique_floats)
+        max_val = max(unique_floats)
+        all_non_negative = all(x >= 0 for x in unique_floats)
+
+        candidates: List[float] = []
+
+        # 1. Progressão por passos acima do máximo e abaixo do mínimo
+        for k in range(1, 25):
+            candidates.append(max_val + k * delta)
+            cand_below = min_val - k * delta
+            if not all_non_negative or cand_below >= 0:
+                candidates.append(cand_below)
+
+            # Passos em torno da resposta correta
+            candidates.append(c_num + k * delta)
+            cand_c_below = c_num - k * delta
+            if not all_non_negative or cand_c_below >= 0:
+                candidates.append(cand_c_below)
+
+        # 2. Erros proporcionais e de escala clássicos do ENEM
+        if c_num != 0:
+            candidates.append(c_num * 2.0)
+            candidates.append(c_num * 1.5)
+            candidates.append(c_num * 0.5)
+            if is_int:
+                candidates.append(c_num + 1.0)
+                if not all_non_negative or c_num - 1.0 >= 0:
+                    candidates.append(c_num - 1.0)
+                candidates.append(c_num + 2.0)
+                if not all_non_negative or c_num - 2.0 >= 0:
+                    candidates.append(c_num - 2.0)
+            if abs(c_num) >= 10:
+                candidates.append(c_num * 10.0)
+                candidates.append(c_num / 10.0)
+
+        for cand in candidates:
+            if is_int:
+                cand = round(cand)
+            cand_str = format_number(cand)
+            if cand_str not in seen:
+                seen.add(cand_str)
+                accepted.append(cand_str)
+                if len(accepted) == 4:
+                    break
+
+    except (ValueError, TypeError):
+        pass
+
+    # Fallback seguro para strings ou valores não numéricos residuais
+    suffix_idx = 1
+    while len(accepted) < 4:
+        cand_str = f"{correta_str} (Opção {suffix_idx})"
+        if cand_str not in seen:
+            seen.add(cand_str)
+            accepted.append(cand_str)
+        suffix_idx += 1
+
+    return accepted
+
+
 def validate_solver_consistency(
     enunciado: str,
     code: str,
@@ -173,7 +293,7 @@ def validate_solver_consistency(
 ) -> List[str]:
     """
     Valida a consistência matemática e o nexo entre o código do solver e o texto do enunciado:
-    1. Unicidade estrita: o gabarito e os 4 distratores devem ser distintos.
+    1. Unicidade estrita: o gabarito e os 4 distratores devem ser distintos (com Auto-Healing).
     2. Checagem de nexo numérico: todo número utilizado no código antes do return deve estar presente no enunciado.
     Retorna a lista de 5 valores formatados [correta, distrator1, distrator2, distrator3, distrator4].
     """
@@ -184,11 +304,23 @@ def validate_solver_consistency(
     dist_strs = [format_number(d) for d in distratores_vals]
     all_values = [correta_str] + dist_strs
 
-    # 1. Validação de Unicidade
+    # 1. Validação de Unicidade com Auto-Healing Algorítmico (Abordagem 1)
+    if len(set(all_values)) != 5:
+        logger.warning(
+            f"Auto-Healing: Colisão de alternativas detectada no solver ({all_values}). "
+            f"Acionando auto-cura algorítmica para garantir unicidade estrita..."
+        )
+        dist_strs = auto_heal_distractors(
+            correta_val=correta_val,
+            distratores_vals=distratores_vals
+        )
+        all_values = [correta_str] + dist_strs
+        logger.info(f"Auto-Healing: Alternativas curadas com sucesso: {all_values}")
+
     if len(set(all_values)) != 5:
         duplicates = [v for v in all_values if all_values.count(v) > 1]
         raise ValueError(
-            f"Alternativas duplicadas geradas pelo solver: {all_values}. Valores repetidos: {set(duplicates)}."
+            f"Alternativas duplicadas geradas pelo solver mesmo após auto-healing: {all_values}. Valores repetidos: {set(duplicates)}."
         )
 
     # 2. Checagem de Nexo Numérico (Groundedness)

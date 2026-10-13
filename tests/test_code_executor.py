@@ -5,7 +5,8 @@ from app.services.code_executor import (
     validate_solver_consistency,
     assemble_alternatives_and_gabarito,
     format_number,
-    sanitize_solver_code
+    sanitize_solver_code,
+    auto_heal_distractors
 )
 
 
@@ -98,13 +99,40 @@ def resolver():
     assert "30" in formatted_vals
 
 
-def test_validate_solver_consistency_duplicate_alternatives_fails():
+def test_auto_heal_distractors_with_duplicates_and_correct_collision():
+    # Caso 1: Colisão com a correta (10) e repetição de distratores (30 e 30)
+    correta = 10
+    distratores = [10, 20, 30, 30]
+    healed = auto_heal_distractors(correta, distratores)
+    assert len(healed) == 4
+    # Todos devem ser distintos entre si e distintos da resposta correta ("10")
+    all_5 = [format_number(correta)] + healed
+    assert len(set(all_5)) == 5
+    assert "10" not in healed
+    assert "20" in healed
+    assert "30" in healed
+
+
+def test_auto_heal_distractors_float_values():
+    # Caso 2: Valores decimais
+    correta = 12.5
+    distratores = [10.0, 12.5, 15.0, 15.0]
+    healed = auto_heal_distractors(correta, distratores)
+    assert len(healed) == 4
+    all_5 = [format_number(correta)] + healed
+    assert len(set(all_5)) == 5
+    assert "12,5" not in healed
+
+
+def test_validate_solver_consistency_auto_heals_duplicate_alternatives():
     enunciado = "Teste com 100 reais e taxa de 10%."
     code = "def resolver():\n    return {'correta': 10, 'distratores': [10, 20, 30, 40]}"
     result = {'correta': 10, 'distratores': [10, 20, 30, 40]}  # Duplicata: 10 e 10
 
-    with pytest.raises(ValueError, match="Alternativas duplicadas"):
-        validate_solver_consistency(enunciado, code, result)
+    formatted_vals = validate_solver_consistency(enunciado, code, result)
+    assert len(formatted_vals) == 5
+    assert len(set(formatted_vals)) == 5
+    assert formatted_vals[0] == "10"
 
 
 def test_validate_solver_consistency_missing_nexo_fails():
