@@ -20,6 +20,7 @@ import os
 import time
 import argparse
 import logging
+from typing import Dict, List
 
 # Adiciona o diretório raiz ao PYTHONPATH
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
@@ -132,40 +133,98 @@ def main():
     sucessos = 0
     falhas = 0
 
-    try:
-        for idx, hab_code in enumerate(habilidades_list, 1):
-            print(f"\n>>> [{idx}/{len(habilidades_list)}] Processando Habilidade: {hab_code}")
-            
-            existing_count = db.query(QuestaoInedita).filter(QuestaoInedita.habilidade_codigo == hab_code).count()
-            if args.skip_existing and existing_count >= args.count:
-                print(f"    [SKIP] Habilidade {hab_code} já possui {existing_count} questão(ões) no banco. Pulando.")
-                sucessos += args.count
-                continue
+    # Inicializa o mapa de metas por habilidade (quantas questões ainda faltam gerar)
+    metas_originais: Dict[str, int] = {}
+    metas_restantes: Dict[str, int] = {}
 
-            needed = args.count - (existing_count if args.skip_existing else 0)
-            for q_idx in range(1, needed + 1):
-                t0 = time.time()
-                try:
-                    questao = question_service.generate_single_questao_inedita(
-                        db=db,
-                        habilidade_codigo=hab_code,
-                        num_few_shot=args.few_shot_k,
-                        max_attempts=4,
-                        use_pot=not args.traditional,
-                        tema=args.tema,
-                        abertura=args.abertura
-                    )
-                    tempo_gasto = time.time() - t0
-                    sucessos += 1
-                    enunciado_resumo = (questao.enunciado[:90] + "...") if len(questao.enunciado) > 90 else questao.enunciado
-                    print(f"    [SUCESSO] Questão {q_idx}/{needed} gerada e validada em {tempo_gasto:.1f}s!")
-                    print(f"    - ID: {questao.id}")
-                    print(f"    - Gabarito: {questao.gabarito}")
-                    print(f"    - Enunciado: {enunciado_resumo}")
-                except Exception as e:
-                    tempo_gasto = time.time() - t0
-                    falhas += 1
-                    print(f"    [FALHA] Não foi possível gerar para {hab_code} após {tempo_gasto:.1f}s: {e}")
+    for hab_code in habilidades_list:
+        needed = args.count
+        if args.skip_existing:
+            existing_count = db.query(QuestaoInedita).filter(QuestaoInedita.habilidade_codigo == hab_code).count()
+            needed = max(0, args.count - existing_count)
+        metas_originais[hab_code] = needed
+        metas_restantes[hab_code] = needed
+
+    rodada = 1
+
+    try:
+        while True:
+            habs_para_processar = {hab: qtd for hab, qtd in metas_restantes.items() if qtd > 0}
+            if not habs_para_processar:
+                print("\n🎉 Todas as metas de questões por habilidade foram concluídas com sucesso!")
+                break
+
+            total_itens_rodada = sum(habs_para_processar.values())
+            if rodada > 1:
+                print("\n" + "=" * 80)
+                print(f" 🔄 INICIANDO RODADA {rodada} DE RE-TENTATIVAS PARA HABILIDADES PENDENTES")
+                print(f" Habilidades Pendentes: {len(habs_para_processar)} | Questões Restantes: {total_itens_rodada}")
+                print("=" * 80)
+
+            for idx, (hab_code, needed_in_round) in enumerate(habs_para_processar.items(), 1):
+                print(f"\n>>> [{idx}/{len(habs_para_processar)}] Processando Habilidade: {hab_code} ({needed_in_round} pendente(s))")
+
+                for q_idx in range(1, needed_in_round + 1):
+                    t0 = time.time()
+                    try:
+                        questao = question_service.generate_single_questao_inedita(
+                            db=db,
+                            habilidade_codigo=hab_code,
+                            num_few_shot=args.few_shot_k,
+                            max_attempts=4,
+                            use_pot=not args.traditional,
+                            tema=args.tema,
+                            abertura=args.abertura
+                        )
+                        tempo_gasto = time.time() - t0
+                        sucessos += 1
+                        metas_restantes[hab_code] -= 1
+                        enunciado_resumo = (questao.enunciado[:90] + "...") if len(questao.enunciado) > 90 else questao.enunciado
+                        print(f"    [SUCESSO] Questão {q_idx}/{needed_in_round} gerada e validada em {tempo_gasto:.1f}s!")
+                        print(f"    - ID: {questao.id}")
+                        print(f"    - Gabarito: {questao.gabarito}")
+                        print(f"    - Enunciado: {enunciado_resumo}")
+                    except Exception as e:
+                        tempo_gasto = time.time() - t0
+                        falhas += 1
+                        print(f"    [FALHA] Não foi possível gerar para {hab_code} após {tempo_gasto:.1f}s: {e}")
+
+            # Verifica pendências remanescentes após a rodada
+            pendencias_finais = {hab: qtd for hab, qtd in metas_restantes.items() if qtd > 0}
+            if not pendencias_finais:
+                print("\n🎉 Todas as questões solicitadas foram concluídas com sucesso!")
+                break
+
+            total_restante = sum(pendencias_finais.values())
+            print("\n" + "=" * 80)
+            print(" ⚠️  RELATÓRIO DE PENDÊNCIAS / FALHAS DA RODADA")
+            print("=" * 80)
+            print("As seguintes habilidades não concluíram todas as questões solicitadas:")
+            for hab, qtd_faltando in pendencias_finais.items():
+                meta_orig = metas_originais[hab]
+                geradas = meta_orig - qtd_faltando
+                print(f"  • {hab}: {geradas} de {meta_orig} gerada(s) ({qtd_faltando} pendente(s))")
+            print(f"\nTotal restante: {total_restante} questão(ões) em {len(pendencias_finais)} habilidade(s).")
+            print("-" * 80)
+
+            # Verifica se o terminal é interativo para aguardar resposta do usuário
+            if not sys.stdin.isatty():
+                print("[*] Terminal não-interativo detectado. Finalizando sem repetições.")
+                break
+
+            try:
+                pergunta = f"\nDeseja iniciar um novo fluxo somente com essas {len(pendencias_finais)} habilidades pendentes? (s/N): "
+                resposta = input(pergunta).strip().lower()
+            except (EOFError, KeyboardInterrupt):
+                print("\n\nExecução interrompida pelo usuário.")
+                break
+
+            if resposta in ["s", "sim", "y", "yes"]:
+                rodada += 1
+                continue
+            else:
+                print("\nFluxo de re-tentativas recusado. Finalizando processo...")
+                break
 
         # Contagem total consolidada no banco de dados
         total_no_banco = db.query(QuestaoInedita).count()
