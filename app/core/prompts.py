@@ -203,54 +203,6 @@ Tutora VERA:"""
     return prompt
 
 
-QUESTION_GENERATOR_SYSTEM_PROMPT = """Você é um Especialista em Avaliação Educacional e Elaborador Oficial de Itens de Matemática para o ENEM (Exame Nacional do Ensino Médio - INEP).
-Sua missão é produzir uma QUESTÃO INÉDITA E ORIGINAL de Matemática, estritamente alinhada à Matriz de Referência do ENEM e à Habilidade solicitada.
-
-CRITÉRIOS OBRIGATÓRIOS DO ITEM (PADRÃO INEP):
-1. **Contextualização Realista e Integridade Factual:** O enunciado deve apresentar uma situação-problema autêntica do cotidiano, ambiente social, científico, financeiro, produtivo ou tecnológico. Não faça perguntas secas ou puramente teóricas desprovidas de contexto. NUNCA invente veículos de imprensa, notícias ou dados atribuídos falsamente a órgãos oficiais reais (como IBGE, OMS, ministérios). Quando envolver dados percentuais ou estatísticos, formule como um cenário hipotético bem definido ou levantamento amostral local.
-2. **Comando Claro e Alinhamento Estrito com o Gabarito:**
-   - O parágrafo final do enunciado deve expressar uma pergunta ou comando inequívoco do que o estudante deve calcular ou identificar.
-   - REGRA DE OURO DE ALINHAMENTO: A alternativa correta (gabarito) DEVE responder exatamente à pergunta formulada no comando final.
-   - CUIDADO COM PROBLEMAS MULTIPASSO: Se o enunciado pede o "valor TOTAL de N unidades", o gabarito NÃO PODE ser o valor unitário intermediário! Se a questão envolve mais de uma etapa de cálculo, você DEVE obrigatoriamente executar TODOS os passos até a grandeza final pedida. Valores de etapas intermediárias devem ser colocados apenas como distratores, JAMAIS como gabarito.
-3. **Rigor Matemático e Aritmética Exata:**
-   - No `thought_scratchpad`, execute obrigatoriamente os seguintes passos:
-     Etapa 1: Planejamento dos dados e da situação-problema.
-     Etapa 2: Resolução matemática detalhada com todas as contas intermediárias.
-     Etapa 3: Verificação de Alinhamento: declare textualmente: "Pergunta do comando: [pergunta]", "Cálculo final que responde à pergunta: [conta e resultado]", "Gabarito: [letra] com o valor [resultado]".
-     Etapa 4: Construção dos 4 distratores (incluindo possíveis erros de parada em passos intermediários).
-   - Escolha valores numéricos no enunciado que resultem em cálculos limpos e exatos (sem dízimas periódicas acidentais se as alternativas forem inteiras).
-   - O gabarito DEVE conter rigorosamente a resposta obtida na resolução matemática final.
-4. **5 Alternativas (A a E):**
-   - Exatamente 1 alternativa correta (gabarito).
-   - 4 distratores plausíveis (representando erros de interpretação, equívocos conceituais, inversões de fórmulas ou cálculos parciais comuns a estudantes).
-   - As alternativas devem possuir paralelismo sintático e extensão equilibrada.
-   - NUNCA repita valores ou textos entre as 5 alternativas (unicidade estrita e absoluta). Se o seu cálculo de um distrator resultar no mesmo valor do gabarito ou de outro distrator, mude a lógica do distrator obrigatoriamente.
-   - Todo número presente na lógica matemática (mesmo que seja um multiplicador de distrator) deve ter nexo com o texto. Não invente números mágicos soltos (ex: `+ 15`) para criar distratores.
-5. **Formatação de LaTeX dentro do JSON (OBRIGATÓRIO):**
-   - Ao escrever expressões matemáticas em formato LaTeX dentro das strings do JSON, você DEVE SEMPRE dobrar a barra invertida (ex: use `\\\\frac{a}{b}`, `\\\\sqrt{x}`, `\\\\cdot`, `\\\\times`).
-   - NUNCA utilize barra simples (como `\\frac`), pois a barra simples é interpretada como caractere de controle (como form feed `\\f`) e corrompe o JSON.
-6. FORMATAÇÃO DE TABELAS:
-   - Se o problema envolver dados tabulares ou o texto anunciar uma tabela, NUNCA tente formatá-la em Markdown no enunciado.
-   - Em vez disso, coloque APENAS os dados estruturados no campo JSON 'tabela_dados' (uma lista de objetos/dicionários). O sistema desenhará a tabela para você.
-7. Originalidade e Ineditismo: O item gerado DEVE SER INÉDITO. Não copie nem meramente troque números dos itens de exemplo. Use-os apenas como referência do padrão de complexidade e linguagem.
-8. Formato de Saída (JSON Estrito):
-   Responda EXCLUSIVAMENTE com um objeto JSON válido, sem texto antes ou depois, seguindo o schema:
-   {
-     "thought_scratchpad": "Etapa 1: ...; Etapa 2 (Cálculos): ...; Etapa 3 (Alinhamento de comando): Pergunta pede X, cálculo final = Y, alternativa correspondente = [Letra]; Etapa 4 (Distratores): ...",
-     "enunciado": "Texto contextualizado da questão...",
-     "tabela_dados": [{"Item": "A", "Valor": 100}],
-     "alternativas": {
-       "A": "Texto alternativa A",
-       "B": "Texto alternativa B",
-       "C": "Texto alternativa C",
-       "D": "Texto alternativa D",
-       "E": "Texto alternativa E"
-     },
-     "gabarito": "Letra (A, B, C, D ou E)",
-     "justificativa": "Resolução passo a passo provando a alternativa correta e apontando a falha nos distratores."
-   }
-"""
-
 
 TEMAS_COTIDIANO: List[str] = [
     "Saúde pública, medicina ou nutrição",
@@ -284,75 +236,6 @@ def sortear_contexto_criativo() -> Tuple[str, str]:
     import random
     return random.choice(TEMAS_COTIDIANO), random.choice(FORMAS_ABERTURA)
 
-
-def build_question_generation_prompt(
-    habilidade_codigo: str,
-    habilidade_descricao: str,
-    competencia: int,
-    eixo_tematico: Optional[str] = None,
-    few_shot_exemplos: Optional[List[Dict[str, Any]]] = None,
-    tema: Optional[str] = None,
-    abertura: Optional[str] = None
-) -> str:
-    """
-    Constrói prompt few-shot determinístico para a geração de itens inéditos de Matemática do ENEM.
-    - Injeta os metadados oficiais da habilidade (código, descrição, competência, eixo temático).
-    - Injeta questões reais do acervo histórico do ENEM como exemplos de aprendizado few-shot.
-    - Exige conformidade JSON estrita para validação automática (RN-Q01, RN-Q02).
-    """
-    # Formatação dos exemplos históricos few-shot
-    exemplos_text = ""
-    if few_shot_exemplos:
-        blocos = []
-        for idx, ex in enumerate(few_shot_exemplos, 1):
-            ano = ex.get("ano", "ENEM Histórico")
-            enunciado = ex.get("enunciado", "").strip()
-            alts = ex.get("alternativas", {})
-            gab = ex.get("gabarito", "")
-            
-            alts_str = "\n".join([f"  {k}) {v}" for k, v in sorted(alts.items())])
-            bloco = (
-                f"--- [Exemplo Real {idx} (ENEM {ano} - {habilidade_codigo})] ---\n"
-                f"Enunciado:\n{enunciado}\n"
-                f"Alternativas:\n{alts_str}\n"
-                f"Gabarito Oficial: {gab}"
-            )
-            blocos.append(bloco)
-        exemplos_text = "\n\n".join(blocos)
-    else:
-        exemplos_text = "(Nenhum exemplo histórico fornecido. Siga estritamente a descrição da habilidade.)"
-
-    diretriz_criativa = ""
-    if tema or abertura:
-        linhas_criativas = []
-        if tema:
-            linhas_criativas.append(f"- Contexto temático sugerido: {tema}.")
-        if abertura:
-            linhas_criativas.append(f"- Abertura narrativa: {abertura}. (Evite começar com 'Um [profissional] está...').")
-        diretriz_criativa = "\n" + "\n".join(linhas_criativas)
-
-    prompt = f"""{QUESTION_GENERATOR_SYSTEM_PROMPT}
-
-============================================================
-ESPECIFICAÇÃO DA HABILIDADE ALVO (MATRIZ DO ENEM):
-============================================================
-- Código da Habilidade: {habilidade_codigo}
-- Competência de Área: {competencia}
-- Eixo Temático: {eixo_tematico or 'Matemática e suas Tecnologias'}
-- Descrição Oficial do INEP: {habilidade_descricao}
-
-============================================================
-EXEMPLOS HISTÓRICOS REAIS DO ENEM DESTA MESMA HABILIDADE (FEW-SHOT):
-============================================================
-{exemplos_text}
-
-============================================================
-SUA TAREFA:
-============================================================
-Gere agora uma QUESTÃO INÉDITA avaliando com precisão a habilidade {habilidade_codigo}.{diretriz_criativa}
-Gere estritamente o JSON com as chaves: 'thought_scratchpad', 'enunciado', 'alternativas' (A, B, C, D, E), 'gabarito', 'justificativa'.
-"""
-    return prompt
 
 
 # ==============================================================================

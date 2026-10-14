@@ -99,8 +99,7 @@ def test_generate_single_questao_inedita_pot_success():
             db=db,
             habilidade_codigo="H01",
             num_few_shot=2,
-            max_attempts=2,
-            use_pot=True
+            max_attempts=2
         )
 
         assert questao is not None
@@ -147,8 +146,7 @@ def test_generate_single_questao_inedita_pot_retry_on_solver_error():
         questao = service.generate_single_questao_inedita(
             db=db,
             habilidade_codigo="H01",
-            max_attempts=3,
-            use_pot=True
+            max_attempts=3
         )
 
         assert questao is not None
@@ -158,17 +156,18 @@ def test_generate_single_questao_inedita_pot_retry_on_solver_error():
         db.close()
 
 
-def test_generate_single_questao_inedita_traditional_fallback():
-    """Valida geração tradicional (use_pot=False) ou recebimento de alternativas prontas."""
+def test_generate_single_questao_inedita_rejects_missing_solver():
+    """Valida que o pipeline PoT rejeita estritamente retornos sem solver Python."""
     db = TestingSessionLocal()
     try:
         mock_llm = MagicMock(spec=LLMClient)
         mock_vs = MagicMock(spec=PineconeVectorStore)
         mock_vs.search.return_value = []
 
+        # Formato tradicional legado (sem solver)
         mock_output = {
-            "thought_scratchpad": "Passo a passo da geração de questão inédita.",
-            "enunciado": "Em uma loja de informática, o preço de um computador sofreu um desconto de 15% na semana da tecnologia. Sabendo que o preço original era de R$ 2.400,00, qual é o valor final pago pelo cliente?",
+            "thought_scratchpad": "Passo a passo.",
+            "enunciado": "Em uma loja de informática, o preço de um computador sofreu um desconto de 15%...",
             "alternativas": {
                 "A": "R$ 1.980,00.",
                 "B": "R$ 2.040,00.",
@@ -177,24 +176,18 @@ def test_generate_single_questao_inedita_traditional_fallback():
                 "E": "R$ 2.240,00."
             },
             "gabarito": "B",
-            "justificativa": "15% de 2400 é 360. Subtraindo 360 de 2400, obtemos R$ 2.040,00 (Alternativa B)."
+            "justificativa": "15% de 2400 é 360..."
         }
         mock_llm.generate.return_value = json.dumps(mock_output)
 
         service = QuestionService(llm_client=mock_llm, vector_store=mock_vs)
-        questao = service.generate_single_questao_inedita(
-            db=db,
-            habilidade_codigo="H01",
-            num_few_shot=2,
-            max_attempts=2,
-            use_pot=False
-        )
-
-        assert questao is not None
-        assert questao.habilidade_codigo == "H01"
-        assert questao.gabarito == "B"
-        assert questao.is_validated is True
-        assert len(questao.alternativas) == 5
+        with pytest.raises(ValueError, match=r"RN-Q01 \(PoT\)"):
+            service.generate_single_questao_inedita(
+                db=db,
+                habilidade_codigo="H01",
+                num_few_shot=2,
+                max_attempts=2
+            )
     finally:
         db.close()
 
@@ -219,8 +212,7 @@ def test_generate_batch_success():
         summary = service.generate_batch(
             db=db,
             habilidades=["H01"],
-            count_per_habilidade=1,
-            use_pot=True
+            count_per_habilidade=1
         )
 
         assert summary.total_habilidades_processadas == 1

@@ -66,11 +66,6 @@ def parse_args():
         help="Executa em modo mock (respostas simuladas pré-formatadas) para testes rápidos."
     )
     parser.add_argument(
-        "--traditional",
-        action="store_true",
-        help="Executa no modo tradicional de 1 fase com CoT em vez do padrão Program-Aided Generation (PoT)."
-    )
-    parser.add_argument(
         "--skip-existing",
         action="store_true",
         help="Pula habilidades que já possuam a quantidade solicitada de questões no banco."
@@ -120,8 +115,7 @@ def main():
 
     print(f"[*] Total de habilidades a processar: {len(habilidades_list)}")
     print(f"[*] Questões por habilidade: {args.count}")
-    modo_str = "Tradicional (CoT 1-fase)" if args.traditional else "Program-Aided Generation (PoT: Python Solver + Justificativa)"
-    print(f"[*] Modo de Arquitetura: {modo_str}")
+    print("[*] Modo de Arquitetura: Program-Aided Generation (PoT: Python Solver + Justificativa)")
     print(f"[*] Exemplos few-shot por item: {args.few_shot_k}")
     print(f"[*] Total estimado de questões inéditas a gerar: {len(habilidades_list) * args.count}")
     print("-" * 80)
@@ -172,7 +166,6 @@ def main():
                             habilidade_codigo=hab_code,
                             num_few_shot=args.few_shot_k,
                             max_attempts=4,
-                            use_pot=not args.traditional,
                             tema=args.tema,
                             abertura=args.abertura
                         )

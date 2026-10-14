@@ -8,7 +8,6 @@ from app.core.prompts import (
     FORMAS_ABERTURA,
     sortear_contexto_criativo,
     build_enunciado_solver_prompt,
-    build_question_generation_prompt,
 )
 
 
@@ -53,16 +52,3 @@ def test_build_enunciado_solver_prompt_sem_diretriz_opcional():
     assert "Gere agora uma QUESTÃO INÉDITA para a habilidade H02." in prompt
     assert "Contexto temático sugerido" not in prompt
 
-
-def test_build_question_generation_prompt_com_diretriz():
-    """Valida injeção no prompt clássico/tradicional."""
-    prompt = build_question_generation_prompt(
-        habilidade_codigo="H03",
-        habilidade_descricao="Resolver problemas numéricos.",
-        competencia=1,
-        tema="Saúde pública, medicina ou nutrição",
-        abertura="Inicie contextualizando o cenário geográfico",
-    )
-
-    assert "Contexto temático sugerido: Saúde pública" in prompt
-    assert "Abertura narrativa: Inicie contextualizando o cenário geográfico" in prompt

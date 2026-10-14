@@ -119,20 +119,15 @@ def test_api_obter_questao_inedita_not_found():
 
 def test_api_gerar_questao_inedita():
     mock_llm = MagicMock(spec=LLMClient)
-    mock_output = json.dumps({
-        "thought_scratchpad": "Elaborando questão para H02.",
+    resp_fase1 = json.dumps({
         "enunciado": "Quantas maneiras distintas existem de organizar 5 livros diferentes em uma prateleira linear?",
-        "alternativas": {
-            "A": "60.",
-            "B": "90.",
-            "C": "120.",
-            "D": "150.",
-            "E": "180."
-        },
-        "gabarito": "C",
-        "justificativa": "Permutação simples de 5 elementos: 5! = 120 (Alternativa C)."
+        "solver": "def resolver():\n    import math\n    val = math.factorial(5)\n    return {'correta': val, 'distratores': [60, 90, 150, 180]}"
     })
-    mock_llm.generate.return_value = mock_output
+    resp_fase2 = json.dumps({
+        "aprovada": True,
+        "justificativa_resolucao": "Permutação simples de 5 elementos: 5! = 120."
+    })
+    mock_llm.generate.side_effect = [resp_fase1, resp_fase2]
 
     def override_question_service():
         mock_vs = MagicMock()
@@ -149,8 +144,8 @@ def test_api_gerar_questao_inedita():
     assert response.status_code == 201
     created = response.json()
     assert created["habilidade_codigo"] == "H02"
-    assert created["gabarito"] == "C"
     assert created["is_validated"] is True
+    assert created["alternativas"][created["gabarito"]] == "120"
 
     # Limpa override após o teste
     app.dependency_overrides.pop(get_question_service, None)

@@ -25,8 +25,6 @@ from app.db.models.questao_inedita import QuestaoInedita
 from app.services.llm_client import LLMClient
 from app.services.vectorstore import PineconeVectorStore
 from app.services.question_validator import (
-    validate_questao_inedita,
-    check_table_markdown_structure,
     extract_json_from_text,
     sanitize_latex_json_text,
     sanitize_parsed_dict_values
@@ -37,10 +35,8 @@ from app.services.code_executor import (
     assemble_alternatives_and_gabarito
 )
 from app.core.prompts import (
-    build_question_generation_prompt,
     build_enunciado_solver_prompt,
     build_auto_validation_prompt,
-    build_correction_prompt,
     sortear_contexto_criativo,
     TEMAS_COTIDIANO,
     FORMAS_ABERTURA
@@ -211,12 +207,11 @@ class QuestionService:
         max_attempts: int = 4,
         temperature: float = 0.2,
         top_p: float = 0.9,
-        use_pot: bool = True,
         tema: Optional[str] = None,
         abertura: Optional[str] = None
     ) -> QuestaoInedita:
         """
-        Executa o pipeline RAG de geração de uma questão inédita:
+        Executa o pipeline RAG de geração de uma questão inédita via Program-Aided Generation (PoT):
         1. Validação da habilidade na Matriz oficial do ENEM.
         2. Retrieval RAG semântico dos Top-k exemplos no namespace 'questoes_enem' do Pinecone.
         3. Geração via Program-Aided Generation (PoT):
@@ -225,8 +220,7 @@ class QuestionService:
            - Validação de nexo numérico (groundedness) e unicidade estrita das 5 alternativas.
            - Embaralhamento programático das alternativas e definição determinística do gabarito.
            - Fase 2: LLM redige justificativa pedagógica com gabarito comprovado.
-        4. Fallback/Modo comparativo: Caso use_pot=False, executa geração clássica de 1 fase com CoT e validação.
-        5. Persistência na tabela questoes_ineditas no PostgreSQL.
+        4. Persistência na tabela questoes_ineditas no PostgreSQL.
         """
         clean_hab = habilidade_codigo.strip().upper()
         if clean_hab.startswith("H") and clean_hab[1:].isdigit():
@@ -248,28 +242,16 @@ class QuestionService:
             db=db
         )
 
-        if use_pot:
-            return self._generate_pot_item(
-                db=db,
-                habilidade=habilidade,
-                few_shot_dicts=few_shot_dicts,
-                max_attempts=max_attempts,
-                temperature=temperature,
-                top_p=top_p,
-                tema=tema,
-                abertura=abertura
-            )
-        else:
-            return self._generate_traditional_item(
-                db=db,
-                habilidade=habilidade,
-                few_shot_dicts=few_shot_dicts,
-                max_attempts=max_attempts,
-                temperature=temperature if temperature != 0.2 else 0.7,
-                top_p=top_p,
-                tema=tema,
-                abertura=abertura
-            )
+        return self._generate_pot_item(
+            db=db,
+            habilidade=habilidade,
+            few_shot_dicts=few_shot_dicts,
+            max_attempts=max_attempts,
+            temperature=temperature,
+            top_p=top_p,
+            tema=tema,
+            abertura=abertura
+        )
 
     def _generate_pot_item(
         self,
@@ -356,33 +338,7 @@ class QuestionService:
                 logger.warning(f"Tentativa {attempt}/{max_attempts} falhou no JSON: {e}")
                 continue
 
-            # Suporte resiliente a modelos ou mocks legados que retornaram formato tradicional
-            if "solver" not in parsed_data and "alternativas" in parsed_data and "gabarito" in parsed_data:
-                logger.info("Detectado formato com alternativas prontas (sem solver). Validando via RN-Q01/Q02...")
-                is_valid, err_msg, validated_item = validate_questao_inedita(
-                    raw_output=raw_pot_output,
-                    few_shot_exemplos=curr_few_shot
-                )
-                if is_valid and validated_item:
-                    nova_questao = QuestaoInedita(
-                        id=uuid.uuid4(),
-                        habilidade_codigo=habilidade.codigo,
-                        enunciado=validated_item.enunciado,
-                        alternativas=validated_item.alternativas,
-                        gabarito=validated_item.gabarito,
-                        justificativa=validated_item.justificativa,
-                        thought_scratchpad=validated_item.thought_scratchpad,
-                        is_validated=True
-                    )
-                    db.add(nova_questao)
-                    db.commit()
-                    db.refresh(nova_questao)
-                    return nova_questao
-                else:
-                    last_error = err_msg
-                    continue
-
-            # Validação do Schema Pydantic da Fase 1
+            # Validação do Schema Pydantic da Fase 1 (exige solver em Python)
             try:
                 pot_output = QuestaoEnunciadoSolverOutput(**parsed_data)
                 
@@ -522,90 +478,12 @@ class QuestionService:
             )
             return True, None, fallback_just
 
-    def _generate_traditional_item(
-        self,
-        db: Session,
-        habilidade: HabilidadeEnem,
-        few_shot_dicts: List[Dict[str, Any]],
-        max_attempts: int = 4,
-        temperature: float = 0.7,
-        top_p: float = 0.9,
-        tema: Optional[str] = None,
-        abertura: Optional[str] = None
-    ) -> QuestaoInedita:
-        """
-        Geração clássica de 1 fase com CoT e validação via validate_questao_inedita.
-        """
-        clean_hab = habilidade.codigo
-        if not tema and not abertura:
-            tema, abertura = sortear_contexto_criativo()
-
-        logger.info(
-            f"Gerando questão inédita (modo tradicional) para {clean_hab} "
-            f"(Tema: '{tema}' | Abertura: '{abertura}' | {len(few_shot_dicts)} exemplos RAG three-shot)..."
-        )
-
-        prompt = build_question_generation_prompt(
-            habilidade_codigo=habilidade.codigo,
-            habilidade_descricao=habilidade.descricao,
-            competencia=habilidade.competencia,
-            eixo_tematico=habilidade.eixo_tematico,
-            few_shot_exemplos=few_shot_dicts,
-            tema=tema,
-            abertura=abertura
-        )
-
-        last_error = None
-        for attempt in range(1, max_attempts + 1):
-            logger.info(f"Tentativa tradicional {attempt}/{max_attempts} de geração para {clean_hab}...")
-
-            raw_output = self.llm_client.generate(
-                prompt=prompt,
-                max_tokens=1024,
-                temperature=temperature,
-                top_p=top_p,
-                format="json"
-            )
-
-            is_valid, error_msg, validated_item = validate_questao_inedita(
-                raw_output=raw_output,
-                few_shot_exemplos=few_shot_dicts
-            )
-
-            if is_valid and validated_item:
-                logger.info(f"Item para {clean_hab} gerado e validado com sucesso na tentativa {attempt}!")
-                nova_questao = QuestaoInedita(
-                    id=uuid.uuid4(),
-                    habilidade_codigo=habilidade.codigo,
-                    enunciado=validated_item.enunciado,
-                    alternativas=validated_item.alternativas,
-                    gabarito=validated_item.gabarito,
-                    justificativa=validated_item.justificativa,
-                    thought_scratchpad=validated_item.thought_scratchpad,
-                    is_validated=True
-                )
-                db.add(nova_questao)
-                db.commit()
-                db.refresh(nova_questao)
-                return nova_questao
-            else:
-                last_error = error_msg
-                logger.warning(
-                    f"Falha na validação do item para {clean_hab} (tentativa {attempt}/{max_attempts}): {error_msg}"
-                )
-
-        raise ValueError(
-            f"RN-Q01: Não foi possível gerar uma questão inédita válida para {clean_hab} após {max_attempts} tentativas. "
-            f"Último erro: {last_error}"
-        )
-
     def generate_batch(
         self,
         db: Session,
         habilidades: Optional[List[str]] = None,
         count_per_habilidade: int = 1,
         num_few_shot: int = 2,
-        use_pot: bool = True,
         on_progress: Optional[Callable[[str, int, int, bool, Optional[str]], None]] = None
     ) -> BatchPopulationSummary:
         """
@@ -637,8 +515,7 @@ class QuestionService:
                         db=db,
                         habilidade_codigo=hab_code,
                         num_few_shot=num_few_shot,
-                        max_attempts=4,
-                        use_pot=use_pot
+                        max_attempts=4
                     )
                     elapsed = round(time.time() - op_start, 2)
                     total_success += 1
