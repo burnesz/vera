@@ -192,7 +192,7 @@ def main():
             # Verifica pendências remanescentes após a rodada
             pendencias_finais = {hab: qtd for hab, qtd in metas_restantes.items() if qtd > 0}
             if not pendencias_finais:
-                print("\n🎉 Todas as questões solicitadas foram concluídas com sucesso!")
+                print("\nTodas as questões solicitadas foram concluídas com sucesso!")
                 break
 
             total_restante = sum(pendencias_finais.values())
