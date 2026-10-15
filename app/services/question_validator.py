@@ -217,6 +217,58 @@ def check_table_markdown_structure(enunciado: str) -> Tuple[bool, Optional[str]]
     return False, msg
 
 
+def format_enunciado_with_table(
+    enunciado: str,
+    tabela_dados: Optional[List[Dict[str, Any]]]
+) -> str:
+    """
+    Converte tabela_dados em uma tabela Markdown e anexa ao enunciado de forma idempotente e limpa:
+    1. Se tabela_dados for vazia ou None, retorna o enunciado inalterado.
+    2. Se o enunciado já contiver uma tabela Markdown com delimitadores (| --- |), não duplica.
+    3. Remove blocos redundantes de pseudo-tabelas ou listas introduzidas por 'Tabela ...:' que repetem os dados.
+    4. Anexa a tabela Markdown formatada ao enunciado.
+    """
+    if not tabela_dados or not isinstance(tabela_dados, list) or len(tabela_dados) == 0:
+        return enunciado
+
+    # Monta a tabela Markdown canônica
+    keys = list(tabela_dados[0].keys())
+    md_table = "\n\n| " + " | ".join(keys) + " |\n"
+    md_table += "| " + " | ".join(["---"] * len(keys)) + " |\n"
+    for row in tabela_dados:
+        md_table += "| " + " | ".join([str(row.get(k, "")) for k in keys]) + " |\n"
+
+    # 1. Se já existe uma tabela Markdown com linha divisória (| --- |), não anexa outra
+    if re.search(r"\|(?:\s*:?-+:?\s*\|)+", enunciado):
+        return enunciado
+
+    # 2. Higieniza eventuais pseudo-tabelas em texto simples ou listas de tópicos redundantes
+    # Padrão: 'Tabela ...:' seguido de linhas com marcadores (- ou *) ou barras verticais (|)
+    clean_enunciado = re.sub(
+        r"(?:\n\s*(?:Tabela|Quadro)[^\n:]*:\s*\n(?:[ \t]*[-*•|].*(?:\n|$))+)",
+        "\n",
+        enunciado,
+        flags=re.IGNORECASE
+    ).strip()
+
+    # Se após remoção ainda houver uma pseudo-tabela de pipes solta no final sem cabeçalho específico
+    if "|" in clean_enunciado:
+        lines = clean_enunciado.split("\n")
+        non_pipe_lines = []
+        trailing_pipe = True
+        for line in reversed(lines):
+            if trailing_pipe and ("|" in line or not line.strip()):
+                continue
+            trailing_pipe = False
+            non_pipe_lines.append(line)
+        if len(non_pipe_lines) < len(lines):
+            candidate = "\n".join(reversed(non_pipe_lines)).strip()
+            if len(candidate) > 30:  # preserva o enunciado principal
+                clean_enunciado = candidate
+
+    return clean_enunciado + md_table
+
+
 def validate_questao_inedita(
     raw_output: Union[str, Dict[str, Any]],
     few_shot_exemplos: Optional[List[Dict[str, Any]]] = None
@@ -259,13 +311,10 @@ def validate_questao_inedita(
         
         if validated_item.tabela_dados:
             try:
-                md_table = "\n\n"
-                keys = list(validated_item.tabela_dados[0].keys())
-                md_table += "| " + " | ".join(keys) + " |\n"
-                md_table += "| " + " | ".join(["---"] * len(keys)) + " |\n"
-                for row in validated_item.tabela_dados:
-                    md_table += "| " + " | ".join([str(row.get(k, "")) for k in keys]) + " |\n"
-                validated_item.enunciado += md_table
+                validated_item.enunciado = format_enunciado_with_table(
+                    enunciado=validated_item.enunciado,
+                    tabela_dados=validated_item.tabela_dados
+                )
             except Exception as e:
                 logger.warning(f"Aviso ao converter tabela_dados para Markdown no modo tradicional: {e}")
                 

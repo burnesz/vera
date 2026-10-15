@@ -222,3 +222,127 @@ def test_generate_batch_success():
         assert summary.itens[0].success is True
     finally:
         db.close()
+
+
+def test_generate_pot_item_with_tabela_dados_clean_markdown():
+    """Valida se o pipeline converte tabela_dados em Markdown sem duplicações."""
+    db = TestingSessionLocal()
+    try:
+        mock_llm = MagicMock(spec=LLMClient)
+        mock_vs = MagicMock(spec=PineconeVectorStore)
+        mock_vs.search.return_value = []
+
+        resp_pot = json.dumps({
+            "enunciado": "A tabela a seguir apresenta os dados de consumo de água em metros cúbicos em uma residência. Qual o consumo total no período?",
+            "tabela_dados": [
+                {"Mês": "Janeiro", "Consumo": 15},
+                {"Mês": "Fevereiro", "Consumo": 20}
+            ],
+            "solver": "def resolver():\n    total = 15 + 20\n    return {'correta': total, 'distratores': [25, 30, 40, 50]}"
+        })
+        resp_just = json.dumps({
+            "justificativa": "O total é 15 + 20 = 35 m³."
+        })
+        mock_llm.generate.side_effect = [resp_pot, resp_just]
+
+        service = QuestionService(llm_client=mock_llm, vector_store=mock_vs)
+        questao = service.generate_single_questao_inedita(
+            db=db,
+            habilidade_codigo="H01",
+            max_attempts=1
+        )
+
+        assert questao is not None
+        assert "| Mês | Consumo |" in questao.enunciado
+        assert "| Janeiro | 15 |" in questao.enunciado
+        # Exatamente uma ocorrência do cabeçalho
+        assert questao.enunciado.count("| Mês | Consumo |") == 1
+    finally:
+        db.close()
+
+
+def test_generate_pot_item_sanitizes_duplicate_inline_pseudo_table():
+    """Valida se o backend remove blocos redundantes de pseudo-tabelas gerados pelo LLM."""
+    db = TestingSessionLocal()
+    try:
+        mock_llm = MagicMock(spec=LLMClient)
+        mock_vs = MagicMock(spec=PineconeVectorStore)
+        mock_vs.search.return_value = []
+
+        resp_pot = json.dumps({
+            "enunciado": (
+                "Em um experimento de monitoramento, foram coletados dados sobre custos por megabyte baixado. "
+                "Qual horário apresenta o menor custo?\n\n"
+                "Tabela de dados:\n"
+                "Horário | Custo por MB\n"
+                "10h00 | 0.002\n"
+                "14h00 | 0.003"
+            ),
+            "tabela_dados": [
+                {"Horário": "10h00", "Custo por MB": 0.002},
+                {"Horário": "14h00", "Custo por MB": 0.003}
+            ],
+            "solver": "def resolver():\n    return {'correta': '10h00', 'distratores': ['14h00', '18h00', '22h00', '23h00']}"
+        })
+        resp_just = json.dumps({
+            "justificativa": "O menor custo é 0.002 às 10h00."
+        })
+        mock_llm.generate.side_effect = [resp_pot, resp_just]
+
+        service = QuestionService(llm_client=mock_llm, vector_store=mock_vs)
+        questao = service.generate_single_questao_inedita(
+            db=db,
+            habilidade_codigo="H01",
+            max_attempts=1
+        )
+
+        assert questao is not None
+        # O cabeçalho formatado em Markdown com pipes deve existir exatamente uma vez
+        assert questao.enunciado.count("| Horário | Custo por MB |") == 1
+        # A pseudo-tabela de texto duplicada deve ter sido removida
+        assert "Tabela de dados:\nHorário | Custo por MB" not in questao.enunciado
+    finally:
+        db.close()
+
+
+def test_generate_pot_item_sanitizes_duplicate_bullet_list():
+    """Valida se o backend remove listas de tópicos redundantes em 'Tabela ...:'."""
+    db = TestingSessionLocal()
+    try:
+        mock_llm = MagicMock(spec=LLMClient)
+        mock_vs = MagicMock(spec=PineconeVectorStore)
+        mock_vs.search.return_value = []
+
+        resp_pot = json.dumps({
+            "enunciado": (
+                "Um centro de distribuição planeja a ração diária por faixa etária. "
+                "Qual será a quantidade total de ração necessária?\n\n"
+                "Tabela de consumo de ração por cães:\n"
+                "- Jovens (0-2 anos): 0.5 kg/dia\n"
+                "- Adultos (3-10 anos): 0.3 kg/dia"
+            ),
+            "tabela_dados": [
+                {"Faixa": "Jovens", "Consumo": 0.5},
+                {"Faixa": "Adultos", "Consumo": 0.3}
+            ],
+            "solver": "def resolver():\n    total = 0.5 + 0.3\n    return {'correta': total, 'distratores': [1.0, 1.2, 1.5, 2.0]}"
+        })
+        resp_just = json.dumps({
+            "justificativa": "Total é 0.8."
+        })
+        mock_llm.generate.side_effect = [resp_pot, resp_just]
+
+        service = QuestionService(llm_client=mock_llm, vector_store=mock_vs)
+        questao = service.generate_single_questao_inedita(
+            db=db,
+            habilidade_codigo="H01",
+            max_attempts=1
+        )
+
+        assert questao is not None
+        assert "| Faixa | Consumo |" in questao.enunciado
+        assert questao.enunciado.count("| Faixa | Consumo |") == 1
+        assert "- Jovens" not in questao.enunciado
+    finally:
+        db.close()
+

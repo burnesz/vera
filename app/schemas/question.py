@@ -64,10 +64,11 @@ class QuestaoAutoValidacaoOutput(BaseModel):
     sem_ambiguidade: bool = Field(..., description="A questão está livre de ambiguidades e dupla interpretação?")
     informacao_suficiente: bool = Field(..., description="Todas as informações necessárias para resolver estão presentes no texto?")
     sem_erros_vazamentos: bool = Field(..., description="O texto está livre de erros de português e NÃO contém palavras como 'solver', 'python', 'código' ou 'variável'?")
+    sem_duplicacao_tabelas: bool = Field(True, description="O texto está livre de dados repetidos em formato de lista ou tabelas duplicadas?")
     resposta_nas_alternativas: bool = Field(..., description="Ao resolver mentalmente, a resposta obtida se encontra entre as alternativas fornecidas?")
     justificativa_resolucao: str = Field(..., description="Sua resolução passo a passo detalhada e didática provando qual é a alternativa correta e o erro das outras.")
     feedback_correcao: Optional[str] = Field(None, description="Se qualquer validação acima for falsa, explique detalhadamente O QUE DEVE SER CORRIGIDO no enunciado ou código.")
-    aprovada: bool = Field(..., description="True APENAS SE todas as 5 checagens booleanas acima forem True.")
+    aprovada: bool = Field(..., description="True APENAS SE todas as checagens booleanas acima forem True.")
 
 
 class QuestaoIneditaLLMOutput(BaseModel):

@@ -27,7 +27,8 @@ from app.services.vectorstore import PineconeVectorStore
 from app.services.question_validator import (
     extract_json_from_text,
     sanitize_latex_json_text,
-    sanitize_parsed_dict_values
+    sanitize_parsed_dict_values,
+    format_enunciado_with_table
 )
 from app.services.code_executor import (
     execute_solver_code,
@@ -342,18 +343,15 @@ class QuestionService:
             try:
                 pot_output = QuestaoEnunciadoSolverOutput(**parsed_data)
                 
-                # Conversão da tabela nativa para Markdown (se existir)
+                # Conversão e higienização da tabela nativa para Markdown (se existir)
                 if pot_output.tabela_dados:
                     try:
-                        md_table = "\n\n"
-                        keys = list(pot_output.tabela_dados[0].keys())
-                        md_table += "| " + " | ".join(keys) + " |\n"
-                        md_table += "| " + " | ".join(["---"] * len(keys)) + " |\n"
-                        for row in pot_output.tabela_dados:
-                            md_table += "| " + " | ".join([str(row.get(k, "")) for k in keys]) + " |\n"
-                        pot_output.enunciado += md_table
+                        pot_output.enunciado = format_enunciado_with_table(
+                            enunciado=pot_output.enunciado,
+                            tabela_dados=pot_output.tabela_dados
+                        )
                     except Exception as e:
-                        logger.warning(f"Aviso ao converter tabela_dados para Markdown: {e}")
+                        logger.warning(f"Aviso ao formatar tabela_dados para Markdown: {e}")
                 
                 enunciado_anterior = pot_output.enunciado
                 solver_anterior = pot_output.solver
@@ -461,6 +459,7 @@ class QuestionService:
                 for bool_field in [
                     "faz_sentido_semanticamente", "sem_ambiguidade",
                     "informacao_suficiente", "sem_erros_vazamentos",
+                    "sem_duplicacao_tabelas",
                     "resposta_nas_alternativas"
                 ]:
                     if bool_field not in parsed:
@@ -468,7 +467,17 @@ class QuestionService:
 
             val_obj = QuestaoAutoValidacaoOutput(**parsed)
             
-            return val_obj.aprovada, val_obj.feedback_correcao, val_obj.justificativa_resolucao
+            is_valid = bool(val_obj.aprovada)
+            feedback = val_obj.feedback_correcao
+            if not val_obj.sem_duplicacao_tabelas:
+                is_valid = False
+                if not feedback:
+                    feedback = (
+                        "O enunciado apresenta dados ou tabelas duplicados. "
+                        "Elimine a repetição dos dados tabulares no texto."
+                    )
+            
+            return is_valid, feedback, val_obj.justificativa_resolucao
         except Exception as e:
             logger.warning(f"Aviso ao executar auto-validação estruturada na Fase 2: {e}. Considerando válida com fallback.")
             correta_val = alternativas.get(gabarito, "")

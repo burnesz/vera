@@ -250,13 +250,14 @@ REGRAS ESTRITAS:
 1. ENUNCIADO: Situação-problema realista com comando final claro.
    - SEJA CRIATIVO NO CONTEXTO. NUNCA comece as questões sempre com a mesma estrutura sintática. Varie a narrativa e o sujeito!
    - NUNCA use palavras como "solver", "python", "algoritmo", "código", "distrator" ou "gabarito" no enunciado!
-2. FORMATAÇÃO DE TABELAS:
-   - Se o problema envolver dados tabulares ou anunciar uma tabela ("tabela a seguir", "quadro abaixo", etc.), NUNCA tente formatá-la em Markdown no enunciado.
-   - Em vez disso, coloque APENAS os dados estruturados no campo JSON 'tabela_dados' (lista de dicionários). O sistema desenhará a tabela para você.
+2. DADOS TABULARES E ISOLAMENTO DE TABELA:
+   - Se a questão envolver dados tabulares ou anunciar uma tabela ("A tabela a seguir apresenta...", "O quadro abaixo ilustra..."), no campo 'enunciado' escreva APENAS a contextualização anunciando a tabela e a pergunta final.
+   - NUNCA liste os dados da tabela no corpo do 'enunciado' (seja em tópicos '-', listas numeradas, parágrafos ou pipes '|'). O texto NÃO deve conter os dados repetidos.
+   - Os dados tabulares devem residir EXCLUSIVAMENTE no campo JSON 'tabela_dados' (lista de dicionários). O sistema desenhará e renderizará a tabela para o aluno no ponto adequado.
 3. SOLVER (Python puro): 
    - Modela os cálculos da grandeza solicitada no enunciado.
    - Retorna: return {'correta': <numero>, 'distratores': [<d1>, <d2>, <d3>, <d4>]}
-4. NEXO E COMPLETUDE: Todo dado ou número usado no solver (exceto constantes universais) DEVE estar visível no texto do enunciado ou na tabela_dados.
+4. NEXO E COMPLETUDE: Todo dado ou número usado no solver (exceto constantes universais) DEVE estar visível no texto do enunciado ou na tabela_dados. Os números contidos em 'tabela_dados' são considerados 100% visíveis e válidos pelo sistema de validação de nexo numérico.
 5. COERÊNCIA FÍSICA E MATEMÁTICA: O problema deve ser factível e ter lógica no mundo real.
 6. INTEGRIDADE FACTUAL: NUNCA invente notícias de veículos de imprensa, nomes de pesquisadores ou dados atribuídos falsamente a órgãos oficiais reais (como IBGE, OMS, ministérios). Quando o problema envolver dados percentuais ou estatísticos, contextualize-os como cenários hipotéticos bem definidos ou pesquisas amostrais locais (ex: 'Uma pesquisa de satisfação em uma loja com 400 clientes...', 'Um levantamento sobre o consumo elétrico em um condomínio...').
 7. EXCLUSIVIDADE: Gere APENAS o JSON válido, sem comentários antes ou depois.
@@ -264,12 +265,13 @@ REGRAS ESTRITAS:
 
 POT_FEW_SHOT_EXAMPLE = """--- [EXEMPLO DE SAÍDA ESPERADA (FORMATO OBRIGATÓRIO)] ---
 {
-  "enunciado": "Seu texto contextualizado aqui terminando com uma pergunta clara...",
+  "enunciado": "Um centro de triagem registrou a quantidade diária de materiais recicláveis recolhidos ao longo de três dias. A tabela a seguir apresenta a massa, em quilogramas, de cada categoria recolhida. Qual foi a quantidade total de papel recolhida nos três dias?",
   "tabela_dados": [
-    {"Produto": "A", "Preço": 10.00},
-    {"Produto": "B", "Preço": 20.00}
+    {"Dia": "Segunda-feira", "Papel (kg)": 120, "Plástico (kg)": 80},
+    {"Dia": "Terça-feira", "Papel (kg)": 150, "Plástico (kg)": 90},
+    {"Dia": "Quarta-feira", "Papel (kg)": 180, "Plástico (kg)": 110}
   ],
-  "solver": "def resolver():\\n    # cálculos baseados nos dados numéricos do enunciado\\n    # ...\\n    return {'correta': valor_correto, 'distratores': [d1, d2, d3, d4]}"
+  "solver": "def resolver():\\n    # Cálculos utilizam os dados declarados em tabela_dados sem repeti-los no enunciado\\n    total_papel = 120 + 150 + 180\\n    return {'correta': total_papel, 'distratores': [total_papel - 50, total_papel + 50, total_papel * 0.8, total_papel * 1.2]}"
 }
 """
 
@@ -388,7 +390,8 @@ Você DEVE verificar rigorosamente:
 2. O texto está livre de qualquer ambiguidade ou comando duplo?
 3. Há informações suficientes para resolver ou falta algum dado numérico?
 4. O texto está livre de erros de português e livre de "vazamentos de prompt" (palavras absurdas para um aluno como: solver, python, código, distratores, gerar)?
-5. Ao você resolver passo a passo, a resposta exata se encontra nas alternativas, e corresponde ao gabarito pretendido?
+5. O texto está livre de redundâncias ou duplicações de informações (por exemplo, os mesmos dados aparecendo primeiro em lista/texto e depois repetidos em tabela)?
+6. Ao você resolver passo a passo, a resposta exata se encontra nas alternativas, e corresponde ao gabarito pretendido?
 
 Se houver QUALQUER erro, seja implacável. Marque 'aprovada' como false e escreva em 'feedback_correcao' exatamente o que quem elaborou a questão precisa consertar no enunciado ou na lógica.
 
@@ -399,6 +402,7 @@ Schema esperado:
   "sem_ambiguidade": bool,
   "informacao_suficiente": bool,
   "sem_erros_vazamentos": bool,
+  "sem_duplicacao_tabelas": bool,
   "resposta_nas_alternativas": bool,
   "justificativa_resolucao": "Sua resolução passo a passo detalhada",
   "feedback_correcao": "O que corrigir (se houver erro), senao null",
