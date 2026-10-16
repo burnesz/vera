@@ -322,7 +322,7 @@ class QuestionService:
             try:
                 raw_pot_output = self.llm_client.generate(
                     prompt=prompt_pot,
-                    max_tokens=1024,
+                    max_tokens=1536,
                     temperature=curr_temp,
                     top_p=top_p,
                     format="json"
@@ -393,6 +393,20 @@ class QuestionService:
             except Exception as e:
                 last_error = f"Falha na resolução cega da LLM: {e}"
                 logger.warning(f"Tentativa {attempt}/{max_attempts} falhou na resolução cega: {e}")
+                continue
+
+            # --- VALIDAÇÃO ETAPA 1b: PREMISSAS IMPLÍCITAS (Early Exit determinístico) ---
+            # Gerador e resolvedor cego compartilham o mesmo viés (ex: ambos assumem mês = 30 dias),
+            # logo a equivalência sozinha não detecta convenções não declaradas no enunciado.
+            if blind_sol.premissas_assumidas:
+                premissas_fmt = "; ".join(blind_sol.premissas_assumidas)
+                last_error = (
+                    f"Premissa implícita não declarada no enunciado: {premissas_fmt}. "
+                    f"Declare explicitamente toda convenção necessária (ex: 'Considere que o mês tem 30 dias')."
+                )
+                logger.warning(
+                    f"Tentativa {attempt}/{max_attempts} descartada por premissa implícita (Early Exit): {premissas_fmt}"
+                )
                 continue
 
             # --- VALIDAÇÃO ETAPA 2: CONFRONTO DIRETO DE EQUIVALÊNCIA (com Early Exit) ---

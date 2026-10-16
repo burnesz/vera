@@ -555,3 +555,102 @@ def test_three_stage_validation_semantic_failure_rejects():
         db.close()
 
 
+def test_implicit_premise_in_blind_solving_rejects_with_early_exit():
+    """
+    Valida que premissas implícitas reportadas pela Resolução Cega (ex: 'mês = 30 dias')
+    reprovam a questão ANTES da equivalência (Early Exit: 2 chamadas na 1ª tentativa).
+    """
+    db = TestingSessionLocal()
+    try:
+        mock_llm = MagicMock(spec=LLMClient)
+        mock_vs = MagicMock(spec=PineconeVectorStore)
+        mock_vs.search.return_value = []
+
+        # 1ª tentativa: "mensal" sem declarar a quantidade de dias (o 30 aparece por coincidência)
+        t1_pot = json.dumps({
+            "enunciado": "Uma loja com 30 funcionários vende 4 produtos por dia cada. Quantos produtos a loja vende mensalmente?",
+            "solver": "def resolver():\n    diario = 30 * 4\n    mensal = diario * 30\n    return {'correta': mensal, 'distratores': [120, 840, 3000, 4800]}"
+        })
+        t1_blind = json.dumps({
+            "resolucao_passo_a_passo": "30 x 4 = 120 por dia; 120 x 30 = 3600 por mês.",
+            "premissas_assumidas": ["Assumi que o mês tem 30 dias"],
+            "resultado_obtido": 3600
+        })
+
+        # 2ª tentativa: premissa declarada explicitamente
+        t2_pot = json.dumps({
+            "enunciado": "Uma loja com 20 funcionários vende 4 produtos por dia cada. Considere que o mês tem 30 dias. Quantos produtos a loja vende mensalmente?",
+            "solver": "def resolver():\n    diario = 20 * 4\n    mensal = diario * 30\n    return {'correta': mensal, 'distratores': [80, 560, 2000, 3200]}"
+        })
+        t2_blind = json.dumps({
+            "resolucao_passo_a_passo": "20 x 4 = 80 por dia; 80 x 30 = 2400 por mês.",
+            "premissas_assumidas": [],
+            "resultado_obtido": 2400
+        })
+        t2_equiv = json.dumps({"equivalentes": True, "explicacao_equivalencia": "Equivalentes."})
+        t2_audit = json.dumps({
+            "possui_incoerencia": False,
+            "possui_ambiguidade": False,
+            "deficit_informacoes": False,
+            "erros_ou_vazamentos": False,
+            "duplicacao_tabelas": False
+        })
+
+        mock_llm.generate.side_effect = [
+            t1_pot, t1_blind,                       # 2 chamadas: Early Exit por premissa implícita
+            t2_pot, t2_blind, t2_equiv, t2_audit    # 4 chamadas: sucesso pleno
+        ]
+
+        service = QuestionService(llm_client=mock_llm, vector_store=mock_vs)
+        questao = service.generate_single_questao_inedita(
+            db=db,
+            habilidade_codigo="H01",
+            max_attempts=2
+        )
+
+        assert questao is not None
+        assert questao.alternativas[questao.gabarito] == "2400"
+        assert mock_llm.generate.call_count == 6
+    finally:
+        db.close()
+
+
+def test_blind_solving_schema_normalizes_premissas():
+    """Valida a normalização tolerante da lista de premissas retornada pelo LLM 7B."""
+    from app.schemas.question import QuestaoBlindSolvingOutput
+
+    # Campo ausente (retrocompatibilidade) -> lista vazia
+    assert QuestaoBlindSolvingOutput(resolucao_passo_a_passo="x", resultado_obtido=1).premissas_assumidas == []
+    # Marcadores vazios são descartados
+    out = QuestaoBlindSolvingOutput(
+        resolucao_passo_a_passo="x", resultado_obtido=1, premissas_assumidas=["Nenhuma.", "N/A", "", None]
+    )
+    assert out.premissas_assumidas == []
+    # String única é convertida em lista
+    out = QuestaoBlindSolvingOutput(
+        resolucao_passo_a_passo="x", resultado_obtido=1, premissas_assumidas="Assumi juros compostos"
+    )
+    assert out.premissas_assumidas == ["Assumi juros compostos"]
+
+
+def test_groundedness_rejects_undeclared_365_days():
+    """'Ano = 365 dias' é convenção, não constante neutra: deve constar no enunciado."""
+    from app.services.code_executor import validate_solver_consistency
+
+    code = "def resolver():\n    total = 8 * 365\n    return {'correta': total, 'distratores': [1, 2, 3, 4]}"
+    result = {"correta": 2920, "distratores": [8, 96, 240, 2880]}
+
+    with pytest.raises(ValueError, match="365"):
+        validate_solver_consistency(
+            enunciado="Uma torneira desperdiça 8 litros por dia. Quantos litros desperdiça em um ano?",
+            code=code,
+            result=result
+        )
+
+    # Com a premissa declarada, o nexo numérico é aceito
+    valores = validate_solver_consistency(
+        enunciado="Uma torneira desperdiça 8 litros por dia. Considere que o ano tem 365 dias. Quantos litros desperdiça em um ano?",
+        code=code,
+        result=result
+    )
+    assert valores[0] == "2920"

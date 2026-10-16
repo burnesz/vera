@@ -52,3 +52,32 @@ def test_build_enunciado_solver_prompt_sem_diretriz_opcional():
     assert "Gere agora uma QUESTÃO INÉDITA para a habilidade H02." in prompt
     assert "Contexto temático sugerido" not in prompt
 
+def test_build_enunciado_solver_prompt_resolve_valor_correto_rag():
+    """
+    Valida que os exemplos few-shot do RAG exibem o valor real da alternativa correta
+    ('Resposta Correta Oficial') em vez da letra solta do gabarito, e omitem a linha
+    quando o texto da alternativa não está disponível.
+    """
+    exemplos = [
+        {
+            "ano": 2022,
+            "enunciado": "Uma fábrica produz 1.500 peças em 5 dias.",
+            "alternativas": {"A": "150", "B": "300", "C": "450", "D": "600", "E": "750"},
+            "gabarito": "B",
+        },
+        {
+            "ano": 2023,
+            "enunciado": "Questão sem dicionário de alternativas.",
+            "gabarito": "D",
+        },
+    ]
+
+    prompt = build_enunciado_solver_prompt(
+        habilidade_codigo="H01",
+        habilidade_descricao="Reconhecer padrões numéricos.",
+        competencia=1,
+        exemplos_referencia=exemplos,
+    )
+
+    assert "Resposta Correta Oficial: 300" in prompt
+    assert "Gabarito Oficial:" not in prompt

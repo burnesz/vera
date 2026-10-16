@@ -31,9 +31,11 @@ BLOCKED_CALLS = {
     "delattr", "input", "exit", "quit", "breakpoint"
 }
 
-# Constantes numéricas matemáticas, geométricas e temporais neutras permitidas no código
+# Constantes numéricas matemáticas, geométricas e temporais neutras permitidas no código.
+# Apenas conversões universais e inequívocas (1 h = 60 min, 1 dia = 24 h, 1 ano = 12 meses).
+# Convenções como "ano = 365 dias" ou "mês = 30 dias" NÃO são neutras e devem constar no enunciado.
 ALLOWED_NUMERIC_CONSTANTS: Set[float] = {
-    0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 10.0, 12.0, 24.0, 60.0, 100.0, 180.0, 360.0, 365.0, 1000.0,
+    0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 10.0, 12.0, 24.0, 60.0, 100.0, 180.0, 360.0, 1000.0,
     0.5, 0.1, 0.01, 3.14, 3.1415, 3.1416
 }
 
