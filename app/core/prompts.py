@@ -259,9 +259,10 @@ REGRAS ESTRITAS:
    - Mobilize pelo menos 2 conceitos matemáticos articulados (ex: proporcionalidade + conversão de unidades; porcentagem + comparação de opções; área + custo; média + variação percentual).
    - O aluno deve INTERPRETAR o texto e/ou a tabela para selecionar e relacionar os dados relevantes; a operação necessária NÃO pode estar entregue literalmente no comando.
    - PROIBIDO: questões resolvidas com uma única operação direta (ex: apenas somar os valores de uma coluna, aplicar uma única porcentagem, ler um valor da tabela).
-4. PREMISSAS EXPLÍCITAS (NENHUMA SUPOSIÇÃO IMPLÍCITA):
+4. PREMISSAS EXPLÍCITAS E ARREDONDAMENTO (NENHUMA SUPOSIÇÃO IMPLÍCITA):
    - Toda convenção, valor de referência ou hipótese necessária ao cálculo DEVE estar escrita no enunciado, preferencialmente em uma frase iniciada por "Considere que...".
    - Declare SEMPRE, quando usados: quantidade de dias do mês ou do ano, semanas por mês, dias úteis ou jornada de trabalho, regime de juros (simples ou composto), critério de arredondamento, valor aproximado de π, equivalência entre litro e metro cúbico, densidades, e a constância de taxas, vazões ou velocidades.
+   - EXATIDÃO NUMÉRICA E CASAS DECIMAIS: Priorize escolher valores numéricos múltiplos e compatíveis para que as divisões resultem em números inteiros ou decimais exatos de até 2 casas (evitando dízimas periódicas). Caso o cálculo não seja exato ou o solver utilize arredondamento (`round`, `math.ceil`, `math.floor`), o comando final do enunciado DEVE especificar explicitamente quantas casas decimais ou qual critério usar (ex: "Considere o resultado arredondado para duas casas decimais" ou "aproxime para uma casa decimal"). NUNCA arredonde no solver sem declarar o número exato de casas decimais no enunciado.
    - Termos de periodicidade ("mensal", "semanal", "anual", "diário") NUNCA podem ser convertidos no cálculo sem que a conversão esteja declarada (ex: escreva "Considere que o mês tem 30 dias").
    - Apenas conversões universais e inequívocas dispensam declaração: 1 h = 60 min, 1 min = 60 s, 1 dia = 24 h, 1 ano = 12 meses e prefixos métricos (1 m = 100 cm, 1 kg = 1.000 g).
 5. SOLVER (Python puro): 
