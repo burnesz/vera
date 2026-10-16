@@ -466,7 +466,7 @@ class QuestionService:
         raw = self.llm_client.generate(
             prompt=prompt,
             max_tokens=800,
-            temperature=0.1,
+            temperature=0.0,
             top_p=0.9,
             format="json"
         )
@@ -479,11 +479,11 @@ class QuestionService:
             if "resolucao_passo_a_passo" not in parsed:
                 parsed["resolucao_passo_a_passo"] = parsed.get("resolucao") or parsed.get("justificativa") or "Resolução detalhada."
             if "resultado_obtido" not in parsed:
-                parsed["resultado_obtido"] = str(parsed.get("resultado") or parsed.get("correta") or "")
+                parsed["resultado_obtido"] = parsed.get("resultado", parsed.get("correta", ""))
 
         return QuestaoBlindSolvingOutput(**parsed)
 
-    def _run_equivalence_check(self, resultado_solver: Any, resultado_obtido: str) -> QuestaoEquivalenciaOutput:
+    def _run_equivalence_check(self, resultado_solver: Any, resultado_obtido: Any) -> QuestaoEquivalenciaOutput:
         """
         Etapa 2 da Validação: Confronto Direto de Equivalência Matemática.
         Avalia se a resposta calculada pelo solver e o resultado deduzido pela LLM são equivalentes.

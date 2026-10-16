@@ -374,18 +374,21 @@ SUA TAREFA:
 ============================================================
 1. Resolva a questão passo a passo com rigor lógico e matemático formal.
 2. Apresente toda a resolução didática detalhada em 'resolucao_passo_a_passo'.
-3. Deduza e declare o resultado final (valor numérico, unidade de medida ou conclusão conceitual) em 'resultado_obtido'.
+3. Deduza e declare o resultado final em 'resultado_obtido' no formato de um TIPO PRIMÁRIO DO PYTHON:
+   - Se for um valor numérico único, retorne apenas o número (int ou float, ex: 35.0, 30, 1.9), sem texto ou unidades de medida.
+   - Se for uma conclusão conceitual, retorne em texto.
+   - Se forem múltiplos valores, retorne como dict (ex: {{"media": 135.0, "moda": None}}).
 
 Responda EXCLUSIVAMENTE em formato JSON com o schema abaixo:
 {{
   "resolucao_passo_a_passo": "Sua resolução didática e detalhada passo a passo deduzindo o resultado...",
-  "resultado_obtido": "Valor numérico ou conclusão final obtida (ex: '135 kg', 'não há moda', '40 minutos')"
+  "resultado_obtido": "Valor numérico ou conclusão final obtida no tipo primário do Python"
 }}
 """
     return prompt
 
 
-def build_equivalencia_gabarito_prompt(resultado_solver: Any, resultado_obtido: str) -> str:
+def build_equivalencia_gabarito_prompt(resultado_solver: Any, resultado_obtido: Any) -> str:
     """
     Constrói prompt para a Chamada 2 da Fase de Validação: Confronto Direto de Equivalência.
     Juiz matemático objetivo que confronta o resultado calculado pelo Python com a conclusão da LLM.
@@ -402,8 +405,11 @@ RESULTADOS A COMPARAR:
 ============================================================
 DIRETRIZES DE EQUIVALÊNCIA:
 ============================================================
-1. Considere EQUIVALENTES variações de formato, representações decimais vs. fracionárias (ex: 0,5 e 1/2), formatações com unidades (ex: '135' e '135 kg', '40' e '40 minutos') ou aproximações/arredondamentos numéricos consistentes.
-2. NÃO considere equivalentes se houver valores numéricos diferentes ou divergências conceituais graves (por exemplo: um resultado traz um número específico para moda enquanto o outro declara que o conjunto é amodal / não possui moda).
+1. Antes de comparar, normalize os valores, as representações matemáticas e as unidades de medida.
+2. Considere equivalentes diferenças de formatação, notação, frações, decimais e unidades conversíveis.
+3. A ausência de unidade em um resultado não implica divergência, desde que o valor e o contexto sejam compatíveis.
+4. Considere o enunciado para verificar a grandeza esperada. Não invente informações nem converta grandezas incompatíveis.
+5. Retorne `false` apenas quando houver divergência matemática ou conceitual real. Se as informações forem insuficientes, explique a limitação objetivamente e decida com base nas evidências disponíveis.
 
 Responda EXCLUSIVAMENTE em formato JSON com o schema:
 {{

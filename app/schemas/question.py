@@ -63,9 +63,9 @@ class QuestaoBlindSolvingOutput(BaseModel):
         ...,
         description="Resolução didática completa e detalhada passo a passo deduzindo o resultado a partir do enunciado."
     )
-    resultado_obtido: str = Field(
+    resultado_obtido: Any = Field(
         ...,
-        description="Valor numérico, expressão ou conclusão final obtida (ex: '135 kg', 'não há moda', '40 minutos')."
+        description="Valor final deduzido no formato de tipo primário do Python (int, float, str, dict ou list)."
     )
 
 
