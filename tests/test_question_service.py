@@ -74,7 +74,7 @@ def test_retrieve_few_shot_examples():
 
 
 def test_generate_single_questao_inedita_pot_success():
-    """Valida o pipeline PoT completo de duas fases (Solver + Justificativa)."""
+    """Valida o pipeline PoT completo com 3 etapas de validação (Resolução Cega, Equivalência, Auditoria)."""
     db = TestingSessionLocal()
     try:
         mock_llm = MagicMock(spec=LLMClient)
@@ -87,12 +87,28 @@ def test_generate_single_questao_inedita_pot_success():
             "solver": "def resolver():\n    capacidade = 1200\n    entrada = 40\n    saida = 10\n    taxa = entrada - saida\n    tempo = capacidade / taxa\n    return {'correta': tempo, 'distratores': [30, 50, 60, 80]}"
         })
 
-        # Fase 2: Justificativa
-        resp_fase2 = json.dumps({
-            "justificativa": "A taxa líquida é 40 - 10 = 30 L/min. Dividindo 1200 por 30, obtemos 40 minutos."
+        # Validação Etapa 1: Resolução Cega
+        resp_blind = json.dumps({
+            "resolucao_passo_a_passo": "A taxa líquida é 40 - 10 = 30 L/min. Dividindo 1200 por 30, obtemos 40 minutos.",
+            "resultado_obtido": "40 minutos"
         })
 
-        mock_llm.generate.side_effect = [resp_fase1, resp_fase2]
+        # Validação Etapa 2: Confronto de Equivalência
+        resp_equiv = json.dumps({
+            "equivalentes": True,
+            "explicacao_equivalencia": "40 e 40 minutos são matematicamente equivalentes."
+        })
+
+        # Validação Etapa 3: Auditoria Semântica
+        resp_audit = json.dumps({
+            "possui_incoerencia": False,
+            "possui_ambiguidade": False,
+            "deficit_informacoes": False,
+            "erros_ou_vazamentos": False,
+            "duplicacao_tabelas": False
+        })
+
+        mock_llm.generate.side_effect = [resp_fase1, resp_blind, resp_equiv, resp_audit]
 
         service = QuestionService(llm_client=mock_llm, vector_store=mock_vs)
         questao = service.generate_single_questao_inedita(
@@ -110,7 +126,7 @@ def test_generate_single_questao_inedita_pot_success():
         assert questao.alternativas[questao.gabarito] == "40"
         assert "def resolver" in questao.thought_scratchpad
         assert "taxa líquida" in questao.justificativa
-        assert mock_llm.generate.call_count == 2
+        assert mock_llm.generate.call_count == 4
     finally:
         db.close()
 
@@ -135,12 +151,24 @@ def test_generate_single_questao_inedita_pot_retry_on_solver_error():
             "solver": "def resolver():\n    dist = 100\n    t = 2\n    v = dist / t\n    return {'correta': v, 'distratores': [30, 40, 60, 70]}"
         })
 
-        # Fase 2 da 2ª tentativa: Justificativa
-        resp_fase2 = json.dumps({
-            "justificativa": "A velocidade média é 100 / 2 = 50 km/h."
+        # Validação 2ª tentativa
+        resp_blind = json.dumps({
+            "resolucao_passo_a_passo": "A velocidade média é 100 / 2 = 50 km/h.",
+            "resultado_obtido": "50 km/h"
+        })
+        resp_equiv = json.dumps({
+            "equivalentes": True,
+            "explicacao_equivalencia": "50 e 50 km/h são equivalentes."
+        })
+        resp_audit = json.dumps({
+            "possui_incoerencia": False,
+            "possui_ambiguidade": False,
+            "deficit_informacoes": False,
+            "erros_ou_vazamentos": False,
+            "duplicacao_tabelas": False
         })
 
-        mock_llm.generate.side_effect = [resp_fase1_erro, resp_fase1_ok, resp_fase2]
+        mock_llm.generate.side_effect = [resp_fase1_erro, resp_fase1_ok, resp_blind, resp_equiv, resp_audit]
 
         service = QuestionService(llm_client=mock_llm, vector_store=mock_vs)
         questao = service.generate_single_questao_inedita(
@@ -151,7 +179,7 @@ def test_generate_single_questao_inedita_pot_retry_on_solver_error():
 
         assert questao is not None
         assert questao.alternativas[questao.gabarito] == "50"
-        assert mock_llm.generate.call_count == 3
+        assert mock_llm.generate.call_count == 5
     finally:
         db.close()
 
@@ -203,10 +231,22 @@ def test_generate_batch_success():
             "enunciado": "Um investidor aplicou um capital de 5000 reais a uma taxa mensal de 2% durante 6 meses sob juros simples. Qual o montante final em reais?",
             "solver": "def resolver():\n    c = 5000\n    i = 0.02\n    t = 6\n    j = c * i * t\n    m = c + j\n    return {'correta': m, 'distratores': [5200, 5400, 5800, 6000]}"
         })
-        resp_just = json.dumps({
-            "justificativa": "Juros = 5000 * 0.02 * 6 = 600. Montante = 5000 + 600 = 5600 reais."
+        resp_blind = json.dumps({
+            "resolucao_passo_a_passo": "Juros = 5000 * 0.02 * 6 = 600. Montante = 5000 + 600 = 5600 reais.",
+            "resultado_obtido": "5600"
         })
-        mock_llm.generate.side_effect = [resp_pot, resp_just]
+        resp_equiv = json.dumps({
+            "equivalentes": True,
+            "explicacao_equivalencia": "5600 coincide exatamente."
+        })
+        resp_audit = json.dumps({
+            "possui_incoerencia": False,
+            "possui_ambiguidade": False,
+            "deficit_informacoes": False,
+            "erros_ou_vazamentos": False,
+            "duplicacao_tabelas": False
+        })
+        mock_llm.generate.side_effect = [resp_pot, resp_blind, resp_equiv, resp_audit]
 
         service = QuestionService(llm_client=mock_llm, vector_store=mock_vs)
         summary = service.generate_batch(
@@ -240,10 +280,22 @@ def test_generate_pot_item_with_tabela_dados_clean_markdown():
             ],
             "solver": "def resolver():\n    total = 15 + 20\n    return {'correta': total, 'distratores': [25, 30, 40, 50]}"
         })
-        resp_just = json.dumps({
-            "justificativa": "O total é 15 + 20 = 35 m³."
+        resp_blind = json.dumps({
+            "resolucao_passo_a_passo": "O total é 15 + 20 = 35 m³.",
+            "resultado_obtido": "35 m³"
         })
-        mock_llm.generate.side_effect = [resp_pot, resp_just]
+        resp_equiv = json.dumps({
+            "equivalentes": True,
+            "explicacao_equivalencia": "35 e 35 m³ são equivalentes."
+        })
+        resp_audit = json.dumps({
+            "possui_incoerencia": False,
+            "possui_ambiguidade": False,
+            "deficit_informacoes": False,
+            "erros_ou_vazamentos": False,
+            "duplicacao_tabelas": False
+        })
+        mock_llm.generate.side_effect = [resp_pot, resp_blind, resp_equiv, resp_audit]
 
         service = QuestionService(llm_client=mock_llm, vector_store=mock_vs)
         questao = service.generate_single_questao_inedita(
@@ -284,10 +336,22 @@ def test_generate_pot_item_sanitizes_duplicate_inline_pseudo_table():
             ],
             "solver": "def resolver():\n    return {'correta': '10h00', 'distratores': ['14h00', '18h00', '22h00', '23h00']}"
         })
-        resp_just = json.dumps({
-            "justificativa": "O menor custo é 0.002 às 10h00."
+        resp_blind = json.dumps({
+            "resolucao_passo_a_passo": "O menor custo é 0.002 às 10h00.",
+            "resultado_obtido": "10h00"
         })
-        mock_llm.generate.side_effect = [resp_pot, resp_just]
+        resp_equiv = json.dumps({
+            "equivalentes": True,
+            "explicacao_equivalencia": "Ambos 10h00."
+        })
+        resp_audit = json.dumps({
+            "possui_incoerencia": False,
+            "possui_ambiguidade": False,
+            "deficit_informacoes": False,
+            "erros_ou_vazamentos": False,
+            "duplicacao_tabelas": False
+        })
+        mock_llm.generate.side_effect = [resp_pot, resp_blind, resp_equiv, resp_audit]
 
         service = QuestionService(llm_client=mock_llm, vector_store=mock_vs)
         questao = service.generate_single_questao_inedita(
@@ -327,10 +391,22 @@ def test_generate_pot_item_sanitizes_duplicate_bullet_list():
             ],
             "solver": "def resolver():\n    total = 0.5 + 0.3\n    return {'correta': total, 'distratores': [1.0, 1.2, 1.5, 2.0]}"
         })
-        resp_just = json.dumps({
-            "justificativa": "Total é 0.8."
+        resp_blind = json.dumps({
+            "resolucao_passo_a_passo": "Total é 0.8.",
+            "resultado_obtido": "0.8"
         })
-        mock_llm.generate.side_effect = [resp_pot, resp_just]
+        resp_equiv = json.dumps({
+            "equivalentes": True,
+            "explicacao_equivalencia": "Ambos 0.8."
+        })
+        resp_audit = json.dumps({
+            "possui_incoerencia": False,
+            "possui_ambiguidade": False,
+            "deficit_informacoes": False,
+            "erros_ou_vazamentos": False,
+            "duplicacao_tabelas": False
+        })
+        mock_llm.generate.side_effect = [resp_pot, resp_blind, resp_equiv, resp_audit]
 
         service = QuestionService(llm_client=mock_llm, vector_store=mock_vs)
         questao = service.generate_single_questao_inedita(
@@ -345,4 +421,137 @@ def test_generate_pot_item_sanitizes_duplicate_bullet_list():
         assert "- Jovens" not in questao.enunciado
     finally:
         db.close()
+
+
+def test_three_stage_validation_mismatch_triggers_early_exit():
+    """Valida se divergência de equivalência interrompe o fluxo (Early Exit sem chamar auditoria) e faz retry."""
+    db = TestingSessionLocal()
+    try:
+        mock_llm = MagicMock(spec=LLMClient)
+        mock_vs = MagicMock(spec=PineconeVectorStore)
+        mock_vs.search.return_value = []
+
+        # 1ª tentativa: Solver calculou 120 (bug de moda), mas LLM cego achou 'não há moda' -> equivalentes=False
+        t1_pot = json.dumps({
+            "enunciado": "Qual a moda das equipes de lixo?",
+            "solver": "def resolver():\n    return {'correta': 120, 'distratores': [130, 140, 150, 160]}"
+        })
+        t1_blind = json.dumps({
+            "resolucao_passo_a_passo": "Todos os valores aparecem 1 vez, logo o conjunto é amodal.",
+            "resultado_obtido": "não há moda"
+        })
+        t1_equiv = json.dumps({
+            "equivalentes": False,
+            "explicacao_equivalencia": "O solver calculou 120, mas o conjunto é amodal (não há moda)."
+        })
+        # A auditoria da tentativa 1 NÃO deve ser chamada! (Early Exit)
+
+        # 2ª tentativa: Sucesso pleno
+        t2_pot = json.dumps({
+            "enunciado": "Qual a média das notas 10 e 20?",
+            "solver": "def resolver():\n    return {'correta': 15, 'distratores': [10, 20, 25, 30]}"
+        })
+        t2_blind = json.dumps({
+            "resolucao_passo_a_passo": "(10 + 20) / 2 = 15.",
+            "resultado_obtido": "15"
+        })
+        t2_equiv = json.dumps({
+            "equivalentes": True,
+            "explicacao_equivalencia": "15 e 15 são equivalentes."
+        })
+        t2_audit = json.dumps({
+            "possui_incoerencia": False,
+            "possui_ambiguidade": False,
+            "deficit_informacoes": False,
+            "erros_ou_vazamentos": False,
+            "duplicacao_tabelas": False
+        })
+
+        mock_llm.generate.side_effect = [
+            t1_pot, t1_blind, t1_equiv,  # 3 chamadas na 1ª tentativa (curto-circuito na equivalência)
+            t2_pot, t2_blind, t2_equiv, t2_audit  # 4 chamadas na 2ª tentativa
+        ]
+
+        service = QuestionService(llm_client=mock_llm, vector_store=mock_vs)
+        questao = service.generate_single_questao_inedita(
+            db=db,
+            habilidade_codigo="H01",
+            max_attempts=2
+        )
+
+        assert questao is not None
+        assert questao.alternativas[questao.gabarito] == "15"
+        assert mock_llm.generate.call_count == 7
+    finally:
+        db.close()
+
+
+def test_three_stage_validation_semantic_failure_rejects():
+    """Valida se defeito apontado na auditoria semântica rejeita a questão e gera mensagem automática."""
+    db = TestingSessionLocal()
+    try:
+        mock_llm = MagicMock(spec=LLMClient)
+        mock_vs = MagicMock(spec=PineconeVectorStore)
+        mock_vs.search.return_value = []
+
+        # 1ª tentativa: Equivalência OK, mas Auditoria detecta déficit de informações
+        t1_pot = json.dumps({
+            "enunciado": "Qual a velocidade média de um carro que percorreu uma distância sem tempo?",
+            "solver": "def resolver():\n    return {'correta': 10, 'distratores': [20, 30, 40, 50]}"
+        })
+        t1_blind = json.dumps({
+            "resolucao_passo_a_passo": "Resolução 10.",
+            "resultado_obtido": "10"
+        })
+        t1_equiv = json.dumps({
+            "equivalentes": True,
+            "explicacao_equivalencia": "Equivalentes."
+        })
+        t1_audit = json.dumps({
+            "possui_incoerencia": False,
+            "possui_ambiguidade": False,
+            "deficit_informacoes": True,  # Defeito detectado!
+            "erros_ou_vazamentos": False,
+            "duplicacao_tabelas": False
+        })
+
+        # 2ª tentativa: Sucesso pleno
+        t2_pot = json.dumps({
+            "enunciado": "Enunciado completo sobre velocidade média.",
+            "solver": "def resolver():\n    return {'correta': 80, 'distratores': [60, 70, 90, 100]}"
+        })
+        t2_blind = json.dumps({
+            "resolucao_passo_a_passo": "80 km/h.",
+            "resultado_obtido": "80"
+        })
+        t2_equiv = json.dumps({
+            "equivalentes": True,
+            "explicacao_equivalencia": "Equivalentes."
+        })
+        t2_audit = json.dumps({
+            "possui_incoerencia": False,
+            "possui_ambiguidade": False,
+            "deficit_informacoes": False,
+            "erros_ou_vazamentos": False,
+            "duplicacao_tabelas": False
+        })
+
+        mock_llm.generate.side_effect = [
+            t1_pot, t1_blind, t1_equiv, t1_audit,  # 4 chamadas na 1ª tentativa (rejeitada na auditoria)
+            t2_pot, t2_blind, t2_equiv, t2_audit   # 4 chamadas na 2ª tentativa
+        ]
+
+        service = QuestionService(llm_client=mock_llm, vector_store=mock_vs)
+        questao = service.generate_single_questao_inedita(
+            db=db,
+            habilidade_codigo="H01",
+            max_attempts=2
+        )
+
+        assert questao is not None
+        assert questao.alternativas[questao.gabarito] == "80"
+        assert mock_llm.generate.call_count == 8
+    finally:
+        db.close()
+
 

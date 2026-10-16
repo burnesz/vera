@@ -55,20 +55,69 @@ class QuestaoJustificativaOutput(BaseModel):
     )
 
 
-class QuestaoAutoValidacaoOutput(BaseModel):
+class QuestaoBlindSolvingOutput(BaseModel):
     """
-    Schema para a Fase de Auto-Validação da questão inédita gerada.
-    A LLM testa a questão, resolve e verifica problemas de ambiguidade ou sentido.
+    Schema para a Chamada 1 da Fase de Validação: Resolução Cega Pura.
     """
-    faz_sentido_semanticamente: bool = Field(..., description="A questão faz sentido no mundo real e tem coerência?")
-    sem_ambiguidade: bool = Field(..., description="A questão está livre de ambiguidades e dupla interpretação?")
-    informacao_suficiente: bool = Field(..., description="Todas as informações necessárias para resolver estão presentes no texto?")
-    sem_erros_vazamentos: bool = Field(..., description="O texto está livre de erros de português e NÃO contém palavras como 'solver', 'python', 'código' ou 'variável'?")
-    sem_duplicacao_tabelas: bool = Field(True, description="O texto está livre de dados repetidos em formato de lista ou tabelas duplicadas?")
-    resposta_nas_alternativas: bool = Field(..., description="Ao resolver mentalmente, a resposta obtida se encontra entre as alternativas fornecidas?")
-    justificativa_resolucao: str = Field(..., description="Sua resolução passo a passo detalhada e didática provando qual é a alternativa correta e o erro das outras.")
-    feedback_correcao: Optional[str] = Field(None, description="Se qualquer validação acima for falsa, explique detalhadamente O QUE DEVE SER CORRIGIDO no enunciado ou código.")
-    aprovada: bool = Field(..., description="True APENAS SE todas as checagens booleanas acima forem True.")
+    resolucao_passo_a_passo: str = Field(
+        ...,
+        description="Resolução didática completa e detalhada passo a passo deduzindo o resultado a partir do enunciado."
+    )
+    resultado_obtido: str = Field(
+        ...,
+        description="Valor numérico, expressão ou conclusão final obtida (ex: '135 kg', 'não há moda', '40 minutos')."
+    )
+
+
+class QuestaoEquivalenciaOutput(BaseModel):
+    """
+    Schema para a Chamada 2 da Fase de Validação: Confronto Direto de Equivalência.
+    """
+    equivalentes: bool = Field(
+        ...,
+        description="True se os dois resultados expressam a mesma resposta matemática/conceitual."
+    )
+    explicacao_equivalencia: Optional[str] = Field(
+        None,
+        description="Explicação objetiva da equivalência ou discrepância encontrada."
+    )
+
+
+class QuestaoAuditoriaSemanticaOutput(BaseModel):
+    """
+    Schema para a Chamada 3 da Fase de Validação: Auditoria Semântica e Pedagógica.
+    Avalia a presença de defeitos ou problemas no item.
+    """
+    possui_incoerencia: bool = Field(False, description="True se a situação-problema tiver incoerência ou erro lógico.")
+    possui_ambiguidade: bool = Field(False, description="True se houver ambiguidade ou comando duplo.")
+    deficit_informacoes: bool = Field(False, description="True se faltarem informações necessárias para resolver.")
+    erros_ou_vazamentos: bool = Field(False, description="True se contiver erros de português ou palavras proibidas de código.")
+    duplicacao_tabelas: bool = Field(False, description="True se houver redundância ou repetição de dados da tabela.")
+
+    @property
+    def aprovada(self) -> bool:
+        return not any([
+            self.possui_incoerencia,
+            self.possui_ambiguidade,
+            self.deficit_informacoes,
+            self.erros_ou_vazamentos,
+            self.duplicacao_tabelas
+        ])
+
+    @property
+    def motivo_rejeicao(self) -> Optional[str]:
+        motivos = []
+        if self.possui_incoerencia:
+            motivos.append("Incoerência semântica ou lógica na situação-problema.")
+        if self.possui_ambiguidade:
+            motivos.append("O enunciado apresenta ambiguidade ou comando duplo.")
+        if self.deficit_informacoes:
+            motivos.append("Foi identificado déficit de informações no enunciado para resolução.")
+        if self.erros_ou_vazamentos:
+            motivos.append("Presença de erros gramaticais ou vazamento de termos técnicos ('solver', 'python', 'código').")
+        if self.duplicacao_tabelas:
+            motivos.append("Redundância ou duplicação de dados/tabelas no enunciado.")
+        return " | ".join(motivos) if motivos else None
 
 
 class QuestaoIneditaLLMOutput(BaseModel):

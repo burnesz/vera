@@ -37,14 +37,18 @@ from app.services.code_executor import (
 )
 from app.core.prompts import (
     build_enunciado_solver_prompt,
-    build_auto_validation_prompt,
+    build_blind_solving_prompt,
+    build_equivalencia_gabarito_prompt,
+    build_auditoria_semantica_prompt,
     sortear_contexto_criativo,
     TEMAS_COTIDIANO,
     FORMAS_ABERTURA
 )
 from app.schemas.question import (
     QuestaoEnunciadoSolverOutput,
-    QuestaoAutoValidacaoOutput,
+    QuestaoBlindSolvingOutput,
+    QuestaoEquivalenciaOutput,
+    QuestaoAuditoriaSemanticaOutput,
     BatchPopulationSummary,
     BatchPopulationItemResult
 )
@@ -383,20 +387,52 @@ class QuestionService:
             # --- MONTAGEM ALGORÍTMICA DE ALTERNATIVAS E GABARITO ---
             alternativas, gabarito = assemble_alternatives_and_gabarito(formatted_values)
 
-            # --- FASE 2: AUTO-VALIDAÇÃO E JUSTIFICATIVA ---
-            is_valid_llm, val_feedback, justificativa_texto = self._run_auto_validation_fase2(
-                enunciado=pot_output.enunciado,
-                alternativas=alternativas,
-                gabarito=gabarito
-            )
-            
-            if not is_valid_llm:
-                last_error = f"Falha na auto-validação LLM: {val_feedback}"
-                logger.warning(f"Tentativa {attempt}/{max_attempts} falhou na auto-validação: {val_feedback}")
+            # --- VALIDAÇÃO ETAPA 1: RESOLUÇÃO CEGA PURA (Zero Alternativas) ---
+            try:
+                blind_sol = self._run_blind_solving(enunciado=pot_output.enunciado)
+            except Exception as e:
+                last_error = f"Falha na resolução cega da LLM: {e}"
+                logger.warning(f"Tentativa {attempt}/{max_attempts} falhou na resolução cega: {e}")
+                continue
+
+            # --- VALIDAÇÃO ETAPA 2: CONFRONTO DIRETO DE EQUIVALÊNCIA (com Early Exit) ---
+            try:
+                equiv = self._run_equivalence_check(
+                    resultado_solver=solver_result["correta"],
+                    resultado_obtido=blind_sol.resultado_obtido
+                )
+            except Exception as e:
+                last_error = f"Falha no confronto de equivalência: {e}"
+                logger.warning(f"Tentativa {attempt}/{max_attempts} falhou na equivalência: {e}")
+                continue
+
+            if not equiv.equivalentes:
+                motivo = equiv.explicacao_equivalencia or "Divergência conceitual ou numérica entre o solver e a resolução cega."
+                last_error = f"Divergência matemática no confronto: {motivo}"
+                logger.warning(
+                    f"Tentativa {attempt}/{max_attempts} descartada por divergência (Early Exit): "
+                    f"Solver='{solver_result['correta']}' vs LLM='{blind_sol.resultado_obtido}' | Motivo: {motivo}"
+                )
+                continue
+
+            # --- VALIDAÇÃO ETAPA 3: AUDITORIA SEMÂNTICA E PEDAGÓGICA ---
+            try:
+                audit = self._run_semantic_audit(
+                    enunciado=pot_output.enunciado,
+                    alternativas=alternativas
+                )
+            except Exception as e:
+                last_error = f"Falha na auditoria semântica: {e}"
+                logger.warning(f"Tentativa {attempt}/{max_attempts} falhou na auditoria semântica: {e}")
+                continue
+
+            if not audit.aprovada:
+                last_error = f"Rejeição semântica: {audit.motivo_rejeicao}"
+                logger.warning(f"Tentativa {attempt}/{max_attempts} falhou na auditoria semântica: {audit.motivo_rejeicao}")
                 continue
 
             logger.info(
-                f"Item PoT para {clean_hab} gerado, comprovado e auto-validado com sucesso na tentativa {attempt}! "
+                f"Item PoT para {clean_hab} gerado, comprovado e validado nas 3 etapas com sucesso na tentativa {attempt}! "
                 f"Gabarito: {gabarito} ({alternativas[gabarito]})."
             )
 
@@ -407,7 +443,7 @@ class QuestionService:
                 enunciado=pot_output.enunciado,
                 alternativas=alternativas,
                 gabarito=gabarito,
-                justificativa=justificativa_texto,
+                justificativa=blind_sol.resolucao_passo_a_passo,
                 thought_scratchpad=f"# Solver Python validado via PoT:\n{pot_output.solver}",
                 is_validated=True
             )
@@ -421,71 +457,82 @@ class QuestionService:
             f"Último erro: {last_error}"
         )
 
-    def _run_auto_validation_fase2(
-        self,
-        enunciado: str,
-        alternativas: Dict[str, str],
-        gabarito: str
-    ) -> Tuple[bool, Optional[str], str]:
+    def _run_blind_solving(self, enunciado: str) -> QuestaoBlindSolvingOutput:
         """
-        Fase 2 do PoT: LLM resolve a questão para atestar qualidade e redige justificativa.
-        Retorna: (is_valid, feedback_correcao, justificativa_resolucao)
+        Etapa 1 da Validação: Resolução Cega Pura.
+        A LLM recebe exclusivamente o enunciado e deduz a resolução e o resultado obtido.
         """
-        prompt_val = build_auto_validation_prompt(
-            enunciado=enunciado,
-            alternativas=alternativas,
-            gabarito=gabarito
+        prompt = build_blind_solving_prompt(enunciado=enunciado)
+        raw = self.llm_client.generate(
+            prompt=prompt,
+            max_tokens=800,
+            temperature=0.1,
+            top_p=0.9,
+            format="json"
         )
+        json_str = extract_json_from_text(raw)
+        sanitized = sanitize_latex_json_text(json_str)
+        parsed = json.loads(sanitized, strict=False)
+        parsed = sanitize_parsed_dict_values(parsed)
 
-        try:
-            raw_val = self.llm_client.generate(
-                prompt=prompt_val,
-                max_tokens=600,
-                temperature=0.1,
-                top_p=0.9,
-                format="json"
-            )
-            json_str = extract_json_from_text(raw_val)
-            sanitized = sanitize_latex_json_text(json_str)
-            parsed = json.loads(sanitized, strict=False)
-            parsed = sanitize_parsed_dict_values(parsed)
+        if isinstance(parsed, dict):
+            if "resolucao_passo_a_passo" not in parsed:
+                parsed["resolucao_passo_a_passo"] = parsed.get("resolucao") or parsed.get("justificativa") or "Resolução detalhada."
+            if "resultado_obtido" not in parsed:
+                parsed["resultado_obtido"] = str(parsed.get("resultado") or parsed.get("correta") or "")
 
-            # Suporte resiliente a formatos compactos ou de mock
-            if isinstance(parsed, dict):
-                if "justificativa_resolucao" not in parsed and "justificativa" in parsed:
-                    parsed["justificativa_resolucao"] = parsed["justificativa"]
-                if "aprovada" not in parsed:
-                    parsed["aprovada"] = True
-                for bool_field in [
-                    "faz_sentido_semanticamente", "sem_ambiguidade",
-                    "informacao_suficiente", "sem_erros_vazamentos",
-                    "sem_duplicacao_tabelas",
-                    "resposta_nas_alternativas"
-                ]:
-                    if bool_field not in parsed:
-                        parsed[bool_field] = True
+        return QuestaoBlindSolvingOutput(**parsed)
 
-            val_obj = QuestaoAutoValidacaoOutput(**parsed)
-            
-            is_valid = bool(val_obj.aprovada)
-            feedback = val_obj.feedback_correcao
-            if not val_obj.sem_duplicacao_tabelas:
-                is_valid = False
-                if not feedback:
-                    feedback = (
-                        "O enunciado apresenta dados ou tabelas duplicados. "
-                        "Elimine a repetição dos dados tabulares no texto."
-                    )
-            
-            return is_valid, feedback, val_obj.justificativa_resolucao
-        except Exception as e:
-            logger.warning(f"Aviso ao executar auto-validação estruturada na Fase 2: {e}. Considerando válida com fallback.")
-            correta_val = alternativas.get(gabarito, "")
-            fallback_just = (
-                f"A alternativa correta é a {gabarito} ({correta_val}), "
-                f"conforme resolução matemática comprovada pelo solver da questão."
-            )
-            return True, None, fallback_just
+    def _run_equivalence_check(self, resultado_solver: Any, resultado_obtido: str) -> QuestaoEquivalenciaOutput:
+        """
+        Etapa 2 da Validação: Confronto Direto de Equivalência Matemática.
+        Avalia se a resposta calculada pelo solver e o resultado deduzido pela LLM são equivalentes.
+        """
+        prompt = build_equivalencia_gabarito_prompt(
+            resultado_solver=resultado_solver,
+            resultado_obtido=resultado_obtido
+        )
+        raw = self.llm_client.generate(
+            prompt=prompt,
+            max_tokens=300,
+            temperature=0.1,
+            top_p=0.9,
+            format="json"
+        )
+        json_str = extract_json_from_text(raw)
+        sanitized = sanitize_latex_json_text(json_str)
+        parsed = json.loads(sanitized, strict=False)
+        parsed = sanitize_parsed_dict_values(parsed)
+
+        if isinstance(parsed, dict):
+            if "equivalentes" not in parsed:
+                # Suporte a variações semânticas se o modelo responder "sao_equivalentes"
+                parsed["equivalentes"] = bool(parsed.get("sao_equivalentes", True))
+
+        return QuestaoEquivalenciaOutput(**parsed)
+
+    def _run_semantic_audit(self, enunciado: str, alternativas: Dict[str, str]) -> QuestaoAuditoriaSemanticaOutput:
+        """
+        Etapa 3 da Validação: Auditoria Semântica e Pedagógica.
+        Avalia o item do ENEM quanto à presença de incoerência, ambiguidade, déficit de dados ou erros.
+        """
+        prompt = build_auditoria_semantica_prompt(
+            enunciado=enunciado,
+            alternativas=alternativas
+        )
+        raw = self.llm_client.generate(
+            prompt=prompt,
+            max_tokens=300,
+            temperature=0.1,
+            top_p=0.9,
+            format="json"
+        )
+        json_str = extract_json_from_text(raw)
+        sanitized = sanitize_latex_json_text(json_str)
+        parsed = json.loads(sanitized, strict=False)
+        parsed = sanitize_parsed_dict_values(parsed)
+
+        return QuestaoAuditoriaSemanticaOutput(**parsed)
 
     def generate_batch(
         self,

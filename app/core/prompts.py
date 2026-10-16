@@ -355,111 +355,105 @@ Responda EXCLUSIVAMENTE em formato JSON com as chaves 'enunciado', 'tabela_dados
     return prompt
 
 
-def build_auto_validation_prompt(
-    enunciado: str,
-    alternativas: Dict[str, str],
-    gabarito: str
-) -> str:
+def build_blind_solving_prompt(enunciado: str) -> str:
     """
-    Constrói prompt para a Fase de Auto-Validação da Geração PoT.
-    A LLM deve resolver a questão gerada (sem saber que foi ela mesma quem gerou)
-    para atestar a qualidade e apontar qualquer falha (ambiguidade, erro).
+    Constrói prompt para a Chamada 1 da Fase de Validação: Resolução Cega Pura.
+    O LLM recebe exclusivamente o enunciado (sem alternativas e sem gabarito)
+    e deve resolver o problema passo a passo com rigor conceitual e formal.
+    """
+    prompt = f"""Você é um estudante de alto desempenho resolvendo uma questão de Matemática do ENEM.
+Leia atentamente a questão abaixo e resolva-a de forma autônoma, passo a passo, a partir exclusivamente do enunciado.
+
+============================================================
+ENUNCIADO DA QUESTÃO:
+============================================================
+{enunciado}
+
+============================================================
+SUA TAREFA:
+============================================================
+1. Resolva a questão passo a passo com rigor lógico e matemático formal.
+2. Apresente toda a resolução didática detalhada em 'resolucao_passo_a_passo'.
+3. Deduza e declare o resultado final (valor numérico, unidade de medida ou conclusão conceitual) em 'resultado_obtido'.
+
+Responda EXCLUSIVAMENTE em formato JSON com o schema abaixo:
+{{
+  "resolucao_passo_a_passo": "Sua resolução didática e detalhada passo a passo deduzindo o resultado...",
+  "resultado_obtido": "Valor numérico ou conclusão final obtida (ex: '135 kg', 'não há moda', '40 minutos')"
+}}
+"""
+    return prompt
+
+
+def build_equivalencia_gabarito_prompt(resultado_solver: Any, resultado_obtido: str) -> str:
+    """
+    Constrói prompt para a Chamada 2 da Fase de Validação: Confronto Direto de Equivalência.
+    Juiz matemático objetivo que confronta o resultado calculado pelo Python com a conclusão da LLM.
+    """
+    prompt = f"""Você é um Juiz de Equivalência Matemática e Conceitual.
+Sua única função é comparar objetivamente os dois resultados abaixo e determinar se eles expressam a mesma resposta matemática/conceitual.
+
+============================================================
+RESULTADOS A COMPARAR:
+============================================================
+- Resultado A (Cálculo do Solver): {resultado_solver}
+- Resultado B (Resolução Dedutiva): {resultado_obtido}
+
+============================================================
+DIRETRIZES DE EQUIVALÊNCIA:
+============================================================
+1. Considere EQUIVALENTES variações de formato, representações decimais vs. fracionárias (ex: 0,5 e 1/2), formatações com unidades (ex: '135' e '135 kg', '40' e '40 minutos') ou aproximações/arredondamentos numéricos consistentes.
+2. NÃO considere equivalentes se houver valores numéricos diferentes ou divergências conceituais graves (por exemplo: um resultado traz um número específico para moda enquanto o outro declara que o conjunto é amodal / não possui moda).
+
+Responda EXCLUSIVAMENTE em formato JSON com o schema:
+{{
+  "equivalentes": bool,
+  "explicacao_equivalencia": "Explicação objetiva comprovando a equivalência ou apontando a discrepância encontrada"
+}}
+"""
+    return prompt
+
+
+def build_auditoria_semantica_prompt(enunciado: str, alternativas: Dict[str, str]) -> str:
+    """
+    Constrói prompt para a Chamada 3 da Fase de Validação: Auditoria Semântica e Pedagógica.
+    Avalia a qualidade do item do ENEM (enunciado + alternativas) identificando eventuais problemas ou defeitos.
     """
     alts_formatted = "\n".join([f"  {k}) {v}" for k, v in sorted(alternativas.items())])
     
     prompt = f"""Você é um Revisor Técnico e Pedagógico Oficial do INEP para questões do ENEM.
-Uma questão foi submetida e precisa ser rigidamente avaliada antes de ir para os alunos.
+Audite o item de Matemática abaixo avaliando rigorosamente a presença de eventuais problemas pedagógicos ou textuais.
 
 ============================================================
-QUESTÃO SUBMETIDA:
+ITEM SUBMETIDO:
 ============================================================
 Enunciado:
 {enunciado}
 
-Alternativas Disponíveis:
+Alternativas:
 {alts_formatted}
 
-Gabarito Pretendido pela Banca: {gabarito}
-
 ============================================================
-SUA TAREFA DE AVALIAÇÃO:
+CRITÉRIOS DE AUDITORIA (IDENTIFICAÇÃO DE PROBLEMAS):
 ============================================================
-Analise a questão criticamente e resolva-a passo a passo na sua justificativa_resolucao.
-Você DEVE verificar rigorosamente:
-1. Faz sentido semanticamente e tem coerência matemática/lógica?
-2. O texto está livre de qualquer ambiguidade ou comando duplo?
-3. Há informações suficientes para resolver ou falta algum dado numérico?
-4. O texto está livre de erros de português e livre de "vazamentos de prompt" (palavras absurdas para um aluno como: solver, python, código, distratores, gerar)?
-5. O texto está livre de redundâncias ou duplicações de informações (por exemplo, os mesmos dados aparecendo primeiro em lista/texto e depois repetidos em tabela)?
-6. Ao você resolver passo a passo, a resposta exata se encontra nas alternativas, e corresponde ao gabarito pretendido?
+Avalie se o item apresenta algum dos seguintes problemas (marque true se o problema existir, false se o item estiver perfeito):
 
-Se houver QUALQUER erro, seja implacável. Marque 'aprovada' como false e escreva em 'feedback_correcao' exatamente o que quem elaborou a questão precisa consertar no enunciado ou na lógica.
+1. possui_incoerencia: A situação-problema é absurda, incoerente com o mundo real ou tem erro conceitual grave?
+2. possui_ambiguidade: O comando final é dúbio, confuso ou possui dupla interpretação?
+3. deficit_informacoes: Faltam informações, dados numéricos essenciais ou contexto indispensável para resolver a questão?
+4. erros_ou_vazamentos: O texto contém erros de português ou palavras proibidas de bastidor ('solver', 'python', 'código', 'algoritmo', 'distrator')?
+5. duplicacao_tabelas: O texto repete desnecessariamente dados de tabelas em tópicos/texto corrido além da própria tabela formatada?
 
-Responda EXCLUSIVAMENTE em formato JSON contendo exatamente as chaves do schema abaixo. Não coloque nenhum texto fora do JSON.
-Schema esperado:
+Responda EXCLUSIVAMENTE em formato JSON com o schema:
 {{
-  "faz_sentido_semanticamente": bool,
-  "sem_ambiguidade": bool,
-  "informacao_suficiente": bool,
-  "sem_erros_vazamentos": bool,
-  "sem_duplicacao_tabelas": bool,
-  "resposta_nas_alternativas": bool,
-  "justificativa_resolucao": "Sua resolução passo a passo detalhada",
-  "feedback_correcao": "O que corrigir (se houver erro), senao null",
-  "aprovada": bool
+  "possui_incoerencia": bool,
+  "possui_ambiguidade": bool,
+  "deficit_informacoes": bool,
+  "erros_ou_vazamentos": bool,
+  "duplicacao_tabelas": bool
 }}
 """
     return prompt
 
-
-def build_correction_prompt(
-    habilidade_codigo: str,
-    habilidade_descricao: str,
-    enunciado_anterior: str,
-    solver_anterior: str,
-    feedback_erro: str
-) -> str:
-    """
-    Constrói prompt de Correção (Stateful Correction).
-    Em vez de recriar do zero, pede para a LLM consertar o que deu errado com base no feedback.
-    """
-    prompt = f"""Você é um Elaborador de Itens de Matemática para o ENEM.
-Você produziu uma QUESTÃO INÉDITA estruturada em JSON (enunciado + solver em Python).
-No entanto, a sua questão foi rejeitada na revisão rigorosa.
-
-============================================================
-ESPECIFICAÇÃO DA HABILIDADE ALVO:
-============================================================
-- Código: {habilidade_codigo}
-- Descrição: {habilidade_descricao}
-
-============================================================
-O QUE VOCÊ PRODUZIU ANTERIORMENTE:
-============================================================
-ENUNCIADO:
-{enunciado_anterior}
-
-SOLVER PYTHON:
-{solver_anterior}
-
-============================================================
-FEEDBACK DA REVISÃO (ERRO ENCONTRADO):
-============================================================
-{feedback_erro}
-
-============================================================
-SUA TAREFA DE CORREÇÃO:
-============================================================
-Modifique o ENUNCIADO e/ou o SOLVER APENAS O SUFICIENTE para corrigir o problema apontado na revisão.
-Mantenha o mesmo contexto original o máximo possível. Lembre-se que o solver calcula e retorna {{'correta': ..., 'distratores': [...]}}.
-
-Responda EXCLUSIVAMENTE em formato JSON com as chaves 'enunciado', 'tabela_dados' (opcional) e 'solver':
-{{
-  "enunciado": "Novo texto contextualizado já corrigido...",
-  "tabela_dados": [{{"Coluna1": "A", "Coluna2": 10}}],
-  "solver": "def resolver():\\n    # lógica em python corrigida\\n    return {{'correta': ..., 'distratores': [d1, d2, d3, d4]}}"
-}}
-"""
-    return prompt
 
 

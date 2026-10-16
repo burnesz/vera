@@ -123,11 +123,22 @@ def test_api_gerar_questao_inedita():
         "enunciado": "Quantas maneiras distintas existem de organizar 5 livros diferentes em uma prateleira linear?",
         "solver": "def resolver():\n    import math\n    val = math.factorial(5)\n    return {'correta': val, 'distratores': [60, 90, 150, 180]}"
     })
-    resp_fase2 = json.dumps({
-        "aprovada": True,
-        "justificativa_resolucao": "Permutação simples de 5 elementos: 5! = 120."
+    resp_blind = json.dumps({
+        "resolucao_passo_a_passo": "Permutação simples de 5 elementos: 5! = 120 maneiras.",
+        "resultado_obtido": "120"
     })
-    mock_llm.generate.side_effect = [resp_fase1, resp_fase2]
+    resp_equiv = json.dumps({
+        "equivalentes": True,
+        "explicacao_equivalencia": "120 e 120 são matematicamente equivalentes."
+    })
+    resp_audit = json.dumps({
+        "possui_incoerencia": False,
+        "possui_ambiguidade": False,
+        "deficit_informacoes": False,
+        "erros_ou_vazamentos": False,
+        "duplicacao_tabelas": False
+    })
+    mock_llm.generate.side_effect = [resp_fase1, resp_blind, resp_equiv, resp_audit]
 
     def override_question_service():
         mock_vs = MagicMock()
