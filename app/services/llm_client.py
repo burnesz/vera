@@ -63,7 +63,7 @@ class LLMClient:
         self,
         prompt: str,
         max_tokens: Optional[int] = None,
-        temperature: float = 0.7,
+        temperature: float = 0.0,
         top_p: float = 0.9,
         repetition_penalty: float = 1.0,
         format: Optional[str] = None
@@ -186,7 +186,7 @@ class LLMClient:
         prompt: str,
         session_id: Optional[str] = None,
         max_tokens: Optional[int] = None,
-        temperature: float = 0.7,
+        temperature: float = 0.0,
         top_p: float = 0.9,
         repetition_penalty: float = 1.0,
         format: Optional[str] = None
@@ -251,7 +251,7 @@ class LLMClient:
         prompt: str,
         session_id: Optional[str] = None,
         max_tokens: Optional[int] = None,
-        temperature: float = 0.7,
+        temperature: float = 0.0,
         top_p: float = 0.9,
         repetition_penalty: float = 1.0,
         format: Optional[str] = None

@@ -180,6 +180,9 @@ def test_generate_single_questao_inedita_pot_retry_on_solver_error():
         assert questao is not None
         assert questao.alternativas[questao.gabarito] == "50"
         assert mock_llm.generate.call_count == 5
+        # Progressão de temperatura da Fase 1: 0.0 na 1ª tentativa -> 0.1 na 2ª tentativa
+        assert mock_llm.generate.call_args_list[0].kwargs["temperature"] == pytest.approx(0.0)
+        assert mock_llm.generate.call_args_list[1].kwargs["temperature"] == pytest.approx(0.1)
     finally:
         db.close()
 
