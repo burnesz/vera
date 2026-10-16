@@ -657,3 +657,19 @@ def test_groundedness_rejects_undeclared_365_days():
         result=result
     )
     assert valores[0] == "2920"
+
+
+def test_groundedness_accepts_numbers_attached_to_units():
+    """Garante que números colados a unidades sem espaço (ex: 20m, 40kg) não geram falso positivo no nexo numérico."""
+    from app.services.code_executor import validate_solver_consistency
+
+    code = "def resolver():\n    largura = 20\n    comprimento = 40\n    area = largura * comprimento\n    return {'correta': area, 'distratores': [60, 120, 400, 1600]}"
+    result = {"correta": 800, "distratores": [60, 120, 400, 1600]}
+
+    valores = validate_solver_consistency(
+        enunciado="Um terreno retangular mede 20m de largura por 40m de comprimento. Qual a sua área?",
+        code=code,
+        result=result
+    )
+    assert valores[0] == "800"
+

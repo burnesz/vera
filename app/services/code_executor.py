@@ -468,16 +468,16 @@ def validate_solver_consistency(
     # Extrai números presentes no enunciado com suporte a separador de milhar brasileiro (1.200 ou 1.200,50)
     enun_floats: Set[float] = set()
 
-    # 1. Padrão de milhar brasileiro: ex 1.200 ou 1.200,50
-    for match in re.finditer(r"\b\d{1,3}(?:\.\d{3})+(?:,\d+)?\b", enunciado):
+    # 1. Padrão de milhar brasileiro: ex 1.200 ou 1.200,50 (mesmo se colado a unidade/símbolo)
+    for match in re.finditer(r"(?<!\d)\d{1,3}(?:\.\d{3})+(?:,\d+)?(?!\d)", enunciado):
         raw_val = match.group(0).replace(".", "").replace(",", ".")
         try:
             enun_floats.add(float(raw_val))
         except ValueError:
             pass
 
-    # 2. Padrão decimal padrão ou inteiro simples: ex 34, 12.5, 12,5
-    raw_enun_matches = re.findall(r"\b\d+(?:[\.,]\d+)?\b", enunciado)
+    # 2. Padrão decimal padrão ou inteiro simples: ex 34, 12.5, 12,5, 20m, 40kg
+    raw_enun_matches = re.findall(r"(?<!\d)\d+(?:[\.,]\d+)?(?!\d)", enunciado)
     for n in raw_enun_matches:
         try:
             enun_floats.add(float(n.replace(",", ".")))

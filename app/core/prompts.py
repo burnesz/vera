@@ -265,25 +265,29 @@ REGRAS ESTRITAS:
    - EXATIDÃO NUMÉRICA E CASAS DECIMAIS: Priorize escolher valores numéricos múltiplos e compatíveis para que as divisões resultem em números inteiros ou decimais exatos de até 2 casas (evitando dízimas periódicas). Caso o cálculo não seja exato ou o solver utilize arredondamento (`round`, `math.ceil`, `math.floor`), o comando final do enunciado DEVE especificar explicitamente quantas casas decimais ou qual critério usar (ex: "Considere o resultado arredondado para duas casas decimais" ou "aproxime para uma casa decimal"). NUNCA arredonde no solver sem declarar o número exato de casas decimais no enunciado.
    - Termos de periodicidade ("mensal", "semanal", "anual", "diário") NUNCA podem ser convertidos no cálculo sem que a conversão esteja declarada (ex: escreva "Considere que o mês tem 30 dias").
    - Apenas conversões universais e inequívocas dispensam declaração: 1 h = 60 min, 1 min = 60 s, 1 dia = 24 h, 1 ano = 12 meses e prefixos métricos (1 m = 100 cm, 1 kg = 1.000 g).
-5. SOLVER (Python puro): 
+5. SOLVER (Python puro — PROIBIDO PULAR PASSOS):
+   - Inicie `def resolver():` declarando variáveis de entrada atribuídas EXATAMENTE aos números brutos que aparecem no enunciado ou na `tabela_dados`.
+   - NUNCA faça pré-cálculos de cabeça ao escrever o código (ex: se o enunciado informa diâmetro 40, escreva `diametro = 40` e `raio = diametro / 2`, NUNCA escreva direto `raio = 20`; se o enunciado informa 80%, escreva `percentual = 80` e `complementar = (100 - percentual) / 100`, NUNCA escreva direto `20` ou `0.2`). Toda operação intermediária deve estar explícita no Python.
    - Modela, passo a passo e com variáveis intermediárias nomeadas, os cálculos da grandeza solicitada no enunciado.
    - Os 4 distratores devem modelar ERROS TÍPICOS de raciocínio do aluno (parar em uma etapa intermediária, esquecer uma conversão, usar apenas parte dos dados, inverter uma operação). NÃO use variações arbitrárias como "+50" ou "*1.2".
    - Retorna: return {'correta': <numero>, 'distratores': [<d1>, <d2>, <d3>, <d4>]}
-6. NEXO E COMPLETUDE: Todo dado ou número usado no solver (exceto as conversões universais da regra 4) DEVE estar visível no texto do enunciado ou na tabela_dados, inclusive os valores das premissas (ex: o 30 de "mês com 30 dias"). Os números contidos em 'tabela_dados' são considerados 100% visíveis e válidos pelo sistema de validação de nexo numérico.
+6. NEXO E COMPLETUDE NUMÉRICA:
+   - No `enunciado`, escreva todos os dados numéricos em ALGARISMOS ARÁBICOS (ex: `20`, `40`, `30`), nunca apenas por extenso ("vinte", "quarenta").
+   - Todo número literal usado no cálculo de `correta` no solver (exceto as conversões universais da regra 4) DEVE constar identicamente no texto do `enunciado` ou na `tabela_dados`, inclusive os valores das premissas (ex: o `30` de "mês com 30 dias"). Os números contidos em `tabela_dados` são considerados 100% visíveis e válidos pelo validador de nexo numérico.
 7. COERÊNCIA FÍSICA E MATEMÁTICA: O problema deve ser factível e ter lógica no mundo real.
 8. INTEGRIDADE FACTUAL: NUNCA invente notícias de veículos de imprensa, nomes de pesquisadores ou dados atribuídos falsamente a órgãos oficiais reais (como IBGE, OMS, ministérios). Quando o problema envolver dados percentuais ou estatísticos, contextualize-os como cenários hipotéticos bem definidos ou pesquisas amostrais locais (ex: 'Uma pesquisa de satisfação em uma loja com 400 clientes...', 'Um levantamento sobre o consumo elétrico em um condomínio...').
 9. EXCLUSIVIDADE: Gere APENAS o JSON válido, sem comentários antes ou depois.
 """
 
 POT_FEW_SHOT_EXAMPLE = """--- [EXEMPLO DE SAÍDA ESPERADA (FORMATO E NÍVEL DE EXIGÊNCIA OBRIGATÓRIOS)] ---
-(Observe: 3 etapas encadeadas — vazão total, volume mensal com conversão de unidade, custo —, premissas declaradas com "Considere que..." e distratores que modelam erros típicos.)
+(Observe: declaração explícita dos dados brutos do enunciado sem pular passos, 3 etapas encadeadas — vazão total, volume mensal com conversão de unidade, custo —, premissas declaradas com "Considere que..." e distratores que modelam erros típicos.)
 {
   "enunciado": "Uma cooperativa de agricultura familiar irriga sua estufa com um sistema de gotejamento dividido em dois setores. A tabela a seguir apresenta a quantidade de gotejadores de cada setor e a vazão de cada gotejador. O sistema funciona 3 horas por dia, todos os dias, e a companhia de abastecimento cobra R$ 4,50 por metro cúbico de água consumido. Considere que o mês tem 30 dias, que 1 metro cúbico corresponde a 1.000 litros e que a vazão dos gotejadores permanece constante. Qual será o gasto mensal, em reais, da cooperativa com a água utilizada na irrigação?",
   "tabela_dados": [
     {"Setor": "A", "Quantidade de gotejadores": 200, "Vazão por gotejador (L/h)": 2},
     {"Setor": "B", "Quantidade de gotejadores": 150, "Vazão por gotejador (L/h)": 4}
   ],
-  "solver": "def resolver():\\n    vazao_total_l_h = 200 * 2 + 150 * 4\\n    volume_diario_l = vazao_total_l_h * 3\\n    volume_mensal_l = volume_diario_l * 30\\n    custo_mensal = volume_mensal_l / 1000 * 4.5\\n    # Erro 1: calcula apenas o custo diario (esquece o fator mensal)\\n    d1 = volume_diario_l / 1000 * 4.5\\n    # Erro 2: considera apenas o setor A\\n    d2 = 200 * 2 * 3 * 30 / 1000 * 4.5\\n    # Erro 3: esquece as horas de funcionamento diario\\n    d3 = vazao_total_l_h * 30 / 1000 * 4.5\\n    # Erro 4: nao converte litros para metros cubicos\\n    d4 = volume_mensal_l * 4.5\\n    return {'correta': custo_mensal, 'distratores': [d1, d2, d3, d4]}"
+  "solver": "def resolver():\\n    # Dados brutos do enunciado e da tabela (sem pular etapas)\\n    gotejadores_a, vazao_a = 200, 2\\n    gotejadores_b, vazao_b = 150, 4\\n    horas_por_dia = 3\\n    dias_mes = 30\\n    litros_por_m3 = 1000\\n    tarifa_m3 = 4.5\\n    # Etapas de calculo encadeadas\\n    vazao_total_l_h = gotejadores_a * vazao_a + gotejadores_b * vazao_b\\n    volume_diario_l = vazao_total_l_h * horas_por_dia\\n    volume_mensal_l = volume_diario_l * dias_mes\\n    custo_mensal = (volume_mensal_l / litros_por_m3) * tarifa_m3\\n    # Erro 1: calcula apenas o custo diario (esquece o fator mensal)\\n    d1 = (volume_diario_l / litros_por_m3) * tarifa_m3\\n    # Erro 2: considera apenas o setor A\\n    d2 = (gotejadores_a * vazao_a * horas_por_dia * dias_mes / litros_por_m3) * tarifa_m3\\n    # Erro 3: esquece as horas de funcionamento diario\\n    d3 = (vazao_total_l_h * dias_mes / litros_por_m3) * tarifa_m3\\n    # Erro 4: nao converte litros para metros cubicos\\n    d4 = volume_mensal_l * tarifa_m3\\n    return {'correta': custo_mensal, 'distratores': [d1, d2, d3, d4]}"
 }
 """
 
@@ -365,11 +369,12 @@ Gere agora uma QUESTÃO INÉDITA para a habilidade {habilidade_codigo}.{diretriz
 Antes de responder, confira mentalmente:
 - [Complexidade] A resolução exige pelo menos 2 etapas encadeadas e 2 conceitos? Se bastar uma única operação, torne a situação mais rica.
 - [Premissas] Cada convenção usada no solver (dias do mês/ano, regime de juros, arredondamento, π, litro/m³, constância de taxas) está escrita no enunciado com "Considere que..."?
+- [Nexo sem Pulo de Passos] Todos os números do solver foram declarados a partir dos algarismos exatos do enunciado/tabela, sem fazer contas de cabeça (como metade, complemento percentual ou conversão prévia)?
 Responda EXCLUSIVAMENTE em formato JSON com as chaves 'enunciado', 'tabela_dados' (opcional) e 'solver':
 {{
   "enunciado": "Texto contextualizado da questão, com as premissas declaradas e comando final inequívoco...",
   "tabela_dados": [{{"Coluna1": "A", "Coluna2": 10}}],
-  "solver": "def resolver():\\n    # etapas com variáveis intermediárias usando os números do enunciado\\n    return {{'correta': ..., 'distratores': [d1, d2, d3, d4]}}"
+  "solver": "def resolver():\\n    # 1. Declare variáveis com os números brutos do enunciado/tabela (sem pular passos)\\n    # 2. Calcule as etapas intermediárias explicitamente\\n    return {{'correta': ..., 'distratores': [d1, d2, d3, d4]}}"
 }}
 """
     return prompt
