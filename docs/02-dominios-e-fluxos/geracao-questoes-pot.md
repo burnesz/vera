@@ -88,7 +88,7 @@ Nenhuma questão inédita pode ser salva ou exibida ao estudante sem cumprir **t
 
 ### `RN-Q03` — Defesa em Cascata: Auto-Healing Algorítmico e Stateless Retry
 - **Linha 1 (`auto_heal_distractors`)**: quando `resolver()` acerta o cálculo principal mas produz distratores repetidos ou iguais à correta, o backend preserva os distratores únicos e sintetiza os faltantes deterministicamente usando o passo característico $\Delta$ da distribuição e variações cognitivas típicas do ENEM ($\pm k\Delta$, dobro/metade, escala decimal $\times 10$ / $\div 10$).
-- **Linha 2 (*Stateless Retry*)**: em caso de falha estrutural na Fase 1 ou reprovação nas Etapas 2/3 da validação, descarta-se toda a tentativa e inicia-se uma nova iteração com contexto limpo, novo sorteio de tema/abertura (`sortear_contexto_criativo`) e nova amostragem dos Top-10 candidatos no Pinecone.
+- **Linha 2 (*Stateless Retry*)**: em caso de falha estrutural na Fase 1 ou reprovação nas Etapas 1b/2/3 da validação, descarta-se toda a tentativa e inicia-se uma nova iteração com contexto limpo, novo sorteio de tema/abertura (`sortear_contexto_criativo`), nova amostragem dos Top-10 candidatos no Pinecone e progressão gradual de temperatura a partir de `0.0` (`0.0` $\rightarrow$ `0.1` $\rightarrow$ `0.2` $\rightarrow$ `0.3`, limitada a `0.6`).
 
 ### `RN-Q04` — Rastreabilidade e Auditoria na Persistência
 - Na tabela `questoes_ineditas`:
