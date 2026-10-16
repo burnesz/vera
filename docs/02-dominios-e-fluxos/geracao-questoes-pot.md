@@ -56,8 +56,8 @@ Nenhuma questão inédita pode ser salva ou exibida ao estudante sem cumprir **t
 2. **Inspeção Estática de Segurança via AST (`check_code_safety`)**:
    - Bloqueia imports de módulos do sistema/rede (`BLOCKED_MODULES`: `os`, `sys`, `subprocess`, `socket`, `shutil`, `urllib`, `requests`, `http`, `pathlib`, `ctypes`, `pickle`, `sqlite3`, etc.).
    - Bloqueia chamadas de funções perigosas (`BLOCKED_CALLS`: `eval`, `exec`, `compile`, `__import__`, `open`, `getattr`, `setattr`, `input`, `exit`, `breakpoint`).
-3. **Nexo Numérico (*Groundedness* — `validate_solver_consistency`)**:
-   - Extrai todos os literais numéricos (`ast.Constant`) do corpo de `resolver()` e verifica se cada número consta explicitamente no texto do `enunciado` (incluindo números escritos por extenso de `zero` a `mil` convertidos via `_WORDS_TO_NUMBERS`) ou na `tabela_dados`.
+3. **Nexo Numérico (*Groundedness* — `validate_solver_consistency` / `_extract_correta_code_numbers`)**:
+   - Realiza *backward slicing* na AST de `resolver()` a partir da expressão de `"correta"`, extraindo apenas os literais numéricos (`ast.Constant`) que participam direta ou indiretamente do cálculo do gabarito (isentando constantes auxiliares exclusivas das variáveis de `"distratores"`, o que evita falsos positivos sem enfraquecer o rigor do cálculo principal) e verifica se cada número consta no `enunciado` ou na `tabela_dados`.
    - Apenas constantes matemáticas/geométricas/temporais neutras (`ALLOWED_NUMERIC_CONSTANTS`: `0, 1, 2, 3, 4, 5, 10, 12, 24, 60, 100, 180, 360, 1000, 0.5, 0.1, 0.01, 3.14, 3.1415, 3.1416`) são isentas.
    - **Convenções não são constantes neutras** (`DSR-07`): `365` foi removido da lista; "ano = 365 dias", "mês = 30 dias" etc. só podem ser usados no solver se declarados no enunciado.
 4. **Unicidade Estrita das 5 Alternativas**: a resposta correta e os 4 distratores devem resultar em 5 strings formatadas mutuamente exclusivas.

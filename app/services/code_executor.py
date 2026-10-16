@@ -288,6 +288,143 @@ def auto_heal_distractors(
     return accepted
 
 
+def _get_target_names(target: ast.AST) -> Set[str]:
+    """Extrai nomes de variáveis atribuídas em um alvo de atribuição (Name, Tuple, List, Subscript)."""
+    return {node.id for node in ast.walk(target) if isinstance(node, ast.Name)}
+
+
+def _get_loaded_names(node: ast.AST) -> Set[str]:
+    """Extrai identificadores de variáveis lidos (Load) em uma subárvore AST."""
+    return {
+        sub.id for sub in ast.walk(node)
+        if isinstance(sub, ast.Name) and isinstance(sub.ctx, ast.Load)
+    }
+
+
+def _extract_numbers_from_ast_node(node: ast.AST) -> Set[float]:
+    """Extrai literais numéricos (int/float, excluindo bool) de uma subárvore AST."""
+    nums: Set[float] = set()
+    for sub in ast.walk(node):
+        if isinstance(sub, ast.Constant) and isinstance(sub.value, (int, float)) and not isinstance(sub.value, bool):
+            nums.add(float(sub.value))
+    return nums
+
+
+def _extract_correta_code_numbers(code: str) -> Set[float]:
+    """
+    Extrai via AST apenas os literais numéricos que participam direta ou indiretamente
+    do cálculo da resposta 'correta', ignorando números usados exclusivamente na construção
+    dos 'distratores' (ex: d1 = correta + 50, d2 = correta * 1.5).
+    """
+    clean_code = sanitize_solver_code(code)
+    try:
+        tree = ast.parse(clean_code)
+    except SyntaxError:
+        code_before_return = clean_code.split("return")[0] if "return" in clean_code else clean_code
+        code_no_comments = re.sub(r"#.*", "", code_before_return)
+        return {float(n) for n in re.findall(r"\b\d+(?:\.\d+)?\b", code_no_comments)}
+
+    # Localiza o dicionário de retorno contendo a chave 'correta'
+    result_dicts: List[ast.Dict] = []
+    correta_exprs: List[ast.AST] = []
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Dict):
+            for k, v in zip(node.keys, node.values):
+                if isinstance(k, ast.Constant) and k.value == "correta" and v is not None:
+                    result_dicts.append(node)
+                    correta_exprs.append(v)
+
+    if not correta_exprs:
+        # Fallback se não encontrar dicionário literal com chave 'correta'
+        return _extract_numbers_from_ast_node(tree)
+
+    needed_vars: Set[str] = set()
+    relevant_nodes: List[ast.AST] = []
+    for expr in correta_exprs:
+        needed_vars.update(_get_loaded_names(expr))
+        if not isinstance(expr, ast.Constant):
+            relevant_nodes.append(expr)
+
+    # Coleta todas as instruções (statements) dentro da AST
+    all_stmts: List[ast.stmt] = [n for n in ast.walk(tree) if isinstance(n, ast.stmt)]
+    relevant_stmts: Set[ast.stmt] = set()
+
+    # Ponto fixo: propaga dependências reversas a partir das variáveis usadas em 'correta'
+    changed = True
+    while changed:
+        changed = False
+        for stmt in all_stmts:
+            if stmt in relevant_stmts:
+                continue
+
+            if isinstance(stmt, ast.Assign):
+                # Ignora atribuição direta do próprio dicionário final {'correta': ..., 'distratores': ...}
+                if stmt.value in result_dicts:
+                    continue
+                targets: Set[str] = set()
+                for t in stmt.targets:
+                    targets.update(_get_target_names(t))
+                if targets & needed_vars:
+                    relevant_stmts.add(stmt)
+                    relevant_nodes.append(stmt.value)
+                    needed_vars.update(_get_loaded_names(stmt.value))
+                    for t in stmt.targets:
+                        needed_vars.update(_get_loaded_names(t))
+                    changed = True
+
+            elif isinstance(stmt, ast.AugAssign):
+                targets = _get_target_names(stmt.target)
+                if targets & needed_vars:
+                    relevant_stmts.add(stmt)
+                    relevant_nodes.append(stmt.value)
+                    needed_vars.update(_get_loaded_names(stmt.value))
+                    needed_vars.update(_get_loaded_names(stmt.target))
+                    changed = True
+
+            elif isinstance(stmt, ast.AnnAssign) and stmt.value is not None:
+                if stmt.value in result_dicts:
+                    continue
+                targets = _get_target_names(stmt.target)
+                if targets & needed_vars:
+                    relevant_stmts.add(stmt)
+                    relevant_nodes.append(stmt.value)
+                    needed_vars.update(_get_loaded_names(stmt.value))
+                    changed = True
+
+            elif isinstance(stmt, ast.Expr) and isinstance(stmt.value, ast.Call):
+                # Captura mutações de listas/dicionários relevantes (ex: valores.append(1200))
+                func = stmt.value.func
+                if isinstance(func, ast.Attribute):
+                    owner_vars = _get_loaded_names(func.value)
+                    if owner_vars & needed_vars:
+                        relevant_stmts.add(stmt)
+                        relevant_nodes.append(stmt.value)
+                        needed_vars.update(_get_loaded_names(stmt.value))
+                        changed = True
+
+            elif isinstance(stmt, ast.For):
+                target_vars = _get_target_names(stmt.target)
+                body_relevant = any(child in relevant_stmts for child in ast.walk(stmt) if isinstance(child, ast.stmt) and child is not stmt)
+                if (target_vars & needed_vars) or body_relevant:
+                    relevant_stmts.add(stmt)
+                    relevant_nodes.append(stmt.iter)
+                    needed_vars.update(_get_loaded_names(stmt.iter))
+                    changed = True
+
+            elif isinstance(stmt, (ast.While, ast.If)):
+                body_relevant = any(child in relevant_stmts for child in ast.walk(stmt) if isinstance(child, ast.stmt) and child is not stmt)
+                if body_relevant:
+                    relevant_stmts.add(stmt)
+                    relevant_nodes.append(stmt.test)
+                    needed_vars.update(_get_loaded_names(stmt.test))
+                    changed = True
+
+    code_floats: Set[float] = set()
+    for node in relevant_nodes:
+        code_floats.update(_extract_numbers_from_ast_node(node))
+    return code_floats
+
+
 def validate_solver_consistency(
     enunciado: str,
     code: str,
@@ -296,7 +433,7 @@ def validate_solver_consistency(
     """
     Valida a consistência matemática e o nexo entre o código do solver e o texto do enunciado:
     1. Unicidade estrita: o gabarito e os 4 distratores devem ser distintos (com Auto-Healing).
-    2. Checagem de nexo numérico: todo número utilizado no código antes do return deve estar presente no enunciado.
+    2. Checagem de nexo numérico: todo número utilizado no cálculo da resposta 'correta' deve estar presente no enunciado.
     Retorna a lista de 5 valores formatados [correta, distrator1, distrator2, distrator3, distrator4].
     """
     correta_val = result["correta"]
@@ -325,19 +462,8 @@ def validate_solver_consistency(
             f"Alternativas duplicadas geradas pelo solver mesmo após auto-healing: {all_values}. Valores repetidos: {set(duplicates)}."
         )
 
-    # 2. Checagem de Nexo Numérico (Groundedness)
-    # Extrai o corpo do código antes do 'return' e remove comentários
-    code_before_return = code.split("return")[0] if "return" in code else code
-    code_no_comments = re.sub(r"#.*", "", code_before_return)
-
-    # Extrai todos os números literais no código
-    raw_code_nums = re.findall(r"\b\d+(?:\.\d+)?\b", code_no_comments)
-    code_floats: Set[float] = set()
-    for n in raw_code_nums:
-        try:
-            code_floats.add(float(n))
-        except ValueError:
-            pass
+    # 2. Checagem de Nexo Numérico (Groundedness) restrita ao cálculo da resposta 'correta' via AST
+    code_floats = _extract_correta_code_numbers(code)
 
     # Extrai números presentes no enunciado com suporte a separador de milhar brasileiro (1.200 ou 1.200,50)
     enun_floats: Set[float] = set()
