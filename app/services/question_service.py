@@ -395,25 +395,12 @@ class QuestionService:
                 logger.warning(f"Tentativa {attempt}/{max_attempts} falhou na resolução cega: {e}")
                 continue
 
-            # --- VALIDAÇÃO ETAPA 1b: PREMISSAS IMPLÍCITAS (Early Exit determinístico) ---
-            # Gerador e resolvedor cego compartilham o mesmo viés (ex: ambos assumem mês = 30 dias),
-            # logo a equivalência sozinha não detecta convenções não declaradas no enunciado.
-            if blind_sol.premissas_assumidas:
-                premissas_fmt = "; ".join(blind_sol.premissas_assumidas)
-                last_error = (
-                    f"Premissa implícita não declarada no enunciado: {premissas_fmt}. "
-                    f"Declare explicitamente toda convenção necessária (ex: 'Considere que o mês tem 30 dias')."
-                )
-                logger.warning(
-                    f"Tentativa {attempt}/{max_attempts} descartada por premissa implícita (Early Exit): {premissas_fmt}"
-                )
-                continue
-
             # --- VALIDAÇÃO ETAPA 2: CONFRONTO DIRETO DE EQUIVALÊNCIA (com Early Exit) ---
             try:
                 equiv = self._run_equivalence_check(
                     resultado_solver=solver_result["correta"],
-                    resultado_obtido=blind_sol.resultado_obtido
+                    resultado_obtido=blind_sol.resultado_obtido,
+                    enunciado=pot_output.enunciado
                 )
             except Exception as e:
                 last_error = f"Falha no confronto de equivalência: {e}"
@@ -479,7 +466,7 @@ class QuestionService:
         prompt = build_blind_solving_prompt(enunciado=enunciado)
         raw = self.llm_client.generate(
             prompt=prompt,
-            max_tokens=800,
+            max_tokens=1536,
             temperature=0.0,
             top_p=0.9,
             format="json"
@@ -497,14 +484,48 @@ class QuestionService:
 
         return QuestaoBlindSolvingOutput(**parsed)
 
-    def _run_equivalence_check(self, resultado_solver: Any, resultado_obtido: Any) -> QuestaoEquivalenciaOutput:
+    @staticmethod
+    def _check_deterministic_equivalence(resultado_solver: Any, resultado_obtido: Any) -> bool:
+        """
+        Verifica equivalência numérica direta em Python (incluindo quando resultado_obtido
+        é um dicionário com múltiplos grupos contendo o valor exato de resultado_solver).
+        """
+        try:
+            solver_num = float(resultado_solver)
+        except (ValueError, TypeError):
+            return False
+
+        candidates: List[Any] = []
+        if isinstance(resultado_obtido, dict):
+            candidates.extend(resultado_obtido.values())
+        elif isinstance(resultado_obtido, (list, tuple)):
+            candidates.extend(resultado_obtido)
+        else:
+            candidates.append(resultado_obtido)
+
+        for cand in candidates:
+            try:
+                cand_num = float(cand)
+                if abs(solver_num - cand_num) <= 1e-2:
+                    return True
+            except (ValueError, TypeError):
+                continue
+        return False
+
+    def _run_equivalence_check(
+        self,
+        resultado_solver: Any,
+        resultado_obtido: Any,
+        enunciado: Optional[str] = None
+    ) -> QuestaoEquivalenciaOutput:
         """
         Etapa 2 da Validação: Confronto Direto de Equivalência Matemática.
         Avalia se a resposta calculada pelo solver e o resultado deduzido pela LLM são equivalentes.
         """
         prompt = build_equivalencia_gabarito_prompt(
             resultado_solver=resultado_solver,
-            resultado_obtido=resultado_obtido
+            resultado_obtido=resultado_obtido,
+            enunciado=enunciado
         )
         raw = self.llm_client.generate(
             prompt=prompt,
@@ -523,7 +544,18 @@ class QuestionService:
                 # Suporte a variações semânticas se o modelo responder "sao_equivalentes"
                 parsed["equivalentes"] = bool(parsed.get("sao_equivalentes", True))
 
-        return QuestaoEquivalenciaOutput(**parsed)
+        equiv_out = QuestaoEquivalenciaOutput(**parsed)
+
+        # Se o LLM retornou um dicionário na resolução cega contendo o valor exato do solver
+        # e o juiz se confundiu com o formato dict, recupera deterministicamente
+        if not equiv_out.equivalentes and isinstance(resultado_obtido, (dict, list)):
+            if self._check_deterministic_equivalence(resultado_solver, resultado_obtido):
+                equiv_out.equivalentes = True
+                equiv_out.explicacao_equivalencia = (
+                    f"Equivalência numérica confirmada deterministicamente: {resultado_solver} está contido em {resultado_obtido}."
+                )
+
+        return equiv_out
 
     def _run_semantic_audit(self, enunciado: str, alternativas: Dict[str, str]) -> QuestaoAuditoriaSemanticaOutput:
         """

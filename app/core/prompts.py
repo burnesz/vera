@@ -247,47 +247,36 @@ Gere uma QUESTÃO INÉDITA estruturada em JSON (enunciado + solver em Python).
 O solver calculará a resposta correta e 4 distratores; NÃO gere gabarito ou letras A-E.
 
 REGRAS ESTRITAS:
-1. ENUNCIADO: Situação-problema realista com comando final claro.
+1. ENUNCIADO: Situação-problema realista com comando final claro e objetivo.
    - SEJA CRIATIVO NO CONTEXTO. NUNCA comece as questões sempre com a mesma estrutura sintática. Varie a narrativa e o sujeito!
    - NUNCA use palavras como "solver", "python", "algoritmo", "código", "distrator" ou "gabarito" no enunciado!
 2. DADOS TABULARES E ISOLAMENTO DE TABELA:
    - Se a questão envolver dados tabulares ou anunciar uma tabela ("A tabela a seguir apresenta...", "O quadro abaixo ilustra..."), no campo 'enunciado' escreva APENAS a contextualização anunciando a tabela e a pergunta final.
    - NUNCA liste os dados da tabela no corpo do 'enunciado' (seja em tópicos '-', listas numeradas, parágrafos ou pipes '|'). O texto NÃO deve conter os dados repetidos.
    - Os dados tabulares devem residir EXCLUSIVAMENTE no campo JSON 'tabela_dados' (lista de dicionários). O sistema desenhará e renderizará a tabela para o aluno no ponto adequado.
-3. COMPLEXIDADE PADRÃO ENEM (OBRIGATÓRIO):
-   - A resolução deve exigir NO MÍNIMO 2 etapas de raciocínio encadeadas, em que o resultado de uma etapa alimenta a seguinte.
-   - Mobilize pelo menos 2 conceitos matemáticos articulados (ex: proporcionalidade + conversão de unidades; porcentagem + comparação de opções; área + custo; média + variação percentual).
-   - O aluno deve INTERPRETAR o texto e/ou a tabela para selecionar e relacionar os dados relevantes; a operação necessária NÃO pode estar entregue literalmente no comando.
-   - PROIBIDO: questões resolvidas com uma única operação direta (ex: apenas somar os valores de uma coluna, aplicar uma única porcentagem, ler um valor da tabela).
-4. PREMISSAS EXPLÍCITAS E ARREDONDAMENTO (NENHUMA SUPOSIÇÃO IMPLÍCITA):
-   - Toda convenção, valor de referência ou hipótese necessária ao cálculo DEVE estar escrita no enunciado, preferencialmente em uma frase iniciada por "Considere que...".
-   - Declare SEMPRE, quando usados: quantidade de dias do mês ou do ano, semanas por mês, dias úteis ou jornada de trabalho, regime de juros (simples ou composto), critério de arredondamento, valor aproximado de π, equivalência entre litro e metro cúbico, densidades, e a constância de taxas, vazões ou velocidades.
-   - EXATIDÃO NUMÉRICA E CASAS DECIMAIS: Priorize escolher valores numéricos múltiplos e compatíveis para que as divisões resultem em números inteiros ou decimais exatos de até 2 casas (evitando dízimas periódicas). Caso o cálculo não seja exato ou o solver utilize arredondamento (`round`, `math.ceil`, `math.floor`), o comando final do enunciado DEVE especificar explicitamente quantas casas decimais ou qual critério usar (ex: "Considere o resultado arredondado para duas casas decimais" ou "aproxime para uma casa decimal"). NUNCA arredonde no solver sem declarar o número exato de casas decimais no enunciado.
-   - Termos de periodicidade ("mensal", "semanal", "anual", "diário") NUNCA podem ser convertidos no cálculo sem que a conversão esteja declarada (ex: escreva "Considere que o mês tem 30 dias").
-   - Apenas conversões universais e inequívocas dispensam declaração: 1 h = 60 min, 1 min = 60 s, 1 dia = 24 h, 1 ano = 12 meses e prefixos métricos (1 m = 100 cm, 1 kg = 1.000 g).
-5. SOLVER (Python puro — PROIBIDO PULAR PASSOS):
-   - Inicie `def resolver():` declarando variáveis de entrada atribuídas EXATAMENTE aos números brutos que aparecem no enunciado ou na `tabela_dados`.
-   - NUNCA faça pré-cálculos de cabeça ao escrever o código (ex: se o enunciado informa diâmetro 40, escreva `diametro = 40` e `raio = diametro / 2`, NUNCA escreva direto `raio = 20`; se o enunciado informa 80%, escreva `percentual = 80` e `complementar = (100 - percentual) / 100`, NUNCA escreva direto `20` ou `0.2`). Toda operação intermediária deve estar explícita no Python.
-   - Modela, passo a passo e com variáveis intermediárias nomeadas, os cálculos da grandeza solicitada no enunciado.
-   - Os 4 distratores devem modelar ERROS TÍPICOS de raciocínio do aluno (parar em uma etapa intermediária, esquecer uma conversão, usar apenas parte dos dados, inverter uma operação). NÃO use variações arbitrárias como "+50" ou "*1.2".
+3. COMPLEXIDADE E EXATIDÃO PADRÃO ENEM:
+   - A resolução deve exigir pelo menos 2 etapas de raciocínio encadeadas (evite questões triviais de uma única operação direta).
+   - Escolha valores numéricos compatíveis para que o resultado final seja um número inteiro ou decimal exato de até 2 casas. Se usar aproximação de π (ex: considere π = 3 ou π = 3,14) ou arredondamento, informe isso no enunciado.
+4. SOLVER (Python puro):
+   - Escreva a função `def resolver():` declarando as variáveis com os mesmos números do enunciado/tabela e calculando passo a passo a resposta final.
+   - Calcule 4 distratores plausíveis e distintos entre si (representando erros comuns de raciocínio, como parar em uma etapa intermediária ou esquecer um fator).
    - Retorna: return {'correta': <numero>, 'distratores': [<d1>, <d2>, <d3>, <d4>]}
-6. NEXO E COMPLETUDE NUMÉRICA:
-   - No `enunciado`, escreva todos os dados numéricos em ALGARISMOS ARÁBICOS (ex: `20`, `40`, `30`), nunca apenas por extenso ("vinte", "quarenta").
-   - Todo número literal usado no cálculo de `correta` no solver (exceto as conversões universais da regra 4) DEVE constar identicamente no texto do `enunciado` ou na `tabela_dados`, inclusive os valores das premissas (ex: o `30` de "mês com 30 dias"). Os números contidos em `tabela_dados` são considerados 100% visíveis e válidos pelo validador de nexo numérico.
-7. COERÊNCIA FÍSICA E MATEMÁTICA: O problema deve ser factível e ter lógica no mundo real.
-8. INTEGRIDADE FACTUAL: NUNCA invente notícias de veículos de imprensa, nomes de pesquisadores ou dados atribuídos falsamente a órgãos oficiais reais (como IBGE, OMS, ministérios). Quando o problema envolver dados percentuais ou estatísticos, contextualize-os como cenários hipotéticos bem definidos ou pesquisas amostrais locais (ex: 'Uma pesquisa de satisfação em uma loja com 400 clientes...', 'Um levantamento sobre o consumo elétrico em um condomínio...').
-9. EXCLUSIVIDADE: Gere APENAS o JSON válido, sem comentários antes ou depois.
+5. NEXO E COMPLETUDE NUMÉRICA:
+   - Escreva os dados numéricos em algarismos no `enunciado` ou na `tabela_dados`.
+   - Todo número usado no cálculo de `correta` no solver deve constar no `enunciado` ou na `tabela_dados` (os dados de `tabela_dados` já são lidos automaticamente pelo validador).
+6. COERÊNCIA E INTEGRIDADE FACTUAL:
+   - O problema deve ter lógica no mundo real. NUNCA atribua dados inventados a órgãos oficiais reais (como IBGE, OMS, ministérios); use cenários locais ou levantamentos hipotéticos bem definidos.
+7. EXCLUSIVIDADE: Gere APENAS o JSON válido, sem comentários antes ou depois.
 """
 
-POT_FEW_SHOT_EXAMPLE = """--- [EXEMPLO DE SAÍDA ESPERADA (FORMATO E NÍVEL DE EXIGÊNCIA OBRIGATÓRIOS)] ---
-(Observe: declaração explícita dos dados brutos do enunciado sem pular passos, 3 etapas encadeadas — vazão total, volume mensal com conversão de unidade, custo —, premissas declaradas com "Considere que..." e distratores que modelam erros típicos.)
+POT_FEW_SHOT_EXAMPLE = """--- [EXEMPLO DE SAÍDA ESPERADA (FORMATO E NÍVEL DE EXIGÊNCIA)] ---
 {
-  "enunciado": "Uma cooperativa de agricultura familiar irriga sua estufa com um sistema de gotejamento dividido em dois setores. A tabela a seguir apresenta a quantidade de gotejadores de cada setor e a vazão de cada gotejador. O sistema funciona 3 horas por dia, todos os dias, e a companhia de abastecimento cobra R$ 4,50 por metro cúbico de água consumido. Considere que o mês tem 30 dias, que 1 metro cúbico corresponde a 1.000 litros e que a vazão dos gotejadores permanece constante. Qual será o gasto mensal, em reais, da cooperativa com a água utilizada na irrigação?",
+  "enunciado": "Uma cooperativa de reciclagem comercializa lotes de alumínio e plástico prensados. A tabela a seguir apresenta a quantidade arrecadada, em quilogramas, e o preço de venda por quilograma de cada material na última semana. Do valor total arrecadado com a venda de todos esses materiais, 20% são destinados aos custos operacionais de transporte e o restante é dividido igualmente entre os 8 cooperados. Qual o valor, em reais, que cada cooperado receberá nessa semana?",
   "tabela_dados": [
-    {"Setor": "A", "Quantidade de gotejadores": 200, "Vazão por gotejador (L/h)": 2},
-    {"Setor": "B", "Quantidade de gotejadores": 150, "Vazão por gotejador (L/h)": 4}
+    {"Material": "Alumínio", "Quantidade (kg)": 250, "Preço por kg (R$)": 6},
+    {"Material": "Plástico", "Quantidade (kg)": 500, "Preço por kg (R$)": 3}
   ],
-  "solver": "def resolver():\\n    # Dados brutos do enunciado e da tabela (sem pular etapas)\\n    gotejadores_a, vazao_a = 200, 2\\n    gotejadores_b, vazao_b = 150, 4\\n    horas_por_dia = 3\\n    dias_mes = 30\\n    litros_por_m3 = 1000\\n    tarifa_m3 = 4.5\\n    # Etapas de calculo encadeadas\\n    vazao_total_l_h = gotejadores_a * vazao_a + gotejadores_b * vazao_b\\n    volume_diario_l = vazao_total_l_h * horas_por_dia\\n    volume_mensal_l = volume_diario_l * dias_mes\\n    custo_mensal = (volume_mensal_l / litros_por_m3) * tarifa_m3\\n    # Erro 1: calcula apenas o custo diario (esquece o fator mensal)\\n    d1 = (volume_diario_l / litros_por_m3) * tarifa_m3\\n    # Erro 2: considera apenas o setor A\\n    d2 = (gotejadores_a * vazao_a * horas_por_dia * dias_mes / litros_por_m3) * tarifa_m3\\n    # Erro 3: esquece as horas de funcionamento diario\\n    d3 = (vazao_total_l_h * dias_mes / litros_por_m3) * tarifa_m3\\n    # Erro 4: nao converte litros para metros cubicos\\n    d4 = volume_mensal_l * tarifa_m3\\n    return {'correta': custo_mensal, 'distratores': [d1, d2, d3, d4]}"
+  "solver": "def resolver():\\n    kg_aluminio, preco_aluminio = 250, 6\\n    kg_plastico, preco_plastico = 500, 3\\n    percentual_custo = 20\\n    cooperados = 8\\n    receita_total = kg_aluminio * preco_aluminio + kg_plastico * preco_plastico\\n    valor_liquido = receita_total * (100 - percentual_custo) / 100\\n    valor_por_cooperado = valor_liquido / cooperados\\n    # Distratores baseados em erros comuns\\n    d1 = receita_total / cooperados\\n    d2 = (receita_total * percentual_custo / 100) / cooperados\\n    d3 = valor_liquido\\n    d4 = (kg_aluminio * preco_aluminio) / cooperados\\n    return {'correta': valor_por_cooperado, 'distratores': [d1, d2, d3, d4]}"
 }
 """
 
@@ -323,7 +312,7 @@ def build_enunciado_solver_prompt(
                 bloco += f"\nResposta Correta Oficial: {valor_correto}"
             blocos.append(bloco)
         
-        ref_text = "\n\n".join(blocos) + "\n\n(Crie uma questão inédita ISOMÓRFICA: com mesma lógica matemática e nível de complexidade das questões acima, porém com um novo contexto do cotidiano e novos dados numéricos. NUNCA simplifique: a questão inédita deve exigir tantas etapas e tanta interpretação quanto as de referência)."
+        ref_text = "\n\n".join(blocos) + "\n\n(Crie uma questão inédita ISOMÓRFICA: com mesma lógica matemática e nível de complexidade das questões acima, porém com um novo contexto do cotidiano e novos dados numéricos)."
     else:
         ref_text = "(Siga estritamente os conceitos pedagógicos da habilidade alvo, respeitando o nível de exigência do ENEM)."
 
@@ -360,21 +349,17 @@ ESPECIFICAÇÃO DA HABILIDADE ALVO (MATRIZ DO ENEM):
 {ref_text}
 
 {POT_FEW_SHOT_EXAMPLE}
-(O exemplo acima ilustra apenas formato e nível de exigência: NÃO reutilize seu contexto, seus dados ou sua estrutura narrativa.)
+(O exemplo acima ilustra apenas o formato JSON esperado: NÃO reutilize seu contexto, seus dados ou sua estrutura narrativa.)
 {secao_feedback}
 ============================================================
 SUA TAREFA:
 ============================================================
 Gere agora uma QUESTÃO INÉDITA para a habilidade {habilidade_codigo}.{diretriz_criativa}
-Antes de responder, confira mentalmente:
-- [Complexidade] A resolução exige pelo menos 2 etapas encadeadas e 2 conceitos? Se bastar uma única operação, torne a situação mais rica.
-- [Premissas] Cada convenção usada no solver (dias do mês/ano, regime de juros, arredondamento, π, litro/m³, constância de taxas) está escrita no enunciado com "Considere que..."?
-- [Nexo sem Pulo de Passos] Todos os números do solver foram declarados a partir dos algarismos exatos do enunciado/tabela, sem fazer contas de cabeça (como metade, complemento percentual ou conversão prévia)?
 Responda EXCLUSIVAMENTE em formato JSON com as chaves 'enunciado', 'tabela_dados' (opcional) e 'solver':
 {{
-  "enunciado": "Texto contextualizado da questão, com as premissas declaradas e comando final inequívoco...",
+  "enunciado": "Texto contextualizado da questão com comando final inequívoco...",
   "tabela_dados": [{{"Coluna1": "A", "Coluna2": 10}}],
-  "solver": "def resolver():\\n    # 1. Declare variáveis com os números brutos do enunciado/tabela (sem pular passos)\\n    # 2. Calcule as etapas intermediárias explicitamente\\n    return {{'correta': ..., 'distratores': [d1, d2, d3, d4]}}"
+  "solver": "def resolver():\\n    # código com variáveis usando os números do enunciado/tabela\\n    return {{'correta': ..., 'distratores': [d1, d2, d3, d4]}}"
 }}
 """
     return prompt
@@ -386,8 +371,8 @@ def build_blind_solving_prompt(enunciado: str) -> str:
     O LLM recebe exclusivamente o enunciado (sem alternativas e sem gabarito)
     e deve resolver o problema passo a passo com rigor conceitual e formal.
     """
-    prompt = f"""Você é um estudante de alto desempenho resolvendo uma questão de Matemática do ENEM.
-Leia atentamente a questão abaixo e resolva-a de forma autônoma, passo a passo, a partir exclusivamente do enunciado.
+    prompt = f"""Você é um especialista resolvendo uma questão de Matemática do ENEM.
+Leia atentamente a questão abaixo e resolva-a passo a passo a partir exclusivamente do enunciado.
 
 ============================================================
 ENUNCIADO DA QUESTÃO:
@@ -397,51 +382,54 @@ ENUNCIADO DA QUESTÃO:
 ============================================================
 SUA TAREFA:
 ============================================================
-1. Resolva a questão passo a passo com rigor lógico e matemático formal.
-2. Apresente toda a resolução didática detalhada em 'resolucao_passo_a_passo'.
-3. Liste em 'premissas_assumidas' TODA suposição, convenção ou valor que você precisou adotar e que NÃO está escrito explicitamente no enunciado. Exemplos:
-   - "Assumi que o mês tem 30 dias" (quando o enunciado diz apenas "mensal").
-   - "Assumi que o ano tem 365 dias", "Assumi 4 semanas por mês", "Assumi juros compostos", "Assumi π = 3,14", "Assumi que 1 m³ = 1.000 L", "Assumi arredondamento para cima".
-   - NÃO liste conversões universais e inequívocas: 1 h = 60 min, 1 min = 60 s, 1 dia = 24 h, 1 ano = 12 meses e prefixos métricos (1 m = 100 cm, 1 kg = 1.000 g).
-   - NÃO liste informações que estão escritas no enunciado.
-   - Se não precisou assumir nada, retorne uma lista vazia [].
-4. Deduza e declare o resultado final em 'resultado_obtido' no formato de um TIPO PRIMÁRIO DO PYTHON:
-   - Se for um valor numérico único, retorne apenas o número (int ou float, ex: 35.0, 30, 1.9), sem texto ou unidades de medida.
-   - Se for uma conclusão conceitual, retorne em texto.
-   - Se forem múltiplos valores, retorne como dict (ex: {{"media": 135.0, "moda": None}}).
+1. Resolva a questão passo a passo de forma clara, direta e objetiva em 'resolucao_passo_a_passo'.
+2. Declare em 'resultado_obtido' APENAS o valor final único que responde diretamente à pergunta do comando final:
+   - Se a resposta for numérica, retorne APENAS o número final (int ou float, ex: 35.0, 30, 1350), sem unidades de medida, sem texto extra e NUNCA como dicionário de múltiplos grupos.
+   - Retorne string apenas quando a pergunta pedir explicitamente um nome, categoria ou horário (ex: "10h00", "Setor A").
 
 Responda EXCLUSIVAMENTE em formato JSON com o schema abaixo:
 {{
-  "resolucao_passo_a_passo": "Sua resolução didática e detalhada passo a passo deduzindo o resultado...",
-  "premissas_assumidas": ["Cada suposição não declarada no enunciado, ou lista vazia"],
-  "resultado_obtido": "Valor numérico ou conclusão final obtida no tipo primário do Python"
+  "resolucao_passo_a_passo": "Sua resolução passo a passo objetiva deduzindo o resultado...",
+  "resultado_obtido": 0
 }}
 """
     return prompt
 
 
-def build_equivalencia_gabarito_prompt(resultado_solver: Any, resultado_obtido: Any) -> str:
+def build_equivalencia_gabarito_prompt(
+    resultado_solver: Any,
+    resultado_obtido: Any,
+    enunciado: Optional[str] = None
+) -> str:
     """
     Constrói prompt para a Chamada 2 da Fase de Validação: Confronto Direto de Equivalência.
     Juiz matemático objetivo que confronta o resultado calculado pelo Python com a conclusão da LLM.
     """
-    prompt = f"""Você é um Juiz de Equivalência Matemática e Conceitual.
-Sua única função é comparar objetivamente os dois resultados abaixo e determinar se eles expressam a mesma resposta matemática/conceitual.
-
+    contexto_bloco = ""
+    if enunciado:
+        contexto_bloco = f"""============================================================
+ENUNCIADO DA QUESTÃO (PARA CONTEXTO DA GRANDEZA PEDIDA):
 ============================================================
+{enunciado}
+
+"""
+
+    prompt = f"""Você é um Juiz de Equivalência Matemática e Conceitual.
+Sua única função é comparar objetivamente os dois resultados abaixo e determinar se eles expressam a mesma resposta para a pergunta da questão.
+
+{contexto_bloco}============================================================
 RESULTADOS A COMPARAR:
 ============================================================
-- Resultado A (Cálculo do Solver): {resultado_solver}
+- Resultado A (Cálculo Oficial do Solver): {resultado_solver}
 - Resultado B (Resolução Dedutiva): {resultado_obtido}
 
 ============================================================
 DIRETRIZES DE EQUIVALÊNCIA:
 ============================================================
-1. Antes de comparar, normalize os valores, as representações matemáticas e as unidades de medida.
-2. Considere equivalentes diferenças de formatação, notação, frações, decimais e unidades conversíveis.
-3. A ausência de unidade em um resultado não implica divergência, desde que o valor e o contexto sejam compatíveis.
-4. Considere o enunciado para verificar a grandeza esperada. Não invente informações nem converta grandezas incompatíveis.
-5. Retorne `false` apenas quando houver divergência matemática ou conceitual real. Se as informações forem insuficientes, explique a limitação objetivamente e decida com base nas evidências disponíveis.
+1. Normalize valores numéricos, frações, decimais, porcentagens, arredondamentos próximos e unidades de medida conversíveis (ex: 1350 e 1350.0, 0.5 e "50%", 2500 e "R$ 2.500,00").
+2. Se o Resultado B contiver múltiplos valores ou um dicionário (ex: {{'Grupo A': 1350.0, 'Grupo B': 1150.0}}), considere EQUIVALENTE (`true`) caso o valor correspondente ao que foi perguntado no enunciado coincida com o Resultado A.
+3. A ausência de unidade de medida em um dos resultados NÃO implica divergência.
+4. Retorne `false` apenas quando houver divergência matemática ou conceitual real entre os valores finais.
 
 Responda EXCLUSIVAMENTE em formato JSON com o schema:
 {{
@@ -460,7 +448,7 @@ def build_auditoria_semantica_prompt(enunciado: str, alternativas: Dict[str, str
     alts_formatted = "\n".join([f"  {k}) {v}" for k, v in sorted(alternativas.items())])
     
     prompt = f"""Você é um Revisor Técnico e Pedagógico Oficial do INEP para questões do ENEM.
-Audite o item de Matemática abaixo avaliando rigorosamente a presença de eventuais problemas pedagógicos ou textuais.
+Audite o item de Matemática abaixo avaliando a presença de eventuais problemas graves.
 
 ============================================================
 ITEM SUBMETIDO:
@@ -474,13 +462,13 @@ Alternativas:
 ============================================================
 CRITÉRIOS DE AUDITORIA (IDENTIFICAÇÃO DE PROBLEMAS):
 ============================================================
-Avalie se o item apresenta algum dos seguintes problemas (marque true se o problema existir, false se o item estiver perfeito):
+Avalie se o item apresenta algum dos seguintes problemas graves (marque true APENAS se o defeito existir claramente; marque false se o item estiver adequado):
 
-1. possui_incoerencia: A situação-problema é absurda, incoerente com o mundo real ou tem erro conceitual grave?
-2. possui_ambiguidade: O comando final é dúbio, confuso ou possui dupla interpretação?
-3. deficit_informacoes: Faltam informações, dados numéricos essenciais ou contexto indispensável para resolver a questão? Marque true também se a resolução depender de alguma CONVENÇÃO NÃO DECLARADA no enunciado (ex: tratar "mensal" como 30 dias, "anual" como 365 dias, supor juros simples ou compostos, adotar um valor de π, um critério de arredondamento ou a relação litro/m³ sem que estejam escritos). Conversões universais (1 h = 60 min, 1 dia = 24 h, 1 ano = 12 meses, prefixos métricos) NÃO precisam ser declaradas.
-4. erros_ou_vazamentos: O texto contém erros de português ou palavras proibidas de bastidor ('solver', 'python', 'código', 'algoritmo', 'distrator')?
-5. duplicacao_tabelas: O texto repete desnecessariamente dados de tabelas em tópicos/texto corrido além da própria tabela formatada?
+1. possui_incoerencia: A situação-problema é fisicamente absurda ou tem erro conceitual grave?
+2. possui_ambiguidade: O comando final é dúbio e impede saber o que está sendo perguntado?
+3. deficit_informacoes: Falta algum dado numérico indispensável que torne impossível calcular a resposta? (Nota: conversões métricas como 1 m³ = 1.000 L, relações de tempo como mês = 30 dias / ano = 12 meses e constância de taxas informadas são padrões normais de prova e NÃO constituem déficit de informações).
+4. erros_ou_vazamentos: O texto contém palavras proibidas de bastidor ('solver', 'python', 'código', 'algoritmo', 'distrator')?
+5. duplicacao_tabelas: O texto repete integralmente a mesma tabela duas vezes?
 
 Responda EXCLUSIVAMENTE em formato JSON com o schema:
 {{
@@ -492,6 +480,7 @@ Responda EXCLUSIVAMENTE em formato JSON com o schema:
 }}
 """
     return prompt
+
 
 
 

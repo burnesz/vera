@@ -34,10 +34,8 @@ flowchart TD
     E -- "Falha Estrutural" --> F["Linha 2: Stateless Retry\n(Contexto limpo + novo sorteio)"]
     F --> B
     E -- "Sucesso (mesmo com distratores duplicados)" --> G["Linha 1: Auto-Healing Algorítmico de Distratores\n+ Formatação de Tabela Markdown\n+ Embaralhamento A-E por Código (RN-Q02)"]
-    G --> H["Validação Etapa 1: Resolução Cega Pura\n(LLM recebe APENAS o enunciado\ne lista premissas_assumidas)"]
-    H --> H2{"Etapa 1b: premissas_assumidas\nnão vazia?"}
-    H2 -- "Sim (premissa implícita)" --> F
-    H2 -- "Não" --> I["Validação Etapa 2: Confronto de Equivalência\n(Juiz compara resultado_solver vs resultado_obtido)"]
+    G --> H["Validação Etapa 1: Resolução Cega Pura\n(LLM recebe APENAS o enunciado, max_tokens=1536)"]
+    H --> I["Validação Etapa 2: Confronto de Equivalência\n(Juiz com contexto do enunciado + recuperação determinística)"]
     I -- "Divergentes (equivalentes = False)" --> J["Early Exit / Curto-Circuito"]
     J --> F
     I -- "Equivalentes (True)" --> K["Validação Etapa 3: Auditoria Semântica\n(LLM avalia 5 flags booleanas de defeito)"]
@@ -56,32 +54,32 @@ Nenhuma questão inédita pode ser salva ou exibida ao estudante sem cumprir **t
 2. **Inspeção Estática de Segurança via AST (`check_code_safety`)**:
    - Bloqueia imports de módulos do sistema/rede (`BLOCKED_MODULES`: `os`, `sys`, `subprocess`, `socket`, `shutil`, `urllib`, `requests`, `http`, `pathlib`, `ctypes`, `pickle`, `sqlite3`, etc.).
    - Bloqueia chamadas de funções perigosas (`BLOCKED_CALLS`: `eval`, `exec`, `compile`, `__import__`, `open`, `getattr`, `setattr`, `input`, `exit`, `breakpoint`).
-3. **Nexo Numérico (*Groundedness* — `validate_solver_consistency` / `_extract_correta_code_numbers`)**:
-   - Realiza *backward slicing* na AST de `resolver()` a partir da expressão de `"correta"`, extraindo apenas os literais numéricos (`ast.Constant`) que participam direta ou indiretamente do cálculo do gabarito (isentando constantes auxiliares exclusivas das variáveis de `"distratores"`, o que evita falsos positivos sem enfraquecer o rigor do cálculo principal) e verifica se cada número consta no `enunciado` ou na `tabela_dados`.
-   - Apenas constantes matemáticas/geométricas/temporais neutras (`ALLOWED_NUMERIC_CONSTANTS`: `0, 1, 2, 3, 4, 5, 10, 12, 24, 60, 100, 180, 360, 1000, 0.5, 0.1, 0.01, 3.14, 3.1415, 3.1416`) são isentas.
-   - **Convenções não são constantes neutras** (`DSR-07`): `365` foi removido da lista; "ano = 365 dias", "mês = 30 dias" etc. só podem ser usados no solver se declarados no enunciado.
+3. **Nexo Numérico Flexível e Inteligente (*Groundedness* — `validate_solver_consistency` / `_extract_correta_code_numbers`)**:
+   - Realiza *backward slicing* na AST de `resolver()` a partir da expressão de `"correta"`, extraindo apenas os literais numéricos (`ast.Constant`) que participam direta ou indiretamente do cálculo do gabarito (isentando constantes auxiliares exclusivas das variáveis de `"distratores"`).
+   - Verifica se cada número consta no `enunciado` ou na `tabela_dados`, aceitando também:
+     - **Numerais por extenso e termos temporais** em português (`PORTUGUESE_WORD_NUMBERS`: `"oito"` $\rightarrow 8$, `"mensal"`/`"mês"` $\rightarrow 30$, `"semana"` $\rightarrow 7$, `"ano"` $\rightarrow 12, 365$, `"mil"` $\rightarrow 1000$, etc.).
+     - **Conversões diretas de escala métrica e geometria** dos números presentes no enunciado ($\times 10, \times 100, \times 1000, \div 10, \div 100, \div 1000$, metade/raio $\div 2$ e dobro $\times 2$).
+     - **Fatores e complementos percentuais** (para $p\%$, aceita $p$, $p/100$, $100-p$, $1 - p/100$ e $1 + p/100$).
+     - Constantes matemáticas, geométricas e temporais padrão (`ALLOWED_NUMERIC_CONSTANTS`).
 4. **Unicidade Estrita das 5 Alternativas**: a resposta correta e os 4 distratores devem resultar em 5 strings formatadas mutuamente exclusivas.
 5. **Validação Etapa 1 — Resolução Cega Pura (`QuestaoBlindSolvingOutput`)**:
-   - O LLM resolve o problema recebendo **exclusivamente o enunciado** (sem alternativas e sem gabarito), produzindo `resolucao_passo_a_passo`, `premissas_assumidas` e `resultado_obtido` (em tipo primitivo Python: `int`, `float`, `str`, `dict` ou `list`).
-   - **Etapa 1b — Premissas Implícitas com *Early Exit* (`DSR-07`)**: o resolvedor lista toda suposição/convenção que precisou adotar sem estar escrita no enunciado (exceto conversões universais: 1 h = 60 min, 1 dia = 24 h, 1 ano = 12 meses, prefixos métricos). Se `premissas_assumidas` não for vazia (após normalização de marcadores como `"Nenhuma"`/`"N/A"`), o backend reprova deterministicamente e aciona o *Stateless Retry* sem chamar a Etapa 2.
+   - O LLM resolve o problema recebendo **exclusivamente o enunciado** (sem alternativas e sem gabarito, com orçamento `max_tokens=1536`), produzindo `resolucao_passo_a_passo` e o valor final único em `resultado_obtido`.
 6. **Validação Etapa 2 — Confronto Direto de Equivalência com *Early Exit* (`QuestaoEquivalenciaOutput`)**:
-   - Compara `resultado_solver` vs. `resultado_obtido` aceitando equivalências matemáticas legítimas (ex.: `2500` vs. `"R$ 2.500,00"`, `0.5` vs. `"50%"`, arredondamentos compatíveis). Se `equivalentes == False`, interrompe imediatamente (*Early Exit*) e aciona o *Stateless Retry*.
+   - Compara `resultado_solver` vs. `resultado_obtido` informando o `enunciado` como contexto da grandeza perguntada e aceitando equivalências matemáticas legítimas (incluindo recuperação determinística caso `resultado_obtido` venha estruturado como `dict`/`list` contendo o valor exato do solver). Se `equivalentes == False`, interrompe imediatamente (*Early Exit*) e aciona o *Stateless Retry*.
 7. **Validação Etapa 3 — Auditoria Semântica Determinística (`QuestaoAuditoriaSemanticaOutput`)**:
    - Avalia 5 flags booleanas de defeito:
      - `possui_incoerencia`: contradições físicas, matemáticas ou de senso comum.
      - `possui_ambiguidade`: comando duplo ou margem para mais de uma interpretação.
-     - `deficit_informacoes`: omissão de dado indispensável para o cálculo **ou dependência de convenção não declarada** (ex.: "mensal" tratado como 30 dias).
-     - `erros_ou_vazamentos`: erros gramaticais graves ou vazamento de termos internos (`"solver"`, `"python"`, `"código"`, `"função"`).
+     - `deficit_informacoes`: omissão de dado numérico indispensável que torne impossível calcular a resposta.
+     - `erros_ou_vazamentos`: vazamento de termos internos (`"solver"`, `"python"`, `"código"`, `"função"`).
      - `duplicacao_tabelas`: repetição redundante da tabela no texto e em `tabela_dados`.
    - A aprovação (`aprovada = not any(...)`) e o `motivo_rejeicao` são calculados em Python no backend.
 
 ### Diretrizes de Geração da Fase 1 (`POT_QUESTION_GENERATOR_SYSTEM_PROMPT` — `DSR-07`)
-- **Complexidade padrão ENEM**: no mínimo 2 etapas de raciocínio encadeadas e 2 conceitos articulados; proibidas questões de operação única (ex.: somar uma coluna, aplicar uma porcentagem isolada). Com referências RAG, o item isomórfico não pode ser simplificado.
-- **Premissas explícitas e exatidão decimal**: toda convenção (dias do mês/ano, semanas por mês, regime de juros, arredondamento e número de casas decimais, π, litro/m³, constância de taxas) deve ser declarada no enunciado ("Considere que..."). O elaborador prioriza números múltiplos compatíveis (resultados inteiros ou decimais exatos de até 2 casas) e é proibido arredondar no solver sem declarar a quantidade de casas decimais no comando.
-- **Declaração de dados brutos sem pular passos**: o `enunciado` deve grafar todos os dados numéricos em algarismos arábicos, e `def resolver():` deve iniciar declarando as variáveis atribuídas exatamente aos números brutos do enunciado/tabela, realizando qualquer transformação intermediária (ex.: `raio = diametro / 2`, `complementar = (100 - percentual) / 100`) explicitamente no código Python, sem pré-cálculo mental.
-- **Distratores por erros típicos**: o solver modela erros de raciocínio (parar em etapa intermediária, esquecer conversão, usar parte dos dados), não variações arbitrárias (`±50`, `×1,2`).
-- **Few-shot multi-etapas**: o exemplo de formato (`POT_FEW_SHOT_EXAMPLE`) é um item de 3 etapas com premissas declaradas e variáveis de entrada explícitas a partir dos dados brutos, substituindo o antigo exemplo de soma simples que ancorava o modelo 7B em itens triviais. O orçamento da Fase 1 é de `max_tokens=1536`.
-- **Ancoragem RAG com valor real da resposta**: nos 2 exemplos históricos do RAG (`exemplos_referencia`), `build_enunciado_solver_prompt` resolve `alternativas[gabarito]` e injeta `Resposta Correta Oficial: <valor>` (ou omite a linha caso o texto da alternativa não esteja disponível), eliminando a letra isolada (`Gabarito Oficial: B`) que não trazia significado matemático nem correspondia ao contrato PoT (que proíbe letras A–E na Fase 1).
+- **Complexidade padrão ENEM**: no mínimo 2 etapas de raciocínio encadeadas, evitando questões de operação única e priorizando valores compatíveis (resultados inteiros ou decimais exatos de até 2 casas).
+- **Distratores baseados em erros comuns**: o solver modela erros típicos de raciocínio (parar em etapa intermediária, esquecer fator ou considerar apenas parte dos dados).
+- **Few-shot multi-etapas desacoplado**: o exemplo de formato (`POT_FEW_SHOT_EXAMPLE`) ilustra um problema multi-etapas com `tabela_dados` e percentual sem induzir vícios de tema (como conversão fixa de 30 dias ou $\text{m}^3$). O orçamento da Fase 1 é de `max_tokens=1536`.
+- **Ancoragem RAG com valor real da resposta**: nos 2 exemplos históricos do RAG (`exemplos_referencia`), `build_enunciado_solver_prompt` resolve `alternativas[gabarito]` e injeta `Resposta Correta Oficial: <valor>`, eliminando a letra isolada (`Gabarito Oficial: B`).
 
 ### `RN-Q02` — Atribuição Determinística de Alternativas e Gabarito
 - O LLM **nunca** escolhe a letra do gabarito na geração PoT.

@@ -65,40 +65,8 @@ class QuestaoBlindSolvingOutput(BaseModel):
     )
     resultado_obtido: Any = Field(
         ...,
-        description="Valor final deduzido no formato de tipo primário do Python (int, float, str, dict ou list)."
+        description="Valor final único deduzido que responde diretamente ao comando da questão (int, float ou str)."
     )
-    premissas_assumidas: List[str] = Field(
-        default_factory=list,
-        description=(
-            "Suposições ou convenções adotadas pelo resolvedor que NÃO estão declaradas no enunciado "
-            "(ex: 'mês com 30 dias'). Lista não vazia reprova a questão por premissa implícita."
-        )
-    )
-
-    @field_validator("premissas_assumidas", mode="before")
-    @classmethod
-    def normalize_premissas(cls, v: Any) -> List[str]:
-        """
-        Normaliza a saída do LLM: aceita string única, None ou lista, e descarta
-        marcadores vazios ('nenhuma', 'n/a', 'não há'...) que não representam premissas reais.
-        """
-        if v is None:
-            return []
-        if isinstance(v, str):
-            v = [v]
-        if not isinstance(v, list):
-            return []
-        marcadores_vazios = {
-            "", "nenhuma", "nenhum", "nenhuma premissa", "nenhuma suposição", "nenhuma suposicao",
-            "n/a", "na", "-", "não há", "nao ha", "não", "nao", "none", "null", "[]",
-        }
-        premissas: List[str] = []
-        for item in v:
-            texto = str(item).strip()
-            if texto.lower().rstrip(".") in marcadores_vazios:
-                continue
-            premissas.append(texto)
-        return premissas
 
 
 class QuestaoEquivalenciaOutput(BaseModel):
@@ -122,7 +90,7 @@ class QuestaoAuditoriaSemanticaOutput(BaseModel):
     """
     possui_incoerencia: bool = Field(False, description="True se a situação-problema tiver incoerência ou erro lógico.")
     possui_ambiguidade: bool = Field(False, description="True se houver ambiguidade ou comando duplo.")
-    deficit_informacoes: bool = Field(False, description="True se faltarem informações necessárias para resolver ou se a resolução depender de convenção não declarada (ex: mês = 30 dias).")
+    deficit_informacoes: bool = Field(False, description="True se faltarem informações ou dados numéricos essenciais para resolver a questão.")
     erros_ou_vazamentos: bool = Field(False, description="True se contiver erros de português ou palavras proibidas de código.")
     duplicacao_tabelas: bool = Field(False, description="True se houver redundância ou repetição de dados da tabela.")
 

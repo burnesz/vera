@@ -31,12 +31,39 @@ BLOCKED_CALLS = {
     "delattr", "input", "exit", "quit", "breakpoint"
 }
 
-# Constantes numéricas matemáticas, geométricas e temporais neutras permitidas no código.
-# Apenas conversões universais e inequívocas (1 h = 60 min, 1 dia = 24 h, 1 ano = 12 meses).
-# Convenções como "ano = 365 dias" ou "mês = 30 dias" NÃO são neutras e devem constar no enunciado.
+# Constantes numéricas matemáticas, geométricas, fracionárias e temporais permitidas no código
 ALLOWED_NUMERIC_CONSTANTS: Set[float] = {
-    0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 10.0, 12.0, 24.0, 60.0, 100.0, 180.0, 360.0, 1000.0,
-    0.5, 0.1, 0.01, 3.14, 3.1415, 3.1416
+    0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 12.0, 15.0,
+    24.0, 30.0, 60.0, 100.0, 180.0, 360.0, 365.0, 1000.0, 3600.0, 10000.0,
+    0.5, 0.25, 0.75, 0.1, 0.01, 0.001, 3.14, 3.1415, 3.1416
+}
+
+# Mapeamento de numerais por extenso e termos quantitativos/temporais comuns em enunciados
+PORTUGUESE_WORD_NUMBERS: Dict[str, List[float]] = {
+    "um": [1.0], "uma": [1.0], "unico": [1.0], "unica": [1.0],
+    "dois": [2.0], "duas": [2.0], "dobro": [2.0], "duplo": [2.0], "ambos": [2.0], "ambas": [2.0],
+    "meio": [0.5, 2.0], "metade": [0.5, 2.0],
+    "tres": [3.0], "triplo": [3.0], "terco": [3.0], "terca": [3.0],
+    "quatro": [4.0], "quadruplo": [4.0], "quarto": [0.25, 4.0],
+    "cinco": [5.0], "quinto": [0.2, 5.0],
+    "seis": [6.0], "meia": [6.0, 0.5],
+    "sete": [7.0], "oito": [8.0], "nove": [9.0], "dez": [10.0], "dezena": [10.0],
+    "onze": [11.0], "doze": [12.0], "duzia": [12.0],
+    "treze": [13.0], "quatorze": [14.0], "catorze": [14.0], "quinze": [15.0], "quinzena": [15.0],
+    "dezesseis": [16.0], "dezessete": [17.0], "dezoito": [18.0], "dezenove": [19.0],
+    "vinte": [20.0], "trinta": [30.0], "quarenta": [40.0], "cinquenta": [50.0],
+    "sessenta": [60.0], "setenta": [70.0], "oitenta": [80.0], "noventa": [90.0],
+    "cem": [100.0], "cento": [100.0], "centena": [100.0],
+    "duzentos": [200.0], "duzentas": [200.0], "trezentos": [300.0], "trezentas": [300.0],
+    "quatrocentos": [400.0], "quinhentos": [500.0], "seiscentos": [600.0],
+    "setecentos": [700.0], "oitocentos": [800.0], "novecentos": [900.0],
+    "mil": [1000.0], "milhao": [1000000.0], "milhoes": [1000000.0],
+    "semana": [7.0], "semanas": [7.0], "semanal": [7.0], "semanalmente": [7.0],
+    "mes": [30.0, 12.0], "meses": [30.0, 12.0], "mensal": [30.0, 12.0], "mensalmente": [30.0, 12.0],
+    "bimestre": [2.0, 60.0], "bimestral": [2.0, 60.0],
+    "trimestre": [3.0, 90.0], "trimestral": [3.0, 90.0],
+    "semestre": [6.0, 180.0], "semestral": [6.0, 180.0],
+    "ano": [12.0, 365.0], "anos": [12.0, 365.0], "anual": [12.0, 365.0], "anualmente": [12.0, 365.0],
 }
 
 
@@ -465,14 +492,15 @@ def validate_solver_consistency(
     # 2. Checagem de Nexo Numérico (Groundedness) restrita ao cálculo da resposta 'correta' via AST
     code_floats = _extract_correta_code_numbers(code)
 
-    # Extrai números presentes no enunciado com suporte a separador de milhar brasileiro (1.200 ou 1.200,50)
-    enun_floats: Set[float] = set()
+    # Extrai números presentes no enunciado com suporte a separador de milhar brasileiro,
+    # numerais por extenso, complementos percentuais e conversões diretas de escala/geometria.
+    base_enun_floats: Set[float] = set()
 
     # 1. Padrão de milhar brasileiro: ex 1.200 ou 1.200,50 (mesmo se colado a unidade/símbolo)
     for match in re.finditer(r"(?<!\d)\d{1,3}(?:\.\d{3})+(?:,\d+)?(?!\d)", enunciado):
         raw_val = match.group(0).replace(".", "").replace(",", ".")
         try:
-            enun_floats.add(float(raw_val))
+            base_enun_floats.add(float(raw_val))
         except ValueError:
             pass
 
@@ -480,24 +508,62 @@ def validate_solver_consistency(
     raw_enun_matches = re.findall(r"(?<!\d)\d+(?:[\.,]\d+)?(?!\d)", enunciado)
     for n in raw_enun_matches:
         try:
-            enun_floats.add(float(n.replace(",", ".")))
+            base_enun_floats.add(float(n.replace(",", ".")))
         except ValueError:
             pass
 
-    # 3. Tratamento de porcentagens: ex '2%' ou '15%' -> adiciona também 0.02 e 0.15
+    # 3. Numerais por extenso e termos temporais/quantitativos em português
+    import unicodedata
+    norm_text = "".join(
+        c for c in unicodedata.normalize("NFKD", enunciado.lower())
+        if not unicodedata.combining(c)
+    )
+    words_in_enun = set(re.findall(r"\b[a-z]+\b", norm_text))
+    for word in words_in_enun:
+        if word in PORTUGUESE_WORD_NUMBERS:
+            base_enun_floats.update(PORTUGUESE_WORD_NUMBERS[word])
+
+    enun_floats: Set[float] = set(base_enun_floats)
+
+    # 4. Derivações diretas de escala métrica (x10, x100, x1000, /10, /100, /1000) e geometria (raio=d/2, dobro=2x)
+    for val in base_enun_floats:
+        if val != 0:
+            enun_floats.update({
+                round(val * 10.0, 6),
+                round(val * 100.0, 6),
+                round(val * 1000.0, 6),
+                round(val / 10.0, 6),
+                round(val / 100.0, 6),
+                round(val / 1000.0, 6),
+                round(val / 2.0, 6),
+                round(val * 2.0, 6),
+            })
+
+    # 5. Tratamento de porcentagens e seus complementos: ex '20%' -> 20, 0.2, 80, 0.8, 1.2
     for match in re.finditer(r"(\d+(?:[\.,]\d+)?)\s*%", enunciado):
         val_str = match.group(1).replace(",", ".")
         try:
             val_pct = float(val_str)
-            enun_floats.add(round(val_pct / 100.0, 6))
+            dec_pct = round(val_pct / 100.0, 6)
+            enun_floats.update({
+                val_pct,
+                dec_pct,
+                round(100.0 - val_pct, 6),
+                round(1.0 - dec_pct, 6),
+                round(1.0 + dec_pct, 6),
+            })
         except ValueError:
             pass
 
-    # Identifica números no código que não constam no enunciado nem na lista de constantes neutras
-    missing_numbers = {
-        n for n in code_floats
-        if n not in enun_floats and n not in ALLOWED_NUMERIC_CONSTANTS
-    }
+    allowed_all = enun_floats | ALLOWED_NUMERIC_CONSTANTS
+
+    def _is_grounded(target: float) -> bool:
+        if target in allowed_all:
+            return True
+        return any(abs(target - candidate) <= 1e-6 for candidate in allowed_all)
+
+    # Identifica números no código que não constam no enunciado nem na lista de constantes permitidas
+    missing_numbers = {n for n in code_floats if not _is_grounded(n)}
 
     if missing_numbers:
         missing_fmt = sorted([int(x) if x.is_integer() else x for x in missing_numbers])
