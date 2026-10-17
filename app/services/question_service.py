@@ -120,6 +120,26 @@ class QuestionService:
         )
         return exemplos
 
+    @staticmethod
+    def _is_clean_reference_enunciado(text: str) -> bool:
+        """
+        Filtra enunciados históricos com artefatos severos de OCR quebrado
+        (ex: '\\right)(', '( ) (', '(Y )') que contaminam o prompt few-shot.
+        """
+        if not text or len(text.strip()) < 30:
+            return False
+        import re
+        corrupted_patterns = [
+            r"\\right\)\s*\(",
+            r"\(\s*\)\s*\(",
+            r"\([A-Z]\s+\)",
+            r"\ufffd",
+        ]
+        for pat in corrupted_patterns:
+            if re.search(pat, text):
+                return False
+        return True
+
     def retrieve_rag_few_shot_examples(
         self,
         habilidade_codigo: str,
@@ -129,8 +149,8 @@ class QuestionService:
     ) -> List[Dict[str, Any]]:
         """
         Recupera os Top-candidates (padrão 10) itens históricos do ENEM mais similares
-        semanticamente no Pinecone (namespace 'questoes_enem') e sorteia k exemplos (padrão 2)
-        para compor o contexto few-shot, maximizando a diversidade e relevância.
+        semanticamente no Pinecone (namespace 'questoes_enem') filtrados estritamente pela
+        habilidade-alvo e sorteia k exemplos (padrão 2) para compor o contexto few-shot.
         """
         clean_hab = habilidade_codigo.strip().upper()
         if clean_hab.startswith("H") and clean_hab[1:].isdigit():
@@ -148,13 +168,19 @@ class QuestionService:
             results = self.vector_store.search(
                 query=query_text,
                 namespace=settings.NAMESPACE_QUESTOES_ENEM,
-                top_k=fetch_limit
+                top_k=fetch_limit,
+                filter_dict={"habilidade_codigo": clean_hab}
             )
 
             few_shot_dicts = []
             for r in results:
                 meta = r.get("metadata", {})
+                hab_meta = meta.get("habilidade_codigo")
+                if hab_meta and str(hab_meta).strip().upper() != clean_hab:
+                    continue
                 enunciado = meta.get("text") or r.get("text", "")
+                if not self._is_clean_reference_enunciado(enunciado):
+                    continue
                 alternativas = {
                     "A": meta.get("alt_a", ""),
                     "B": meta.get("alt_b", ""),
@@ -165,7 +191,7 @@ class QuestionService:
                 few_shot_dicts.append({
                     "co_item": meta.get("co_item"),
                     "ano": meta.get("ano", "ENEM"),
-                    "habilidade_origem": meta.get("habilidade_codigo"),
+                    "habilidade_origem": hab_meta or clean_hab,
                     "enunciado": enunciado,
                     "alternativas": alternativas,
                     "gabarito": meta.get("gabarito", ""),
@@ -188,19 +214,22 @@ class QuestionService:
         except Exception as e:
             logger.warning(f"Falha na recuperação RAG via Pinecone para {clean_hab}: {e}. Acionando fallback relacional...")
 
-        # Fallback relacional no PostgreSQL caso Pinecone falhe ou não retorne resultados
+        # Fallback relacional no PostgreSQL caso Pinecone falhe ou não retorne resultados limpos da habilidade
         if db:
-            itens_db = self.retrieve_few_shot_examples(db, clean_hab, k=k)
-            return [
+            itens_db = self.retrieve_few_shot_examples(db, clean_hab, k=max(k * 3, 6))
+            clean_db_items = [
                 {
                     "ano": item.ano,
+                    "habilidade_origem": item.habilidade_codigo,
                     "enunciado": item.enunciado,
                     "alternativas": item.alternativas,
                     "gabarito": item.gabarito,
                     "score": 1.0
                 }
                 for item in itens_db
+                if self._is_clean_reference_enunciado(item.enunciado)
             ]
+            return clean_db_items[:k]
 
         return []
 
@@ -377,7 +406,8 @@ class QuestionService:
                 formatted_values = validate_solver_consistency(
                     enunciado=pot_output.enunciado,
                     code=pot_output.solver,
-                    result=solver_result
+                    result=solver_result,
+                    tabela_dados=pot_output.tabela_dados
                 )
             except Exception as e:
                 last_error = f"Erro de consistência matemática ou nexo numérico: {e}"
@@ -420,7 +450,9 @@ class QuestionService:
             try:
                 audit = self._run_semantic_audit(
                     enunciado=pot_output.enunciado,
-                    alternativas=alternativas
+                    alternativas=alternativas,
+                    resolucao_passo_a_passo=blind_sol.resolucao_passo_a_passo,
+                    habilidade_descricao=habilidade.descricao
                 )
             except Exception as e:
                 last_error = f"Falha na auditoria semântica: {e}"
@@ -521,7 +553,26 @@ class QuestionService:
         """
         Etapa 2 da Validação: Confronto Direto de Equivalência Matemática.
         Avalia se a resposta calculada pelo solver e o resultado deduzido pela LLM são equivalentes.
+        Possui Fast-Path determinístico (0ms) quando ambos os resultados já são escalares numéricos iguais.
         """
+        if (
+            isinstance(resultado_solver, (int, float))
+            and not isinstance(resultado_solver, bool)
+            and isinstance(resultado_obtido, (int, float))
+            and not isinstance(resultado_obtido, bool)
+        ):
+            if abs(float(resultado_solver) - float(resultado_obtido)) <= 1e-2:
+                logger.info(
+                    f"Equivalência confirmada via Fast-Path determinístico (0ms): "
+                    f"Solver='{resultado_solver}' == Blind='{resultado_obtido}'."
+                )
+                return QuestaoEquivalenciaOutput(
+                    equivalentes=True,
+                    explicacao_equivalencia=(
+                        f"Equivalência numérica direta confirmada em 0ms ({resultado_solver} == {resultado_obtido})."
+                    )
+                )
+
         prompt = build_equivalencia_gabarito_prompt(
             resultado_solver=resultado_solver,
             resultado_obtido=resultado_obtido,
@@ -557,18 +608,26 @@ class QuestionService:
 
         return equiv_out
 
-    def _run_semantic_audit(self, enunciado: str, alternativas: Dict[str, str]) -> QuestaoAuditoriaSemanticaOutput:
+    def _run_semantic_audit(
+        self,
+        enunciado: str,
+        alternativas: Dict[str, str],
+        resolucao_passo_a_passo: Optional[str] = None,
+        habilidade_descricao: Optional[str] = None
+    ) -> QuestaoAuditoriaSemanticaOutput:
         """
         Etapa 3 da Validação: Auditoria Semântica e Pedagógica.
-        Avalia o item do ENEM quanto à presença de incoerência, ambiguidade, déficit de dados ou erros.
+        Avalia o item do ENEM (enunciado + resolução + alternativas) quanto à presença de incoerência, ambiguidade ou déficit.
         """
         prompt = build_auditoria_semantica_prompt(
             enunciado=enunciado,
-            alternativas=alternativas
+            alternativas=alternativas,
+            resolucao_passo_a_passo=resolucao_passo_a_passo,
+            habilidade_descricao=habilidade_descricao
         )
         raw = self.llm_client.generate(
             prompt=prompt,
-            max_tokens=300,
+            max_tokens=512,
             temperature=0.0,
             top_p=0.9,
             format="json"

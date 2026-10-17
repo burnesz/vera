@@ -247,35 +247,34 @@ Gere uma QUESTÃO INÉDITA estruturada em JSON (enunciado + solver em Python).
 O solver calculará a resposta correta e 4 distratores; NÃO gere gabarito ou letras A-E.
 
 REGRAS ESTRITAS:
-1. ENUNCIADO: Situação-problema realista com comando final claro e objetivo.
+1. ENUNCIADO E ALINHAMENTO À HABILIDADE:
+   - Crie uma situação-problema realista com comando final claro e objetivo, avaliando diretamente os conceitos matemáticos da Habilidade Alvo (ex: Geometria, Escala, Funções, Estatística, Grandezas).
    - SEJA CRIATIVO NO CONTEXTO. NUNCA comece as questões sempre com a mesma estrutura sintática. Varie a narrativa e o sujeito!
    - NUNCA use palavras como "solver", "python", "algoritmo", "código", "distrator" ou "gabarito" no enunciado!
-2. DADOS TABULARES E ISOLAMENTO DE TABELA:
-   - Se a questão envolver dados tabulares ou anunciar uma tabela ("A tabela a seguir apresenta...", "O quadro abaixo ilustra..."), no campo 'enunciado' escreva APENAS a contextualização anunciando a tabela e a pergunta final.
-   - NUNCA liste os dados da tabela no corpo do 'enunciado' (seja em tópicos '-', listas numeradas, parágrafos ou pipes '|'). O texto NÃO deve conter os dados repetidos.
-   - Os dados tabulares devem residir EXCLUSIVAMENTE no campo JSON 'tabela_dados' (lista de dicionários). O sistema desenhará e renderizará a tabela para o aluno no ponto adequado.
-3. COMPLEXIDADE E EXATIDÃO PADRÃO ENEM:
-   - A resolução deve exigir pelo menos 2 etapas de raciocínio encadeadas (evite questões triviais de uma única operação direta).
-   - Escolha valores numéricos compatíveis para que o resultado final seja um número inteiro ou decimal exato de até 2 casas. Se usar aproximação de π (ex: considere π = 3 ou π = 3,14) ou arredondamento, informe isso no enunciado.
+2. DADOS TABULARES (OPCIONAL — USE `"tabela_dados": null` POR PADRÃO):
+   - Por padrão, defina `"tabela_dados": null` e apresente os dados no texto do enunciado.
+   - Use `"tabela_dados"` (entre 2 e 6 linhas no máximo) APENAS quando a questão exigir comparação ou leitura de dados tabulares.
+   - Se usar `"tabela_dados"`, NÃO repita os dados da tabela no texto do `enunciado` e garanta que TODAS as colunas numéricas da tabela sejam necessárias no cálculo da resposta `correta` (nunca crie tabelas ou colunas inúteis/decorativas).
+3. COMPLEXIDADE, UNICIDADE E EXATIDÃO PADRÃO ENEM:
+   - A resolução deve exigir pelo menos 2 etapas de raciocínio encadeadas (evite questões triviais de uma única multiplicação/divisão direta).
+   - Se a questão comparar opções ou propostas (ex: "qual o mais econômico"), escolha valores numéricos que NÃO gerem empate entre duas opções.
+   - Escolha valores compatíveis para que o resultado final seja inteiro ou decimal exato de até 2 casas. Se usar aproximação de π (ex: considere π = 3 ou π = 3,14), informe isso no enunciado.
 4. SOLVER (Python puro):
-   - Escreva a função `def resolver():` declarando as variáveis com os mesmos números do enunciado/tabela e calculando passo a passo a resposta final.
-   - Calcule 4 distratores plausíveis e distintos entre si (representando erros comuns de raciocínio, como parar em uma etapa intermediária ou esquecer um fator).
+   - Escreva a função `def resolver():` declarando as variáveis com os mesmos números do enunciado/tabela e calculando passo a passo a resposta final na mesma unidade/escala pedida (ex: se pedir porcentagem, retorne 24 e não 0.24).
+   - Calcule 4 distratores plausíveis, positivos e estritamente distintos entre si e distintos de `correta` (representando erros comuns de raciocínio, como parar em uma etapa intermediária).
    - Retorna: return {'correta': <numero>, 'distratores': [<d1>, <d2>, <d3>, <d4>]}
 5. NEXO E COMPLETUDE NUMÉRICA:
    - Escreva os dados numéricos em algarismos no `enunciado` ou na `tabela_dados`.
-   - Todo número usado no cálculo de `correta` no solver deve constar no `enunciado` ou na `tabela_dados` (os dados de `tabela_dados` já são lidos automaticamente pelo validador).
+   - Todo número usado no cálculo de `correta` no solver deve constar no `enunciado` ou na `tabela_dados`.
 6. COERÊNCIA E INTEGRIDADE FACTUAL:
-   - O problema deve ter lógica no mundo real. NUNCA atribua dados inventados a órgãos oficiais reais (como IBGE, OMS, ministérios); use cenários locais ou levantamentos hipotéticos bem definidos.
+   - O problema deve ter lógica física e dimensional no mundo real. NUNCA atribua dados inventados a órgãos oficiais reais (como IBGE, OMS, ministérios); use cenários locais ou levantamentos hipotéticos bem definidos.
 7. EXCLUSIVIDADE: Gere APENAS o JSON válido, sem comentários antes ou depois.
 """
 
 POT_FEW_SHOT_EXAMPLE = """--- [EXEMPLO DE SAÍDA ESPERADA (FORMATO E NÍVEL DE EXIGÊNCIA)] ---
 {
-  "enunciado": "Uma cooperativa de reciclagem comercializa lotes de alumínio e plástico prensados. A tabela a seguir apresenta a quantidade arrecadada, em quilogramas, e o preço de venda por quilograma de cada material na última semana. Do valor total arrecadado com a venda de todos esses materiais, 20% são destinados aos custos operacionais de transporte e o restante é dividido igualmente entre os 8 cooperados. Qual o valor, em reais, que cada cooperado receberá nessa semana?",
-  "tabela_dados": [
-    {"Material": "Alumínio", "Quantidade (kg)": 250, "Preço por kg (R$)": 6},
-    {"Material": "Plástico", "Quantidade (kg)": 500, "Preço por kg (R$)": 3}
-  ],
+  "enunciado": "Uma cooperativa de reciclagem comercializou, na última semana, 250 kg de alumínio prensado a R$ 6,00 por quilograma e 500 kg de plástico a R$ 3,00 por quilograma. Do valor bruto total arrecadado com a venda desses dois materiais, 20% foram destinados ao pagamento dos custos operacionais de transporte, e o valor líquido restante foi dividido igualmente entre os 8 cooperados da equipe. Qual foi a quantia, em reais, recebida por cada cooperado nessa semana?",
+  "tabela_dados": null,
   "solver": "def resolver():\\n    kg_aluminio, preco_aluminio = 250, 6\\n    kg_plastico, preco_plastico = 500, 3\\n    percentual_custo = 20\\n    cooperados = 8\\n    receita_total = kg_aluminio * preco_aluminio + kg_plastico * preco_plastico\\n    valor_liquido = receita_total * (100 - percentual_custo) / 100\\n    valor_por_cooperado = valor_liquido / cooperados\\n    # Distratores baseados em erros comuns\\n    d1 = receita_total / cooperados\\n    d2 = (receita_total * percentual_custo / 100) / cooperados\\n    d3 = valor_liquido\\n    d4 = (kg_aluminio * preco_aluminio) / cooperados\\n    return {'correta': valor_por_cooperado, 'distratores': [d1, d2, d3, d4]}"
 }
 """
@@ -355,11 +354,11 @@ ESPECIFICAÇÃO DA HABILIDADE ALVO (MATRIZ DO ENEM):
 SUA TAREFA:
 ============================================================
 Gere agora uma QUESTÃO INÉDITA para a habilidade {habilidade_codigo}.{diretriz_criativa}
-Responda EXCLUSIVAMENTE em formato JSON com as chaves 'enunciado', 'tabela_dados' (opcional) e 'solver':
+Responda EXCLUSIVAMENTE em formato JSON com as chaves 'enunciado', 'tabela_dados' (null por padrão, ou lista de dicts se houver tabela) e 'solver':
 {{
   "enunciado": "Texto contextualizado da questão com comando final inequívoco...",
-  "tabela_dados": [{{"Coluna1": "A", "Coluna2": 10}}],
-  "solver": "def resolver():\\n    # código com variáveis usando os números do enunciado/tabela\\n    return {{'correta': ..., 'distratores': [d1, d2, d3, d4]}}"
+  "tabela_dados": null,
+  "solver": "def resolver():\\n    # código com variáveis usando os números do enunciado\\n    return {{'correta': ..., 'distratores': [d1, d2, d3, d4]}}"
 }}
 """
     return prompt
@@ -440,38 +439,52 @@ Responda EXCLUSIVAMENTE em formato JSON com o schema:
     return prompt
 
 
-def build_auditoria_semantica_prompt(enunciado: str, alternativas: Dict[str, str]) -> str:
+def build_auditoria_semantica_prompt(
+    enunciado: str,
+    alternativas: Dict[str, str],
+    resolucao_passo_a_passo: Optional[str] = None,
+    habilidade_descricao: Optional[str] = None
+) -> str:
     """
     Constrói prompt para a Chamada 3 da Fase de Validação: Auditoria Semântica e Pedagógica.
-    Avalia a qualidade do item do ENEM (enunciado + alternativas) identificando eventuais problemas ou defeitos.
+    Avalia a qualidade do item do ENEM (enunciado + resolução + alternativas) identificando eventuais defeitos.
     """
     alts_formatted = "\n".join([f"  {k}) {v}" for k, v in sorted(alternativas.items())])
     
+    bloco_hab = ""
+    if habilidade_descricao:
+        bloco_hab = f"\nHabilidade Avaliada:\n{habilidade_descricao}\n"
+
+    bloco_resolucao = ""
+    if resolucao_passo_a_passo:
+        bloco_resolucao = f"\nResolução Deduzida (Etapa 1):\n{resolucao_passo_a_passo}\n"
+
     prompt = f"""Você é um Revisor Técnico e Pedagógico Oficial do INEP para questões do ENEM.
-Audite o item de Matemática abaixo avaliando a presença de eventuais problemas graves.
+Audite o item de Matemática abaixo avaliando o enunciado, a resolução deduzida e as alternativas.
 
 ============================================================
 ITEM SUBMETIDO:
-============================================================
+============================================================{bloco_hab}
 Enunciado:
 {enunciado}
-
+{bloco_resolucao}
 Alternativas:
 {alts_formatted}
 
 ============================================================
 CRITÉRIOS DE AUDITORIA (IDENTIFICAÇÃO DE PROBLEMAS):
 ============================================================
-Avalie se o item apresenta algum dos seguintes problemas graves (marque true APENAS se o defeito existir claramente; marque false se o item estiver adequado):
+Primeiro redija uma breve `analise_critica` verificando se a resolução deduzida e o enunciado fazem sentido, e depois marque `true` APENAS se algum dos defeitos graves abaixo existir claramente (caso contrário, marque `false`):
 
-1. possui_incoerencia: A situação-problema é fisicamente absurda ou tem erro conceitual grave?
-2. possui_ambiguidade: O comando final é dúbio e impede saber o que está sendo perguntado?
-3. deficit_informacoes: Falta algum dado numérico indispensável que torne impossível calcular a resposta? (Nota: conversões métricas como 1 m³ = 1.000 L, relações de tempo como mês = 30 dias / ano = 12 meses e constância de taxas informadas são padrões normais de prova e NÃO constituem déficit de informações).
+1. possui_incoerencia: A situação-problema ou o cálculo apresenta erro conceitual/dimensional grave (ex: multiplicar grandezas incompatíveis como lux por horas, dividir custo por dose pelo número de doses por frasco, ou apresentar uma tabela inteira cujos dados são ignorados pela pergunta final)?
+2. possui_ambiguidade: O comando final é dúbio OU há empate entre duas opções quando a pergunta pede "o maior / o menor / o mais econômico" (ex: duas opções da tabela empatam com o mesmo custo mínimo)?
+3. deficit_informacoes: Falta algum dado numérico indispensável no enunciado (ex: a própria resolução confessa que precisou inventar que a área de uma casa é 1 m² por falta de dados)? (Nota: conversões métricas padrão como 1 m³ = 1.000 L e mês = 30 dias / ano = 12 meses são normais e NÃO são déficit).
 4. erros_ou_vazamentos: O texto contém palavras proibidas de bastidor ('solver', 'python', 'código', 'algoritmo', 'distrator')?
 5. duplicacao_tabelas: O texto repete integralmente a mesma tabela duas vezes?
 
 Responda EXCLUSIVAMENTE em formato JSON com o schema:
 {{
+  "analise_critica": "Análise técnica concisa verificando coerência física, ausência de empates e uso dos dados...",
   "possui_incoerencia": bool,
   "possui_ambiguidade": bool,
   "deficit_informacoes": bool,

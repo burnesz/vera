@@ -235,7 +235,7 @@ def auto_heal_distractors(
             except (ValueError, TypeError):
                 pass
 
-        is_int = c_num.is_integer() and all(n.is_integer() for n in all_nums)
+        is_int = c_num.is_integer()
         unique_floats = sorted(list(set(all_nums)))
 
         # Calcula passo delta característico da questão
@@ -252,8 +252,8 @@ def auto_heal_distractors(
             if delta == 0:
                 delta = 1.0
 
-        if is_int and delta < 1.0:
-            delta = 1.0
+        if is_int:
+            delta = max(1.0, float(round(delta)))
 
         min_val = min(unique_floats)
         max_val = max(unique_floats)
@@ -455,16 +455,29 @@ def _extract_correta_code_numbers(code: str) -> Set[float]:
 def validate_solver_consistency(
     enunciado: str,
     code: str,
-    result: Dict[str, Any]
+    result: Dict[str, Any],
+    tabela_dados: Optional[List[Dict[str, Any]]] = None
 ) -> List[str]:
     """
     Valida a consistência matemática e o nexo entre o código do solver e o texto do enunciado:
     1. Unicidade estrita: o gabarito e os 4 distratores devem ser distintos (com Auto-Healing).
     2. Checagem de nexo numérico: todo número utilizado no cálculo da resposta 'correta' deve estar presente no enunciado.
+    3. Se houver tabela_dados, valida limite de linhas (máximo 10) e impede colunas ou tabelas numéricas mortas/inúteis.
     Retorna a lista de 5 valores formatados [correta, distrator1, distrator2, distrator3, distrator4].
     """
     correta_val = result["correta"]
-    distratores_vals = result["distratores"]
+    raw_distratores_vals = list(result["distratores"])
+
+    # Normaliza distratores negativos acidentais (ex: inversão de subtração A - B em vez de B - A)
+    # quando a resposta correta é positiva e não há grandezas negativas no enunciado
+    distratores_vals: List[Any] = []
+    has_negative_in_enun = bool(re.search(r"(?<!\w)-\d+", enunciado))
+    correta_is_non_neg = isinstance(correta_val, (int, float)) and not isinstance(correta_val, bool) and float(correta_val) >= 0
+    for d in raw_distratores_vals:
+        if correta_is_non_neg and not has_negative_in_enun and isinstance(d, (int, float)) and not isinstance(d, bool) and float(d) < 0:
+            distratores_vals.append(abs(d))
+        else:
+            distratores_vals.append(d)
 
     correta_str = format_number(correta_val)
     dist_strs = [format_number(d) for d in distratores_vals]
@@ -491,6 +504,67 @@ def validate_solver_consistency(
 
     # 2. Checagem de Nexo Numérico (Groundedness) restrita ao cálculo da resposta 'correta' via AST
     code_floats = _extract_correta_code_numbers(code)
+
+    # 3. Validação de tabelas (limite de linhas e detecção de colunas/tabelas mortas)
+    if tabela_dados and isinstance(tabela_dados, list) and len(tabela_dados) > 0:
+        if len(tabela_dados) > 10:
+            raise ValueError(
+                f"A tabela_dados possui {len(tabela_dados)} linhas (máximo permitido: 10). "
+                f"Use tabelas enxutas (de 2 a 6 linhas) compatíveis com resolução manual no ENEM."
+            )
+
+        if isinstance(correta_val, (int, float)) and not isinstance(correta_val, bool) and code_floats and isinstance(tabela_dados[0], dict):
+            label_col_keywords = {
+                "dia", "mes", "mês", "ano", "hora", "horario", "horário",
+                "id", "codigo", "código", "item", "etapa", "semana", "periodo", "período"
+            }
+            numeric_cols: List[Tuple[str, Set[float]]] = []
+            for col_key in tabela_dados[0].keys():
+                if str(col_key).strip().lower() in label_col_keywords:
+                    continue
+                col_nums: Set[float] = set()
+                all_rows_num = True
+                for row in tabela_dados:
+                    if not isinstance(row, dict) or col_key not in row:
+                        continue
+                    val = row[col_key]
+                    if isinstance(val, (int, float)) and not isinstance(val, bool):
+                        col_nums.add(float(val))
+                    elif isinstance(val, str):
+                        s_val = val.strip()
+                        clean_v = (
+                            s_val.replace(".", "").replace(",", ".")
+                            if re.match(r"^\d{1,3}(?:\.\d{3})+(?:,\d+)?$", s_val)
+                            else s_val.replace(",", ".")
+                        )
+                        try:
+                            col_nums.add(float(clean_v))
+                        except ValueError:
+                            all_rows_num = False
+                    else:
+                        all_rows_num = False
+                if all_rows_num and len(col_nums) >= 2:
+                    numeric_cols.append((str(col_key), col_nums))
+
+            def _col_val_used_in_code(v: float, c_floats: Set[float]) -> bool:
+                variants = {v, round(v / 100.0, 6)}
+                return any(abs(cf - var) <= 1e-6 for cf in c_floats for var in variants)
+
+            for col_name, col_nums in numeric_cols:
+                used_count = sum(1 for v in col_nums if _col_val_used_in_code(v, code_floats))
+                if used_count == 0:
+                    fmt_nums = sorted([int(x) if x.is_integer() else x for x in col_nums])
+                    raise ValueError(
+                        f"A coluna numérica '{col_name}' da tabela ({fmt_nums}) foi declarada mas não é utilizada "
+                        f"no cálculo da resposta correta. Remova colunas inúteis ou integre-as ao cálculo."
+                    )
+                if len(numeric_cols) == 1 and len(col_nums) >= 2 and used_count < 2:
+                    fmt_nums = sorted([int(x) if x.is_integer() else x for x in col_nums])
+                    raise ValueError(
+                        f"A tabela possui apenas uma coluna de dados numéricos ('{col_name}': {fmt_nums}), "
+                        f"mas o cálculo da resposta correta utilizou apenas {used_count} valor da tabela, "
+                        f"tornando a tabela desnecessária. Utilize os dados da tabela ou defina tabela_dados como null."
+                    )
 
     # Extrai números presentes no enunciado com suporte a separador de milhar brasileiro,
     # numerais por extenso, complementos percentuais e conversões diretas de escala/geometria.

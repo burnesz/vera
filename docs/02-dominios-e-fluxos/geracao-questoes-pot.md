@@ -59,27 +59,28 @@ Nenhuma questão inédita pode ser salva ou exibida ao estudante sem cumprir **t
    - Verifica se cada número consta no `enunciado` ou na `tabela_dados`, aceitando também:
      - **Numerais por extenso e termos temporais** em português (`PORTUGUESE_WORD_NUMBERS`: `"oito"` $\rightarrow 8$, `"mensal"`/`"mês"` $\rightarrow 30$, `"semana"` $\rightarrow 7$, `"ano"` $\rightarrow 12, 365$, `"mil"` $\rightarrow 1000$, etc.).
      - **Conversões diretas de escala métrica e geometria** dos números presentes no enunciado ($\times 10, \times 100, \times 1000, \div 10, \div 100, \div 1000$, metade/raio $\div 2$ e dobro $\times 2$).
-     - **Fatores e complementos percentuais** (para $p\%$, aceita $p$, $p/100$, $100-p$, $1 - p/100$ e $1 + p/100$).
-     - Constantes matemáticas, geométricas e temporais padrão (`ALLOWED_NUMERIC_CONSTANTS`).
+      - **Fatores e complementos percentuais** (para $p\%$, aceita $p$, $p/100$, $100-p$, $1 - p/100$ e $1 + p/100$).
+      - Constantes matemáticas, geométricas e temporais padrão (`ALLOWED_NUMERIC_CONSTANTS`).
+    - Se a questão incluir `tabela_dados`, valida-se um teto de **10 linhas** (para permitir cálculo manual) e que **todas as colunas numéricas de dados** participem efetivamente do cálculo de `"correta"` (bloqueando tabelas decorativas ou colunas mortas).
 4. **Unicidade Estrita das 5 Alternativas**: a resposta correta e os 4 distratores devem resultar em 5 strings formatadas mutuamente exclusivas.
 5. **Validação Etapa 1 — Resolução Cega Pura (`QuestaoBlindSolvingOutput`)**:
    - O LLM resolve o problema recebendo **exclusivamente o enunciado** (sem alternativas e sem gabarito, com orçamento `max_tokens=1536`), produzindo `resolucao_passo_a_passo` e o valor final único em `resultado_obtido`.
-6. **Validação Etapa 2 — Confronto Direto de Equivalência com *Early Exit* (`QuestaoEquivalenciaOutput`)**:
-   - Compara `resultado_solver` vs. `resultado_obtido` informando o `enunciado` como contexto da grandeza perguntada e aceitando equivalências matemáticas legítimas (incluindo recuperação determinística caso `resultado_obtido` venha estruturado como `dict`/`list` contendo o valor exato do solver). Se `equivalentes == False`, interrompe imediatamente (*Early Exit*) e aciona o *Stateless Retry*.
-7. **Validação Etapa 3 — Auditoria Semântica Determinística (`QuestaoAuditoriaSemanticaOutput`)**:
-   - Avalia 5 flags booleanas de defeito:
-     - `possui_incoerencia`: contradições físicas, matemáticas ou de senso comum.
-     - `possui_ambiguidade`: comando duplo ou margem para mais de uma interpretação.
-     - `deficit_informacoes`: omissão de dado numérico indispensável que torne impossível calcular a resposta.
+6. **Validação Etapa 2 — Confronto Direto de Equivalência com *Fast-Path* 0ms e *Early Exit* (`QuestaoEquivalenciaOutput`)**:
+   - Se `resultado_solver` e `resultado_obtido` já forem escalares numéricos iguais (`abs(a - b) <= 1e-2`), aprova deterministicamente em **0ms** sem chamar o LLM. Caso contrário, o juiz compara os valores informando o `enunciado` como contexto (com recuperação determinística para `dict`/`list`). Se `equivalentes == False`, interrompe imediatamente (*Early Exit*) e aciona o *Stateless Retry*.
+7. **Validação Etapa 3 — Auditoria Semântica com Visão da Resolução (`QuestaoAuditoriaSemanticaOutput`)**:
+   - Recebe o `enunciado`, a `habilidade_descricao`, a `resolucao_passo_a_passo` da Etapa 1 e as `alternativas`, exigindo primeiro um campo textual de raciocínio (`analise_critica`) antes das 5 flags booleanas de defeito:
+     - `possui_incoerencia`: contradições físicas, dimensionais, matemáticas ou tabela ignorada.
+     - `possui_ambiguidade`: comando duplo ou empate entre opções quando se pede o maior/menor.
+     - `deficit_informacoes`: omissão de dado numérico indispensável (inclusive quando confessada na própria resolução da Etapa 1).
      - `erros_ou_vazamentos`: vazamento de termos internos (`"solver"`, `"python"`, `"código"`, `"função"`).
      - `duplicacao_tabelas`: repetição redundante da tabela no texto e em `tabela_dados`.
    - A aprovação (`aprovada = not any(...)`) e o `motivo_rejeicao` são calculados em Python no backend.
 
 ### Diretrizes de Geração da Fase 1 (`POT_QUESTION_GENERATOR_SYSTEM_PROMPT` — `DSR-07`)
-- **Complexidade padrão ENEM**: no mínimo 2 etapas de raciocínio encadeadas, evitando questões de operação única e priorizando valores compatíveis (resultados inteiros ou decimais exatos de até 2 casas).
-- **Distratores baseados em erros comuns**: o solver modela erros típicos de raciocínio (parar em etapa intermediária, esquecer fator ou considerar apenas parte dos dados).
-- **Few-shot multi-etapas desacoplado**: o exemplo de formato (`POT_FEW_SHOT_EXAMPLE`) ilustra um problema multi-etapas com `tabela_dados` e percentual sem induzir vícios de tema (como conversão fixa de 30 dias ou $\text{m}^3$). O orçamento da Fase 1 é de `max_tokens=1536`.
-- **Ancoragem RAG com valor real da resposta**: nos 2 exemplos históricos do RAG (`exemplos_referencia`), `build_enunciado_solver_prompt` resolve `alternativas[gabarito]` e injeta `Resposta Correta Oficial: <valor>`, eliminando a letra isolada (`Gabarito Oficial: B`).
+- **Complexidade padrão ENEM**: no mínimo 2 etapas de raciocínio encadeadas, evitando questões de operação única e priorizando valores compatíveis (resultados inteiros ou decimais exatos de até 2 casas) e sem empates entre opções comparadas.
+- **Distratores baseados em erros comuns**: o solver modela erros típicos de raciocínio (parar em etapa intermediária, esquecer fator ou considerar apenas parte dos dados), com normalização de distratores negativos acidentais quando a resposta é positiva.
+- **Few-shot multi-etapas sem vício de tabela**: o exemplo de formato (`POT_FEW_SHOT_EXAMPLE`) e o template final usam `"tabela_dados": null` por padrão para evitar que o modelo 7B force tabelas artificiais em habilidades de Geometria, Escala ou Álgebra. O orçamento da Fase 1 é de `max_tokens=1536`.
+- **Ancoragem RAG filtrada por habilidade e higienizada**: `retrieve_rag_few_shot_examples` filtra no Pinecone estritamente por `filter_dict={"habilidade_codigo": clean_hab}`, descarta enunciados históricos com OCR quebrado e injeta `Resposta Correta Oficial: <valor>`.
 
 ### `RN-Q02` — Atribuição Determinística de Alternativas e Gabarito
 - O LLM **nunca** escolhe a letra do gabarito na geração PoT.

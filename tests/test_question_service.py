@@ -648,3 +648,144 @@ def test_groundedness_accepts_numbers_attached_to_units():
     assert valores[0] == "800"
 
 
+def test_retrieve_rag_few_shot_filters_by_habilidade_and_clean_ocr():
+    """
+    Valida que a Etapa 0 (RAG) filtra estritamente por habilidade_codigo no Pinecone
+    e descarta exemplos de habilidades divergentes (ex: H19 para H04) ou com OCR quebrado.
+    """
+    mock_vs = MagicMock(spec=PineconeVectorStore)
+    mock_vs.search.return_value = [
+        {
+            "id": "wrong-hab",
+            "score": 0.92,
+            "metadata": {
+                "habilidade_codigo": "H19",
+                "text": "Questão longa da habilidade H19 que não deveria entrar em H04.",
+                "gabarito": "A"
+            }
+        },
+        {
+            "id": "corrupted-ocr",
+            "score": 0.90,
+            "metadata": {
+                "habilidade_codigo": "H04",
+                "text": "Questão com fórmula corrompida ( \\right)( ) (2 3) (Y ) no enunciado.",
+                "gabarito": "B"
+            }
+        },
+        {
+            "id": "clean-h04",
+            "score": 0.85,
+            "metadata": {
+                "habilidade_codigo": "H04",
+                "text": "Questão íntegra da habilidade H04 avaliando razão e proporção entre grandezas.",
+                "gabarito": "C"
+            }
+        }
+    ]
+
+    service = QuestionService(vector_store=mock_vs)
+    exemplos = service.retrieve_rag_few_shot_examples("H04", k=2)
+
+    mock_vs.search.assert_called_once()
+    assert mock_vs.search.call_args.kwargs["filter_dict"] == {"habilidade_codigo": "H04"}
+    assert len(exemplos) == 1
+    assert exemplos[0]["habilidade_origem"] == "H04"
+    assert "íntegra" in exemplos[0]["enunciado"]
+
+
+def test_validate_solver_consistency_rejects_dead_table_and_dead_columns():
+    """
+    Valida que validate_solver_consistency rejeita:
+    1. Tabela de coluna única onde apenas 1 valor é usado em correta (caso H09: [30, 70, 50] com 50 * 24).
+    2. Tabela com coluna numérica inteira morta/ignorada em correta (caso H15: coluna [10, 8, 6] ignorada).
+    3. Tabela com mais de 10 linhas (caso H11: 30 linhas).
+    """
+    from app.services.code_executor import validate_solver_consistency
+
+    # 1. Caso H09: tabela [30, 70, 50] ignorada, usando apenas 50 * 24
+    with pytest.raises(ValueError, match="tornando a tabela desnecessária"):
+        validate_solver_consistency(
+            enunciado="Luminosidade média é 50 lux em 24 horas. | Hora | Luminosidade |\n| 6h | 30 |\n| 12h | 70 |\n| 18h | 50 |",
+            code="def resolver():\n    return {'correta': 50 * 24, 'distratores': [30, 70, 100, 200]}",
+            result={"correta": 1200, "distratores": [30, 70, 100, 200]},
+            tabela_dados=[
+                {"Hora": "6h", "Luminosidade": 30},
+                {"Hora": "12h", "Luminosidade": 70},
+                {"Hora": "18h", "Luminosidade": 50},
+            ]
+        )
+
+    # 2. Caso H15: coluna 'Quantidade de Frutas' [10, 8, 6] ignorada no cálculo de correta
+    with pytest.raises(ValueError, match="coluna numérica 'Quantidade de Frutas'"):
+        validate_solver_consistency(
+            enunciado="Venda de 100 pacotes a custo de 1.5 e preços 5, 4 e 3.",
+            code="def resolver():\n    lucro = 100 * ((5 - 1.5) + (4 - 1.5) + (3 - 1.5))\n    return {'correta': lucro, 'distratores': [100, 200, 300, 400]}",
+            result={"correta": 750.0, "distratores": [100, 200, 300, 400]},
+            tabela_dados=[
+                {"Pacote": "A", "Preço": 5, "Quantidade de Frutas": 10},
+                {"Pacote": "B", "Preço": 4, "Quantidade de Frutas": 8},
+                {"Pacote": "C", "Preço": 3, "Quantidade de Frutas": 6},
+            ]
+        )
+
+    # 3. Caso H11: tabela excessiva com mais de 10 linhas
+    with pytest.raises(ValueError, match="máximo permitido: 10"):
+        validate_solver_consistency(
+            enunciado="Consumo diário de 15 dias.",
+            code="def resolver():\n    return {'correta': 15, 'distratores': [1, 2, 3, 4]}",
+            result={"correta": 15, "distratores": [1, 2, 3, 4]},
+            tabela_dados=[{"Dia": i, "Consumo": 15} for i in range(1, 16)]
+        )
+
+
+def test_equivalence_fast_path_skips_llm_when_numeric_scalars_match():
+    """
+    Valida que quando o solver e a resolução cega retornam o mesmo número (int/float),
+    a Etapa 2 aprova via Fast-Path em 0ms sem chamar o LLM (total de 3 chamadas ao LLM em vez de 4).
+    """
+    db = TestingSessionLocal()
+    try:
+        mock_llm = MagicMock(spec=LLMClient)
+        mock_vs = MagicMock(spec=PineconeVectorStore)
+        mock_vs.search.return_value = []
+
+        resp_pot = json.dumps({
+            "enunciado": "Uma cooperativa vendeu 250 kg a 6 reais e 500 kg a 3 reais. Qual a receita total?",
+            "tabela_dados": None,
+            "solver": "def resolver():\n    total = 250 * 6 + 500 * 3\n    return {'correta': total, 'distratores': [1500, 2000, 2500, 3500]}"
+        })
+        resp_blind = json.dumps({
+            "resolucao_passo_a_passo": "250 * 6 = 1500 e 500 * 3 = 1500. Soma = 3000.",
+            "resultado_obtido": 3000.0
+        })
+        resp_audit = json.dumps({
+            "analise_critica": "Enunciado e resolução coerentes e sem empates.",
+            "possui_incoerencia": False,
+            "possui_ambiguidade": False,
+            "deficit_informacoes": False,
+            "erros_ou_vazamentos": False,
+            "duplicacao_tabelas": False
+        })
+
+        # Apenas 3 chamadas ao LLM: Geração PoT, Resolução Cega e Auditoria Semântica!
+        mock_llm.generate.side_effect = [resp_pot, resp_blind, resp_audit]
+
+        service = QuestionService(llm_client=mock_llm, vector_store=mock_vs)
+        questao = service.generate_single_questao_inedita(
+            db=db,
+            habilidade_codigo="H01",
+            max_attempts=1
+        )
+
+        assert questao is not None
+        assert questao.alternativas[questao.gabarito] == "3000"
+        assert mock_llm.generate.call_count == 3
+        # Verifica que a chamada 3 (Auditoria Semântica) recebeu a resolução passo a passo da Etapa 1
+        audit_prompt = mock_llm.generate.call_args_list[2].kwargs["prompt"]
+        assert "250 * 6 = 1500" in audit_prompt
+    finally:
+        db.close()
+
+
+

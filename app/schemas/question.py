@@ -88,6 +88,10 @@ class QuestaoAuditoriaSemanticaOutput(BaseModel):
     Schema para a Chamada 3 da Fase de Validação: Auditoria Semântica e Pedagógica.
     Avalia a presença de defeitos ou problemas no item.
     """
+    analise_critica: Optional[str] = Field(
+        None,
+        description="Breve análise técnica do enunciado, da resolução e das alternativas antes de preencher as flags."
+    )
     possui_incoerencia: bool = Field(False, description="True se a situação-problema tiver incoerência ou erro lógico.")
     possui_ambiguidade: bool = Field(False, description="True se houver ambiguidade ou comando duplo.")
     deficit_informacoes: bool = Field(False, description="True se faltarem informações ou dados numéricos essenciais para resolver a questão.")
