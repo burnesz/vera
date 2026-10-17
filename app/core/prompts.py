@@ -286,7 +286,6 @@ def build_enunciado_solver_prompt(
     competencia: int,
     eixo_tematico: Optional[str] = None,
     exemplos_referencia: Optional[List[Dict[str, Any]]] = None,
-    feedback_erro: Optional[str] = None,
     tema: Optional[str] = None,
     abertura: Optional[str] = None
 ) -> str:
@@ -315,17 +314,6 @@ def build_enunciado_solver_prompt(
     else:
         ref_text = "(Siga estritamente os conceitos pedagógicos da habilidade alvo, respeitando o nível de exigência do ENEM)."
 
-    secao_feedback = ""
-    if feedback_erro:
-        secao_feedback = f"""
-============================================================
-ATENÇÃO - CORREÇÃO OBRIGATÓRIA DA TENTATIVA ANTERIOR:
-Sua tentativa anterior foi rejeitada com o seguinte erro:
-"{feedback_erro}"
-Corrija o enunciado e a função solver() para eliminar rigorosamente esse erro.
-============================================================
-"""
-
     diretriz_criativa = ""
     if tema or abertura:
         linhas_criativas = []
@@ -349,7 +337,7 @@ ESPECIFICAÇÃO DA HABILIDADE ALVO (MATRIZ DO ENEM):
 
 {POT_FEW_SHOT_EXAMPLE}
 (O exemplo acima ilustra apenas o formato JSON esperado: NÃO reutilize seu contexto, seus dados ou sua estrutura narrativa.)
-{secao_feedback}
+
 ============================================================
 SUA TAREFA:
 ============================================================
