@@ -788,4 +788,104 @@ def test_equivalence_fast_path_skips_llm_when_numeric_scalars_match():
         db.close()
 
 
+def test_equivalence_fast_path_rejects_numeric_scalars_mismatch_without_calling_llm():
+    """
+    Valida que quando solver e resolução cega produzem escalares numéricos divergentes
+    (ex: solver=100 e blind=200), a Etapa 2 reprova deterministicamente em 0ms (Fast-Path),
+    sem chamar o LLM e sem risco de concordância alucinatória (Ponto 1).
+    """
+    db = TestingSessionLocal()
+    try:
+        mock_llm = MagicMock(spec=LLMClient)
+        mock_vs = MagicMock(spec=PineconeVectorStore)
+        mock_vs.search.return_value = []
+
+        # 1ª tentativa: Solver calculou 100, mas resolução cega calculou 200 (ambos números puros)
+        t1_pot = json.dumps({
+            "enunciado": "Um veículo percorre 200 km em 2 horas. Qual a sua velocidade média em km/h?",
+            "solver": "def resolver():\n    return {'correta': 100, 'distratores': [50, 80, 120, 150]}"
+        })
+        t1_blind = json.dumps({
+            "resolucao_passo_a_passo": "A velocidade é 200 / 2 = 100, mas errei a conta para 200.",
+            "resultado_obtido": 200.0
+        })
+        # Não há chamada de equivalência para t1! O Fast-Path reprova direto e descarta.
+
+        # 2ª tentativa: Sucesso pleno
+        t2_pot = json.dumps({
+            "enunciado": "Um veículo percorre 300 km em 3 horas. Qual a sua velocidade média em km/h?",
+            "solver": "def resolver():\n    return {'correta': 100, 'distratores': [50, 80, 120, 150]}"
+        })
+        t2_blind = json.dumps({
+            "resolucao_passo_a_passo": "300 / 3 = 100 km/h.",
+            "resultado_obtido": 100.0
+        })
+        t2_audit = json.dumps({
+            "analise_critica": "Perfeito.",
+            "possui_incoerencia": False,
+            "possui_ambiguidade": False,
+            "deficit_informacoes": False,
+            "erros_ou_vazamentos": False,
+            "duplicacao_tabelas": False
+        })
+
+        # Total de chamadas:
+        # Tentativa 1: t1_pot, t1_blind (Fast-Path reprova sem chamar equivalência nem auditoria)
+        # Tentativa 2: t2_pot, t2_blind, t2_audit (Fast-Path aprova sem chamar equivalência)
+        mock_llm.generate.side_effect = [t1_pot, t1_blind, t2_pot, t2_blind, t2_audit]
+
+        service = QuestionService(llm_client=mock_llm, vector_store=mock_vs)
+        questao = service.generate_single_questao_inedita(
+            db=db,
+            habilidade_codigo="H01",
+            max_attempts=2
+        )
+
+        assert questao is not None
+        assert mock_llm.generate.call_count == 5
+    finally:
+        db.close()
+
+
+def test_semantic_audit_detects_code_leakage_and_table_duplication_deterministically():
+    """
+    Valida que check_code_leakage e check_table_duplication interceptam vazamentos
+    técnicos e tabelas duplicadas em Python mesmo que o LLM responda False para todas as flags (Ponto 3).
+    """
+    mock_llm = MagicMock(spec=LLMClient)
+    # LLM responde que está tudo False
+    mock_llm.generate.return_value = json.dumps({
+        "analise_critica": "Parece correto.",
+        "possui_incoerencia": False,
+        "possui_ambiguidade": False,
+        "deficit_informacoes": False,
+        "erros_ou_vazamentos": False,
+        "duplicacao_tabelas": False
+    })
+
+    service = QuestionService(llm_client=mock_llm)
+
+    # Caso 1: Enunciado com palavra de bastidor vazada
+    enunciado_com_leak = "Segundo o código em python que foi implementado, calcule a vazão."
+    audit_leak = service._run_semantic_audit(
+        enunciado=enunciado_com_leak,
+        alternativas={"A": "1", "B": "2", "C": "3", "D": "4", "E": "5"}
+    )
+    assert audit_leak.erros_ou_vazamentos is True
+    assert audit_leak.aprovada is False
+
+    # Caso 2: Enunciado com tabela Markdown duplicada
+    enunciado_dup_table = (
+        "Consumo:\n| A | B |\n| --- | --- |\n| 1 | 2 |\n\n"
+        "Repetição:\n| A | B |\n| --- | --- |\n| 1 | 2 |\n"
+    )
+    audit_dup = service._run_semantic_audit(
+        enunciado=enunciado_dup_table,
+        alternativas={"A": "1", "B": "2", "C": "3", "D": "4", "E": "5"}
+    )
+    assert audit_dup.duplicacao_tabelas is True
+    assert audit_dup.aprovada is False
+
+
+
 

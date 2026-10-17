@@ -66,15 +66,11 @@ Nenhuma questão inédita pode ser salva ou exibida ao estudante sem cumprir **t
 5. **Validação Etapa 1 — Resolução Cega Pura (`QuestaoBlindSolvingOutput`)**:
    - O LLM resolve o problema recebendo **exclusivamente o enunciado** (sem alternativas e sem gabarito, com orçamento `max_tokens=1536`), produzindo `resolucao_passo_a_passo` e o valor final único em `resultado_obtido`.
 6. **Validação Etapa 2 — Confronto Direto de Equivalência com *Fast-Path* 0ms e *Early Exit* (`QuestaoEquivalenciaOutput`)**:
-   - Se `resultado_solver` e `resultado_obtido` já forem escalares numéricos iguais (`abs(a - b) <= 1e-2`), aprova deterministicamente em **0ms** sem chamar o LLM. Caso contrário, o juiz compara os valores informando o `enunciado` como contexto (com recuperação determinística para `dict`/`list`). Se `equivalentes == False`, interrompe imediatamente (*Early Exit*) e aciona o *Stateless Retry*.
+   - Se `resultado_solver` e `resultado_obtido` forem escalares numéricos, o backend decide em **0ms** (aprovando se iguais ou equivalentes percentuais, e reprovando imediatamente com *Early Exit* se divergentes, sem chamar o LLM e eliminando qualquer risco de *sycophancy*). Caso envolva strings ou estruturas complexas, o juiz LLM é chamado via Structured Output (JSON Schema) com default estrito `False` caso a chave seja omitida.
 7. **Validação Etapa 3 — Auditoria Semântica com Visão da Resolução (`QuestaoAuditoriaSemanticaOutput`)**:
-   - Recebe o `enunciado`, a `habilidade_descricao`, a `resolucao_passo_a_passo` da Etapa 1 e as `alternativas`, exigindo primeiro um campo textual de raciocínio (`analise_critica`) antes das 5 flags booleanas de defeito:
-     - `possui_incoerencia`: contradições físicas, dimensionais, matemáticas ou tabela ignorada.
-     - `possui_ambiguidade`: comando duplo ou empate entre opções quando se pede o maior/menor.
-     - `deficit_informacoes`: omissão de dado numérico indispensável (inclusive quando confessada na própria resolução da Etapa 1).
-     - `erros_ou_vazamentos`: vazamento de termos internos (`"solver"`, `"python"`, `"código"`, `"função"`).
-     - `duplicacao_tabelas`: repetição redundante da tabela no texto e em `tabela_dados`.
-   - A aprovação (`aprovada = not any(...)`) e o `motivo_rejeicao` são calculados em Python no backend.
+   - Recebe o `enunciado`, a `habilidade_descricao`, a `resolucao_passo_a_passo` da Etapa 1 e as `alternativas`, exigindo primeiro um campo textual de raciocínio (`analise_critica`) antes das flags de defeito semântico (`possui_incoerencia`, `possui_ambiguidade`, `deficit_informacoes`).
+   - Defeitos sintáticos como termos de bastidores vazados (`erros_ou_vazamentos`) e tabelas duplicadas (`duplicacao_tabelas`) são interceptados deterministicamente em Python (`check_code_leakage` e `check_table_duplication`).
+   - A aprovação (`aprovada = not any(...)`) e o `motivo_rejeicao` continuam calculados em Python no backend.
 
 ### Diretrizes de Geração da Fase 1 (`POT_QUESTION_GENERATOR_SYSTEM_PROMPT` — `DSR-07`)
 - **Complexidade padrão ENEM**: no mínimo 2 etapas de raciocínio encadeadas, evitando questões de operação única e priorizando valores compatíveis (resultados inteiros ou decimais exatos de até 2 casas) e sem empates entre opções comparadas.

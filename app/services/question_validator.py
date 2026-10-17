@@ -145,26 +145,37 @@ def _jaccard_similarity(text_a: str, text_b: str) -> float:
     return intersection / union if union > 0 else 0.0
 
 
-TABLE_INDICATOR_PATTERNS = [
-    r"\btabela\s+a\s+seguir\b",
-    r"\btabela\s+abaixo\b",
-    r"\bquadro\s+a\s+seguir\b",
-    r"\bquadro\s+abaixo\b",
-    r"\bapresentados?\s+na\s+tabela\b",
-    r"\bapresentadas?\s+na\s+tabela\b",
-    r"\bconstam\s+na\s+tabela\b",
-    r"\bconstam\s+no\s+quadro\b",
-    r"\bdados\s+da\s+tabela\b",
-    r"\bna\s+seguinte\s+tabela\b",
-    r"\bno\s+seguinte\s+quadro\b",
-    r"\bconforme\s+a\s+tabela\b",
-    r"\bconforme\s+o\s+quadro\b",
-    r"\bmostrad[oa]s?\s+na\s+tabela\b",
-    r"\bmostrad[oa]s?\s+no\s+quadro\b",
-    r"\bobservando\s+a\s+tabela\b",
-    r"\bobservando\s+o\s+quadro\b",
-    r"\bsegundo\s+a\s+tabela\b",
+FORBIDDEN_INTERNAL_TERMS = [
+    r"\bsolver\b",
+    r"\bdef\s+resolver\b",
+    r"\bpython\b",
+    r"\bc[óo]digo\b",
+    r"\balgoritmo\b",
+    r"\bdistrator(?:es)?\b",
 ]
+
+
+def check_code_leakage(text: str) -> bool:
+    """
+    Verifica de forma determinística em Python se o texto contém vazamento
+    de termos técnicos ou de bastidores ('solver', 'python', 'código', 'algoritmo', 'distrator').
+    Retorna True se houver vazamento.
+    """
+    if not text:
+        return False
+    lower_text = text.lower()
+    return any(re.search(pat, lower_text) for pat in FORBIDDEN_INTERNAL_TERMS)
+
+
+def check_table_duplication(enunciado: str) -> bool:
+    """
+    Verifica de forma determinística se há duplicação de tabela no enunciado:
+    presença de mais de uma linha delimitadora Markdown (| --- |) ou tabelas repetidas.
+    """
+    if not enunciado:
+        return False
+    delimiters = re.findall(r"\|(?:\s*:?-{2,}:?\s*\|)+", enunciado)
+    return len(delimiters) > 1
 
 
 TABLE_INDICATOR_PATTERNS = [

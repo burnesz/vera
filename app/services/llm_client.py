@@ -1,6 +1,6 @@
 import time
 import logging
-from typing import Dict, Any, Optional, Tuple
+from typing import Dict, Any, Optional, Tuple, Union
 import httpx
 
 from app.core.config import settings
@@ -66,7 +66,7 @@ class LLMClient:
         temperature: float = 0.0,
         top_p: float = 0.9,
         repetition_penalty: float = 1.0,
-        format: Optional[str] = None
+        format: Optional[Union[str, Dict[str, Any]]] = None
     ) -> Tuple[str, Dict[str, Any]]:
         resolved_max_tokens = max_tokens if max_tokens is not None else settings.LLM_MAX_TOKENS
 
@@ -189,7 +189,7 @@ class LLMClient:
         temperature: float = 0.0,
         top_p: float = 0.9,
         repetition_penalty: float = 1.0,
-        format: Optional[str] = None
+        format: Optional[Union[str, Dict[str, Any]]] = None
     ) -> str:
         """
         Gera resposta a partir de um prompt usando política de retry com backoff exponencial.
@@ -254,7 +254,7 @@ class LLMClient:
         temperature: float = 0.0,
         top_p: float = 0.9,
         repetition_penalty: float = 1.0,
-        format: Optional[str] = None
+        format: Optional[Union[str, Dict[str, Any]]] = None
     ) -> str:
         """
         Versão assíncrona da geração de resposta no Ollama.
@@ -308,14 +308,15 @@ class LLMClient:
             raise last_exception
         raise LLMConnectionError(f"Não foi possível obter resposta assíncrona após {self.max_retries} tentativas: {last_exception}")
 
-    def _generate_mock_response(self, prompt: str, format: Optional[str] = None) -> str:
+    def _generate_mock_response(self, prompt: str, format: Optional[Union[str, Dict[str, Any]]] = None) -> str:
         """
         Gera resposta didática ou estruturada simulada para ambiente de desenvolvimento e testes.
         """
         import json
 
+        format_str = json.dumps(format, ensure_ascii=False).lower() if isinstance(format, dict) else (format or "").lower()
+
         if "consulta de busca reescrita" in prompt.lower() or "otimizador de consultas de busca" in prompt.lower():
-            # Extrai a última mensagem do prompt se possível
             if "última mensagem do estudante:" in prompt.lower():
                 part = prompt.split("Última mensagem do estudante:")[-1].split("Consulta de busca reescrita:")[0].strip()
                 if part:
@@ -328,14 +329,40 @@ class LLMClient:
             }
             return json.dumps(mock_just, ensure_ascii=False)
 
-        if "solver" in prompt.lower():
+        if "solver" in prompt.lower() or "solver" in format_str:
             mock_pot = {
                 "enunciado": "Um reservatório com capacidade de 1200 litros é abastecido a uma taxa de 40 litros por minuto, enquanto uma válvula esvazia a 10 litros por minuto. Estando inicialmente vazio, qual é o tempo necessário, em minutos, para enchê-lo completamente?",
+                "tabela_dados": None,
                 "solver": "def resolver():\n    capacidade = 1200\n    entrada = 40\n    saida = 10\n    taxa_liquida = entrada - saida\n    tempo_total = capacidade / taxa_liquida\n    d1 = capacidade / entrada  # 30 (esqueceu a saída)\n    d2 = capacidade / saida    # 120 (usou apenas a saída)\n    d3 = tempo_total + 10      # 50 (somou taxa)\n    d4 = tempo_total + 20      # 60 (erro de cálculo)\n    return {'correta': tempo_total, 'distratores': [d1, d2, d3, d4]}"
             }
             return json.dumps(mock_pot, ensure_ascii=False)
 
-        if format == "json" or "retorne estritamente um objeto json" in prompt.lower() or "schema json" in prompt.lower():
+        if "resolucao_passo_a_passo" in prompt.lower() or "resolucao_passo_a_passo" in format_str:
+            mock_blind = {
+                "resolucao_passo_a_passo": "A taxa líquida de enchimento é de 40 - 10 = 30 litros por minuto. Dividindo 1200 por 30, obtemos 40 minutos.",
+                "resultado_obtido": 40.0
+            }
+            return json.dumps(mock_blind, ensure_ascii=False)
+
+        if "equivalentes" in prompt.lower() or "equivalentes" in format_str:
+            mock_equiv = {
+                "equivalentes": True,
+                "explicacao_equivalencia": "Os valores coincidem numericamente."
+            }
+            return json.dumps(mock_equiv, ensure_ascii=False)
+
+        if "analise_critica" in prompt.lower() or "possui_incoerencia" in format_str:
+            mock_audit = {
+                "analise_critica": "Item coerente e alinhado aos padrões do ENEM.",
+                "possui_incoerencia": False,
+                "possui_ambiguidade": False,
+                "deficit_informacoes": False,
+                "erros_ou_vazamentos": False,
+                "duplicacao_tabelas": False
+            }
+            return json.dumps(mock_audit, ensure_ascii=False)
+
+        if format == "json" or isinstance(format, dict) or "retorne estritamente um objeto json" in prompt.lower() or "schema json" in prompt.lower():
             mock_question = {
                 "enunciado": "Um reservatório de água com capacidade de 1.200 litros é abastecido por uma bomba com vazão constante de 40 litros por minuto. Paralelamente, uma válvula esvazia o reservatório a uma taxa constante de 10 litros por minuto. Estando o reservatório inicialmente vazio, o tempo necessário para enchê-lo completamente é de:",
                 "alternativas": {

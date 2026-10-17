@@ -28,7 +28,9 @@ from app.services.question_validator import (
     extract_json_from_text,
     sanitize_latex_json_text,
     sanitize_parsed_dict_values,
-    format_enunciado_with_table
+    format_enunciado_with_table,
+    check_code_leakage,
+    check_table_duplication
 )
 from app.services.code_executor import (
     execute_solver_code,
@@ -353,7 +355,7 @@ class QuestionService:
                     max_tokens=1536,
                     temperature=curr_temp,
                     top_p=top_p,
-                    format="json"
+                    format=QuestaoEnunciadoSolverOutput.model_json_schema()
                 )
             except Exception as e:
                 last_error = f"Falha na chamada ao LLM (Fase 1 PoT): {e}"
@@ -500,7 +502,7 @@ class QuestionService:
             max_tokens=1536,
             temperature=0.0,
             top_p=0.9,
-            format="json"
+            format=QuestaoBlindSolvingOutput.model_json_schema()
         )
         json_str = extract_json_from_text(raw)
         sanitized = sanitize_latex_json_text(json_str)
@@ -554,13 +556,20 @@ class QuestionService:
         Avalia se a resposta calculada pelo solver e o resultado deduzido pela LLM são equivalentes.
         Possui Fast-Path determinístico (0ms) quando ambos os resultados já são escalares numéricos iguais.
         """
-        if (
-            isinstance(resultado_solver, (int, float))
-            and not isinstance(resultado_solver, bool)
-            and isinstance(resultado_obtido, (int, float))
-            and not isinstance(resultado_obtido, bool)
-        ):
-            if abs(float(resultado_solver) - float(resultado_obtido)) <= 1e-2:
+        # 1. Fast-Path determinístico: se ambos forem escalares numéricos diretos (sem bool)
+        is_solver_num = isinstance(resultado_solver, (int, float)) and not isinstance(resultado_solver, bool)
+        is_obtido_num = isinstance(resultado_obtido, (int, float)) and not isinstance(resultado_obtido, bool)
+
+        if is_solver_num and is_obtido_num:
+            solver_f = float(resultado_solver)
+            obtido_f = float(resultado_obtido)
+
+            # Equivalência direta ou fator percentual (ex: 0.25 vs 25)
+            if (
+                abs(solver_f - obtido_f) <= 1e-2
+                or abs(solver_f * 100 - obtido_f) <= 1e-2
+                or abs(solver_f - obtido_f * 100) <= 1e-2
+            ):
                 logger.info(
                     f"Equivalência confirmada via Fast-Path determinístico (0ms): "
                     f"Solver='{resultado_solver}' == Blind='{resultado_obtido}'."
@@ -571,7 +580,21 @@ class QuestionService:
                         f"Equivalência numérica direta confirmada em 0ms ({resultado_solver} == {resultado_obtido})."
                     )
                 )
+            else:
+                # Ambos são números escalares e divergiram: reprova imediatamente sem chamar LLM (Ponto 1)
+                logger.info(
+                    f"Divergência numérica confirmada via Fast-Path determinístico (0ms): "
+                    f"Solver='{resultado_solver}' != Blind='{resultado_obtido}'."
+                )
+                return QuestaoEquivalenciaOutput(
+                    equivalentes=False,
+                    explicacao_equivalencia=(
+                        f"Divergência numérica direta confirmada em 0ms: solver={resultado_solver} vs obtido={resultado_obtido}."
+                    )
+                )
 
+        # 2. Quando pelo menos um dos valores não for número puro (ex: string '10h00', 'Setor A', dict),
+        # consulta o juiz LLM com schema estruturado
         prompt = build_equivalencia_gabarito_prompt(
             resultado_solver=resultado_solver,
             resultado_obtido=resultado_obtido,
@@ -582,7 +605,7 @@ class QuestionService:
             max_tokens=300,
             temperature=0.0,
             top_p=0.9,
-            format="json"
+            format=QuestaoEquivalenciaOutput.model_json_schema()
         )
         json_str = extract_json_from_text(raw)
         sanitized = sanitize_latex_json_text(json_str)
@@ -591,8 +614,8 @@ class QuestionService:
 
         if isinstance(parsed, dict):
             if "equivalentes" not in parsed:
-                # Suporte a variações semânticas se o modelo responder "sao_equivalentes"
-                parsed["equivalentes"] = bool(parsed.get("sao_equivalentes", True))
+                # Default estrito é False quando chave ausente (mitigação de sycophancy)
+                parsed["equivalentes"] = bool(parsed.get("sao_equivalentes", False))
 
         equiv_out = QuestaoEquivalenciaOutput(**parsed)
 
@@ -617,7 +640,12 @@ class QuestionService:
         """
         Etapa 3 da Validação: Auditoria Semântica e Pedagógica.
         Avalia o item do ENEM (enunciado + resolução + alternativas) quanto à presença de incoerência, ambiguidade ou déficit.
+        Checagens determinísticas de vazamento de termos e duplicação de tabelas são executadas em Python.
         """
+        # Checagens determinísticas em Python (Ponto 3)
+        vazamento_detectado = check_code_leakage(enunciado)
+        duplicacao_detectada = check_table_duplication(enunciado)
+
         prompt = build_auditoria_semantica_prompt(
             enunciado=enunciado,
             alternativas=alternativas,
@@ -629,12 +657,21 @@ class QuestionService:
             max_tokens=512,
             temperature=0.0,
             top_p=0.9,
-            format="json"
+            format=QuestaoAuditoriaSemanticaOutput.model_json_schema()
         )
         json_str = extract_json_from_text(raw)
         sanitized = sanitize_latex_json_text(json_str)
         parsed = json.loads(sanitized, strict=False)
         parsed = sanitize_parsed_dict_values(parsed)
+
+        if not isinstance(parsed, dict):
+            parsed = {}
+
+        # Aplica o resultado determinístico do Python caso detectado
+        if vazamento_detectado:
+            parsed["erros_ou_vazamentos"] = True
+        if duplicacao_detectada:
+            parsed["duplicacao_tabelas"] = True
 
         return QuestaoAuditoriaSemanticaOutput(**parsed)
 
