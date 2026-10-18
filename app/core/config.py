@@ -21,7 +21,7 @@ class Settings(BaseSettings):
     LLM_PROVIDER: str = "ollama"
     LLM_TIMEOUT_SECONDS: float = 300.0
     LLM_MAX_TOKENS: int = 1024
-    LLM_NUM_CTX: int = 8192
+    LLM_NUM_CTX: int = 4096
 
     # Vector Store (Pinecone)
     PINECONE_API_KEY: str = ""
@@ -31,6 +31,7 @@ class Settings(BaseSettings):
     # Embeddings
     EMBEDDING_MODEL_NAME: str = "intfloat/multilingual-e5-large"
     EMBEDDING_DIMENSION: int = 1024
+    EMBEDDING_DEVICE: str = "cpu"  # Executar na CPU para poupar VRAM para o LLM local
 
     # Cloudflare R2 (S3-compatible Object Storage)
     R2_ENDPOINT_URL: str = ""

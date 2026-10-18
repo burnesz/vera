@@ -28,7 +28,7 @@ Para erradicar erros aritméticos, colisões de alternativas e viés de confirma
 ```mermaid
 flowchart TD
     A["Habilidade Alvo (H01-H30)"] --> B["RAG Few-Shot: Top-10 no Pinecone (questoes_enem)\nFiltrado por habilidade_codigo + Sorteio de 2 Exemplos\n+ Sorteio de Tema/Abertura + Sorteio de 1 de 3 Few-Shots PoT\n(Fallback Determinístico no PostgreSQL)"]
-    B --> C["Fase 1 (PoT, Temp=0.2, max_tokens=1536, num_ctx=8192):\nLLM gera JSON com planejamento + enunciado + tabela_dados (opcional) + solver Python"]
+    B --> C["Fase 1 (PoT, Temp=0.2, max_tokens=1536, num_ctx=4096):\nLLM gera JSON com planejamento + enunciado + tabela_dados (opcional) + solver Python"]
     C --> D["CodeExecutor: AST Check + Subprocesso Isolado (Timeout 5s)\n+ Normalização de 5->4 distratores se 1 coincidir com gabarito"]
     D --> E{"Groundedness Numérico OK?\n<= 1 colisão de distrator?"}
     E -- "Falha Estrutural ou >= 2 colisões" --> F["Linha 2: Stateless Retry Guiado\n(Contexto limpo + diretriz curta da categoria do erro + enunciados_recentes)"]
@@ -79,7 +79,7 @@ Nenhuma questão inédita pode ser salva ou exibida ao estudante sem cumprir **t
    - A aprovação (`aprovada = not any(...)`) e o `motivo_rejeicao` são calculados em Python no backend.
 
 ### Diretrizes de Geração da Fase 1 (`POT_QUESTION_GENERATOR_SYSTEM_PROMPT` — `DSR-07`)
-- **Janela de Contexto e Orçamento**: `num_ctx=8192` e `max_tokens=1536` na Fase 1 para evitar truncamento das regras do prompt ou do JSON de saída.
+- **Janela de Contexto e Orçamento**: `num_ctx=4096` e `max_tokens=1536` na Fase 1 para acomodar o prompt (instruções + RAG few-shots ~2.5k tokens) e a resposta JSON sem sobrecarregar a VRAM e sem offload desnecessário de KV-Cache para CPU.
 - **Temperatura Base 0.2**: A geração inicia em `temperature=0.2` (evitando cópia determinística do *few-shot* na 1ª tentativa) e escala `+0.1` por retry até `0.6`, enquanto as 3 etapas de validação operam estritamente em `temperature=0.0`.
 - **Planejamento Obrigatório (`planejamento`)**: a primeira chave do JSON obriga o modelo a estruturar dados, etapas de raciocínio ($\ge 2$) e erros típicos antes de redigir `enunciado` e `solver`.
 - **Complexidade padrão ENEM e Premissas explícitas**: no mínimo 2 etapas de raciocínio encadeadas; toda base, área ou peso deve estar declarado; distratores modelados por variáveis nomeadas de erros típicos.

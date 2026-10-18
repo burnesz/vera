@@ -21,7 +21,7 @@ Registro atualizado do progresso das 4 fases de desenvolvimento do projeto VERA.
 ## Fase 1: Infraestrutura e Armazenamento (Concluída)
 
 - [x] Configuração do modelo local Qwen 2.5 7B quantizado (`qwen2.5:7b-instruct-q4_K_M`) no Ollama (`http://localhost:11434`)
-- [x] Cliente LLM resiliente com health-check, timeout de 300s (`num_ctx=8192`), retry exponencial e suporte a modo mock (`app/services/llm_client.py`)
+- [x] Cliente LLM resiliente com health-check, timeout de 300s (`num_ctx=4096`), retry exponencial e suporte a modo mock (`app/services/llm_client.py`)
 - [x] Modelos relacionais completos no PostgreSQL 15: usuários, habilidades, questões ENEM, inéditas, simulados, tentativas, respostas, desempenho, feedbacks e chat (`app/db/models/`)
 - [x] Carga da Matriz de Referência do ENEM (`H01` a `H30`, `C1` a `C7`) via script (`scripts/seed_habilidades.py`)
 - [x] Carga do acervo de 402 questões históricas textuais do ENEM no PostgreSQL (`scripts/seed_questoes.py`)

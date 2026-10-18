@@ -16,11 +16,14 @@ class EmbeddingService:
     Aplica as diretrizes do modelo E5 (prefixo 'passage:' para documentos e 'query:' para buscas).
     """
 
-    def __init__(self, model_name: Optional[str] = None):
+    def __init__(self, model_name: Optional[str] = None, device: Optional[str] = None):
         self.model_name = model_name or settings.EMBEDDING_MODEL_NAME
         self._model = None
-        self.device = "cuda" if torch.cuda.is_available() else "cpu"
-        # Otimiza o paralelismo em CPUs caso GPU não esteja disponível
+        target_device = device or getattr(settings, "EMBEDDING_DEVICE", "cpu")
+        if target_device == "cuda" and not torch.cuda.is_available():
+            target_device = "cpu"
+        self.device = target_device
+        # Otimiza o paralelismo em CPUs caso GPU não esteja disponível ou CPU seja o dispositivo alvo
         if self.device == "cpu":
             num_threads = os.cpu_count() or 4
             torch.set_num_threads(num_threads)

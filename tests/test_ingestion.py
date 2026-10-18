@@ -296,6 +296,12 @@ def test_embedding_service_prefixes():
     )
 
 
+def test_embedding_service_device_configuration():
+    service_cpu = EmbeddingService(device="cpu")
+    assert service_cpu.device == "cpu"
+
+
+
 def test_pinecone_upsert_batches():
     mock_embedding_service = MagicMock()
     mock_embedding_service.embed_documents.return_value = [[0.1] * 1024]
