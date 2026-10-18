@@ -318,7 +318,6 @@ class QuestionService:
                 competencia=habilidade.competencia,
                 eixo_tematico=habilidade.eixo_tematico,
                 exemplos_referencia=curr_few_shot,
-                feedback_erro=None,
                 tema=curr_tema,
                 abertura=curr_abertura
             )
