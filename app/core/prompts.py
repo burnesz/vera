@@ -486,11 +486,6 @@ def build_blind_solving_prompt(
     Constrói prompt para a Chamada 1 da Fase de Validação: Resolução Cega.
     O LLM recebe o enunciado (e a tabela, se houver), sem alternativas e sem gabarito.
 
-    [v2]
-    - Recebe a tabela (se o enunciado chega sem ela, o resolvedor cego não tem como resolver).
-    - Declara 'premissas_assumidas' e 'dados_nao_utilizados'. O validador deve REPROVAR o item quando
-      premissas_assumidas não for vazio: era exatamente o que acontecia nas questões 12 (pesos),
-      17 (área por hectare) e 27 (tempos sem regra), que passavam com is_validated=True.
     """
     tabela_txt = _formatar_tabela(tabela_dados)
     bloco_tabela = f"\nTABELA DE DADOS:\n{tabela_txt}\n" if tabela_txt else ""
@@ -572,15 +567,6 @@ def build_auditoria_semantica_prompt(
     """
     Constrói prompt para a Chamada 3 da Fase de Validação: Auditoria Semântica e Pedagógica.
 
-    [v2]
-    - Recebe a tabela (a v1 só via enunciado + alternativas, então não conseguia detectar dados faltando ou contraditórios).
-    - Critérios novos, um para cada defeito real encontrado na revisão:
-        comando_incompativel_com_alternativas (Q9, Q11), premissa_implicita (Q12, Q17, Q27),
-        dados_contraditorios (Q10), dado_irrelevante_ou_nao_usado (Q27), inverossimilhanca_numerica (Q3, Q13, Q21),
-        nivel_trivial (24 de 28 itens), distratores_artificiais (todos).
-    - O modelo escreve 'analise' ANTES dos booleanos (um 7B julga melhor depois de citar evidências).
-    - Em caso de dúvida, marcar true (reprovar é mais barato que publicar item defeituoso).
-    - O chamador deve reprovar o item se QUALQUER flag for true.
     """
     alts_formatted = "\n".join([f"  {k}) {v}" for k, v in sorted(alternativas.items())])
     tabela_txt = _formatar_tabela(tabela_dados)
