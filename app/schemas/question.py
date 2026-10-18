@@ -65,7 +65,7 @@ class QuestaoBlindSolvingOutput(BaseModel):
     )
     resultado_obtido: Any = Field(
         ...,
-        description="Valor final único deduzido que responde diretamente ao comando da questão (int, float ou str)."
+        description="Valor final deduzido no formato de tipo primário do Python (int, float, str, dict ou list)."
     )
 
 
@@ -88,13 +88,9 @@ class QuestaoAuditoriaSemanticaOutput(BaseModel):
     Schema para a Chamada 3 da Fase de Validação: Auditoria Semântica e Pedagógica.
     Avalia a presença de defeitos ou problemas no item.
     """
-    analise_critica: Optional[str] = Field(
-        None,
-        description="Breve análise técnica do enunciado, da resolução e das alternativas antes de preencher as flags."
-    )
     possui_incoerencia: bool = Field(False, description="True se a situação-problema tiver incoerência ou erro lógico.")
     possui_ambiguidade: bool = Field(False, description="True se houver ambiguidade ou comando duplo.")
-    deficit_informacoes: bool = Field(False, description="True se faltarem informações ou dados numéricos essenciais para resolver a questão.")
+    deficit_informacoes: bool = Field(False, description="True se faltarem informações necessárias para resolver.")
     erros_ou_vazamentos: bool = Field(False, description="True se contiver erros de português ou palavras proibidas de código.")
     duplicacao_tabelas: bool = Field(False, description="True se houver redundância ou repetição de dados da tabela.")
 

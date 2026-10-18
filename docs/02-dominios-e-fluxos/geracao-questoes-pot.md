@@ -34,8 +34,10 @@ flowchart TD
     E -- "Falha Estrutural" --> F["Linha 2: Stateless Retry\n(Contexto limpo + novo sorteio)"]
     F --> B
     E -- "Sucesso (mesmo com distratores duplicados)" --> G["Linha 1: Auto-Healing Algorítmico de Distratores\n+ Formatação de Tabela Markdown\n+ Embaralhamento A-E por Código (RN-Q02)"]
-    G --> H["Validação Etapa 1: Resolução Cega Pura\n(LLM recebe APENAS o enunciado, max_tokens=1536)"]
-    H --> I["Validação Etapa 2: Confronto de Equivalência\n(Juiz com contexto do enunciado + recuperação determinística)"]
+    G --> H["Validação Etapa 1: Resolução Cega Pura\n(LLM recebe APENAS o enunciado\ne lista premissas_assumidas)"]
+    H --> H2{"Etapa 1b: premissas_assumidas\nnão vazia?"}
+    H2 -- "Sim (premissa implícita)" --> F
+    H2 -- "Não" --> I["Validação Etapa 2: Confronto de Equivalência\n(Juiz compara resultado_solver vs resultado_obtido)"]
     I -- "Divergentes (equivalentes = False)" --> J["Early Exit / Curto-Circuito"]
     J --> F
     I -- "Equivalentes (True)" --> K["Validação Etapa 3: Auditoria Semântica\n(LLM avalia 5 flags booleanas de defeito)"]
@@ -54,29 +56,31 @@ Nenhuma questão inédita pode ser salva ou exibida ao estudante sem cumprir **t
 2. **Inspeção Estática de Segurança via AST (`check_code_safety`)**:
    - Bloqueia imports de módulos do sistema/rede (`BLOCKED_MODULES`: `os`, `sys`, `subprocess`, `socket`, `shutil`, `urllib`, `requests`, `http`, `pathlib`, `ctypes`, `pickle`, `sqlite3`, etc.).
    - Bloqueia chamadas de funções perigosas (`BLOCKED_CALLS`: `eval`, `exec`, `compile`, `__import__`, `open`, `getattr`, `setattr`, `input`, `exit`, `breakpoint`).
-3. **Nexo Numérico Flexível e Inteligente (*Groundedness* — `validate_solver_consistency` / `_extract_correta_code_numbers`)**:
-   - Realiza *backward slicing* na AST de `resolver()` a partir da expressão de `"correta"`, extraindo apenas os literais numéricos (`ast.Constant`) que participam direta ou indiretamente do cálculo do gabarito (isentando constantes auxiliares exclusivas das variáveis de `"distratores"`).
-   - Verifica se cada número consta no `enunciado` ou na `tabela_dados`, aceitando também:
-     - **Numerais por extenso e termos temporais** em português (`PORTUGUESE_WORD_NUMBERS`: `"oito"` $\rightarrow 8$, `"mensal"`/`"mês"` $\rightarrow 30$, `"semana"` $\rightarrow 7$, `"ano"` $\rightarrow 12, 365$, `"mil"` $\rightarrow 1000$, etc.).
-     - **Conversões diretas de escala métrica e geometria** dos números presentes no enunciado ($\times 10, \times 100, \times 1000, \div 10, \div 100, \div 1000$, metade/raio $\div 2$ e dobro $\times 2$).
-      - **Fatores e complementos percentuais** (para $p\%$, aceita $p$, $p/100$, $100-p$, $1 - p/100$ e $1 + p/100$).
-      - Constantes matemáticas, geométricas e temporais padrão (`ALLOWED_NUMERIC_CONSTANTS`).
-    - Se a questão incluir `tabela_dados`, valida-se um teto de **10 linhas** (para permitir cálculo manual) e que **todas as colunas numéricas de dados** participem efetivamente do cálculo de `"correta"` (bloqueando tabelas decorativas ou colunas mortas).
+3. **Nexo Numérico (*Groundedness* — `validate_solver_consistency`)**:
+   - Extrai todos os literais numéricos (`ast.Constant`) do corpo de `resolver()` e verifica se cada número consta explicitamente no texto do `enunciado` (incluindo números escritos por extenso de `zero` a `mil` convertidos via `_WORDS_TO_NUMBERS`) ou na `tabela_dados`.
+   - Apenas constantes matemáticas/geométricas/temporais neutras (`ALLOWED_NUMERIC_CONSTANTS`: `0, 1, 2, 3, 4, 5, 10, 12, 24, 60, 100, 180, 360, 1000, 0.5, 0.1, 0.01, 3.14, 3.1415, 3.1416`) são isentas.
+   - **Convenções não são constantes neutras** (`DSR-07`): `365` foi removido da lista; "ano = 365 dias", "mês = 30 dias" etc. só podem ser usados no solver se declarados no enunciado.
 4. **Unicidade Estrita das 5 Alternativas**: a resposta correta e os 4 distratores devem resultar em 5 strings formatadas mutuamente exclusivas.
 5. **Validação Etapa 1 — Resolução Cega Pura (`QuestaoBlindSolvingOutput`)**:
-   - O LLM resolve o problema recebendo **exclusivamente o enunciado** (sem alternativas e sem gabarito, com orçamento `max_tokens=1536`), produzindo `resolucao_passo_a_passo` e o valor final único em `resultado_obtido`.
-6. **Validação Etapa 2 — Confronto Direto de Equivalência com *Fast-Path* 0ms e *Early Exit* (`QuestaoEquivalenciaOutput`)**:
-   - Se `resultado_solver` e `resultado_obtido` forem escalares numéricos, o backend decide em **0ms** (aprovando se iguais ou equivalentes percentuais, e reprovando imediatamente com *Early Exit* se divergentes, sem chamar o LLM e eliminando qualquer risco de *sycophancy*). Caso envolva strings ou estruturas complexas, o juiz LLM é chamado via Structured Output (JSON Schema) com default estrito `False` caso a chave seja omitida.
-7. **Validação Etapa 3 — Auditoria Semântica com Visão da Resolução (`QuestaoAuditoriaSemanticaOutput`)**:
-   - Recebe o `enunciado`, a `habilidade_descricao`, a `resolucao_passo_a_passo` da Etapa 1 e as `alternativas`, exigindo primeiro um campo textual de raciocínio (`analise_critica`) antes das flags de defeito semântico (`possui_incoerencia`, `possui_ambiguidade`, `deficit_informacoes`).
-   - Defeitos sintáticos como termos de bastidores vazados (`erros_ou_vazamentos`) e tabelas duplicadas (`duplicacao_tabelas`) são interceptados deterministicamente em Python (`check_code_leakage` e `check_table_duplication`).
-   - A aprovação (`aprovada = not any(...)`) e o `motivo_rejeicao` continuam calculados em Python no backend.
+   - O LLM resolve o problema recebendo **exclusivamente o enunciado** (sem alternativas e sem gabarito), produzindo `resolucao_passo_a_passo`, `premissas_assumidas` e `resultado_obtido` (em tipo primitivo Python: `int`, `float`, `str`, `dict` ou `list`).
+   - **Etapa 1b — Premissas Implícitas com *Early Exit* (`DSR-07`)**: o resolvedor lista toda suposição/convenção que precisou adotar sem estar escrita no enunciado (exceto conversões universais: 1 h = 60 min, 1 dia = 24 h, 1 ano = 12 meses, prefixos métricos). Se `premissas_assumidas` não for vazia (após normalização de marcadores como `"Nenhuma"`/`"N/A"`), o backend reprova deterministicamente e aciona o *Stateless Retry* sem chamar a Etapa 2.
+6. **Validação Etapa 2 — Confronto Direto de Equivalência com *Early Exit* (`QuestaoEquivalenciaOutput`)**:
+   - Compara `resultado_solver` vs. `resultado_obtido` aceitando equivalências matemáticas legítimas (ex.: `2500` vs. `"R$ 2.500,00"`, `0.5` vs. `"50%"`, arredondamentos compatíveis). Se `equivalentes == False`, interrompe imediatamente (*Early Exit*) e aciona o *Stateless Retry*.
+7. **Validação Etapa 3 — Auditoria Semântica Determinística (`QuestaoAuditoriaSemanticaOutput`)**:
+   - Avalia 5 flags booleanas de defeito:
+     - `possui_incoerencia`: contradições físicas, matemáticas ou de senso comum.
+     - `possui_ambiguidade`: comando duplo ou margem para mais de uma interpretação.
+     - `deficit_informacoes`: omissão de dado indispensável para o cálculo **ou dependência de convenção não declarada** (ex.: "mensal" tratado como 30 dias).
+     - `erros_ou_vazamentos`: erros gramaticais graves ou vazamento de termos internos (`"solver"`, `"python"`, `"código"`, `"função"`).
+     - `duplicacao_tabelas`: repetição redundante da tabela no texto e em `tabela_dados`.
+   - A aprovação (`aprovada = not any(...)`) e o `motivo_rejeicao` são calculados em Python no backend.
 
 ### Diretrizes de Geração da Fase 1 (`POT_QUESTION_GENERATOR_SYSTEM_PROMPT` — `DSR-07`)
-- **Complexidade padrão ENEM**: no mínimo 2 etapas de raciocínio encadeadas, evitando questões de operação única e priorizando valores compatíveis (resultados inteiros ou decimais exatos de até 2 casas) e sem empates entre opções comparadas.
-- **Distratores baseados em erros comuns**: o solver modela erros típicos de raciocínio (parar em etapa intermediária, esquecer fator ou considerar apenas parte dos dados), com normalização de distratores negativos acidentais quando a resposta é positiva.
-- **Few-shot multi-etapas sem vício de tabela**: o exemplo de formato (`POT_FEW_SHOT_EXAMPLE`) e o template final usam `"tabela_dados": null` por padrão para evitar que o modelo 7B force tabelas artificiais em habilidades de Geometria, Escala ou Álgebra. O orçamento da Fase 1 é de `max_tokens=1536`.
-- **Ancoragem RAG filtrada por habilidade e higienizada**: `retrieve_rag_few_shot_examples` filtra no Pinecone estritamente por `filter_dict={"habilidade_codigo": clean_hab}`, descarta enunciados históricos com OCR quebrado e injeta `Resposta Correta Oficial: <valor>`.
+- **Complexidade padrão ENEM**: no mínimo 2 etapas de raciocínio encadeadas e 2 conceitos articulados; proibidas questões de operação única (ex.: somar uma coluna, aplicar uma porcentagem isolada). Com referências RAG, o item isomórfico não pode ser simplificado.
+- **Premissas explícitas**: toda convenção (dias do mês/ano, semanas por mês, regime de juros, arredondamento, π, litro/m³, constância de taxas) deve ser declarada no enunciado ("Considere que...").
+- **Distratores por erros típicos**: o solver modela erros de raciocínio (parar em etapa intermediária, esquecer conversão, usar parte dos dados), não variações arbitrárias (`±50`, `×1,2`).
+- **Few-shot multi-etapas**: o exemplo de formato (`POT_FEW_SHOT_EXAMPLE`) é um item de 3 etapas com premissas declaradas, substituindo o antigo exemplo de soma simples que ancorava o modelo 7B em itens triviais. O orçamento da Fase 1 é de `max_tokens=1536`.
+- **Ancoragem RAG com valor real da resposta**: nos 2 exemplos históricos do RAG (`exemplos_referencia`), `build_enunciado_solver_prompt` resolve `alternativas[gabarito]` e injeta `Resposta Correta Oficial: <valor>` (ou omite a linha caso o texto da alternativa não esteja disponível), eliminando a letra isolada (`Gabarito Oficial: B`) que não trazia significado matemático nem correspondia ao contrato PoT (que proíbe letras A–E na Fase 1).
 
 ### `RN-Q02` — Atribuição Determinística de Alternativas e Gabarito
 - O LLM **nunca** escolhe a letra do gabarito na geração PoT.
@@ -84,7 +88,7 @@ Nenhuma questão inédita pode ser salva ou exibida ao estudante sem cumprir **t
 
 ### `RN-Q03` — Defesa em Cascata: Auto-Healing Algorítmico e Stateless Retry
 - **Linha 1 (`auto_heal_distractors`)**: quando `resolver()` acerta o cálculo principal mas produz distratores repetidos ou iguais à correta, o backend preserva os distratores únicos e sintetiza os faltantes deterministicamente usando o passo característico $\Delta$ da distribuição e variações cognitivas típicas do ENEM ($\pm k\Delta$, dobro/metade, escala decimal $\times 10$ / $\div 10$).
-- **Linha 2 (*Stateless Retry*)**: em caso de falha estrutural na Fase 1 ou reprovação nas Etapas 1b/2/3 da validação, descarta-se toda a tentativa e inicia-se uma nova iteração com contexto limpo, novo sorteio de tema/abertura (`sortear_contexto_criativo`), nova amostragem dos Top-10 candidatos no Pinecone e progressão gradual de temperatura a partir de `0.0` (`0.0` $\rightarrow$ `0.1` $\rightarrow$ `0.2` $\rightarrow$ `0.3`, limitada a `0.6`).
+- **Linha 2 (*Stateless Retry*)**: em caso de falha estrutural na Fase 1 ou reprovação nas Etapas 2/3 da validação, descarta-se toda a tentativa e inicia-se uma nova iteração com contexto limpo, novo sorteio de tema/abertura (`sortear_contexto_criativo`) e nova amostragem dos Top-10 candidatos no Pinecone.
 
 ### `RN-Q04` — Rastreabilidade e Auditoria na Persistência
 - Na tabela `questoes_ineditas`:

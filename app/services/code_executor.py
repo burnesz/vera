@@ -31,39 +31,10 @@ BLOCKED_CALLS = {
     "delattr", "input", "exit", "quit", "breakpoint"
 }
 
-# Constantes numéricas matemáticas, geométricas, fracionárias e temporais permitidas no código
+# Constantes numéricas matemáticas, geométricas e temporais neutras permitidas no código
 ALLOWED_NUMERIC_CONSTANTS: Set[float] = {
-    0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 12.0, 15.0,
-    24.0, 30.0, 60.0, 100.0, 180.0, 360.0, 365.0, 1000.0, 3600.0, 10000.0,
-    0.5, 0.25, 0.75, 0.1, 0.01, 0.001, 3.14, 3.1415, 3.1416
-}
-
-# Mapeamento de numerais por extenso e termos quantitativos/temporais comuns em enunciados
-PORTUGUESE_WORD_NUMBERS: Dict[str, List[float]] = {
-    "um": [1.0], "uma": [1.0], "unico": [1.0], "unica": [1.0],
-    "dois": [2.0], "duas": [2.0], "dobro": [2.0], "duplo": [2.0], "ambos": [2.0], "ambas": [2.0],
-    "meio": [0.5, 2.0], "metade": [0.5, 2.0],
-    "tres": [3.0], "triplo": [3.0], "terco": [3.0], "terca": [3.0],
-    "quatro": [4.0], "quadruplo": [4.0], "quarto": [0.25, 4.0],
-    "cinco": [5.0], "quinto": [0.2, 5.0],
-    "seis": [6.0], "meia": [6.0, 0.5],
-    "sete": [7.0], "oito": [8.0], "nove": [9.0], "dez": [10.0], "dezena": [10.0],
-    "onze": [11.0], "doze": [12.0], "duzia": [12.0],
-    "treze": [13.0], "quatorze": [14.0], "catorze": [14.0], "quinze": [15.0], "quinzena": [15.0],
-    "dezesseis": [16.0], "dezessete": [17.0], "dezoito": [18.0], "dezenove": [19.0],
-    "vinte": [20.0], "trinta": [30.0], "quarenta": [40.0], "cinquenta": [50.0],
-    "sessenta": [60.0], "setenta": [70.0], "oitenta": [80.0], "noventa": [90.0],
-    "cem": [100.0], "cento": [100.0], "centena": [100.0],
-    "duzentos": [200.0], "duzentas": [200.0], "trezentos": [300.0], "trezentas": [300.0],
-    "quatrocentos": [400.0], "quinhentos": [500.0], "seiscentos": [600.0],
-    "setecentos": [700.0], "oitocentos": [800.0], "novecentos": [900.0],
-    "mil": [1000.0], "milhao": [1000000.0], "milhoes": [1000000.0],
-    "semana": [7.0], "semanas": [7.0], "semanal": [7.0], "semanalmente": [7.0],
-    "mes": [30.0, 12.0], "meses": [30.0, 12.0], "mensal": [30.0, 12.0], "mensalmente": [30.0, 12.0],
-    "bimestre": [2.0, 60.0], "bimestral": [2.0, 60.0],
-    "trimestre": [3.0, 90.0], "trimestral": [3.0, 90.0],
-    "semestre": [6.0, 180.0], "semestral": [6.0, 180.0],
-    "ano": [12.0, 365.0], "anos": [12.0, 365.0], "anual": [12.0, 365.0], "anualmente": [12.0, 365.0],
+    0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 10.0, 12.0, 24.0, 60.0, 100.0, 180.0, 360.0, 365.0, 1000.0,
+    0.5, 0.1, 0.01, 3.14, 3.1415, 3.1416
 }
 
 
@@ -235,7 +206,7 @@ def auto_heal_distractors(
             except (ValueError, TypeError):
                 pass
 
-        is_int = c_num.is_integer()
+        is_int = c_num.is_integer() and all(n.is_integer() for n in all_nums)
         unique_floats = sorted(list(set(all_nums)))
 
         # Calcula passo delta característico da questão
@@ -252,8 +223,8 @@ def auto_heal_distractors(
             if delta == 0:
                 delta = 1.0
 
-        if is_int:
-            delta = max(1.0, float(round(delta)))
+        if is_int and delta < 1.0:
+            delta = 1.0
 
         min_val = min(unique_floats)
         max_val = max(unique_floats)
@@ -315,169 +286,19 @@ def auto_heal_distractors(
     return accepted
 
 
-def _get_target_names(target: ast.AST) -> Set[str]:
-    """Extrai nomes de variáveis atribuídas em um alvo de atribuição (Name, Tuple, List, Subscript)."""
-    return {node.id for node in ast.walk(target) if isinstance(node, ast.Name)}
-
-
-def _get_loaded_names(node: ast.AST) -> Set[str]:
-    """Extrai identificadores de variáveis lidos (Load) em uma subárvore AST."""
-    return {
-        sub.id for sub in ast.walk(node)
-        if isinstance(sub, ast.Name) and isinstance(sub.ctx, ast.Load)
-    }
-
-
-def _extract_numbers_from_ast_node(node: ast.AST) -> Set[float]:
-    """Extrai literais numéricos (int/float, excluindo bool) de uma subárvore AST."""
-    nums: Set[float] = set()
-    for sub in ast.walk(node):
-        if isinstance(sub, ast.Constant) and isinstance(sub.value, (int, float)) and not isinstance(sub.value, bool):
-            nums.add(float(sub.value))
-    return nums
-
-
-def _extract_correta_code_numbers(code: str) -> Set[float]:
-    """
-    Extrai via AST apenas os literais numéricos que participam direta ou indiretamente
-    do cálculo da resposta 'correta', ignorando números usados exclusivamente na construção
-    dos 'distratores' (ex: d1 = correta + 50, d2 = correta * 1.5).
-    """
-    clean_code = sanitize_solver_code(code)
-    try:
-        tree = ast.parse(clean_code)
-    except SyntaxError:
-        code_before_return = clean_code.split("return")[0] if "return" in clean_code else clean_code
-        code_no_comments = re.sub(r"#.*", "", code_before_return)
-        return {float(n) for n in re.findall(r"\b\d+(?:\.\d+)?\b", code_no_comments)}
-
-    # Localiza o dicionário de retorno contendo a chave 'correta'
-    result_dicts: List[ast.Dict] = []
-    correta_exprs: List[ast.AST] = []
-    for node in ast.walk(tree):
-        if isinstance(node, ast.Dict):
-            for k, v in zip(node.keys, node.values):
-                if isinstance(k, ast.Constant) and k.value == "correta" and v is not None:
-                    result_dicts.append(node)
-                    correta_exprs.append(v)
-
-    if not correta_exprs:
-        # Fallback se não encontrar dicionário literal com chave 'correta'
-        return _extract_numbers_from_ast_node(tree)
-
-    needed_vars: Set[str] = set()
-    relevant_nodes: List[ast.AST] = []
-    for expr in correta_exprs:
-        needed_vars.update(_get_loaded_names(expr))
-        if not isinstance(expr, ast.Constant):
-            relevant_nodes.append(expr)
-
-    # Coleta todas as instruções (statements) dentro da AST
-    all_stmts: List[ast.stmt] = [n for n in ast.walk(tree) if isinstance(n, ast.stmt)]
-    relevant_stmts: Set[ast.stmt] = set()
-
-    # Ponto fixo: propaga dependências reversas a partir das variáveis usadas em 'correta'
-    changed = True
-    while changed:
-        changed = False
-        for stmt in all_stmts:
-            if stmt in relevant_stmts:
-                continue
-
-            if isinstance(stmt, ast.Assign):
-                # Ignora atribuição direta do próprio dicionário final {'correta': ..., 'distratores': ...}
-                if stmt.value in result_dicts:
-                    continue
-                targets: Set[str] = set()
-                for t in stmt.targets:
-                    targets.update(_get_target_names(t))
-                if targets & needed_vars:
-                    relevant_stmts.add(stmt)
-                    relevant_nodes.append(stmt.value)
-                    needed_vars.update(_get_loaded_names(stmt.value))
-                    for t in stmt.targets:
-                        needed_vars.update(_get_loaded_names(t))
-                    changed = True
-
-            elif isinstance(stmt, ast.AugAssign):
-                targets = _get_target_names(stmt.target)
-                if targets & needed_vars:
-                    relevant_stmts.add(stmt)
-                    relevant_nodes.append(stmt.value)
-                    needed_vars.update(_get_loaded_names(stmt.value))
-                    needed_vars.update(_get_loaded_names(stmt.target))
-                    changed = True
-
-            elif isinstance(stmt, ast.AnnAssign) and stmt.value is not None:
-                if stmt.value in result_dicts:
-                    continue
-                targets = _get_target_names(stmt.target)
-                if targets & needed_vars:
-                    relevant_stmts.add(stmt)
-                    relevant_nodes.append(stmt.value)
-                    needed_vars.update(_get_loaded_names(stmt.value))
-                    changed = True
-
-            elif isinstance(stmt, ast.Expr) and isinstance(stmt.value, ast.Call):
-                # Captura mutações de listas/dicionários relevantes (ex: valores.append(1200))
-                func = stmt.value.func
-                if isinstance(func, ast.Attribute):
-                    owner_vars = _get_loaded_names(func.value)
-                    if owner_vars & needed_vars:
-                        relevant_stmts.add(stmt)
-                        relevant_nodes.append(stmt.value)
-                        needed_vars.update(_get_loaded_names(stmt.value))
-                        changed = True
-
-            elif isinstance(stmt, ast.For):
-                target_vars = _get_target_names(stmt.target)
-                body_relevant = any(child in relevant_stmts for child in ast.walk(stmt) if isinstance(child, ast.stmt) and child is not stmt)
-                if (target_vars & needed_vars) or body_relevant:
-                    relevant_stmts.add(stmt)
-                    relevant_nodes.append(stmt.iter)
-                    needed_vars.update(_get_loaded_names(stmt.iter))
-                    changed = True
-
-            elif isinstance(stmt, (ast.While, ast.If)):
-                body_relevant = any(child in relevant_stmts for child in ast.walk(stmt) if isinstance(child, ast.stmt) and child is not stmt)
-                if body_relevant:
-                    relevant_stmts.add(stmt)
-                    relevant_nodes.append(stmt.test)
-                    needed_vars.update(_get_loaded_names(stmt.test))
-                    changed = True
-
-    code_floats: Set[float] = set()
-    for node in relevant_nodes:
-        code_floats.update(_extract_numbers_from_ast_node(node))
-    return code_floats
-
-
 def validate_solver_consistency(
     enunciado: str,
     code: str,
-    result: Dict[str, Any],
-    tabela_dados: Optional[List[Dict[str, Any]]] = None
+    result: Dict[str, Any]
 ) -> List[str]:
     """
     Valida a consistência matemática e o nexo entre o código do solver e o texto do enunciado:
     1. Unicidade estrita: o gabarito e os 4 distratores devem ser distintos (com Auto-Healing).
-    2. Checagem de nexo numérico: todo número utilizado no cálculo da resposta 'correta' deve estar presente no enunciado.
-    3. Se houver tabela_dados, valida limite de linhas (máximo 10) e impede colunas ou tabelas numéricas mortas/inúteis.
+    2. Checagem de nexo numérico: todo número utilizado no código antes do return deve estar presente no enunciado.
     Retorna a lista de 5 valores formatados [correta, distrator1, distrator2, distrator3, distrator4].
     """
     correta_val = result["correta"]
-    raw_distratores_vals = list(result["distratores"])
-
-    # Normaliza distratores negativos acidentais (ex: inversão de subtração A - B em vez de B - A)
-    # quando a resposta correta é positiva e não há grandezas negativas no enunciado
-    distratores_vals: List[Any] = []
-    has_negative_in_enun = bool(re.search(r"(?<!\w)-\d+", enunciado))
-    correta_is_non_neg = isinstance(correta_val, (int, float)) and not isinstance(correta_val, bool) and float(correta_val) >= 0
-    for d in raw_distratores_vals:
-        if correta_is_non_neg and not has_negative_in_enun and isinstance(d, (int, float)) and not isinstance(d, bool) and float(d) < 0:
-            distratores_vals.append(abs(d))
-        else:
-            distratores_vals.append(d)
+    distratores_vals = result["distratores"]
 
     correta_str = format_number(correta_val)
     dist_strs = [format_number(d) for d in distratores_vals]
@@ -502,142 +323,53 @@ def validate_solver_consistency(
             f"Alternativas duplicadas geradas pelo solver mesmo após auto-healing: {all_values}. Valores repetidos: {set(duplicates)}."
         )
 
-    # 2. Checagem de Nexo Numérico (Groundedness) restrita ao cálculo da resposta 'correta' via AST
-    code_floats = _extract_correta_code_numbers(code)
+    # 2. Checagem de Nexo Numérico (Groundedness)
+    # Extrai o corpo do código antes do 'return' e remove comentários
+    code_before_return = code.split("return")[0] if "return" in code else code
+    code_no_comments = re.sub(r"#.*", "", code_before_return)
 
-    # 3. Validação de tabelas (limite de linhas e detecção de colunas/tabelas mortas)
-    if tabela_dados and isinstance(tabela_dados, list) and len(tabela_dados) > 0:
-        if len(tabela_dados) > 10:
-            raise ValueError(
-                f"A tabela_dados possui {len(tabela_dados)} linhas (máximo permitido: 10). "
-                f"Use tabelas enxutas (de 2 a 6 linhas) compatíveis com resolução manual no ENEM."
-            )
+    # Extrai todos os números literais no código
+    raw_code_nums = re.findall(r"\b\d+(?:\.\d+)?\b", code_no_comments)
+    code_floats: Set[float] = set()
+    for n in raw_code_nums:
+        try:
+            code_floats.add(float(n))
+        except ValueError:
+            pass
 
-        if isinstance(correta_val, (int, float)) and not isinstance(correta_val, bool) and code_floats and isinstance(tabela_dados[0], dict):
-            label_col_keywords = {
-                "dia", "mes", "mês", "ano", "hora", "horario", "horário",
-                "id", "codigo", "código", "item", "etapa", "semana", "periodo", "período"
-            }
-            numeric_cols: List[Tuple[str, Set[float]]] = []
-            for col_key in tabela_dados[0].keys():
-                if str(col_key).strip().lower() in label_col_keywords:
-                    continue
-                col_nums: Set[float] = set()
-                all_rows_num = True
-                for row in tabela_dados:
-                    if not isinstance(row, dict) or col_key not in row:
-                        continue
-                    val = row[col_key]
-                    if isinstance(val, (int, float)) and not isinstance(val, bool):
-                        col_nums.add(float(val))
-                    elif isinstance(val, str):
-                        s_val = val.strip()
-                        clean_v = (
-                            s_val.replace(".", "").replace(",", ".")
-                            if re.match(r"^\d{1,3}(?:\.\d{3})+(?:,\d+)?$", s_val)
-                            else s_val.replace(",", ".")
-                        )
-                        try:
-                            col_nums.add(float(clean_v))
-                        except ValueError:
-                            all_rows_num = False
-                    else:
-                        all_rows_num = False
-                if all_rows_num and len(col_nums) >= 2:
-                    numeric_cols.append((str(col_key), col_nums))
+    # Extrai números presentes no enunciado com suporte a separador de milhar brasileiro (1.200 ou 1.200,50)
+    enun_floats: Set[float] = set()
 
-            def _col_val_used_in_code(v: float, c_floats: Set[float]) -> bool:
-                variants = {v, round(v / 100.0, 6)}
-                return any(abs(cf - var) <= 1e-6 for cf in c_floats for var in variants)
-
-            for col_name, col_nums in numeric_cols:
-                used_count = sum(1 for v in col_nums if _col_val_used_in_code(v, code_floats))
-                if used_count == 0:
-                    fmt_nums = sorted([int(x) if x.is_integer() else x for x in col_nums])
-                    raise ValueError(
-                        f"A coluna numérica '{col_name}' da tabela ({fmt_nums}) foi declarada mas não é utilizada "
-                        f"no cálculo da resposta correta. Remova colunas inúteis ou integre-as ao cálculo."
-                    )
-                if len(numeric_cols) == 1 and len(col_nums) >= 2 and used_count < 2:
-                    fmt_nums = sorted([int(x) if x.is_integer() else x for x in col_nums])
-                    raise ValueError(
-                        f"A tabela possui apenas uma coluna de dados numéricos ('{col_name}': {fmt_nums}), "
-                        f"mas o cálculo da resposta correta utilizou apenas {used_count} valor da tabela, "
-                        f"tornando a tabela desnecessária. Utilize os dados da tabela ou defina tabela_dados como null."
-                    )
-
-    # Extrai números presentes no enunciado com suporte a separador de milhar brasileiro,
-    # numerais por extenso, complementos percentuais e conversões diretas de escala/geometria.
-    base_enun_floats: Set[float] = set()
-
-    # 1. Padrão de milhar brasileiro: ex 1.200 ou 1.200,50 (mesmo se colado a unidade/símbolo)
-    for match in re.finditer(r"(?<!\d)\d{1,3}(?:\.\d{3})+(?:,\d+)?(?!\d)", enunciado):
+    # 1. Padrão de milhar brasileiro: ex 1.200 ou 1.200,50
+    for match in re.finditer(r"\b\d{1,3}(?:\.\d{3})+(?:,\d+)?\b", enunciado):
         raw_val = match.group(0).replace(".", "").replace(",", ".")
         try:
-            base_enun_floats.add(float(raw_val))
+            enun_floats.add(float(raw_val))
         except ValueError:
             pass
 
-    # 2. Padrão decimal padrão ou inteiro simples: ex 34, 12.5, 12,5, 20m, 40kg
-    raw_enun_matches = re.findall(r"(?<!\d)\d+(?:[\.,]\d+)?(?!\d)", enunciado)
+    # 2. Padrão decimal padrão ou inteiro simples: ex 34, 12.5, 12,5
+    raw_enun_matches = re.findall(r"\b\d+(?:[\.,]\d+)?\b", enunciado)
     for n in raw_enun_matches:
         try:
-            base_enun_floats.add(float(n.replace(",", ".")))
+            enun_floats.add(float(n.replace(",", ".")))
         except ValueError:
             pass
 
-    # 3. Numerais por extenso e termos temporais/quantitativos em português
-    import unicodedata
-    norm_text = "".join(
-        c for c in unicodedata.normalize("NFKD", enunciado.lower())
-        if not unicodedata.combining(c)
-    )
-    words_in_enun = set(re.findall(r"\b[a-z]+\b", norm_text))
-    for word in words_in_enun:
-        if word in PORTUGUESE_WORD_NUMBERS:
-            base_enun_floats.update(PORTUGUESE_WORD_NUMBERS[word])
-
-    enun_floats: Set[float] = set(base_enun_floats)
-
-    # 4. Derivações diretas de escala métrica (x10, x100, x1000, /10, /100, /1000) e geometria (raio=d/2, dobro=2x)
-    for val in base_enun_floats:
-        if val != 0:
-            enun_floats.update({
-                round(val * 10.0, 6),
-                round(val * 100.0, 6),
-                round(val * 1000.0, 6),
-                round(val / 10.0, 6),
-                round(val / 100.0, 6),
-                round(val / 1000.0, 6),
-                round(val / 2.0, 6),
-                round(val * 2.0, 6),
-            })
-
-    # 5. Tratamento de porcentagens e seus complementos: ex '20%' -> 20, 0.2, 80, 0.8, 1.2
+    # 3. Tratamento de porcentagens: ex '2%' ou '15%' -> adiciona também 0.02 e 0.15
     for match in re.finditer(r"(\d+(?:[\.,]\d+)?)\s*%", enunciado):
         val_str = match.group(1).replace(",", ".")
         try:
             val_pct = float(val_str)
-            dec_pct = round(val_pct / 100.0, 6)
-            enun_floats.update({
-                val_pct,
-                dec_pct,
-                round(100.0 - val_pct, 6),
-                round(1.0 - dec_pct, 6),
-                round(1.0 + dec_pct, 6),
-            })
+            enun_floats.add(round(val_pct / 100.0, 6))
         except ValueError:
             pass
 
-    allowed_all = enun_floats | ALLOWED_NUMERIC_CONSTANTS
-
-    def _is_grounded(target: float) -> bool:
-        if target in allowed_all:
-            return True
-        return any(abs(target - candidate) <= 1e-6 for candidate in allowed_all)
-
-    # Identifica números no código que não constam no enunciado nem na lista de constantes permitidas
-    missing_numbers = {n for n in code_floats if not _is_grounded(n)}
+    # Identifica números no código que não constam no enunciado nem na lista de constantes neutras
+    missing_numbers = {
+        n for n in code_floats
+        if n not in enun_floats and n not in ALLOWED_NUMERIC_CONSTANTS
+    }
 
     if missing_numbers:
         missing_fmt = sorted([int(x) if x.is_integer() else x for x in missing_numbers])

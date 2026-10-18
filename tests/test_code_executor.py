@@ -152,31 +152,6 @@ def resolver():
         validate_solver_consistency(enunciado, code, result)
 
 
-def test_validate_solver_consistency_ignores_distractor_only_constants():
-    """Constantes auxiliares usadas apenas nos distratores (ex: +15, *1.25, 999) não devem reprovar o nexo de 'correta'."""
-    enunciado = (
-        "Um reservatório com capacidade de 1.200 litros é abastecido a 40 litros por minuto, "
-        "com saída de 10 litros por minuto. Qual o tempo para enchê-lo?"
-    )
-    code = """
-def resolver():
-    capacidade = 1200
-    entrada = 40
-    saida = 10
-    taxa = entrada - saida
-    tempo = capacidade / taxa
-    d1 = capacidade / entrada
-    d2 = tempo + 15
-    d3 = tempo * 1.25
-    d4 = 999
-    return {'correta': tempo, 'distratores': [d1, d2, d3, d4]}
-"""
-    result = {'correta': 40.0, 'distratores': [30.0, 55.0, 50.0, 999.0]}
-    formatted_vals = validate_solver_consistency(enunciado, code, result)
-    assert formatted_vals[0] == "40"
-    assert len(formatted_vals) == 5
-
-
 def test_assemble_alternatives_and_gabarito():
     formatted_vals = ["40", "30", "50", "60", "80"]
     alternativas, gabarito = assemble_alternatives_and_gabarito(formatted_vals)

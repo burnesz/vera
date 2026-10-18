@@ -28,9 +28,7 @@ from app.services.question_validator import (
     extract_json_from_text,
     sanitize_latex_json_text,
     sanitize_parsed_dict_values,
-    format_enunciado_with_table,
-    check_code_leakage,
-    check_table_duplication
+    format_enunciado_with_table
 )
 from app.services.code_executor import (
     execute_solver_code,
@@ -122,26 +120,6 @@ class QuestionService:
         )
         return exemplos
 
-    @staticmethod
-    def _is_clean_reference_enunciado(text: str) -> bool:
-        """
-        Filtra enunciados históricos com artefatos severos de OCR quebrado
-        (ex: '\\right)(', '( ) (', '(Y )') que contaminam o prompt few-shot.
-        """
-        if not text or len(text.strip()) < 30:
-            return False
-        import re
-        corrupted_patterns = [
-            r"\\right\)\s*\(",
-            r"\(\s*\)\s*\(",
-            r"\([A-Z]\s+\)",
-            r"\ufffd",
-        ]
-        for pat in corrupted_patterns:
-            if re.search(pat, text):
-                return False
-        return True
-
     def retrieve_rag_few_shot_examples(
         self,
         habilidade_codigo: str,
@@ -151,8 +129,8 @@ class QuestionService:
     ) -> List[Dict[str, Any]]:
         """
         Recupera os Top-candidates (padrão 10) itens históricos do ENEM mais similares
-        semanticamente no Pinecone (namespace 'questoes_enem') filtrados estritamente pela
-        habilidade-alvo e sorteia k exemplos (padrão 2) para compor o contexto few-shot.
+        semanticamente no Pinecone (namespace 'questoes_enem') e sorteia k exemplos (padrão 2)
+        para compor o contexto few-shot, maximizando a diversidade e relevância.
         """
         clean_hab = habilidade_codigo.strip().upper()
         if clean_hab.startswith("H") and clean_hab[1:].isdigit():
@@ -170,19 +148,13 @@ class QuestionService:
             results = self.vector_store.search(
                 query=query_text,
                 namespace=settings.NAMESPACE_QUESTOES_ENEM,
-                top_k=fetch_limit,
-                filter_dict={"habilidade_codigo": clean_hab}
+                top_k=fetch_limit
             )
 
             few_shot_dicts = []
             for r in results:
                 meta = r.get("metadata", {})
-                hab_meta = meta.get("habilidade_codigo")
-                if hab_meta and str(hab_meta).strip().upper() != clean_hab:
-                    continue
                 enunciado = meta.get("text") or r.get("text", "")
-                if not self._is_clean_reference_enunciado(enunciado):
-                    continue
                 alternativas = {
                     "A": meta.get("alt_a", ""),
                     "B": meta.get("alt_b", ""),
@@ -193,7 +165,7 @@ class QuestionService:
                 few_shot_dicts.append({
                     "co_item": meta.get("co_item"),
                     "ano": meta.get("ano", "ENEM"),
-                    "habilidade_origem": hab_meta or clean_hab,
+                    "habilidade_origem": meta.get("habilidade_codigo"),
                     "enunciado": enunciado,
                     "alternativas": alternativas,
                     "gabarito": meta.get("gabarito", ""),
@@ -216,22 +188,19 @@ class QuestionService:
         except Exception as e:
             logger.warning(f"Falha na recuperação RAG via Pinecone para {clean_hab}: {e}. Acionando fallback relacional...")
 
-        # Fallback relacional no PostgreSQL caso Pinecone falhe ou não retorne resultados limpos da habilidade
+        # Fallback relacional no PostgreSQL caso Pinecone falhe ou não retorne resultados
         if db:
-            itens_db = self.retrieve_few_shot_examples(db, clean_hab, k=max(k * 3, 6))
-            clean_db_items = [
+            itens_db = self.retrieve_few_shot_examples(db, clean_hab, k=k)
+            return [
                 {
                     "ano": item.ano,
-                    "habilidade_origem": item.habilidade_codigo,
                     "enunciado": item.enunciado,
                     "alternativas": item.alternativas,
                     "gabarito": item.gabarito,
                     "score": 1.0
                 }
                 for item in itens_db
-                if self._is_clean_reference_enunciado(item.enunciado)
             ]
-            return clean_db_items[:k]
 
         return []
 
@@ -241,7 +210,7 @@ class QuestionService:
         habilidade_codigo: str,
         num_few_shot: int = 2,
         max_attempts: int = 4,
-        temperature: float = 0.0,
+        temperature: float = 0.2,
         top_p: float = 0.9,
         tema: Optional[str] = None,
         abertura: Optional[str] = None
@@ -295,7 +264,7 @@ class QuestionService:
         habilidade: HabilidadeEnem,
         few_shot_dicts: List[Dict[str, Any]],
         max_attempts: int = 4,
-        temperature: float = 0.0,
+        temperature: float = 0.2,
         top_p: float = 0.9,
         tema: Optional[str] = None,
         abertura: Optional[str] = None
@@ -345,6 +314,7 @@ class QuestionService:
                 competencia=habilidade.competencia,
                 eixo_tematico=habilidade.eixo_tematico,
                 exemplos_referencia=curr_few_shot,
+                feedback_erro=None,
                 tema=curr_tema,
                 abertura=curr_abertura
             )
@@ -352,10 +322,10 @@ class QuestionService:
             try:
                 raw_pot_output = self.llm_client.generate(
                     prompt=prompt_pot,
-                    max_tokens=1536,
+                    max_tokens=1024,
                     temperature=curr_temp,
                     top_p=top_p,
-                    format=QuestaoEnunciadoSolverOutput.model_json_schema()
+                    format="json"
                 )
             except Exception as e:
                 last_error = f"Falha na chamada ao LLM (Fase 1 PoT): {e}"
@@ -407,8 +377,7 @@ class QuestionService:
                 formatted_values = validate_solver_consistency(
                     enunciado=pot_output.enunciado,
                     code=pot_output.solver,
-                    result=solver_result,
-                    tabela_dados=pot_output.tabela_dados
+                    result=solver_result
                 )
             except Exception as e:
                 last_error = f"Erro de consistência matemática ou nexo numérico: {e}"
@@ -430,8 +399,7 @@ class QuestionService:
             try:
                 equiv = self._run_equivalence_check(
                     resultado_solver=solver_result["correta"],
-                    resultado_obtido=blind_sol.resultado_obtido,
-                    enunciado=pot_output.enunciado
+                    resultado_obtido=blind_sol.resultado_obtido
                 )
             except Exception as e:
                 last_error = f"Falha no confronto de equivalência: {e}"
@@ -451,9 +419,7 @@ class QuestionService:
             try:
                 audit = self._run_semantic_audit(
                     enunciado=pot_output.enunciado,
-                    alternativas=alternativas,
-                    resolucao_passo_a_passo=blind_sol.resolucao_passo_a_passo,
-                    habilidade_descricao=habilidade.descricao
+                    alternativas=alternativas
                 )
             except Exception as e:
                 last_error = f"Falha na auditoria semântica: {e}"
@@ -499,10 +465,10 @@ class QuestionService:
         prompt = build_blind_solving_prompt(enunciado=enunciado)
         raw = self.llm_client.generate(
             prompt=prompt,
-            max_tokens=1536,
+            max_tokens=800,
             temperature=0.0,
             top_p=0.9,
-            format=QuestaoBlindSolvingOutput.model_json_schema()
+            format="json"
         )
         json_str = extract_json_from_text(raw)
         sanitized = sanitize_latex_json_text(json_str)
@@ -517,95 +483,21 @@ class QuestionService:
 
         return QuestaoBlindSolvingOutput(**parsed)
 
-    @staticmethod
-    def _check_deterministic_equivalence(resultado_solver: Any, resultado_obtido: Any) -> bool:
-        """
-        Verifica equivalência numérica direta em Python (incluindo quando resultado_obtido
-        é um dicionário com múltiplos grupos contendo o valor exato de resultado_solver).
-        """
-        try:
-            solver_num = float(resultado_solver)
-        except (ValueError, TypeError):
-            return False
-
-        candidates: List[Any] = []
-        if isinstance(resultado_obtido, dict):
-            candidates.extend(resultado_obtido.values())
-        elif isinstance(resultado_obtido, (list, tuple)):
-            candidates.extend(resultado_obtido)
-        else:
-            candidates.append(resultado_obtido)
-
-        for cand in candidates:
-            try:
-                cand_num = float(cand)
-                if abs(solver_num - cand_num) <= 1e-2:
-                    return True
-            except (ValueError, TypeError):
-                continue
-        return False
-
-    def _run_equivalence_check(
-        self,
-        resultado_solver: Any,
-        resultado_obtido: Any,
-        enunciado: Optional[str] = None
-    ) -> QuestaoEquivalenciaOutput:
+    def _run_equivalence_check(self, resultado_solver: Any, resultado_obtido: Any) -> QuestaoEquivalenciaOutput:
         """
         Etapa 2 da Validação: Confronto Direto de Equivalência Matemática.
         Avalia se a resposta calculada pelo solver e o resultado deduzido pela LLM são equivalentes.
-        Possui Fast-Path determinístico (0ms) quando ambos os resultados já são escalares numéricos iguais.
         """
-        # 1. Fast-Path determinístico: se ambos forem escalares numéricos diretos (sem bool)
-        is_solver_num = isinstance(resultado_solver, (int, float)) and not isinstance(resultado_solver, bool)
-        is_obtido_num = isinstance(resultado_obtido, (int, float)) and not isinstance(resultado_obtido, bool)
-
-        if is_solver_num and is_obtido_num:
-            solver_f = float(resultado_solver)
-            obtido_f = float(resultado_obtido)
-
-            # Equivalência direta ou fator percentual (ex: 0.25 vs 25)
-            if (
-                abs(solver_f - obtido_f) <= 1e-2
-                or abs(solver_f * 100 - obtido_f) <= 1e-2
-                or abs(solver_f - obtido_f * 100) <= 1e-2
-            ):
-                logger.info(
-                    f"Equivalência confirmada via Fast-Path determinístico (0ms): "
-                    f"Solver='{resultado_solver}' == Blind='{resultado_obtido}'."
-                )
-                return QuestaoEquivalenciaOutput(
-                    equivalentes=True,
-                    explicacao_equivalencia=(
-                        f"Equivalência numérica direta confirmada em 0ms ({resultado_solver} == {resultado_obtido})."
-                    )
-                )
-            else:
-                # Ambos são números escalares e divergiram: reprova imediatamente sem chamar LLM (Ponto 1)
-                logger.info(
-                    f"Divergência numérica confirmada via Fast-Path determinístico (0ms): "
-                    f"Solver='{resultado_solver}' != Blind='{resultado_obtido}'."
-                )
-                return QuestaoEquivalenciaOutput(
-                    equivalentes=False,
-                    explicacao_equivalencia=(
-                        f"Divergência numérica direta confirmada em 0ms: solver={resultado_solver} vs obtido={resultado_obtido}."
-                    )
-                )
-
-        # 2. Quando pelo menos um dos valores não for número puro (ex: string '10h00', 'Setor A', dict),
-        # consulta o juiz LLM com schema estruturado
         prompt = build_equivalencia_gabarito_prompt(
             resultado_solver=resultado_solver,
-            resultado_obtido=resultado_obtido,
-            enunciado=enunciado
+            resultado_obtido=resultado_obtido
         )
         raw = self.llm_client.generate(
             prompt=prompt,
             max_tokens=300,
-            temperature=0.0,
+            temperature=0.1,
             top_p=0.9,
-            format=QuestaoEquivalenciaOutput.model_json_schema()
+            format="json"
         )
         json_str = extract_json_from_text(raw)
         sanitized = sanitize_latex_json_text(json_str)
@@ -614,64 +506,31 @@ class QuestionService:
 
         if isinstance(parsed, dict):
             if "equivalentes" not in parsed:
-                # Default estrito é False quando chave ausente (mitigação de sycophancy)
-                parsed["equivalentes"] = bool(parsed.get("sao_equivalentes", False))
+                # Suporte a variações semânticas se o modelo responder "sao_equivalentes"
+                parsed["equivalentes"] = bool(parsed.get("sao_equivalentes", True))
 
-        equiv_out = QuestaoEquivalenciaOutput(**parsed)
+        return QuestaoEquivalenciaOutput(**parsed)
 
-        # Se o LLM retornou um dicionário na resolução cega contendo o valor exato do solver
-        # e o juiz se confundiu com o formato dict, recupera deterministicamente
-        if not equiv_out.equivalentes and isinstance(resultado_obtido, (dict, list)):
-            if self._check_deterministic_equivalence(resultado_solver, resultado_obtido):
-                equiv_out.equivalentes = True
-                equiv_out.explicacao_equivalencia = (
-                    f"Equivalência numérica confirmada deterministicamente: {resultado_solver} está contido em {resultado_obtido}."
-                )
-
-        return equiv_out
-
-    def _run_semantic_audit(
-        self,
-        enunciado: str,
-        alternativas: Dict[str, str],
-        resolucao_passo_a_passo: Optional[str] = None,
-        habilidade_descricao: Optional[str] = None
-    ) -> QuestaoAuditoriaSemanticaOutput:
+    def _run_semantic_audit(self, enunciado: str, alternativas: Dict[str, str]) -> QuestaoAuditoriaSemanticaOutput:
         """
         Etapa 3 da Validação: Auditoria Semântica e Pedagógica.
-        Avalia o item do ENEM (enunciado + resolução + alternativas) quanto à presença de incoerência, ambiguidade ou déficit.
-        Checagens determinísticas de vazamento de termos e duplicação de tabelas são executadas em Python.
+        Avalia o item do ENEM quanto à presença de incoerência, ambiguidade, déficit de dados ou erros.
         """
-        # Checagens determinísticas em Python (Ponto 3)
-        vazamento_detectado = check_code_leakage(enunciado)
-        duplicacao_detectada = check_table_duplication(enunciado)
-
         prompt = build_auditoria_semantica_prompt(
             enunciado=enunciado,
-            alternativas=alternativas,
-            resolucao_passo_a_passo=resolucao_passo_a_passo,
-            habilidade_descricao=habilidade_descricao
+            alternativas=alternativas
         )
         raw = self.llm_client.generate(
             prompt=prompt,
-            max_tokens=512,
-            temperature=0.0,
+            max_tokens=300,
+            temperature=0.1,
             top_p=0.9,
-            format=QuestaoAuditoriaSemanticaOutput.model_json_schema()
+            format="json"
         )
         json_str = extract_json_from_text(raw)
         sanitized = sanitize_latex_json_text(json_str)
         parsed = json.loads(sanitized, strict=False)
         parsed = sanitize_parsed_dict_values(parsed)
-
-        if not isinstance(parsed, dict):
-            parsed = {}
-
-        # Aplica o resultado determinístico do Python caso detectado
-        if vazamento_detectado:
-            parsed["erros_ou_vazamentos"] = True
-        if duplicacao_detectada:
-            parsed["duplicacao_tabelas"] = True
 
         return QuestaoAuditoriaSemanticaOutput(**parsed)
 

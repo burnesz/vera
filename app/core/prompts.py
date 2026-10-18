@@ -11,7 +11,7 @@ VERA_TUTOR_SYSTEM_PROMPT = """Você é VERA (Validação e Ensino com Recuperaç
 Seu objetivo é guiar estudantes de forma acolhedora, precisa e altamente didática para que compreendam a matemática em profundidade.
 
 DIRETRIZES DE ATUAÇÃO PEDAGÓGICA E MODO PENSAMENTO (Chain-of-Thought Scratchpad):
-Estruture sua geração em duas etapas delimitadas por tags:
+Você deve OBRIGATORIAMENTE estruturar sua geração em duas etapas delimitadas por tags:
 
 1. ETAPA DE PENSAMENTO E AUTO-VALIDAÇÃO (<pensamento>...</pensamento>):
    - Compreensão do Problema: Analise o que o estudante está perguntando ou calculando, identificando dados, incógnitas e pegadinhas clássicas do ENEM.
@@ -71,8 +71,8 @@ Diretrizes obrigatórias:
 1. Resolva pronomes, elipses e referências ao histórico (ex.: "ele", "essa fórmula", "e se dobrar o raio" -> explicite o conceito ou objeto matemático).
 2. Se a mensagem já for independente e autocontida, preserve o conceito matemático central.
 3. Se a mensagem for puramente social ou sem conteúdo matemático (ex.: "olá", "obrigado", "tchau"), retorne a própria mensagem.
-4. Não responda à pergunta do estudante.
-5. Retorne apenas a consulta de busca em uma única linha, sem aspas, explicações, saudações ou prefixos como "Consulta:" ou "Query:"."""
+4. NÃO responda à pergunta do estudante.
+5. Retorne EXCLUSIVAMENTE a consulta de busca em uma única linha, sem aspas, explicações, saudações ou prefixos como "Consulta:" ou "Query:"."""
 
 
 def clean_rewritten_query(raw_text: str, fallback: str) -> str:
@@ -219,7 +219,7 @@ TEMAS_COTIDIANO: List[str] = [
 
 FORMAS_ABERTURA: List[str] = [
     "Inicie apresentando o resultado de uma pesquisa amostral ou levantamento local (ex: 'Em uma pesquisa com 400 clientes...', 'Um levantamento sobre o consumo de água em um condomínio revelou...')",
-    "Inicie contextualizando o cenário territorial ou comunitário (ex: 'Em um município...', 'Para interligar dois distritos agrícolas...', 'Uma associação de produtores locais...')",
+    "Inicie contextualizando o cenário territorial ou comunitário (ex: 'Em um município...', 'Para interligar dois distritos agrícolas...', 'Uma cooperativa local...')",
     "Inicie descrevendo um processo técnico, produtivo ou logístico (ex: 'Uma linha de envase industrial...', 'Um centro de distribuição organiza o transporte...')",
     "Inicie com uma situação prática de tomada de decisão financeira ou orçamento (ex: 'Um consumidor compara duas opções de parcelamento...', 'Para o orçamento de uma reforma...')",
     "Inicie apresentando um ensaio técnico, medição laboratorial ou monitoramento periódico (ex: 'Durante o monitoramento da vazão de um reservatório...', 'Em um teste de rendimento térmico...')",
@@ -244,42 +244,36 @@ def sortear_contexto_criativo() -> Tuple[str, str]:
 
 POT_QUESTION_GENERATOR_SYSTEM_PROMPT = """Você é um Elaborador de Itens de Matemática para o ENEM.
 Gere uma QUESTÃO INÉDITA estruturada em JSON (enunciado + solver em Python).
-O solver calculará a resposta correta e 4 distratores; não inclua gabarito ou letras A-E no JSON.
+O solver calculará a resposta correta e 4 distratores; NÃO gere gabarito ou letras A-E.
 
-Diretrizes pedagógicas e técnicas:
-1. Enunciado e alinhamento à habilidade:
-   - Crie uma situação-problema realista com comando final claro e objetivo, avaliando diretamente os conceitos matemáticos da Habilidade Alvo (ex: Geometria, Escala, Funções, Estatística, Grandezas).
-   - Diversifique o contexto: varie a narrativa e o sujeito da ação.
-   - Não utilize palavras de bastidor no enunciado (ex: 'solver', 'python', 'código', 'algoritmo', 'distrator', 'gabarito').
-2. Dados tabulares (opcional — use `"tabela_dados": null` por padrão):
-   - Por padrão, defina `"tabela_dados": null` e apresente os dados no texto do enunciado.
-   - Use `"tabela_dados"` (entre 2 e 6 linhas no máximo) apenas quando a questão exigir comparação ou leitura de dados tabulares.
-   - Se usar `"tabela_dados"`, não repita os dados da tabela no texto do enunciado e garanta que todas as colunas numéricas da tabela sejam necessárias no cálculo da resposta correta (não crie tabelas ou colunas decorativas).
-3. Complexidade, unicidade e exatidão padrão ENEM:
-   - A resolução deve exigir pelo menos 2 etapas de raciocínio encadeadas (evite questões triviais de uma única operação direta).
-   - Se a questão comparar opções ou propostas (ex: "qual o mais econômico"), escolha valores numéricos que não gerem empate entre opções.
-   - Escolha valores compatíveis para que o resultado final seja inteiro ou decimal exato de até 2 casas. Se usar aproximação de π (ex: considere π = 3 ou π = 3,14), informe isso no enunciado.
-4. Solver (Python puro):
-   - Escreva a função `def resolver():` declarando as variáveis com os mesmos números do enunciado/tabela e calculando passo a passo a resposta final na mesma unidade/escala pedida (ex: se pedir porcentagem, retorne 24 e não 0.24).
-   - Calcule 4 distratores plausíveis, positivos e estritamente distintos entre si e distintos de `correta` (representando erros comuns de raciocínio, como parar em uma etapa intermediária).
+REGRAS ESTRITAS:
+1. ENUNCIADO: Situação-problema realista com comando final claro.
+   - SEJA CRIATIVO NO CONTEXTO. NUNCA comece as questões sempre com a mesma estrutura sintática. Varie a narrativa e o sujeito!
+   - NUNCA use palavras como "solver", "python", "algoritmo", "código", "distrator" ou "gabarito" no enunciado!
+2. DADOS TABULARES E ISOLAMENTO DE TABELA:
+   - Se a questão envolver dados tabulares ou anunciar uma tabela ("A tabela a seguir apresenta...", "O quadro abaixo ilustra..."), no campo 'enunciado' escreva APENAS a contextualização anunciando a tabela e a pergunta final.
+   - NUNCA liste os dados da tabela no corpo do 'enunciado' (seja em tópicos '-', listas numeradas, parágrafos ou pipes '|'). O texto NÃO deve conter os dados repetidos.
+   - Os dados tabulares devem residir EXCLUSIVAMENTE no campo JSON 'tabela_dados' (lista de dicionários). O sistema desenhará e renderizará a tabela para o aluno no ponto adequado.
+3. SOLVER (Python puro): 
+   - Modela os cálculos da grandeza solicitada no enunciado.
    - Retorna: return {'correta': <numero>, 'distratores': [<d1>, <d2>, <d3>, <d4>]}
-5. Nexo e completude numérica:
-   - Escreva os dados numéricos em algarismos no enunciado ou na tabela_dados.
-   - Todo número usado no cálculo de correta no solver deve constar no enunciado ou na tabela_dados.
-6. Coerência e integridade factual:
-   - O problema deve ter lógica física e dimensional no mundo real. Não atribua dados inventados a órgãos oficiais reais (como IBGE, OMS, ministérios); use cenários locais ou levantamentos hipotéticos bem definidos.
-7. Formato: Responda apenas com o JSON válido, sem comentários antes ou depois.
+4. NEXO E COMPLETUDE: Todo dado ou número usado no solver (exceto constantes universais) DEVE estar visível no texto do enunciado ou na tabela_dados. Os números contidos em 'tabela_dados' são considerados 100% visíveis e válidos pelo sistema de validação de nexo numérico.
+5. COERÊNCIA FÍSICA E MATEMÁTICA: O problema deve ser factível e ter lógica no mundo real.
+6. INTEGRIDADE FACTUAL: NUNCA invente notícias de veículos de imprensa, nomes de pesquisadores ou dados atribuídos falsamente a órgãos oficiais reais (como IBGE, OMS, ministérios). Quando o problema envolver dados percentuais ou estatísticos, contextualize-os como cenários hipotéticos bem definidos ou pesquisas amostrais locais (ex: 'Uma pesquisa de satisfação em uma loja com 400 clientes...', 'Um levantamento sobre o consumo elétrico em um condomínio...').
+7. EXCLUSIVIDADE: Gere APENAS o JSON válido, sem comentários antes ou depois.
 """
 
-POT_FEW_SHOT_EXAMPLE = """============================================================
-EXEMPLO DE ESTRUTURA ESPERADA (FORMATO JSON E SOLVER PoT):
-============================================================
+POT_FEW_SHOT_EXAMPLE = """--- [EXEMPLO DE SAÍDA ESPERADA (FORMATO OBRIGATÓRIO)] ---
 {
-  "enunciado": "Uma fábrica de embalagens comercializou, na última semana, 250 kg de papelão prensado a R$ 6,00 por quilograma e 500 kg de plástico a R$ 3,00 por quilograma. Do valor bruto total arrecadado com a venda desses dois materiais, 20% foram destinados ao pagamento dos custos operacionais de transporte, e o valor líquido restante foi dividido igualmente entre os 8 membros da equipe. Qual foi a quantia, em reais, recebida por cada membro nessa semana?",
-  "tabela_dados": null,
-  "solver": "def resolver():\\n    kg_papelao, preco_papelao = 250, 6\\n    kg_plastico, preco_plastico = 500, 3\\n    percentual_custo = 20\\n    membros = 8\\n    receita_total = kg_papelao * preco_papelao + kg_plastico * preco_plastico\\n    valor_liquido = receita_total * (100 - percentual_custo) / 100\\n    valor_por_membro = valor_liquido / membros\\n    # Distratores baseados em erros comuns\\n    d1 = receita_total / membros\\n    d2 = (receita_total * percentual_custo / 100) / membros\\n    d3 = valor_liquido\\n    d4 = (kg_papelao * preco_papelao) / membros\\n    return {'correta': valor_por_membro, 'distratores': [d1, d2, d3, d4]}"
+  "enunciado": "Um centro de triagem registrou a quantidade diária de materiais recicláveis recolhidos ao longo de três dias. A tabela a seguir apresenta a massa, em quilogramas, de cada categoria recolhida. Qual foi a quantidade total de papel recolhida nos três dias?",
+  "tabela_dados": [
+    {"Dia": "Segunda-feira", "Papel (kg)": 120, "Plástico (kg)": 80},
+    {"Dia": "Terça-feira", "Papel (kg)": 150, "Plástico (kg)": 90},
+    {"Dia": "Quarta-feira", "Papel (kg)": 180, "Plástico (kg)": 110}
+  ],
+  "solver": "def resolver():\\n    # Cálculos utilizam os dados declarados em tabela_dados sem repeti-los no enunciado\\n    total_papel = 120 + 150 + 180\\n    return {'correta': total_papel, 'distratores': [total_papel - 50, total_papel + 50, total_papel * 0.8, total_papel * 1.2]}"
 }
-(O exemplo acima ilustra apenas o padrão de código e schema JSON: não reutilize seu contexto, seus dados ou sua narrativa.)"""
+"""
 
 
 def build_enunciado_solver_prompt(
@@ -288,13 +282,12 @@ def build_enunciado_solver_prompt(
     competencia: int,
     eixo_tematico: Optional[str] = None,
     exemplos_referencia: Optional[List[Dict[str, Any]]] = None,
+    feedback_erro: Optional[str] = None,
     tema: Optional[str] = None,
     abertura: Optional[str] = None
 ) -> str:
     """
     Constrói prompt estruturado para a Fase 1 da geração PoT (Enunciado + Solver em Python).
-    O exemplo estrutural de formato antecede a especificação da habilidade e os exemplos RAG (Ponto 6),
-    garantindo que o contexto mais recente antes da geração seja o conteúdo autêntico do ENEM.
     """
     ref_text = ""
     if exemplos_referencia:
@@ -302,21 +295,28 @@ def build_enunciado_solver_prompt(
         for idx, ex in enumerate(exemplos_referencia, 1):
             ano = ex.get("ano", "ENEM")
             enun = ex.get("enunciado", "").strip()
-            gab = str(ex.get("gabarito") or "").strip().upper()
-            alts = ex.get("alternativas") if isinstance(ex.get("alternativas"), dict) else {}
-            valor_correto = str(alts.get(gab) or alts.get(gab.lower()) or "").strip() if gab else ""
-
+            gab = ex.get("gabarito", "")
             bloco = (
                 f"--- [Questão Histórica do ENEM {idx} para Ancoragem Isomórfica (ENEM {ano})] ---\n"
-                f"Enunciado Real: {enun}"
+                f"Enunciado Real: {enun}\n"
+                f"Gabarito Oficial: {gab}"
             )
-            if valor_correto:
-                bloco += f"\nResposta Correta Oficial: {valor_correto}"
             blocos.append(bloco)
         
-        ref_text = "\n\n".join(blocos) + "\n\n(Crie uma questão inédita isomórfica: com mesma lógica matemática e nível de complexidade das questões acima, porém com um novo contexto do cotidiano e novos dados numéricos)."
+        ref_text = "\n\n".join(blocos) + "\n\n(Crie uma questão inédita ISOMÓRFICA: com mesma lógica matemática e nível de complexidade das questões acima, porém com um novo contexto do cotidiano e novos dados numéricos)."
     else:
-        ref_text = "(Siga estritamente os conceitos pedagógicos da habilidade alvo, respeitando o nível de exigência do ENEM)."
+        ref_text = "(Siga estritamente os conceitos pedagógicos da habilidade alvo)."
+
+    secao_feedback = ""
+    if feedback_erro:
+        secao_feedback = f"""
+============================================================
+ATENÇÃO - CORREÇÃO OBRIGATÓRIA DA TENTATIVA ANTERIOR:
+Sua tentativa anterior foi rejeitada com o seguinte erro:
+"{feedback_erro}"
+Corrija o enunciado e a função solver() para eliminar rigorosamente esse erro.
+============================================================
+"""
 
     diretriz_criativa = ""
     if tema or abertura:
@@ -329,8 +329,6 @@ def build_enunciado_solver_prompt(
 
     prompt = f"""{POT_QUESTION_GENERATOR_SYSTEM_PROMPT}
 
-{POT_FEW_SHOT_EXAMPLE}
-
 ============================================================
 ESPECIFICAÇÃO DA HABILIDADE ALVO (MATRIZ DO ENEM):
 ============================================================
@@ -341,15 +339,17 @@ ESPECIFICAÇÃO DA HABILIDADE ALVO (MATRIZ DO ENEM):
 
 {ref_text}
 
+{POT_FEW_SHOT_EXAMPLE}
+{secao_feedback}
 ============================================================
 SUA TAREFA:
 ============================================================
 Gere agora uma QUESTÃO INÉDITA para a habilidade {habilidade_codigo}.{diretriz_criativa}
-Responda em formato JSON com as chaves 'enunciado', 'tabela_dados' (null por padrão, ou lista de dicts se houver tabela) e 'solver':
+Responda EXCLUSIVAMENTE em formato JSON com as chaves 'enunciado', 'tabela_dados' (opcional) e 'solver':
 {{
   "enunciado": "Texto contextualizado da questão com comando final inequívoco...",
-  "tabela_dados": null,
-  "solver": "def resolver():\\n    # código com variáveis usando os números do enunciado\\n    return {{'correta': ..., 'distratores': [d1, d2, d3, d4]}}"
+  "tabela_dados": [{{"Coluna1": "A", "Coluna2": 10}}],
+  "solver": "def resolver():\\n    # código com variáveis com os números do enunciado\\n    return {{'correta': ..., 'distratores': [d1, d2, d3, d4]}}"
 }}
 """
     return prompt
@@ -361,8 +361,8 @@ def build_blind_solving_prompt(enunciado: str) -> str:
     O LLM recebe exclusivamente o enunciado (sem alternativas e sem gabarito)
     e deve resolver o problema passo a passo com rigor conceitual e formal.
     """
-    prompt = f"""Você é um especialista resolvendo uma questão de Matemática do ENEM.
-Leia atentamente a questão abaixo e resolva-a passo a passo a partir exclusivamente do enunciado.
+    prompt = f"""Você é um estudante de alto desempenho resolvendo uma questão de Matemática do ENEM.
+Leia atentamente a questão abaixo e resolva-a de forma autônoma, passo a passo, a partir exclusivamente do enunciado.
 
 ============================================================
 ENUNCIADO DA QUESTÃO:
@@ -372,56 +372,46 @@ ENUNCIADO DA QUESTÃO:
 ============================================================
 SUA TAREFA:
 ============================================================
-1. Resolva a questão passo a passo de forma clara, direta e objetiva no campo 'resolucao_passo_a_passo'.
-2. Indique em 'resultado_obtido' apenas o valor final único que responde diretamente ao comando da questão:
-   - Se a resposta for numérica, retorne apenas o número final (inteiro ou decimal, ex: 35.0, 30, 1350), sem unidades de medida e sem texto extra.
-   - Retorne texto apenas quando a pergunta pedir explicitamente um nome, categoria ou horário (ex: "10h00", "Setor A").
+1. Resolva a questão passo a passo com rigor lógico e matemático formal.
+2. Apresente toda a resolução didática detalhada em 'resolucao_passo_a_passo'.
+3. Deduza e declare o resultado final em 'resultado_obtido' no formato de um TIPO PRIMÁRIO DO PYTHON:
+   - Se for um valor numérico único, retorne apenas o número (int ou float, ex: 35.0, 30, 1.9), sem texto ou unidades de medida.
+   - Se for uma conclusão conceitual, retorne em texto.
+   - Se forem múltiplos valores, retorne como dict (ex: {{"media": 135.0, "moda": None}}).
 
-Responda em formato JSON com o schema abaixo:
+Responda EXCLUSIVAMENTE em formato JSON com o schema abaixo:
 {{
-  "resolucao_passo_a_passo": "Sua resolução passo a passo objetiva deduzindo o resultado...",
-  "resultado_obtido": "<valor final único calculado>"
+  "resolucao_passo_a_passo": "Sua resolução didática e detalhada passo a passo deduzindo o resultado...",
+  "resultado_obtido": "Valor numérico ou conclusão final obtida no tipo primário do Python"
 }}
 """
     return prompt
 
 
-def build_equivalencia_gabarito_prompt(
-    resultado_solver: Any,
-    resultado_obtido: Any,
-    enunciado: Optional[str] = None
-) -> str:
+def build_equivalencia_gabarito_prompt(resultado_solver: Any, resultado_obtido: Any) -> str:
     """
     Constrói prompt para a Chamada 2 da Fase de Validação: Confronto Direto de Equivalência.
     Juiz matemático objetivo que confronta o resultado calculado pelo Python com a conclusão da LLM.
     """
-    contexto_bloco = ""
-    if enunciado:
-        contexto_bloco = f"""============================================================
-ENUNCIADO DA QUESTÃO (PARA CONTEXTO DA GRANDEZA PEDIDA):
+    prompt = f"""Você é um Juiz de Equivalência Matemática e Conceitual.
+Sua única função é comparar objetivamente os dois resultados abaixo e determinar se eles expressam a mesma resposta matemática/conceitual.
+
 ============================================================
-{enunciado}
-
-"""
-
-    prompt = f"""Você é um juiz de equivalência matemática e conceitual.
-Sua função é comparar objetivamente os dois resultados abaixo e determinar se eles expressam a mesma resposta para a pergunta da questão.
-
-{contexto_bloco}============================================================
 RESULTADOS A COMPARAR:
 ============================================================
-- Resultado A (Cálculo Oficial do Solver): {resultado_solver}
+- Resultado A (Cálculo do Solver): {resultado_solver}
 - Resultado B (Resolução Dedutiva): {resultado_obtido}
 
 ============================================================
 DIRETRIZES DE EQUIVALÊNCIA:
 ============================================================
-1. Considere equivalentes representações matemáticas idênticas (ex: frações e decimais equivalentes como 1/2 e 0.5, porcentagens como 0.5 e "50%", valores monetários como 2500 e "R$ 2.500,00"). Não considere equivalentes números com valores matemáticos distintos.
-2. Se o Resultado B contiver múltiplos valores ou um dicionário (ex: {{'Grupo A': 1350.0, 'Grupo B': 1150.0}}), considere equivalente (`true`) se o valor correspondente ao que foi perguntado no enunciado coincidir com o Resultado A.
-3. A ausência de unidade de medida em um dos resultados não implica divergência.
-4. Retorne `false` quando houver divergência matemática ou conceitual real entre os valores finais.
+1. Antes de comparar, normalize os valores, as representações matemáticas e as unidades de medida.
+2. Considere equivalentes diferenças de formatação, notação, frações, decimais e unidades conversíveis.
+3. A ausência de unidade em um resultado não implica divergência, desde que o valor e o contexto sejam compatíveis.
+4. Considere o enunciado para verificar a grandeza esperada. Não invente informações nem converta grandezas incompatíveis.
+5. Retorne `false` apenas quando houver divergência matemática ou conceitual real. Se as informações forem insuficientes, explique a limitação objetivamente e decida com base nas evidências disponíveis.
 
-Responda em formato JSON com o schema:
+Responda EXCLUSIVAMENTE em formato JSON com o schema:
 {{
   "equivalentes": bool,
   "explicacao_equivalencia": "Explicação objetiva comprovando a equivalência ou apontando a discrepância encontrada"
@@ -430,58 +420,46 @@ Responda em formato JSON com o schema:
     return prompt
 
 
-def build_auditoria_semantica_prompt(
-    enunciado: str,
-    alternativas: Dict[str, str],
-    resolucao_passo_a_passo: Optional[str] = None,
-    habilidade_descricao: Optional[str] = None
-) -> str:
+def build_auditoria_semantica_prompt(enunciado: str, alternativas: Dict[str, str]) -> str:
     """
     Constrói prompt para a Chamada 3 da Fase de Validação: Auditoria Semântica e Pedagógica.
-    Avalia a qualidade do item do ENEM (enunciado + resolução + alternativas) identificando eventuais defeitos.
-    Checagens determinísticas de vazamento de código e duplicação de tabelas são executadas em Python.
+    Avalia a qualidade do item do ENEM (enunciado + alternativas) identificando eventuais problemas ou defeitos.
     """
     alts_formatted = "\n".join([f"  {k}) {v}" for k, v in sorted(alternativas.items())])
     
-    bloco_hab = ""
-    if habilidade_descricao:
-        bloco_hab = f"\nHabilidade Avaliada:\n{habilidade_descricao}\n"
-
-    bloco_resolucao = ""
-    if resolucao_passo_a_passo:
-        bloco_resolucao = f"\nResolução Deduzida (Etapa 1):\n{resolucao_passo_a_passo}\n"
-
     prompt = f"""Você é um Revisor Técnico e Pedagógico Oficial do INEP para questões do ENEM.
-Audite o item de Matemática abaixo avaliando o enunciado, a resolução deduzida e as alternativas.
+Audite o item de Matemática abaixo avaliando rigorosamente a presença de eventuais problemas pedagógicos ou textuais.
 
 ============================================================
 ITEM SUBMETIDO:
-============================================================{bloco_hab}
+============================================================
 Enunciado:
 {enunciado}
-{bloco_resolucao}
+
 Alternativas:
 {alts_formatted}
 
 ============================================================
-CRITÉRIOS DE AUDITORIA:
+CRITÉRIOS DE AUDITORIA (IDENTIFICAÇÃO DE PROBLEMAS):
 ============================================================
-Primeiro redija uma breve `analise_critica` verificando a coerência conceitual da resolução e do enunciado. Em seguida, marque `true` se algum dos problemas abaixo for claramente constatado (caso contrário, marque `false`):
+Avalie se o item apresenta algum dos seguintes problemas (marque true se o problema existir, false se o item estiver perfeito):
 
-1. possui_incoerencia: A situação-problema ou a resolução apresenta contradição lógica, incompatibilidade física entre grandezas ou premissas matemáticas impossíveis no mundo real.
-2. possui_ambiguidade: O comando final permite mais de uma interpretação válida ou há empate entre opções quando se solicita um extremo único (ex: a pergunta pede o item mais econômico, mas duas opções têm o mesmo valor mínimo).
-3. deficit_informacoes: O enunciado omite dados numéricos indispensáveis para a resolução (conversões métricas usuais como 1 m³ = 1.000 L, 1 kg = 1.000 g, 1 h = 60 min são de conhecimento geral e não configuram déficit).
+1. possui_incoerencia: A situação-problema é absurda, incoerente com o mundo real ou tem erro conceitual grave?
+2. possui_ambiguidade: O comando final é dúbio, confuso ou possui dupla interpretação?
+3. deficit_informacoes: Faltam informações, dados numéricos essenciais ou contexto indispensável para resolver a questão?
+4. erros_ou_vazamentos: O texto contém erros de português ou palavras proibidas de bastidor ('solver', 'python', 'código', 'algoritmo', 'distrator')?
+5. duplicacao_tabelas: O texto repete desnecessariamente dados de tabelas em tópicos/texto corrido além da própria tabela formatada?
 
-Responda em formato JSON com o schema:
+Responda EXCLUSIVAMENTE em formato JSON com o schema:
 {{
-  "analise_critica": "Análise técnica concisa verificando coerência conceitual, ausência de empates e uso dos dados...",
   "possui_incoerencia": bool,
   "possui_ambiguidade": bool,
-  "deficit_informacoes": bool
+  "deficit_informacoes": bool,
+  "erros_ou_vazamentos": bool,
+  "duplicacao_tabelas": bool
 }}
 """
     return prompt
-
 
 
 
