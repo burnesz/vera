@@ -160,3 +160,62 @@ def test_assemble_alternatives_and_gabarito():
     assert len(set(alternativas.values())) == 5
     assert gabarito in {"A", "B", "C", "D", "E"}
     assert alternativas[gabarito] == "40"
+
+
+def test_pot_few_shot_examples_pass_groundedness_and_execution():
+    import json
+    from app.core.prompts import POT_FEW_SHOT_EXAMPLES
+    from app.schemas.question import QuestaoEnunciadoSolverOutput
+    from app.services.question_validator import format_enunciado_with_table
+
+    for idx, raw_ex in enumerate(POT_FEW_SHOT_EXAMPLES, 1):
+        data = json.loads(raw_ex)
+        pot_out = QuestaoEnunciadoSolverOutput(**data)
+        assert pot_out.planejamento is not None and len(pot_out.planejamento) > 10
+        enunciado_full = format_enunciado_with_table(pot_out.enunciado, pot_out.tabela_dados)
+        res = execute_solver_code(pot_out.solver, timeout=5)
+        vals = validate_solver_consistency(enunciado_full, pot_out.solver, res)
+        assert len(vals) == 5, f"Exemplo {idx} falhou em retornar 5 alternativas"
+        assert len(set(vals)) == 5, f"Exemplo {idx} gerou alternativas duplicadas: {vals}"
+
+
+def test_validate_solver_consistency_words_to_numbers():
+    enunciado = "Uma cooperativa dividiu oitocentos quilos de grãos igualmente entre oito silos durante um semestre."
+    code = """
+def resolver():
+    total = 800
+    silos = 8
+    meses = 6
+    por_silo = total / silos
+    return {'correta': por_silo, 'distratores': [por_silo / meses, total / meses, por_silo + 20, por_silo - 20]}
+"""
+    res = execute_solver_code(code)
+    vals = validate_solver_consistency(enunciado, code, res)
+    assert len(vals) == 5
+    assert vals[0] == "100"
+
+
+def test_execute_and_validate_five_distractors_discards_gabarito_match():
+    code = """
+def resolver():
+    a = 50
+    b = 4
+    correta = a * b
+    # Incluiu 5 distratores onde 1 deles (200) é igual à correta
+    return {'correta': correta, 'distratores': [200, 150, 180, 220, 250]}
+"""
+    res = execute_solver_code(code)
+    assert len(res["distratores"]) == 4
+    assert 200 not in res["distratores"]
+    vals = validate_solver_consistency("Uma compra de 50 itens a 4 reais cada.", code, res)
+    assert vals == ["200", "150", "180", "220", "250"]
+
+
+def test_validate_solver_consistency_rejects_two_or_more_collisions():
+    enunciado = "Teste com 100 reais e taxa de 10%."
+    code = "def resolver():\n    return {'correta': 10, 'distratores': [10, 10, 20, 30]}"
+    result = {"correta": 10, "distratores": [10, 10, 20, 30]}  # 2 colisões (apenas 20 e 30 são únicos != 10)
+
+    with pytest.raises(ValueError, match="Colisão excessiva de alternativas"):
+        validate_solver_consistency(enunciado, code, result)
+

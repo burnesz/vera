@@ -160,7 +160,7 @@ def build_chat_prompt(
             title = chunk.get("title", "Material Didático")
             topic = chunk.get("topic", "")
             raw_text = str(chunk.get("text", "")).strip()
-            # Limita tamanho do trecho para não estourar a janela de contexto de 4096 tokens
+            # Limita tamanho do trecho para não estourar a janela de contexto de 8192 tokens
             trimmed_text = raw_text[:max_chunk_chars] + ("..." if len(raw_text) > max_chunk_chars else "")
             chunks_text.append(f"--- [Material Didático {idx} | Título: {title} | Tópico: {topic}] ---\n{trimmed_text}")
         context_section = "\n\n".join(chunks_text)
@@ -338,7 +338,7 @@ POT_FEW_SHOT_EXAMPLES: List[str] = [
     {"Turma": "B", "Alunos": 40, "Nota média": 6},
     {"Turma": "C", "Alunos": 20, "Nota média": 8}
   ],
-  "solver": "def resolver():\\n    alunos_a, alunos_b, alunos_c = 40, 40, 20\\n    nota_a, nota_b, nota_c = 4, 6, 8\\n    total_alunos = alunos_a + alunos_b + alunos_c\\n    correta = (alunos_a*nota_a + alunos_b*nota_b + alunos_c*nota_c) / total_alunos\\n    erro_media_simples = (nota_a + nota_b + nota_c) / 3\\n    erro_esqueceu_turma_c = (alunos_a*nota_a + alunos_b*nota_b) / (alunos_a + alunos_b)\\n    erro_pesos_trocados = (alunos_c*nota_a + alunos_b*nota_b + alunos_a*nota_c) / total_alunos\\n    erro_esqueceu_turma_a = (alunos_b*nota_b + alunos_c*nota_c) / (alunos_b + alunos_c)\\n    return {'correta': round(correta, 2), 'distratores': [round(erro_media_simples, 2), round(erro_esqueceu_turma_c, 2), round(erro_pesos_trocados, 2), round(erro_esqueceu_turma_a, 2)]}"
+  "solver": "def resolver():\\n    alunos_a, alunos_b, alunos_c = 40, 40, 20\\n    nota_a, nota_b, nota_c = 4, 6, 8\\n    total_alunos = alunos_a + alunos_b + alunos_c\\n    correta = (alunos_a*nota_a + alunos_b*nota_b + alunos_c*nota_c) / total_alunos\\n    erro_media_simples = (nota_a + nota_b + nota_c) / len([nota_a, nota_b, nota_c])\\n    erro_esqueceu_turma_c = (alunos_a*nota_a + alunos_b*nota_b) / (alunos_a + alunos_b)\\n    erro_pesos_trocados = (alunos_c*nota_a + alunos_b*nota_b + alunos_a*nota_c) / total_alunos\\n    erro_esqueceu_turma_a = (alunos_b*nota_b + alunos_c*nota_c) / (alunos_b + alunos_c)\\n    return {'correta': round(correta, 2), 'distratores': [round(erro_media_simples, 2), round(erro_esqueceu_turma_c, 2), round(erro_pesos_trocados, 2), round(erro_esqueceu_turma_a, 2)]}"
 }""",
     # --- Exemplo 2: sem tabela, porcentagens sucessivas ---
     """{
@@ -381,7 +381,8 @@ def build_enunciado_solver_prompt(
     tema: Optional[str] = None,
     abertura: Optional[str] = None,
     exemplo_few_shot: Optional[str] = None,
-    enunciados_recentes: Optional[List[str]] = None
+    enunciados_recentes: Optional[List[str]] = None,
+    alerta_tentativa_anterior: Optional[str] = None
 ) -> str:
     """
     Constrói prompt estruturado para a Fase 1 da geração PoT (Enunciado + Solver em Python).
@@ -392,11 +393,18 @@ def build_enunciado_solver_prompt(
         for idx, ex in enumerate(exemplos_referencia, 1):
             ano = ex.get("ano", "ENEM")
             enun = ex.get("enunciado", "").strip()
-            gab = ex.get("gabarito", "")
+            gab = str(ex.get("gabarito", "")).strip().upper()
+            alts = ex.get("alternativas") or {}
+            valor_resp = alts.get(gab, "").strip() if isinstance(alts, dict) and gab else ""
+            linha_resp = (
+                f"\nResposta Correta Oficial: {valor_resp}"
+                if valor_resp
+                else (f"\nGabarito Oficial: {gab}" if gab else "")
+            )
             bloco = (
                 f"--- [Questão Histórica do ENEM {idx} para Ancoragem Isomórfica (ENEM {ano})] ---\n"
-                f"Enunciado Real: {enun}\n"
-                f"Gabarito Oficial: {gab}"
+                f"Enunciado Real: {enun}"
+                f"{linha_resp}"
             )
             blocos.append(bloco)
 
@@ -413,8 +421,9 @@ def build_enunciado_solver_prompt(
 
     secao_recentes = ""
     if enunciados_recentes:
-        itens = "\n".join(f"- {e.strip()[:160]}..." for e in enunciados_recentes[-3:])
-        secao_recentes = f"""
+        itens = "\n".join(f"- {e.strip()[:160]}..." for e in enunciados_recentes[-3:] if e and e.strip())
+        if itens:
+            secao_recentes = f"""
 JÁ FORAM GERADOS (NÃO repita contexto, estrutura nem tipo de cálculo):
 {itens}
 """
@@ -427,6 +436,13 @@ JÁ FORAM GERADOS (NÃO repita contexto, estrutura nem tipo de cálculo):
         if abertura:
             linhas_criativas.append(f"- Abertura narrativa: {abertura}. (Evite começar com 'Um [profissional] está...').")
         diretriz_criativa = "\n" + "\n".join(linhas_criativas)
+
+    bloco_alerta_retry = ""
+    if alerta_tentativa_anterior:
+        bloco_alerta_retry = (
+            f"\nATENÇÃO — ORIENTAÇÃO DE QUALIDADE PARA ESTA TENTATIVA:\n"
+            f"- {alerta_tentativa_anterior}\n"
+        )
 
     few_shot = exemplo_few_shot if exemplo_few_shot is not None else sortear_few_shot()
 
@@ -449,7 +465,7 @@ gráfico, estimar, comparar ou usar proporção, o raciocínio do aluno precisa 
 {secao_recentes}============================================================
 SUA TAREFA:
 ============================================================
-Gere agora uma QUESTÃO INÉDITA para a habilidade {habilidade_codigo}.{diretriz_criativa}
+Gere agora uma QUESTÃO INÉDITA para a habilidade {habilidade_codigo}.{diretriz_criativa}{bloco_alerta_retry}
 
 Antes de responder, confira mentalmente:
 [ ] a pergunta pede um NÚMERO com unidade?   [ ] há pelo menos 2 etapas?

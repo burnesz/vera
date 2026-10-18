@@ -9,6 +9,7 @@ Implementa o fluxo RAG de 4 etapas previsto na Seção 8 do pré-projeto / AGENT
 """
 
 import os
+import re
 import json
 import time
 import logging
@@ -57,6 +58,37 @@ from app.schemas.question import (
 from pydantic import ValidationError
 
 logger = logging.getLogger(__name__)
+
+
+def _classify_retry_hint(last_error: Optional[str]) -> Optional[str]:
+    """
+    Converte o erro da tentativa anterior em uma diretriz curta de categoria (1 linha),
+    orientando a próxima geração no Stateless Retry sem expor o rascunho/código anterior
+    (evitando Context Anchoring Bias).
+    """
+    if not last_error:
+        return None
+
+    low = last_error.lower()
+    if "complexidade" in low or "trivial" in low:
+        return "Nível trivial: exija pelo menos 2 etapas de raciocínio encadeadas; proibido resolver apenas somando ou lendo a tabela."
+    if "premissa" in low or "déficit" in low or "deficit" in low or "contradi" in low:
+        return "Premissas e dados completos: declare todas as bases, áreas, pesos ou convenções no enunciado e garanta que a soma da tabela bata com o texto."
+    if "respondível" in low or "ambíguo" in low or "ambiguo" in low or "incompatível" in low:
+        return "Comando numérico inequívoco: a pergunta final deve pedir um número com unidade explícita (nunca pergunte 'qual plano/opção')."
+    if "ocioso" in low or "não utilizado" in low:
+        return "Dados com função: todo número citado no enunciado ou tabela deve entrar no cálculo (máximo de 1 dado extra contextual)."
+    if "incoerência" in low or "absurdo" in low:
+        return "Verossimilhança: utilize ordens de grandeza e contextos fisicamente realistas."
+    if "nexo" in low or "ausentes no enunciado" in low:
+        return "Nexo numérico: use no solver apenas números presentes no enunciado/tabela (para quantidade de itens/linhas, use len([...]))."
+    if "colisão" in low or "duplicad" in low:
+        return "Distratores distintos: calcule 4 variáveis de erros típicos que gerem 4 valores numéricos diferentes entre si e da resposta correta."
+    if "divergência" in low or "equivalência" in low:
+        return "Alinhamento enunciado-solver: garanta que a fórmula de 'correta' em def resolver() calcule exatamente o que o comando final pede."
+    if "termo técnico" in low or "proibido" in low:
+        return "Linguagem limpa: nunca cite termos internos como 'solver', 'python', 'código', 'algoritmo', 'distrator' ou 'gabarito' no enunciado."
+    return "Sintaxe estrita: retorne JSON válido com 'planejamento', 'enunciado', 'tabela_dados' (opcional) e função def resolver() em Python puro sem erros."
 
 
 class QuestionService:
@@ -215,8 +247,8 @@ class QuestionService:
         db: Session,
         habilidade_codigo: str,
         num_few_shot: int = 2,
-        max_attempts: int = 4,
-        temperature: float = 0.0,
+        max_attempts: int = 5,
+        temperature: float = 0.2,
         top_p: float = 0.9,
         tema: Optional[str] = None,
         abertura: Optional[str] = None
@@ -226,11 +258,11 @@ class QuestionService:
         1. Validação da habilidade na Matriz oficial do ENEM.
         2. Retrieval RAG semântico dos Top-k exemplos no namespace 'questoes_enem' do Pinecone.
         3. Geração via Program-Aided Generation (PoT):
-           - Fase 1: LLM gera situação-problema e def resolver() em Python.
+           - Fase 1: LLM gera planejamento, situação-problema e def resolver() em Python.
            - Execução isolada em subprocess com timeout e verificação de AST de segurança.
            - Validação de nexo numérico (groundedness) e unicidade estrita das 5 alternativas.
            - Embaralhamento programático das alternativas e definição determinística do gabarito.
-           - Fase 2: LLM redige justificativa pedagógica com gabarito comprovado.
+           - Validação Cega em 3 Etapas (Resolução Cega + Equivalência + Auditoria Semântica).
         4. Persistência na tabela questoes_ineditas no PostgreSQL.
         """
         clean_hab = habilidade_codigo.strip().upper()
@@ -269,8 +301,8 @@ class QuestionService:
         db: Session,
         habilidade: HabilidadeEnem,
         few_shot_dicts: List[Dict[str, Any]],
-        max_attempts: int = 4,
-        temperature: float = 0.0,
+        max_attempts: int = 5,
+        temperature: float = 0.2,
         top_p: float = 0.9,
         tema: Optional[str] = None,
         abertura: Optional[str] = None
@@ -283,6 +315,26 @@ class QuestionService:
         if not tema and not abertura:
             tema, abertura = sortear_contexto_criativo()
 
+        # Recupera até 3 enunciados recentes aprovados para a mesma habilidade a fim de evitar repetição temática
+        enunciados_recentes: List[str] = []
+        if db is not None:
+            try:
+                recentes_rows = (
+                    db.query(QuestaoInedita.enunciado)
+                    .filter(QuestaoInedita.habilidade_codigo == clean_hab)
+                    .order_by(QuestaoInedita.created_at.desc())
+                    .limit(3)
+                    .all()
+                )
+                if isinstance(recentes_rows, list):
+                    for row in recentes_rows:
+                        if isinstance(row, (tuple, list)) and row and isinstance(row[0], str):
+                            enunciados_recentes.append(row[0])
+                        elif hasattr(row, "enunciado") and isinstance(row.enunciado, str):
+                            enunciados_recentes.append(row.enunciado)
+            except Exception:
+                enunciados_recentes = []
+
         logger.info(
             f"Gerando questão inédita via PoT para {clean_hab} "
             f"(Tema: '{tema}' | Abertura: '{abertura}' | {len(few_shot_dicts)} exemplos RAG para ancoragem)..."
@@ -294,6 +346,8 @@ class QuestionService:
 
         for attempt in range(1, max_attempts + 1):
             # Se for retry após falha estrutural, aplica amostragem independente (Stateless Retry)
+            # passando apenas uma diretriz curta da categoria do erro anterior (sem o rascunho/código)
+            retry_hint: Optional[str] = None
             if attempt > 1:
                 curr_tema, curr_abertura = sortear_contexto_criativo()
                 curr_few_shot = self.retrieve_rag_few_shot_examples(
@@ -302,18 +356,19 @@ class QuestionService:
                     db=db
                 )
                 curr_temp = min(temperature + 0.1 * (attempt - 1), 0.6)
+                retry_hint = _classify_retry_hint(last_error)
                 logger.info(
                     f"PoT Stateless Retry: Tentativa limpa {attempt}/{max_attempts} para {clean_hab} "
-                    f"(Novo tema: '{curr_tema}' | Temp: {curr_temp:.1f})..."
+                    f"(Novo tema: '{curr_tema}' | Temp: {curr_temp:.1f} | Alerta: '{retry_hint}')..."
                 )
             else:
                 curr_tema = tema
                 curr_abertura = abertura
                 curr_few_shot = few_shot_dicts
                 curr_temp = temperature
-                logger.info(f"PoT: Tentativa {attempt}/{max_attempts} para {clean_hab}...")
+                logger.info(f"PoT: Tentativa {attempt}/{max_attempts} para {clean_hab} (Temp: {curr_temp:.1f})...")
 
-            # Geração limpa sem poluição de contexto ou ancoragem em erros anteriores (Stateless)
+            # Geração limpa sem poluição de contexto ou ancoragem em rascunhos anteriores (Stateless)
             prompt_pot = build_enunciado_solver_prompt(
                 habilidade_codigo=habilidade.codigo,
                 habilidade_descricao=habilidade.descricao,
@@ -321,13 +376,15 @@ class QuestionService:
                 eixo_tematico=habilidade.eixo_tematico,
                 exemplos_referencia=curr_few_shot,
                 tema=curr_tema,
-                abertura=curr_abertura
+                abertura=curr_abertura,
+                enunciados_recentes=enunciados_recentes,
+                alerta_tentativa_anterior=retry_hint
             )
 
             try:
                 raw_pot_output = self.llm_client.generate(
                     prompt=prompt_pot,
-                    max_tokens=1024,
+                    max_tokens=1536,
                     temperature=curr_temp,
                     top_p=top_p,
                     format="json"
@@ -411,7 +468,7 @@ class QuestionService:
                 logger.warning(f"Tentativa {attempt}/{max_attempts} falhou na resolução cega: {e}")
                 continue
 
-            # Validação Etapa 1b: Auto-relato de Premissas e Pergunta Respondível (Early Exit)
+            # Validação Etapa 1b: Auto-relato de Premissas, Pergunta Respondível e Dados Ociosos (Early Exit)
             if not getattr(blind_sol, "pergunta_respondivel", True):
                 last_error = "O resolvedor cego apontou que a pergunta não é respondível numericamente com os dados fornecidos."
                 logger.warning(f"Tentativa {attempt}/{max_attempts} descartada (pergunta não respondível): {last_error}")
@@ -426,6 +483,17 @@ class QuestionService:
                 if premissas_reais:
                     last_error = f"Premissas implícitas assumidas na resolução: {'; '.join(premissas_reais)}"
                     logger.warning(f"Tentativa {attempt}/{max_attempts} descartada por premissa implícita (Early Exit): {last_error}")
+                    continue
+
+            dados_ociosos = getattr(blind_sol, "dados_nao_utilizados", [])
+            if dados_ociosos:
+                ociosos_reais = [
+                    d for d in dados_ociosos
+                    if isinstance(d, str) and not re.search(r"^(nenhum|nenhuma|n/a|nada|todos foram usados)\b", d.strip(), re.I)
+                ]
+                if len(ociosos_reais) > 1:
+                    last_error = f"Dados ociosos em excesso no enunciado/tabela ({len(ociosos_reais)} não utilizados): {'; '.join(ociosos_reais)}"
+                    logger.warning(f"Tentativa {attempt}/{max_attempts} descartada por excesso de dados ociosos (Early Exit): {last_error}")
                     continue
 
             # --- VALIDAÇÃO ETAPA 2: CONFRONTO DIRETO DE EQUIVALÊNCIA (com Early Exit) ---
@@ -472,6 +540,11 @@ class QuestionService:
             )
 
             # --- PERSISTÊNCIA NO POSTGRESQL ---
+            scratchpad_header = (
+                f"# Planejamento PoT:\n# {pot_output.planejamento}\n\n"
+                if pot_output.planejamento
+                else ""
+            )
             nova_questao = QuestaoInedita(
                 id=uuid.uuid4(),
                 habilidade_codigo=habilidade.codigo,
@@ -479,7 +552,7 @@ class QuestionService:
                 alternativas=alternativas,
                 gabarito=gabarito,
                 justificativa=blind_sol.resolucao_passo_a_passo,
-                thought_scratchpad=f"# Solver Python validado via PoT:\n{pot_output.solver}",
+                thought_scratchpad=f"{scratchpad_header}# Solver Python validado via PoT:\n{pot_output.solver}",
                 is_validated=True
             )
             db.add(nova_questao)
@@ -621,7 +694,7 @@ class QuestionService:
                         db=db,
                         habilidade_codigo=hab_code,
                         num_few_shot=num_few_shot,
-                        max_attempts=4
+                        max_attempts=5
                     )
                     elapsed = round(time.time() - op_start, 2)
                     total_success += 1
@@ -646,7 +719,7 @@ class QuestionService:
                         habilidade_codigo=hab_code,
                         questao_id=None,
                         success=False,
-                        attempts=4,
+                        attempts=5,
                         error=err_msg,
                         elapsed_seconds=elapsed
                     )

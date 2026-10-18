@@ -12,8 +12,12 @@ from pydantic import BaseModel, Field, field_validator, ConfigDict
 class QuestaoEnunciadoSolverOutput(BaseModel):
     """
     Schema estruturado para a Fase 1 da geração Program-Aided (PoT):
-    O modelo produz exclusivamente o enunciado e o código Python do solver.
+    O modelo produz o planejamento, o enunciado (com tabela opcional) e o código Python do solver.
     """
+    planejamento: Optional[str] = Field(
+        None,
+        description="Planejamento prévio dos dados, etapas de raciocínio e erros típicos dos distratores."
+    )
     enunciado: str = Field(
         ...,
         description="Texto contextualizado da questão com comando final inequívoco."

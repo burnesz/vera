@@ -33,8 +33,54 @@ BLOCKED_CALLS = {
 
 # Constantes numéricas matemáticas, geométricas e temporais neutras permitidas no código
 ALLOWED_NUMERIC_CONSTANTS: Set[float] = {
-    0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 10.0, 12.0, 24.0, 60.0, 100.0, 180.0, 360.0, 365.0, 1000.0,
+    0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 10.0, 12.0, 24.0, 60.0, 100.0, 180.0, 360.0, 1000.0,
     0.5, 0.1, 0.01, 3.14, 3.1415, 3.1416
+}
+
+# Mapeamento de numerais por extenso e termos quantitativos/fracionários em português para nexo numérico
+_WORDS_TO_NUMBERS: Dict[str, float] = {
+    "zero": 0.0,
+    "um": 1.0, "uma": 1.0, "unico": 1.0, "único": 1.0, "unica": 1.0, "única": 1.0,
+    "dois": 2.0, "duas": 2.0, "ambos": 2.0, "ambas": 2.0, "par": 2.0, "dobro": 2.0, "duplo": 2.0, "bimestre": 2.0, "bimestral": 2.0,
+    "tres": 3.0, "três": 3.0, "triplo": 3.0, "trimestre": 3.0, "trimestral": 3.0,
+    "quatro": 4.0, "quadruplo": 4.0, "quádruplo": 4.0, "quadrimestre": 4.0,
+    "cinco": 5.0, "quintuplo": 5.0, "quíntuplo": 5.0,
+    "seis": 6.0, "semestre": 6.0, "semestral": 6.0, "meia": 6.0,
+    "sete": 7.0,
+    "oito": 8.0,
+    "nove": 9.0,
+    "dez": 10.0, "dezena": 10.0, "decada": 10.0, "década": 10.0,
+    "onze": 11.0,
+    "doze": 12.0, "duzia": 12.0, "dúzia": 12.0,
+    "treze": 13.0,
+    "quatorze": 14.0, "catorze": 14.0,
+    "quinze": 15.0, "quinzena": 15.0,
+    "dezesseis": 16.0,
+    "dezessete": 17.0,
+    "dezoito": 18.0,
+    "dezenove": 19.0,
+    "vinte": 20.0,
+    "trinta": 30.0,
+    "quarenta": 40.0,
+    "cinquenta": 50.0,
+    "sessenta": 60.0,
+    "setenta": 70.0,
+    "oitenta": 80.0,
+    "noventa": 90.0,
+    "cem": 100.0, "cento": 100.0, "centena": 100.0,
+    "duzentos": 200.0, "duzentas": 200.0,
+    "trezentos": 300.0, "trezentas": 300.0,
+    "quatrocentos": 400.0, "quatrocentas": 400.0,
+    "quinhentos": 500.0, "quinhentas": 500.0,
+    "seiscentos": 600.0, "seiscentas": 600.0,
+    "setecentos": 700.0, "setecentas": 700.0,
+    "oitocentos": 800.0, "oitocentas": 800.0,
+    "novecentos": 900.0, "novecentas": 900.0,
+    "mil": 1000.0,
+    "meio": 0.5, "metade": 0.5,
+    "terco": 3.0, "terço": 3.0, "terca": 3.0, "terça": 3.0,
+    "quarto": 4.0, "quarta": 4.0,
+    "quinto": 5.0, "quinta": 5.0,
 }
 
 
@@ -74,6 +120,42 @@ def check_code_safety(code: str) -> None:
         elif isinstance(node, ast.Call):
             if isinstance(node.func, ast.Name) and node.func.id in BLOCKED_CALLS:
                 raise PermissionError(f"Chamada de função não permitida no solver: '{node.func.id}()'")
+
+
+def _normalize_five_distractors(correta_val: Any, distratores_vals: List[Any]) -> List[Any]:
+    """
+    Quando o solver retorna 5 itens na lista 'distratores' (ex.: incluiu o próprio gabarito
+    junto com os 4 distratores), verifica se 1 deles é igual ao gabarito (ou duplicado) e
+    o descarta para reaproveitar os 4 distratores legítimos.
+    """
+    if len(distratores_vals) != 5:
+        return list(distratores_vals)
+
+    correta_str = format_number(correta_val)
+    filtered: List[Any] = []
+    removed_one = False
+    for d in distratores_vals:
+        if not removed_one and format_number(d) == correta_str:
+            removed_one = True
+            continue
+        filtered.append(d)
+
+    if len(filtered) == 4:
+        logger.info("Solver retornou 5 distratores com 1 igual à correta; descartado o duplicado do gabarito para reutilizar os 4 distratores.")
+        return filtered
+
+    # Caso nenhum seja igual à correta, remove a primeira duplicata interna (se houver) ou mantém os 4 primeiros distintos
+    dedup: List[Any] = []
+    seen_strs: Set[str] = set()
+    for d in distratores_vals:
+        d_str = format_number(d)
+        if d_str not in seen_strs:
+            seen_strs.add(d_str)
+            dedup.append(d)
+    if len(dedup) >= 4:
+        return dedup[:4]
+
+    return list(distratores_vals)[:4]
 
 
 def execute_solver_code(code: str, timeout: int = 5) -> Dict[str, Any]:
@@ -141,7 +223,13 @@ except Exception as e:
     if "correta" not in data or "distratores" not in data:
         raise ValueError("O dicionário retornado por resolver() deve conter as chaves 'correta' e 'distratores'.")
 
-    if not isinstance(data["distratores"], (list, tuple)) or len(data["distratores"]) != 4:
+    if not isinstance(data["distratores"], (list, tuple)):
+        raise ValueError("A chave 'distratores' deve ser uma lista ou tupla.")
+
+    if len(data["distratores"]) == 5:
+        data["distratores"] = _normalize_five_distractors(data["correta"], list(data["distratores"]))
+
+    if len(data["distratores"]) != 4:
         raise ValueError(f"A chave 'distratores' deve conter exatamente 4 valores. Encontrado: {len(data.get('distratores', []))}")
 
     return data
@@ -293,22 +381,35 @@ def validate_solver_consistency(
 ) -> List[str]:
     """
     Valida a consistência matemática e o nexo entre o código do solver e o texto do enunciado:
-    1. Unicidade estrita: o gabarito e os 4 distratores devem ser distintos (com Auto-Healing).
-    2. Checagem de nexo numérico: todo número utilizado no código antes do return deve estar presente no enunciado.
+    1. Se vierem 5 distratores, verifica se 1 é igual ao gabarito e o descarta para reutilizar 4.
+    2. Unicidade estrita: o gabarito e os 4 distratores devem ser distintos (com Auto-Healing limitado a 1 colisão).
+    3. Checagem de nexo numérico: todo número utilizado no código antes do return deve estar presente no enunciado
+       (em algarismos ou por extenso).
     Retorna a lista de 5 valores formatados [correta, distrator1, distrator2, distrator3, distrator4].
     """
     correta_val = result["correta"]
-    distratores_vals = result["distratores"]
+    distratores_vals = list(result["distratores"])
+
+    if len(distratores_vals) == 5:
+        distratores_vals = _normalize_five_distractors(correta_val, distratores_vals)
 
     correta_str = format_number(correta_val)
     dist_strs = [format_number(d) for d in distratores_vals]
     all_values = [correta_str] + dist_strs
 
-    # 1. Validação de Unicidade com Auto-Healing Algorítmico (Abordagem 1)
-    if len(set(all_values)) != 5:
+    # 1. Validação de Unicidade com Auto-Healing limitado a no máximo 1 distrator colidido
+    unique_valid_distractors = {d for d in dist_strs if d != correta_str}
+    num_collisions = 4 - len(unique_valid_distractors)
+
+    if num_collisions > 1:
+        raise ValueError(
+            f"Colisão excessiva de alternativas no solver ({num_collisions} colisões em {all_values}). "
+            f"O solver deve produzir pelo menos 3 distratores únicos distintos do gabarito."
+        )
+    elif num_collisions == 1 or len(set(all_values)) != 5:
         logger.warning(
-            f"Auto-Healing: Colisão de alternativas detectada no solver ({all_values}). "
-            f"Acionando auto-cura algorítmica para garantir unicidade estrita..."
+            f"Auto-Healing: 1 colisão de alternativa detectada no solver ({all_values}). "
+            f"Acionando auto-cura algorítmica para 1 distrator..."
         )
         dist_strs = auto_heal_distractors(
             correta_val=correta_val,
@@ -356,14 +457,23 @@ def validate_solver_consistency(
         except ValueError:
             pass
 
-    # 3. Tratamento de porcentagens: ex '2%' ou '15%' -> adiciona também 0.02 e 0.15
+    # 3. Tratamento de porcentagens: ex '2%' ou '15%' -> adiciona também 0.02, 0.15 e complementos (0.98, 0.85, 85)
     for match in re.finditer(r"(\d+(?:[\.,]\d+)?)\s*%", enunciado):
         val_str = match.group(1).replace(",", ".")
         try:
             val_pct = float(val_str)
             enun_floats.add(round(val_pct / 100.0, 6))
+            if 0 < val_pct < 100:
+                enun_floats.add(round(100.0 - val_pct, 6))
+                enun_floats.add(round((100.0 - val_pct) / 100.0, 6))
+                enun_floats.add(round((100.0 + val_pct) / 100.0, 6))
         except ValueError:
             pass
+
+    # 4. Numerais por extenso e termos multiplicativos/fracionários em português
+    for word in re.findall(r"[a-zA-ZÀ-ÿ]+", enunciado.lower()):
+        if word in _WORDS_TO_NUMBERS:
+            enun_floats.add(_WORDS_TO_NUMBERS[word])
 
     # Identifica números no código que não constam no enunciado nem na lista de constantes neutras
     missing_numbers = {

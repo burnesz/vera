@@ -555,3 +555,77 @@ def test_three_stage_validation_semantic_failure_rejects():
         db.close()
 
 
+def test_stage_1b_rejects_excessive_unused_data_and_injects_retry_hint():
+    """Valida se a Etapa 1b reprova quando dados_nao_utilizados tem > 1 item e passa alerta_tentativa_anterior no retry."""
+    from app.services.question_service import _classify_retry_hint
+
+    assert "2 etapas" in _classify_retry_hint("Complexidade insuficiente para o ENEM (item trivial)")
+    assert "len([" in _classify_retry_hint("Números utilizados na lógica do solver ausentes no enunciado")
+
+    db = TestingSessionLocal()
+    try:
+        mock_llm = MagicMock(spec=LLMClient)
+        mock_vs = MagicMock(spec=PineconeVectorStore)
+        mock_vs.search.return_value = []
+
+        # 1ª tentativa: Blind solving aponta 2 dados não utilizados -> Early Exit na Etapa 1b!
+        t1_pot = json.dumps({
+            "planejamento": "Plano inicial com dados extras.",
+            "enunciado": "Um atleta correu em 10 s e 20 s, e ganhou 50 pontos fixos mais 30 de bônus. Qual sua pontuação total?",
+            "solver": "def resolver():\n    return {'correta': 80, 'distratores': [50, 60, 70, 90]}"
+        })
+        t1_blind = json.dumps({
+            "resolucao_passo_a_passo": "50 + 30 = 80 pontos.",
+            "premissas_assumidas": [],
+            "dados_nao_utilizados": ["tempo 10 s", "tempo 20 s"],
+            "pergunta_respondivel": True,
+            "resultado_obtido": 80
+        })
+
+        # 2ª tentativa: Usa todos os dados e aprova
+        t2_pot = json.dumps({
+            "planejamento": "Plano corrigido usando todos os dados.",
+            "enunciado": "Um atleta fez 50 pontos no sábado e 30 pontos no domingo. Qual a pontuação total, em pontos, no fim de semana?",
+            "solver": "def resolver():\n    return {'correta': 80, 'distratores': [50, 60, 70, 90]}"
+        })
+        t2_blind = json.dumps({
+            "resolucao_passo_a_passo": "50 + 30 = 80.",
+            "premissas_assumidas": [],
+            "dados_nao_utilizados": [],
+            "pergunta_respondivel": True,
+            "resultado_obtido": 80
+        })
+        t2_equiv = json.dumps({
+            "equivalentes": True,
+            "explicacao_equivalencia": "Ambos 80."
+        })
+        t2_audit = json.dumps({
+            "analise": "Item adequado",
+            "incoerencia_ou_absurdo": False,
+            "comando_ambiguo_ou_incompativel": False,
+            "deficit_ou_contradicao": False,
+            "complexidade_insuficiente": False
+        })
+
+        mock_llm.generate.side_effect = [
+            t1_pot, t1_blind,  # 2 chamadas na 1ª tentativa (Early Exit na Etapa 1b)
+            t2_pot, t2_blind, t2_equiv, t2_audit
+        ]
+
+        service = QuestionService(llm_client=mock_llm, vector_store=mock_vs)
+        questao = service.generate_single_questao_inedita(
+            db=db,
+            habilidade_codigo="H01",
+            max_attempts=2
+        )
+
+        assert questao is not None
+        assert "# Planejamento PoT:" in questao.thought_scratchpad
+        assert mock_llm.generate.call_count == 6
+        # Verifica que o prompt da 2ª tentativa (3ª chamada ao LLM, índice 2) recebeu a diretriz curta de dados com função
+        second_attempt_prompt = mock_llm.generate.call_args_list[2].kwargs["prompt"]
+        assert "Dados com função:" in second_attempt_prompt
+    finally:
+        db.close()
+
+
