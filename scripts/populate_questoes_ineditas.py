@@ -165,7 +165,7 @@ def main():
                             db=db,
                             habilidade_codigo=hab_code,
                             num_few_shot=args.few_shot_k,
-                            max_attempts=4,
+                            max_attempts=5,
                             tema=args.tema,
                             abertura=args.abertura
                         )
