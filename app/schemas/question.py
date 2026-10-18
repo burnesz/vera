@@ -67,6 +67,18 @@ class QuestaoBlindSolvingOutput(BaseModel):
         ...,
         description="Valor final deduzido no formato de tipo primário do Python (int, float, str, dict ou list)."
     )
+    premissas_assumidas: List[str] = Field(
+        default_factory=list,
+        description="Premissas ou convenções implícitas que precisaram ser adotadas sem estar escritas no enunciado."
+    )
+    dados_nao_utilizados: List[str] = Field(
+        default_factory=list,
+        description="Números ou colunas fornecidos que não foram utilizados no cálculo."
+    )
+    pergunta_respondivel: bool = Field(
+        True,
+        description="False se o comando final não puder ser respondido numericamente com os dados fornecidos."
+    )
 
 
 class QuestaoEquivalenciaOutput(BaseModel):
@@ -86,37 +98,70 @@ class QuestaoEquivalenciaOutput(BaseModel):
 class QuestaoAuditoriaSemanticaOutput(BaseModel):
     """
     Schema para a Chamada 3 da Fase de Validação: Auditoria Semântica e Pedagógica.
-    Avalia a presença de defeitos ou problemas no item.
+    Avalia a presença de defeitos no item através de 4 macro-critérios semânticos.
     """
-    possui_incoerencia: bool = Field(False, description="True se a situação-problema tiver incoerência ou erro lógico.")
-    possui_ambiguidade: bool = Field(False, description="True se houver ambiguidade ou comando duplo.")
-    deficit_informacoes: bool = Field(False, description="True se faltarem informações necessárias para resolver.")
-    erros_ou_vazamentos: bool = Field(False, description="True se contiver erros de português ou palavras proibidas de código.")
-    duplicacao_tabelas: bool = Field(False, description="True se houver redundância ou repetição de dados da tabela.")
+    analise: Optional[str] = Field(
+        None,
+        description="Evidência curta dos problemas identificados ou 'Item adequado'."
+    )
+    incoerencia_ou_absurdo: bool = Field(
+        False,
+        description="True se a situação for absurda, fisicamente incoerente ou conceitualmente errada."
+    )
+    comando_ambiguo_ou_incompativel: bool = Field(
+        False,
+        description="True se o comando for dúbio, não informar unidade ou não pedir um valor numérico."
+    )
+    deficit_ou_contradicao: bool = Field(
+        False,
+        description="True se faltarem informações indispensáveis ou se texto e tabela se contradisserem."
+    )
+    complexidade_insuficiente: bool = Field(
+        False,
+        description="True se o item for trivial demais para o ENEM (operação direta única ou leitura sem cálculo)."
+    )
+
+    # Campos legados mantidos para compatibilidade retroativa total com testes
+    possui_incoerencia: Optional[bool] = None
+    possui_ambiguidade: Optional[bool] = None
+    deficit_informacoes: Optional[bool] = None
+    erros_ou_vazamentos: Optional[bool] = None
+    duplicacao_tabelas: Optional[bool] = None
 
     @property
     def aprovada(self) -> bool:
-        return not any([
-            self.possui_incoerencia,
-            self.possui_ambiguidade,
-            self.deficit_informacoes,
-            self.erros_ou_vazamentos,
-            self.duplicacao_tabelas
-        ])
+        novas_flags = [
+            self.incoerencia_ou_absurdo,
+            self.comando_ambiguo_ou_incompativel,
+            self.deficit_ou_contradicao,
+            self.complexidade_insuficiente
+        ]
+        flags_legadas = [
+            bool(self.possui_incoerencia),
+            bool(self.possui_ambiguidade),
+            bool(self.deficit_informacoes),
+            bool(self.erros_ou_vazamentos),
+            bool(self.duplicacao_tabelas)
+        ]
+        return not any(novas_flags) and not any(flags_legadas)
 
     @property
     def motivo_rejeicao(self) -> Optional[str]:
         motivos = []
-        if self.possui_incoerencia:
-            motivos.append("Incoerência semântica ou lógica na situação-problema.")
-        if self.possui_ambiguidade:
-            motivos.append("O enunciado apresenta ambiguidade ou comando duplo.")
-        if self.deficit_informacoes:
-            motivos.append("Foi identificado déficit de informações no enunciado para resolução.")
+        if self.incoerencia_ou_absurdo or self.possui_incoerencia:
+            motivos.append("Incoerência semântica ou física na situação-problema.")
+        if self.comando_ambiguo_ou_incompativel or self.possui_ambiguidade:
+            motivos.append("Comando ambíguo, sem unidade clara ou incompatível com resposta numérica.")
+        if self.deficit_ou_contradicao or self.deficit_informacoes:
+            motivos.append("Déficit de dados essenciais ou contradição entre texto e tabela.")
+        if self.complexidade_insuficiente:
+            motivos.append("Complexidade insuficiente para o ENEM (item trivial de operação direta).")
         if self.erros_ou_vazamentos:
-            motivos.append("Presença de erros gramaticais ou vazamento de termos técnicos ('solver', 'python', 'código').")
+            motivos.append("Presença de erros gramaticais ou termos proibidos de código.")
         if self.duplicacao_tabelas:
-            motivos.append("Redundância ou duplicação de dados/tabelas no enunciado.")
+            motivos.append("Redundância ou repetição de dados da tabela no enunciado.")
+        if self.analise and not self.aprovada:
+            motivos.append(f"Análise do Revisor: {self.analise}")
         return " | ".join(motivos) if motivos else None
 
 

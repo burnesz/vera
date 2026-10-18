@@ -28,7 +28,9 @@ from app.services.question_validator import (
     extract_json_from_text,
     sanitize_latex_json_text,
     sanitize_parsed_dict_values,
-    format_enunciado_with_table
+    format_enunciado_with_table,
+    check_prohibited_terms,
+    check_table_duplication
 )
 from app.services.code_executor import (
     execute_solver_code,
@@ -367,6 +369,14 @@ class QuestionService:
                 logger.warning(f"Tentativa {attempt}/{max_attempts} falhou no schema Pydantic: {e}")
                 continue
 
+            # --- VALIDAÇÕES DETERMINÍSTICAS EM PYTHON (0ms) ---
+            # 1. Vazamento de termos técnicos de bastidor ('solver', 'python', 'código', etc.)
+            ok_terms, err_terms = check_prohibited_terms(pot_output.enunciado)
+            if not ok_terms:
+                last_error = err_terms
+                logger.warning(f"Tentativa {attempt}/{max_attempts} descartada por termo proibido: {err_terms}")
+                continue
+
             # --- EXECUÇÃO DO SOLVER EM SUBPROCESS ISOLADO ---
             try:
                 solver_result = execute_solver_code(pot_output.solver, timeout=5)
@@ -392,11 +402,31 @@ class QuestionService:
 
             # --- VALIDAÇÃO ETAPA 1: RESOLUÇÃO CEGA PURA (Zero Alternativas) ---
             try:
-                blind_sol = self._run_blind_solving(enunciado=pot_output.enunciado)
+                blind_sol = self._run_blind_solving(
+                    enunciado=pot_output.enunciado,
+                    tabela_dados=pot_output.tabela_dados
+                )
             except Exception as e:
                 last_error = f"Falha na resolução cega da LLM: {e}"
                 logger.warning(f"Tentativa {attempt}/{max_attempts} falhou na resolução cega: {e}")
                 continue
+
+            # Validação Etapa 1b: Auto-relato de Premissas e Pergunta Respondível (Early Exit)
+            if not getattr(blind_sol, "pergunta_respondivel", True):
+                last_error = "O resolvedor cego apontou que a pergunta não é respondível numericamente com os dados fornecidos."
+                logger.warning(f"Tentativa {attempt}/{max_attempts} descartada (pergunta não respondível): {last_error}")
+                continue
+
+            premissas = getattr(blind_sol, "premissas_assumidas", [])
+            if premissas:
+                premissas_reais = [
+                    p for p in premissas
+                    if isinstance(p, str) and not re.search(r"^(nenhuma|n/a|nenhum|nada|sem premissas?)\b", p.strip(), re.I)
+                ]
+                if premissas_reais:
+                    last_error = f"Premissas implícitas assumidas na resolução: {'; '.join(premissas_reais)}"
+                    logger.warning(f"Tentativa {attempt}/{max_attempts} descartada por premissa implícita (Early Exit): {last_error}")
+                    continue
 
             # --- VALIDAÇÃO ETAPA 2: CONFRONTO DIRETO DE EQUIVALÊNCIA (com Early Exit) ---
             try:
@@ -418,11 +448,13 @@ class QuestionService:
                 )
                 continue
 
-            # --- VALIDAÇÃO ETAPA 3: AUDITORIA SEMÂNTICA E PEDAGÓGICA ---
+            # --- VALIDAÇÃO ETAPA 3: AUDITORIA SEMÂNTICA E PEDAGÓGICA (4 Macro-Critérios) ---
             try:
                 audit = self._run_semantic_audit(
                     enunciado=pot_output.enunciado,
-                    alternativas=alternativas
+                    alternativas=alternativas,
+                    tabela_dados=pot_output.tabela_dados,
+                    letra_gabarito=gabarito
                 )
             except Exception as e:
                 last_error = f"Falha na auditoria semântica: {e}"
@@ -460,12 +492,19 @@ class QuestionService:
             f"Último erro: {last_error}"
         )
 
-    def _run_blind_solving(self, enunciado: str) -> QuestaoBlindSolvingOutput:
+    def _run_blind_solving(
+        self,
+        enunciado: str,
+        tabela_dados: Optional[List[Dict[str, Any]]] = None
+    ) -> QuestaoBlindSolvingOutput:
         """
         Etapa 1 da Validação: Resolução Cega Pura.
-        A LLM recebe exclusivamente o enunciado e deduz a resolução e o resultado obtido.
+        A LLM recebe exclusivamente o enunciado (e tabela) e deduz a resolução e o resultado obtido.
         """
-        prompt = build_blind_solving_prompt(enunciado=enunciado)
+        prompt = build_blind_solving_prompt(
+            enunciado=enunciado,
+            tabela_dados=tabela_dados
+        )
         raw = self.llm_client.generate(
             prompt=prompt,
             max_tokens=800,
@@ -514,18 +553,26 @@ class QuestionService:
 
         return QuestaoEquivalenciaOutput(**parsed)
 
-    def _run_semantic_audit(self, enunciado: str, alternativas: Dict[str, str]) -> QuestaoAuditoriaSemanticaOutput:
+    def _run_semantic_audit(
+        self,
+        enunciado: str,
+        alternativas: Dict[str, str],
+        tabela_dados: Optional[List[Dict[str, Any]]] = None,
+        letra_gabarito: Optional[str] = None
+    ) -> QuestaoAuditoriaSemanticaOutput:
         """
         Etapa 3 da Validação: Auditoria Semântica e Pedagógica.
-        Avalia o item do ENEM quanto à presença de incoerência, ambiguidade, déficit de dados ou erros.
+        Avalia o item do ENEM através dos 4 macro-critérios semânticos essenciais.
         """
         prompt = build_auditoria_semantica_prompt(
             enunciado=enunciado,
-            alternativas=alternativas
+            alternativas=alternativas,
+            tabela_dados=tabela_dados,
+            letra_gabarito=letra_gabarito
         )
         raw = self.llm_client.generate(
             prompt=prompt,
-            max_tokens=300,
+            max_tokens=400,
             temperature=0.0,
             top_p=0.9,
             format="json"

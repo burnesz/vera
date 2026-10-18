@@ -67,12 +67,12 @@ Nenhuma questão inédita pode ser salva ou exibida ao estudante sem cumprir **t
 6. **Validação Etapa 2 — Confronto Direto de Equivalência com *Early Exit* (`QuestaoEquivalenciaOutput`, `temperature=0.0`)**:
    - Compara `resultado_solver` vs. `resultado_obtido` aceitando equivalências matemáticas legítimas (ex.: `2500` vs. `"R$ 2.500,00"`, `0.5` vs. `"50%"`, arredondamentos compatíveis). Se `equivalentes == False`, interrompe imediatamente (*Early Exit*) e aciona o *Stateless Retry*.
 7. **Validação Etapa 3 — Auditoria Semântica Determinística (`QuestaoAuditoriaSemanticaOutput`, `temperature=0.0`)**:
-   - Avalia 5 flags booleanas de defeito:
-     - `possui_incoerencia`: contradições físicas, matemáticas ou de senso comum.
-     - `possui_ambiguidade`: comando duplo ou margem para mais de uma interpretação.
-     - `deficit_informacoes`: omissão de dado indispensável para o cálculo **ou dependência de convenção não declarada** (ex.: "mensal" tratado como 30 dias).
-     - `erros_ou_vazamentos`: erros gramaticais graves ou vazamento de termos internos (`"solver"`, `"python"`, `"código"`, `"função"`).
-     - `duplicacao_tabelas`: repetição redundante da tabela no texto e em `tabela_dados`.
+   - Checagens mecânicas estruturais (como termos proibidos de bastidores: `"solver"`, `"python"`, `"código"`) são validadas deterministicamente em Python (`check_prohibited_terms`) com 0ms antes das chamadas LLM.
+   - O LLM na Etapa 3 avalia exclusivamente 4 macro-critérios semânticos e contextuais humanos:
+     - `incoerencia_ou_absurdo`: contradições físicas, bom senso ou erro conceitual grave.
+     - `comando_ambiguo_ou_incompativel`: comando duplo, omissão de unidade esperada ou pergunta incompatível com alternativas numéricas.
+     - `deficit_ou_contradicao`: omissão de dado essencial ou contradição entre texto e tabela.
+     - `complexidade_insuficiente`: item trivial abaixo do padrão ENEM.
    - A aprovação (`aprovada = not any(...)`) e o `motivo_rejeicao` são calculados em Python no backend.
 
 ### Diretrizes de Geração da Fase 1 (`POT_QUESTION_GENERATOR_SYSTEM_PROMPT` — `DSR-07`)

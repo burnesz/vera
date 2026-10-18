@@ -566,15 +566,15 @@ def build_auditoria_semantica_prompt(
 ) -> str:
     """
     Constrói prompt para a Chamada 3 da Fase de Validação: Auditoria Semântica e Pedagógica.
-
+    Avalia a qualidade do item do ENEM através de 4 macro-critérios semânticos essenciais.
     """
     alts_formatted = "\n".join([f"  {k}) {v}" for k, v in sorted(alternativas.items())])
     tabela_txt = _formatar_tabela(tabela_dados)
-    bloco_tabela = f"\nTabela:\n{tabela_txt}\n" if tabela_txt else ""
-    bloco_gab = f"\nAlternativa correta segundo o sistema: {letra_gabarito}\n" if letra_gabarito else ""
+    bloco_tabela = f"\nTabela de Dados:\n{tabela_txt}\n" if tabela_txt else ""
+    bloco_gab = f"\nAlternativa correta segundo o sistema: {letra_gabarito} ({alternativas.get(letra_gabarito, '')})\n" if letra_gabarito else ""
 
-    prompt = f"""Você é um Revisor Técnico e Pedagógico Oficial do INEP para questões do ENEM.
-Audite o item de Matemática abaixo. Em caso de dúvida sobre um problema, marque true.
+    prompt = f"""Você é um Revisor Técnico e Pedagógico Oficial do INEP para questões de Matemática do ENEM.
+Audite o item abaixo avaliando se ele cumpre os padrões de verossimilhança e qualidade pedagógica do exame.
 
 ============================================================
 ITEM SUBMETIDO:
@@ -586,40 +586,30 @@ Alternativas:
 {alts_formatted}
 {bloco_gab}
 ============================================================
-CRITÉRIOS (true = o problema EXISTE; false = o item está correto neste critério):
+CRITÉRIOS DE AUDITORIA (true = o defeito EXISTE; false = o item está CORRETO):
 ============================================================
-1. possui_incoerencia: a situação é absurda ou fisicamente impossível? (ex.: consumo de 4 litros de água por casa por dia; prova de 50 m livre em 1,2 minuto; "consumir" calorias no treino; esporte e equipamento que não combinam)
-2. possui_ambiguidade: o comando final admite mais de uma interpretação?
-3. deficit_informacoes: falta algum dado essencial?
-4. erros_ou_vazamentos: há erros de português ou as palavras 'solver', 'python', 'código', 'algoritmo', 'distrator', 'gabarito'?
-5. duplicacao_tabelas: o texto repete os dados da tabela além da própria tabela?
-6. comando_incompativel_com_alternativas: o comando final pede algo (um plano, uma opção, um nome) que as alternativas, todas numéricas, não respondem?
-   Confira também se TODAS as alternativas têm o mesmo tipo de grandeza e se nenhuma é do tipo "Não há diferença" ou "Não há embalagem".
-7. premissa_implicita: a resolução só funciona com uma suposição não escrita? (ex.: "por hectare" sem informar a área; percentuais por faixa sem o tamanho de cada faixa; parcelas de tamanho igual não declarado)
-8. dados_contraditorios: o texto e a tabela se contradizem? (ex.: texto diz 15 km mas a tabela soma 14,8 km; texto diz 10 estações mas a tabela tem outro número; texto diz uma semana mas a tabela tem 5 dias)
-9. dado_irrelevante_ou_nao_usado: há números ou informações que não entram em nenhuma etapa do cálculo (ex.: tempos de um atleta quando a pontuação é fixa)? Apenas UMA coluna extra de distração, coerente com o contexto, é aceitável.
-10. inverossimilhanca_numerica: os valores estão fora de uma faixa realista para o contexto?
-11. nivel_trivial: a questão se resolve com UMA única operação direta ou só com leitura de um valor da tabela (somar uma coluna, multiplicar dois números, ler uma célula)? O ENEM exige pelo menos 2 etapas de raciocínio.
-12. distratores_artificiais: os distratores parecem correta ± valor fixo, correta × 0,8 ou × 1,2, ou decimais sem sentido para o contexto (ex.: 104,4 camisas)? Distratores bons correspondem a erros típicos de alunos.
+1. incoerencia_ou_absurdo: a situação é absurda, fisicamente impossível ou conceitualmente errada?
+   Exemplos de defeito: consumo irreal (ex.: 4 L de água por dia por família), velocidades ou tempos humanos biologicamente impossíveis, esporte e equipamento incompatíveis (ex.: capacete no futebol), ou "consumir calorias" durante um treino.
 
-PASSO 1: escreva em 'analise' uma frase curta com a evidência para cada critério que você marcar true.
-PASSO 2: preencha os booleanos.
+2. comando_ambiguo_ou_incompativel: o comando final é dúbio, omite a unidade esperada ou pede algo incompatível com as alternativas?
+   Exemplos de defeito: omitir a unidade (reais, %, litros, km), comando com duplo sentido, ou perguntar "qual plano/opção é mais econômico?" quando todas as alternativas são números (o comando correto deve pedir um número, ex.: "qual é o custo total, em reais, do plano mais econômico?").
+
+3. deficit_ou_contradicao: faltam dados essenciais para o cálculo ou o texto contradiz frontalmente a tabela de dados?
+   Exemplos de defeito: o texto cita um total que não bate com a soma da tabela (ex.: texto diz 15 km e a tabela soma 14 km), ou omite uma base/taxa indispensável para deduzir a resposta.
+
+4. complexidade_insuficiente: o item é excessivamente trivial para o padrão ENEM?
+   Exemplos de defeito: a questão se resolve apenas lendo diretamente uma célula da tabela ou com uma única operação elementar sem encadeamento de raciocínio.
+
+PASSO 1: Em 'analise', escreva 1 frase curta citando evidências de qualquer problema detectado (ou declare 'Item adequado e verossímil').
+PASSO 2: Preencha as 4 flags booleanas. Em caso de dúvida fundamentada sobre um defeito, marque true.
 
 Responda EXCLUSIVAMENTE em formato JSON com o schema:
 {{
-  "analise": "Evidências curtas dos problemas encontrados (ou 'nenhum problema').",
-  "possui_incoerencia": bool,
-  "possui_ambiguidade": bool,
-  "deficit_informacoes": bool,
-  "erros_ou_vazamentos": bool,
-  "duplicacao_tabelas": bool,
-  "comando_incompativel_com_alternativas": bool,
-  "premissa_implicita": bool,
-  "dados_contraditorios": bool,
-  "dado_irrelevante_ou_nao_usado": bool,
-  "inverossimilhanca_numerica": bool,
-  "nivel_trivial": bool,
-  "distratores_artificiais": bool
+  "analise": "Evidência curta dos problemas encontrados ou 'Item adequado'",
+  "incoerencia_ou_absurdo": bool,
+  "comando_ambiguo_ou_incompativel": bool,
+  "deficit_ou_contradicao": bool,
+  "complexidade_insuficiente": bool
 }}
 """
     return prompt

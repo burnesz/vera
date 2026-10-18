@@ -234,3 +234,67 @@ def test_validate_questao_inedita_rejects_unstructured_table():
     assert "Problema de formatação tabular" in error
 
 
+def test_check_prohibited_terms():
+    from app.services.question_validator import check_prohibited_terms
+
+    # Texto limpo
+    ok, err = check_prohibited_terms("Um fazendeiro comprou 30 sacas de milho.")
+    assert ok is True
+    assert err is None
+
+    # Texto com vazamentos proibidos
+    termos = ["o solver calcula", "segundo o código", "no algoritmo", "o distrator A", "o gabarito oficial", "em python"]
+    for termo in termos:
+        ok, err = check_prohibited_terms(f"Contexto: {termo} para a resposta.")
+        assert ok is False
+        assert "Presença de termo técnico de bastidor proibido" in err
+
+
+def test_check_table_duplication():
+    from app.services.question_validator import check_table_duplication
+
+    # Sem tabela_dados: passa
+    ok, err = check_table_duplication("Texto qualquer sem tabela", None)
+    assert ok is True
+
+    # Com tabela_dados e enunciado limpo (sem pipes): passa
+    tabela = [{"A": 1, "B": 2}]
+    ok, err = check_table_duplication("A tabela a seguir apresenta os dados. Qual o total?", tabela)
+    assert ok is True
+
+    # Com tabela_dados e enunciado com pipes (|): rejeita
+    ok, err = check_table_duplication("A tabela | Coluna 1 | Coluna 2 | apresenta dados", tabela)
+    assert ok is False
+    assert "estrutura de tabela bruta" in err
+
+
+def test_questao_auditoria_semantica_4_macro_criteria():
+    from app.schemas.question import QuestaoAuditoriaSemanticaOutput
+
+    # Item perfeito
+    audit_ok = QuestaoAuditoriaSemanticaOutput(
+        analise="Item verossímil e adequado ao padrão ENEM.",
+        incoerencia_ou_absurdo=False,
+        comando_ambiguo_ou_incompativel=False,
+        deficit_ou_contradicao=False,
+        complexidade_insuficiente=False
+    )
+    assert audit_ok.aprovada is True
+    assert audit_ok.motivo_rejeicao is None
+
+    # Item com incoerência
+    audit_incoerente = QuestaoAuditoriaSemanticaOutput(
+        analise="Consumo de 4 litros de água por casa por dia é absurdo.",
+        incoerencia_ou_absurdo=True
+    )
+    assert audit_incoerente.aprovada is False
+    assert "Incoerência semântica ou física" in audit_incoerente.motivo_rejeicao
+
+    # Compatibilidade com flags legadas
+    audit_legado = QuestaoAuditoriaSemanticaOutput(
+        possui_incoerencia=True
+    )
+    assert audit_legado.aprovada is False
+    assert "Incoerência semântica ou física" in audit_legado.motivo_rejeicao
+
+

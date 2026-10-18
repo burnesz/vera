@@ -360,3 +360,38 @@ def validate_questao_inedita(
 
     return True, None, validated_item
 
+
+def check_prohibited_terms(text: str) -> Tuple[bool, Optional[str]]:
+    """
+    Verifica deterministicamente via regex se o texto contém palavras de bastidores técnicos proibidas.
+    Evita vazamento de termos como 'solver', 'python', 'código', 'algoritmo', 'distrator' e 'gabarito'.
+    """
+    if not text:
+        return True, None
+
+    prohibited_patterns = [
+        (r"\bsolver\b", "solver"),
+        (r"\bpython\b", "python"),
+        (r"\bcódigo\b", "código"),
+        (r"\bcodigo\b", "codigo"),
+        (r"\balgoritmo\b", "algoritmo"),
+        (r"\bdistrator(?:es)?\b", "distrator"),
+        (r"\bgabarito\b", "gabarito"),
+    ]
+    for pattern, name in prohibited_patterns:
+        if re.search(pattern, text, re.IGNORECASE):
+            return False, f"Presença de termo técnico de bastidor proibido no enunciado: '{name}'"
+    return True, None
+
+
+def check_table_duplication(enunciado: str, tabela_dados: Optional[List[Dict[str, Any]]]) -> Tuple[bool, Optional[str]]:
+    """
+    Verifica se o enunciado duplicou dados da tabela em formato tabular Markdown cru (com pipes '|').
+    No pipeline PoT, os dados residem exclusivamente em tabela_dados e são formatados pelo sistema.
+    """
+    if not tabela_dados or not enunciado:
+        return True, None
+    if "|" in enunciado:
+        return False, "O texto do enunciado contém estrutura de tabela bruta (pipes '|'). Os dados devem residir exclusivamente em 'tabela_dados'."
+    return True, None
+
