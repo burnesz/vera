@@ -50,7 +50,7 @@ flowchart TD
 
 ## 2. Regras de Negócio da Geração PoT (`RN-Q01` a `RN-Q04`)
 
-### `RN-Q01` — Validação Estrita Multicamadas (Código + 3 Etapas LLM)
+### `RN-Q01` — Validação Estrita Multicamadas (Código + 3 Etapas LLM com Temperatura 0.0)
 Nenhuma questão inédita pode ser salva ou exibida ao estudante sem cumprir **todos** os 7 critérios abaixo:
 1. **Execução limpa da função `def resolver()`**: executada em processo filho isolado (`subprocess.run`) com timeout de **5 segundos** (`execute_solver_code` em `app/services/code_executor.py`), retornando dicionário com `"correta"` e `"distratores"` (4 itens).
 2. **Inspeção Estática de Segurança via AST (`check_code_safety`)**:
@@ -61,12 +61,12 @@ Nenhuma questão inédita pode ser salva ou exibida ao estudante sem cumprir **t
    - Apenas constantes matemáticas/geométricas/temporais neutras (`ALLOWED_NUMERIC_CONSTANTS`: `0, 1, 2, 3, 4, 5, 10, 12, 24, 60, 100, 180, 360, 1000, 0.5, 0.1, 0.01, 3.14, 3.1415, 3.1416`) são isentas.
    - **Convenções não são constantes neutras** (`DSR-07`): `365` foi removido da lista; "ano = 365 dias", "mês = 30 dias" etc. só podem ser usados no solver se declarados no enunciado.
 4. **Unicidade Estrita das 5 Alternativas**: a resposta correta e os 4 distratores devem resultar em 5 strings formatadas mutuamente exclusivas.
-5. **Validação Etapa 1 — Resolução Cega Pura (`QuestaoBlindSolvingOutput`)**:
+5. **Validação Etapa 1 — Resolução Cega Pura (`QuestaoBlindSolvingOutput`, `temperature=0.0`)**:
    - O LLM resolve o problema recebendo **exclusivamente o enunciado** (sem alternativas e sem gabarito), produzindo `resolucao_passo_a_passo`, `premissas_assumidas` e `resultado_obtido` (em tipo primitivo Python: `int`, `float`, `str`, `dict` ou `list`).
    - **Etapa 1b — Premissas Implícitas com *Early Exit* (`DSR-07`)**: o resolvedor lista toda suposição/convenção que precisou adotar sem estar escrita no enunciado (exceto conversões universais: 1 h = 60 min, 1 dia = 24 h, 1 ano = 12 meses, prefixos métricos). Se `premissas_assumidas` não for vazia (após normalização de marcadores como `"Nenhuma"`/`"N/A"`), o backend reprova deterministicamente e aciona o *Stateless Retry* sem chamar a Etapa 2.
-6. **Validação Etapa 2 — Confronto Direto de Equivalência com *Early Exit* (`QuestaoEquivalenciaOutput`)**:
+6. **Validação Etapa 2 — Confronto Direto de Equivalência com *Early Exit* (`QuestaoEquivalenciaOutput`, `temperature=0.0`)**:
    - Compara `resultado_solver` vs. `resultado_obtido` aceitando equivalências matemáticas legítimas (ex.: `2500` vs. `"R$ 2.500,00"`, `0.5` vs. `"50%"`, arredondamentos compatíveis). Se `equivalentes == False`, interrompe imediatamente (*Early Exit*) e aciona o *Stateless Retry*.
-7. **Validação Etapa 3 — Auditoria Semântica Determinística (`QuestaoAuditoriaSemanticaOutput`)**:
+7. **Validação Etapa 3 — Auditoria Semântica Determinística (`QuestaoAuditoriaSemanticaOutput`, `temperature=0.0`)**:
    - Avalia 5 flags booleanas de defeito:
      - `possui_incoerencia`: contradições físicas, matemáticas ou de senso comum.
      - `possui_ambiguidade`: comando duplo ou margem para mais de uma interpretação.
@@ -76,6 +76,7 @@ Nenhuma questão inédita pode ser salva ou exibida ao estudante sem cumprir **t
    - A aprovação (`aprovada = not any(...)`) e o `motivo_rejeicao` são calculados em Python no backend.
 
 ### Diretrizes de Geração da Fase 1 (`POT_QUESTION_GENERATOR_SYSTEM_PROMPT` — `DSR-07`)
+- **Temperatura Base 0.0**: A geração inicia em `temperature=0.0` para máxima fidelidade sintática na escrita do código Python `def resolver()` e obediência ao schema JSON estrito.
 - **Complexidade padrão ENEM**: no mínimo 2 etapas de raciocínio encadeadas e 2 conceitos articulados; proibidas questões de operação única (ex.: somar uma coluna, aplicar uma porcentagem isolada). Com referências RAG, o item isomórfico não pode ser simplificado.
 - **Premissas explícitas**: toda convenção (dias do mês/ano, semanas por mês, regime de juros, arredondamento, π, litro/m³, constância de taxas) deve ser declarada no enunciado ("Considere que...").
 - **Distratores por erros típicos**: o solver modela erros de raciocínio (parar em etapa intermediária, esquecer conversão, usar parte dos dados), não variações arbitrárias (`±50`, `×1,2`).
@@ -88,7 +89,7 @@ Nenhuma questão inédita pode ser salva ou exibida ao estudante sem cumprir **t
 
 ### `RN-Q03` — Defesa em Cascata: Auto-Healing Algorítmico e Stateless Retry
 - **Linha 1 (`auto_heal_distractors`)**: quando `resolver()` acerta o cálculo principal mas produz distratores repetidos ou iguais à correta, o backend preserva os distratores únicos e sintetiza os faltantes deterministicamente usando o passo característico $\Delta$ da distribuição e variações cognitivas típicas do ENEM ($\pm k\Delta$, dobro/metade, escala decimal $\times 10$ / $\div 10$).
-- **Linha 2 (*Stateless Retry*)**: em caso de falha estrutural na Fase 1 ou reprovação nas Etapas 2/3 da validação, descarta-se toda a tentativa e inicia-se uma nova iteração com contexto limpo, novo sorteio de tema/abertura (`sortear_contexto_criativo`) e nova amostragem dos Top-10 candidatos no Pinecone.
+- **Linha 2 (*Stateless Retry*)**: em caso de falha estrutural na Fase 1 ou reprovação nas Etapas 2/3 da validação, descarta-se toda a tentativa e inicia-se uma nova iteração com contexto limpo, novo sorteio de tema/abertura (`sortear_contexto_criativo`), nova amostragem dos Top-10 candidatos no Pinecone e **escalonamento dinâmico de temperatura** (`curr_temp = min(0.0 + 0.1 * (attempt - 1), 0.6)`), variando de `0.0` a `0.3` em até 4 tentativas para escapar de mínimos locais sem comprometer a sintaxe.
 
 ### `RN-Q04` — Rastreabilidade e Auditoria na Persistência
 - Na tabela `questoes_ineditas`:

@@ -351,8 +351,8 @@ class ChatService:
             context_chunks=[c.model_dump() for c in context_chunks]
         )
 
-        # 5. Inferência via LLM
-        reply_raw = self.llm_client.generate(prompt=prompt, session_id=None)
+        # 5. Inferência via LLM (temperatura didática 0.2)
+        reply_raw = self.llm_client.generate(prompt=prompt, session_id=None, temperature=0.2)
         elapsed_time = round(time.time() - start_time, 2)
 
         # 6. Separa raciocínio (thought) da resposta didática final
@@ -407,8 +407,8 @@ class ChatService:
             context_chunks=[c.model_dump() for c in context_chunks]
         )
 
-        # 5. Inferência assíncrona via LLM
-        reply_raw = await self.llm_client.agenerate(prompt=prompt, session_id=None)
+        # 5. Inferência assíncrona via LLM (temperatura didática 0.2)
+        reply_raw = await self.llm_client.agenerate(prompt=prompt, session_id=None, temperature=0.2)
         elapsed_time = round(time.time() - start_time, 2)
 
         # 6. Separa raciocínio (thought) da resposta didática final

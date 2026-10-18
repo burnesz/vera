@@ -45,6 +45,7 @@ flowchart LR
   - `clean_rewritten_query` sanitiza a saída removendo prefixos ou aspas residuais; em caso de falha, faz fallback seguro para a mensagem original do estudante.
 
 ### `RN-CHAT02` — Scratchpad Pedagógico Obrigatório (`<pensamento>`)
+- A inferência principal da tutora é executada com **`temperature=0.2`** (definida explicitamente em `ChatService.send_message` e `asend_message`), equilibrando a empatia e didática dialógica com o rigor conceitual da Matemática do ENEM.
 - O prompt de sistema construído por `build_chat_prompt` (`app/core/prompts.py`) exige que o modelo estruturado emita obrigatoriamente dois blocos XML:
   1. `<pensamento>...</pensamento>`: onde a tutora realiza cálculos intermediários, confere sinais algébricos, analisa os chunks recuperados do Pinecone e planeja a estratégia didática antes de responder.
   2. `<resposta>...</resposta>`: explicação final clara, acolhedora e passo a passo voltada ao estudante.

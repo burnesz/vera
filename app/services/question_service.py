@@ -210,7 +210,7 @@ class QuestionService:
         habilidade_codigo: str,
         num_few_shot: int = 2,
         max_attempts: int = 4,
-        temperature: float = 0.2,
+        temperature: float = 0.0,
         top_p: float = 0.9,
         tema: Optional[str] = None,
         abertura: Optional[str] = None
@@ -264,7 +264,7 @@ class QuestionService:
         habilidade: HabilidadeEnem,
         few_shot_dicts: List[Dict[str, Any]],
         max_attempts: int = 4,
-        temperature: float = 0.2,
+        temperature: float = 0.0,
         top_p: float = 0.9,
         tema: Optional[str] = None,
         abertura: Optional[str] = None
@@ -495,7 +495,7 @@ class QuestionService:
         raw = self.llm_client.generate(
             prompt=prompt,
             max_tokens=300,
-            temperature=0.1,
+            temperature=0.0,
             top_p=0.9,
             format="json"
         )
@@ -523,7 +523,7 @@ class QuestionService:
         raw = self.llm_client.generate(
             prompt=prompt,
             max_tokens=300,
-            temperature=0.1,
+            temperature=0.0,
             top_p=0.9,
             format="json"
         )
