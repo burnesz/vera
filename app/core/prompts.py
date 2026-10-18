@@ -503,7 +503,8 @@ def build_blind_solving_prompt(
     O LLM recebe o enunciado (e a tabela, se houver), sem alternativas e sem gabarito.
 
     """
-    tabela_txt = _formatar_tabela(tabela_dados)
+    has_md_table = bool(re.search(r"\|(?:\s*:?-+:?\s*\|)+", enunciado or ""))
+    tabela_txt = "" if has_md_table else _formatar_tabela(tabela_dados)
     bloco_tabela = f"\nTABELA DE DADOS:\n{tabela_txt}\n" if tabela_txt else ""
 
     prompt = f"""Você é um estudante de alto desempenho resolvendo uma questão de Matemática do ENEM.
@@ -585,7 +586,8 @@ def build_auditoria_semantica_prompt(
     Avalia a qualidade do item do ENEM através de 4 macro-critérios semânticos essenciais.
     """
     alts_formatted = "\n".join([f"  {k}) {v}" for k, v in sorted(alternativas.items())])
-    tabela_txt = _formatar_tabela(tabela_dados)
+    has_md_table = bool(re.search(r"\|(?:\s*:?-+:?\s*\|)+", enunciado or ""))
+    tabela_txt = "" if has_md_table else _formatar_tabela(tabela_dados)
     bloco_tabela = f"\nTabela de Dados:\n{tabela_txt}\n" if tabela_txt else ""
     bloco_gab = f"\nAlternativa correta segundo o sistema: {letra_gabarito} ({alternativas.get(letra_gabarito, '')})\n" if letra_gabarito else ""
 
