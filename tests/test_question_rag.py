@@ -102,7 +102,7 @@ def test_retrieve_rag_few_shot_pinecone_success():
             "metadata": {
                 "ano": 2021,
                 "co_item": 103,
-                "habilidade_codigo": "H02",
+                "habilidade_codigo": "H01",
                 "gabarito": "E",
                 "alt_a": "Alt 1",
                 "alt_b": "Alt 2",
@@ -123,6 +123,48 @@ def test_retrieve_rag_few_shot_pinecone_success():
     assert examples[0]["alternativas"]["A"] == "Opção A"
     assert examples[0]["score"] == 0.88
     mock_vector_store.search.assert_called_once()
+    assert mock_vector_store.search.call_args[1]["filter_dict"] == {"habilidade_codigo": "H01"}
+
+
+def test_retrieve_rag_few_shot_pinecone_filters_out_different_habilidade():
+    """Valida que itens de habilidades divergentes são filtrados da amostragem few-shot."""
+    mock_vector_store = MagicMock()
+    mock_vector_store.search.return_value = [
+        {
+            "id": "enem_2023_101",
+            "score": 0.95,
+            "text": "Enunciado questão H05",
+            "metadata": {
+                "ano": 2023,
+                "co_item": 101,
+                "habilidade_codigo": "H05",
+                "gabarito": "A",
+                "alt_a": "A", "alt_b": "B", "alt_c": "C", "alt_d": "D", "alt_e": "E",
+                "text": "Enunciado questão H05"
+            }
+        },
+        {
+            "id": "enem_2022_102",
+            "score": 0.85,
+            "text": "Enunciado questão H07 intrusa",
+            "metadata": {
+                "ano": 2022,
+                "co_item": 102,
+                "habilidade_codigo": "H07",
+                "gabarito": "B",
+                "alt_a": "A", "alt_b": "B", "alt_c": "C", "alt_d": "D", "alt_e": "E",
+                "text": "Enunciado questão H07 intrusa"
+            }
+        }
+    ]
+
+    service = QuestionService(vector_store=mock_vector_store)
+    examples = service.retrieve_rag_few_shot_examples(habilidade_codigo="H05", k=2)
+
+    mock_vector_store.search.assert_called_once()
+    assert mock_vector_store.search.call_args[1]["filter_dict"] == {"habilidade_codigo": "H05"}
+    assert len(examples) == 1
+    assert examples[0]["habilidade_origem"] == "H05"
 
 
 def test_retrieve_rag_few_shot_fallback():
@@ -172,6 +214,7 @@ def test_retrieve_rag_few_shot_pinecone_sample_top10():
 
     mock_vector_store.search.assert_called_once()
     assert mock_vector_store.search.call_args[1]["top_k"] == 10
+    assert mock_vector_store.search.call_args[1]["filter_dict"] == {"habilidade_codigo": "H01"}
     assert len(examples) == 2
     # Verifica que foram sorteados elementos válidos da lista
     anos_retornados = [e["ano"] for e in examples]

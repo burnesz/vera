@@ -53,7 +53,7 @@ related_notes:
 - **Contexto Inicial**: Resgate fixo dos mesmos Top-K exemplos mais próximos da habilidade no banco vetorial.
 - **Problema Identificado no Ciclo DSR**: Resgatar sempre os mesmos exemplos de topo fixos induzia o modelo 7B a repetir estruturas narrativas, nomes e premissas quase idênticas às questões de exemplo.
 - **Solução Implementada**:
-  1. Consulta ao namespace `questoes_enem` no Pinecone resgatando os **Top-10 itens candidatos** mais similares semanticamente (ancorados nas queries expandidas em `data/habilidades_queries.json`, com `filter={"habilidade": clean_hab}`).
+  1. Consulta ao namespace `questoes_enem` no Pinecone resgatando os **Top-10 itens candidatos** mais similares semanticamente (ancorados nas queries expandidas em `data/habilidades_queries.json`, com `filter={"habilidade_codigo": clean_hab}`).
   2. Amostragem aleatória (`random.sample`) de **2 exemplos** dentre os candidatos por chamada.
   3. Sorteio estocástico de **tema do cotidiano** (`TEMAS_COTIDIANO`) e **formato de abertura narrativa** (`FORMAS_ABERTURA`) via `sortear_contexto_criativo()` em `app/core/prompts.py`.
   4. **Fallback Relacional Determinístico**: caso o Pinecone esteja indisponível ou sem itens para a habilidade, o sistema consulta automaticamente o PostgreSQL (`WHERE habilidade_codigo = :habilidade ORDER BY random()`), garantindo 100% de disponibilidade offline.

@@ -27,7 +27,7 @@ Para erradicar erros aritméticos, colisões de alternativas e viés de confirma
 
 ```mermaid
 flowchart TD
-    A["Habilidade Alvo (H01-H30)"] --> B["RAG Few-Shot: Top-10 no Pinecone (questoes_enem)\nSorteio de 2 Exemplos + Sorteio de Tema/Abertura\n(Fallback Determinístico no PostgreSQL)"]
+    A["Habilidade Alvo (H01-H30)"] --> B["RAG Few-Shot: Top-10 no Pinecone (questoes_enem)\nFiltrado por habilidade_codigo + Sorteio de 2 Exemplos\n+ Sorteio de Tema/Abertura\n(Fallback Determinístico no PostgreSQL)"]
     B --> C["Fase 1 (PoT): LLM gera JSON com\nenunciado + tabela_dados (opcional) + solver Python"]
     C --> D["CodeExecutor: AST Check + Subprocesso Isolado (Timeout 5s)"]
     D --> E{"Groundedness Numérico OK?\nExecução sem erro?"}

@@ -148,12 +148,16 @@ class QuestionService:
             results = self.vector_store.search(
                 query=query_text,
                 namespace=settings.NAMESPACE_QUESTOES_ENEM,
-                top_k=fetch_limit
+                top_k=fetch_limit,
+                filter_dict={"habilidade_codigo": clean_hab}
             )
 
             few_shot_dicts = []
             for r in results:
                 meta = r.get("metadata", {})
+                item_hab = meta.get("habilidade_codigo")
+                if item_hab and item_hab != clean_hab:
+                    continue
                 enunciado = meta.get("text") or r.get("text", "")
                 alternativas = {
                     "A": meta.get("alt_a", ""),
