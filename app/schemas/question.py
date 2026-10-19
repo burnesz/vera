@@ -146,11 +146,11 @@ POT_PHASE1_JSON_SCHEMA: Dict[str, Any] = {
 
 class QuestaoPlanejamentoEnunciadoOutput(BaseModel):
     """
-    Schema para a Etapa 1a da decomposição experimental da Fase 1 (POT_DECOMPOSE_PHASE1=True):
+    Schema para a Etapa 1a da decomposição da Fase 1:
     planejamento + enunciado + tabela_dados (opcional) + 4 erros_tipicos (sem solver).
     """
-    planejamento: str = Field(
-        ...,
+    planejamento: Optional[str] = Field(
+        None,
         description="Planejamento prévio dos dados, etapas de raciocínio e erros típicos dos distratores."
     )
     enunciado: str = Field(
@@ -161,8 +161,8 @@ class QuestaoPlanejamentoEnunciadoOutput(BaseModel):
         None,
         description="Tabela estruturada opcional (máximo 6 linhas com as mesmas chaves)."
     )
-    erros_tipicos: List[str] = Field(
-        ...,
+    erros_tipicos: Optional[List[str]] = Field(
+        None,
         min_length=4,
         max_length=4,
         description="Lista com exatamente 4 erros típicos de alunos que originarão as variáveis erro_* no solver."
@@ -180,11 +180,9 @@ class QuestaoPlanejamentoEnunciadoOutput(BaseModel):
 
     @field_validator("erros_tipicos", mode="before")
     @classmethod
-    def validate_erros_tipicos(cls, v: Optional[List[str]]) -> List[str]:
-        res = QuestaoEnunciadoSolverOutput.validate_erros_tipicos(v)
-        if res is None:
-            raise ValueError("ERROS_TIPICOS_INVALIDOS: 'erros_tipicos' deve conter exatamente 4 itens.")
-        return res
+    def validate_erros_tipicos(cls, v: Optional[List[str]]) -> Optional[List[str]]:
+        return QuestaoEnunciadoSolverOutput.validate_erros_tipicos(v)
+
 
 
 POT_PHASE1A_JSON_SCHEMA: Dict[str, Any] = {

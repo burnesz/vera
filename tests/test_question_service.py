@@ -976,8 +976,8 @@ def test_b4_blind_solving_self_consistency_behind_flag(monkeypatch):
         db.close()
 
 
-def test_phase_c_keep_alive_and_decompose_phase1(monkeypatch):
-    """Fase C: Verifica keep_alive no payload do LLMClient e experimento POT_DECOMPOSE_PHASE1=True em 2 chamadas."""
+def test_phase_c_keep_alive_and_decompose_phase1():
+    """Fase C: Verifica keep_alive no payload do LLMClient e decomposição da Fase 1 em 2 chamadas por padrão."""
     from app.core.config import settings
 
     # 1. Verifica keep_alive no payload do LLMClient
@@ -986,8 +986,7 @@ def test_phase_c_keep_alive_and_decompose_phase1(monkeypatch):
     assert payload.get("keep_alive") == settings.LLM_KEEP_ALIVE
     assert payload["options"]["seed"] == 42
 
-    # 2. Verifica decomposição da Fase 1 em duas chamadas quando POT_DECOMPOSE_PHASE1=True
-    monkeypatch.setattr(settings, "POT_DECOMPOSE_PHASE1", True)
+    # 2. Verifica decomposição da Fase 1 em duas chamadas por padrão (mock_mode=True roda 1a e 1b)
     db = TestingSessionLocal()
     try:
         mock_vs = MagicMock(spec=PineconeVectorStore)
@@ -1003,6 +1002,7 @@ def test_phase_c_keep_alive_and_decompose_phase1(monkeypatch):
         assert "# Planejamento PoT:" in questao.thought_scratchpad
     finally:
         db.close()
+
 
 
 def test_equivalence_check_deterministic_fast_path():

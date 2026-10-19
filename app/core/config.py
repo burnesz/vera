@@ -58,9 +58,9 @@ class Settings(BaseSettings):
     ENABLE_BLIND_SOLVING_SELF_CONSISTENCY: bool = False
     BLIND_SOLVING_SECOND_TEMP: float = 0.3
 
-    # PoT Phase 1 Two-Call Decomposition Experiment (Phase C)
-    POT_DECOMPOSE_PHASE1: bool = False
+    # PoT Phase 1b Solver Generation Temperature
     POT_SOLVER_ONLY_TEMP: float = 0.1
+
 
 
     # PostgreSQL Relational Database
