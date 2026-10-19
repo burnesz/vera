@@ -82,6 +82,12 @@ def parse_args():
         default=None,
         help="Fixa um estilo de abertura narrativa específico (se omitido, sorteia aleatoriamente a cada questão)."
     )
+    parser.add_argument(
+        "--timeout",
+        type=int,
+        default=420,
+        help="Teto máximo de tempo (em segundos) para gerar 1 questão por habilidade antes de abortar e ir para a próxima."
+    )
     return parser.parse_args()
 
 
@@ -115,6 +121,7 @@ def main():
 
     print(f"[*] Total de habilidades a processar: {len(habilidades_list)}")
     print(f"[*] Questões por habilidade: {args.count}")
+    print(f"[*] Teto máximo por questão/habilidade: {args.timeout}s ({args.timeout / 60:.1f} min)")
     print("[*] Modo de Arquitetura: Program-Aided Generation (PoT: Python Solver + Justificativa)")
     print(f"[*] Exemplos few-shot por item: {args.few_shot_k}")
     print(f"[*] Total estimado de questões inéditas a gerar: {len(habilidades_list) * args.count}")
@@ -167,7 +174,8 @@ def main():
                             num_few_shot=args.few_shot_k,
                             max_attempts=5,
                             tema=args.tema,
-                            abertura=args.abertura
+                            abertura=args.abertura,
+                            timeout_seconds=args.timeout
                         )
                         tempo_gasto = time.time() - t0
                         sucessos += 1

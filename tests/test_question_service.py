@@ -945,3 +945,33 @@ def test_equivalence_check_deterministic_fast_path():
     assert eq3.equivalentes is True
     assert mock_llm.generate.call_count == 1
 
+
+def test_question_service_timeout_interruption():
+    """Valida se o teto de tempo timeout_seconds interrompe a geração com TimeoutError."""
+    import time
+    import pytest
+    db = TestingSessionLocal()
+    try:
+        mock_llm = MagicMock(spec=LLMClient)
+        mock_vs = MagicMock(spec=PineconeVectorStore)
+        mock_vs.search.return_value = []
+
+        def slow_generate(*args, **kwargs):
+            time.sleep(0.05)
+            # Retorna JSON inválido para forçar retentativas
+            return "invalid json"
+
+        mock_llm.generate.side_effect = slow_generate
+        service = QuestionService(llm_client=mock_llm, vector_store=mock_vs)
+
+        with pytest.raises(TimeoutError) as exc_info:
+            service.generate_single_questao_inedita(
+                db=db,
+                habilidade_codigo="H01",
+                max_attempts=5,
+                timeout_seconds=0.03
+            )
+        assert "Tempo limite de 0s esgotado" in str(exc_info.value) or "esgotado para H01" in str(exc_info.value)
+    finally:
+        db.close()
+

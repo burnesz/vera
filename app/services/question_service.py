@@ -283,7 +283,8 @@ class QuestionService:
         temperature: float = 0.2,
         top_p: float = 0.9,
         tema: Optional[str] = None,
-        abertura: Optional[str] = None
+        abertura: Optional[str] = None,
+        timeout_seconds: Optional[float] = None
     ) -> QuestaoInedita:
         """
         Executa o pipeline RAG de geração de uma questão inédita via Program-Aided Generation (PoT):
@@ -325,7 +326,8 @@ class QuestionService:
             temperature=temperature,
             top_p=top_p,
             tema=tema,
-            abertura=abertura
+            abertura=abertura,
+            timeout_seconds=timeout_seconds
         )
 
     def _generate_pot_item(
@@ -337,7 +339,8 @@ class QuestionService:
         temperature: float = 0.2,
         top_p: float = 0.9,
         tema: Optional[str] = None,
-        abertura: Optional[str] = None
+        abertura: Optional[str] = None,
+        timeout_seconds: Optional[float] = None
     ) -> QuestaoInedita:
         """
         Geração Program-Aided (PoT) com execução de código, checagem de nexo numérico
@@ -377,8 +380,17 @@ class QuestionService:
         enunciado_anterior: Optional[str] = None
         solver_anterior: Optional[str] = None
         curr_tipologia: Optional[str] = None
+        start_time = time.time()
 
         for attempt in range(1, max_attempts + 1):
+            if timeout_seconds is not None:
+                elapsed = time.time() - start_time
+                if elapsed >= timeout_seconds:
+                    raise TimeoutError(
+                        f"Tempo limite de {timeout_seconds:.0f}s esgotado para {clean_hab} "
+                        f"após {elapsed:.1f}s e {attempt - 1} tentativa(s). Interrompendo ciclo."
+                    )
+
             # Se for retry após falha estrutural, aplica amostragem independente (Stateless Retry)
             # passando apenas uma diretriz curta da categoria do erro anterior (sem o rascunho/código)
             retry_hint: Optional[str] = None
