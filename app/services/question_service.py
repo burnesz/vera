@@ -805,7 +805,30 @@ class QuestionService:
         """
         Etapa 2 da Validação: Confronto Direto de Equivalência Matemática.
         Avalia se a resposta calculada pelo solver e o resultado deduzido pela LLM são equivalentes.
+        Aplica atalho determinístico em Python (0ms) para igualdade exata ou numérica
+        antes de acionar o juiz LLM.
         """
+        # 1. Atalho determinístico em Python (0ms) para igualdade textual ou numérica exata
+        s_solver = str(resultado_solver).strip()
+        s_obtido = str(resultado_obtido).strip()
+        if s_solver == s_obtido:
+            return QuestaoEquivalenciaOutput(
+                equivalentes=True,
+                explicacao_equivalencia=f"Equivalência exata confirmada deterministicamente em Python (0ms): '{s_solver}' == '{s_obtido}'."
+            )
+
+        try:
+            f_solver = float(s_solver.replace(",", "."))
+            f_obtido = float(s_obtido.replace(",", "."))
+            if abs(f_solver - f_obtido) < 1e-4:
+                return QuestaoEquivalenciaOutput(
+                    equivalentes=True,
+                    explicacao_equivalencia=f"Equivalência numérica confirmada deterministicamente em Python (0ms): {f_solver} == {f_obtido}."
+                )
+        except (ValueError, TypeError):
+            pass
+
+        # 2. Confronto semântico via LLM quando há divergência de formato ou unidades (ex: 2500 vs R$ 2.500)
         prompt = build_equivalencia_gabarito_prompt(
             resultado_solver=resultado_solver,
             resultado_obtido=resultado_obtido

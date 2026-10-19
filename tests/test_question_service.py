@@ -1003,3 +1003,32 @@ def test_phase_c_keep_alive_and_decompose_phase1(monkeypatch):
         assert "# Planejamento PoT:" in questao.thought_scratchpad
     finally:
         db.close()
+
+
+def test_equivalence_check_deterministic_fast_path():
+    """Etapa 2: Valida que igualdade exata (textual ou numérica) usa o fast-path em Python (0ms) sem chamar o LLM."""
+    mock_llm = MagicMock(spec=LLMClient)
+    mock_vs = MagicMock(spec=PineconeVectorStore)
+    service = QuestionService(llm_client=mock_llm, vector_store=mock_vs)
+
+    # 1. Igualdade inteira exata: 40 == 40 (0ms, 0 chamadas ao LLM)
+    eq1 = service._run_equivalence_check(40, 40)
+    assert eq1.equivalentes is True
+    assert "Python (0ms)" in eq1.explicacao_equivalencia
+    assert mock_llm.generate.call_count == 0
+
+    # 2. Igualdade numérica decimal com vírgula: 12.5 == "12,5" (0ms, 0 chamadas ao LLM)
+    eq2 = service._run_equivalence_check(12.5, "12,5")
+    assert eq2.equivalentes is True
+    assert "Python (0ms)" in eq2.explicacao_equivalencia
+    assert mock_llm.generate.call_count == 0
+
+    # 3. Formato diferente (ex: "R$ 2.500,00" vs 2500): recorre ao LLM (1 chamada)
+    mock_llm.generate.return_value = json.dumps({
+        "equivalentes": True,
+        "explicacao_equivalencia": "2500 e R$ 2.500,00 são equivalentes."
+    })
+    eq3 = service._run_equivalence_check(2500, "R$ 2.500,00")
+    assert eq3.equivalentes is True
+    assert mock_llm.generate.call_count == 1
+
