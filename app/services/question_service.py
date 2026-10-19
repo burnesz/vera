@@ -559,6 +559,31 @@ class QuestionService:
                     logger.warning(f"Tentativa {attempt}/{max_attempts} descartada por excesso de dados ociosos (Early Exit): {last_error}")
                     continue
 
+            # Validação Etapa 1c (B4): Auto-consistência da Resolução Cega (atrás de flag de configuração)
+            if settings.ENABLE_BLIND_SOLVING_SELF_CONSISTENCY:
+                try:
+                    blind_sol_2 = self._run_blind_solving(
+                        enunciado=pot_output.enunciado,
+                        tabela_dados=pot_output.tabela_dados,
+                        temperature=settings.BLIND_SOLVING_SECOND_TEMP
+                    )
+                except Exception as e:
+                    last_error_code = PipelineErrorCode.INCONSISTENCIA_CEGA
+                    last_error = f"Falha na 2ª execução da resolução cega (auto-consistência): {e}"
+                    logger.warning(f"Tentativa {attempt}/{max_attempts} falhou na 2ª resolução cega (B4): {e}")
+                    continue
+
+                if not getattr(blind_sol_2, "pergunta_respondivel", True) or not self._are_blind_results_equivalent(
+                    blind_sol.resultado_obtido, blind_sol_2.resultado_obtido
+                ):
+                    last_error_code = PipelineErrorCode.INCONSISTENCIA_CEGA
+                    last_error = (
+                        f"Inconsistência na resolução cega (B4): Run 1 (T=0.0) obteve '{blind_sol.resultado_obtido}' "
+                        f"vs Run 2 (T={settings.BLIND_SOLVING_SECOND_TEMP}) obteve '{blind_sol_2.resultado_obtido}'."
+                    )
+                    logger.warning(f"Tentativa {attempt}/{max_attempts} descartada por INCONSISTENCIA_CEGA (Early Exit): {last_error}")
+                    continue
+
             # --- VALIDAÇÃO ETAPA 2: CONFRONTO DIRETO DE EQUIVALÊNCIA (com Early Exit) ---
             try:
                 equiv = self._run_equivalence_check(
@@ -641,10 +666,33 @@ class QuestionService:
             f"Último erro: {last_error}"
         )
 
+    def _are_blind_results_equivalent(self, res1: Any, res2: Any) -> bool:
+        """
+        Compara se os resultados obtidos em duas execuções da Resolução Cega (B4) são equivalentes.
+        Aplica atalho numérico/textual determinístico (0ms) antes de recorrer ao LLM de equivalência.
+        """
+        s1 = str(res1).strip()
+        s2 = str(res2).strip()
+        if s1 == s2:
+            return True
+        try:
+            f1 = float(s1.replace(",", "."))
+            f2 = float(s2.replace(",", "."))
+            if abs(f1 - f2) < 1e-4:
+                return True
+        except (ValueError, TypeError):
+            pass
+        try:
+            equiv = self._run_equivalence_check(resultado_solver=res1, resultado_obtido=res2)
+            return bool(equiv.equivalentes)
+        except Exception:
+            return False
+
     def _run_blind_solving(
         self,
         enunciado: str,
-        tabela_dados: Optional[List[Dict[str, Any]]] = None
+        tabela_dados: Optional[List[Dict[str, Any]]] = None,
+        temperature: float = 0.0
     ) -> QuestaoBlindSolvingOutput:
         """
         Etapa 1 da Validação: Resolução Cega Pura.
@@ -657,7 +705,7 @@ class QuestionService:
         raw = self.llm_client.generate(
             prompt=prompt,
             max_tokens=800,
-            temperature=0.0,
+            temperature=temperature,
             top_p=0.9,
             format="json"
         )

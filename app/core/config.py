@@ -53,6 +53,11 @@ class Settings(BaseSettings):
     POT_MIN_OPERATIONS: int = 3
     POT_MIN_OPERATION_TYPES: int = 2
 
+    # PoT Blind Solving Self-Consistency (B4)
+    ENABLE_BLIND_SOLVING_SELF_CONSISTENCY: bool = False
+    BLIND_SOLVING_SECOND_TEMP: float = 0.3
+
+
     # PostgreSQL Relational Database
     DATABASE_URL: Optional[str] = None
     POSTGRES_SERVER: str = "localhost"
