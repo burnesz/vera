@@ -359,6 +359,8 @@ class QuestionService:
             # Se for retry após falha estrutural, aplica amostragem independente (Stateless Retry)
             # passando apenas uma diretriz curta da categoria do erro anterior (sem o rascunho/código)
             retry_hint: Optional[str] = None
+            attempt_seed = random.randint(1, 2_000_000_000)
+            base_temp = min(temperature, 0.3)
             if attempt > 1:
                 curr_tema, curr_abertura = sortear_contexto_criativo()
                 curr_few_shot = self.retrieve_rag_few_shot_examples(
@@ -366,18 +368,18 @@ class QuestionService:
                     k=len(few_shot_dicts) or 2,
                     db=db
                 )
-                curr_temp = min(temperature + 0.1 * (attempt - 1), 0.6)
+                curr_temp = round(min(base_temp + 0.05 * (attempt - 1), 0.3), 2)
                 retry_hint = _classify_retry_hint(last_error_code)
                 logger.info(
                     f"PoT Stateless Retry: Tentativa limpa {attempt}/{max_attempts} para {clean_hab} "
-                    f"(Novo tema: '{curr_tema}' | Temp: {curr_temp:.1f} | Código: {last_error_code} | Alerta: '{retry_hint}')..."
+                    f"(Novo tema: '{curr_tema}' | Temp: {curr_temp:.2f} | Seed: {attempt_seed} | Código: {last_error_code} | Alerta: '{retry_hint}')..."
                 )
             else:
                 curr_tema = tema
                 curr_abertura = abertura
                 curr_few_shot = few_shot_dicts
-                curr_temp = temperature
-                logger.info(f"PoT: Tentativa {attempt}/{max_attempts} para {clean_hab} (Temp: {curr_temp:.1f})...")
+                curr_temp = round(base_temp, 2)
+                logger.info(f"PoT: Tentativa {attempt}/{max_attempts} para {clean_hab} (Temp: {curr_temp:.2f} | Seed: {attempt_seed})...")
 
             # Geração limpa sem poluição de contexto ou ancoragem em rascunhos anteriores (Stateless)
             prompt_pot = build_enunciado_solver_prompt(
@@ -398,7 +400,8 @@ class QuestionService:
                     max_tokens=1536,
                     temperature=curr_temp,
                     top_p=top_p,
-                    format=POT_PHASE1_JSON_SCHEMA
+                    format=POT_PHASE1_JSON_SCHEMA,
+                    seed=attempt_seed
                 )
             except Exception as e:
                 last_error_code = PipelineErrorCode.SINTAXE

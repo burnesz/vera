@@ -686,3 +686,60 @@ def test_a7_collision_retry_injects_colisao_hint_not_nexo():
         assert "Nexo numérico:" not in second_attempt_prompt
     finally:
         db.close()
+
+
+def test_a8_temperature_ceiling_03_and_seed_passed():
+    """A8: Garante que a temperatura da geração do solver nunca ultrapasse 0.3 mesmo após múltiplos retries e use seed."""
+    db = TestingSessionLocal()
+    try:
+        mock_llm = MagicMock(spec=LLMClient)
+        mock_vs = MagicMock(spec=PineconeVectorStore)
+        mock_vs.search.return_value = []
+
+        bad_pot = json.dumps({
+            "enunciado": "Um atleta fez 50 pontos no sábado e 30 pontos no domingo. Qual a pontuação total?",
+            "solver": "def resolver():\n    correta = (50 + 30\n"  # SyntaxError
+        })
+        good_pot = json.dumps({
+            "enunciado": "Um atleta fez 50 pontos no sábado e 30 pontos no domingo. Qual a pontuação total no fim de semana?",
+            "erros_tipicos": ["Erro 1", "Erro 2", "Erro 3", "Erro 4"],
+            "solver": "def resolver():\n    a = 50\n    b = 30\n    correta = a + b\n    erro_1 = a - b\n    erro_2 = a\n    erro_3 = b\n    erro_4 = a * b"
+        })
+        resp_blind = json.dumps({
+            "resolucao_passo_a_passo": "50 + 30 = 80.",
+            "premissas_assumidas": [],
+            "dados_nao_utilizados": [],
+            "pergunta_respondivel": True,
+            "resultado_obtido": 80
+        })
+        resp_equiv = json.dumps({
+            "equivalentes": True,
+            "explicacao_equivalencia": "Ambos 80."
+        })
+        resp_audit = json.dumps({
+            "analise": "Item adequado",
+            "incoerencia_ou_absurdo": False,
+            "comando_ambiguo_ou_incompativel": False,
+            "deficit_ou_contradicao": False,
+            "complexidade_insuficiente": False
+        })
+
+        # 3 falhas seguidas de sucesso na 4ª tentativa, mesmo passando temperature=0.5 na entrada
+        mock_llm.generate.side_effect = [bad_pot, bad_pot, bad_pot, good_pot, resp_blind, resp_equiv, resp_audit]
+
+        service = QuestionService(llm_client=mock_llm, vector_store=mock_vs)
+        questao = service.generate_single_questao_inedita(
+            db=db,
+            habilidade_codigo="H01",
+            max_attempts=4,
+            temperature=0.5  # Passado acima do teto
+        )
+
+        assert questao is not None
+        phase1_calls = mock_llm.generate.call_args_list[:4]
+        for call in phase1_calls:
+            assert call.kwargs["temperature"] <= 0.3
+            assert isinstance(call.kwargs.get("seed"), int)
+    finally:
+        db.close()
+

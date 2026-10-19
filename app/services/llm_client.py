@@ -66,22 +66,27 @@ class LLMClient:
         temperature: float = 0.0,
         top_p: float = 0.9,
         repetition_penalty: float = 1.0,
-        format: Optional[Union[str, Dict[str, Any]]] = None
+        format: Optional[Union[str, Dict[str, Any]]] = None,
+        seed: Optional[int] = None
     ) -> Tuple[str, Dict[str, Any]]:
         resolved_max_tokens = max_tokens if max_tokens is not None else settings.LLM_MAX_TOKENS
 
         url = f"{self.endpoint_url}/api/generate"
+        options: Dict[str, Any] = {
+            "num_predict": resolved_max_tokens,
+            "temperature": temperature,
+            "top_p": top_p,
+            "repeat_penalty": repetition_penalty,
+            "num_ctx": settings.LLM_NUM_CTX
+        }
+        if seed is not None:
+            options["seed"] = int(seed)
+
         payload: Dict[str, Any] = {
             "model": self.model_name,
             "prompt": prompt,
             "stream": False,
-            "options": {
-                "num_predict": resolved_max_tokens,
-                "temperature": temperature,
-                "top_p": top_p,
-                "repeat_penalty": repetition_penalty,
-                "num_ctx": settings.LLM_NUM_CTX
-            }
+            "options": options
         }
         if format:
             payload["format"] = format
@@ -189,7 +194,8 @@ class LLMClient:
         temperature: float = 0.0,
         top_p: float = 0.9,
         repetition_penalty: float = 1.0,
-        format: Optional[Union[str, Dict[str, Any]]] = None
+        format: Optional[Union[str, Dict[str, Any]]] = None,
+        seed: Optional[int] = None
     ) -> str:
         """
         Gera resposta a partir de um prompt usando política de retry com backoff exponencial.
@@ -203,7 +209,8 @@ class LLMClient:
             temperature=temperature,
             top_p=top_p,
             repetition_penalty=repetition_penalty,
-            format=format
+            format=format,
+            seed=seed
         )
 
         last_exception = None
@@ -254,7 +261,8 @@ class LLMClient:
         temperature: float = 0.0,
         top_p: float = 0.9,
         repetition_penalty: float = 1.0,
-        format: Optional[Union[str, Dict[str, Any]]] = None
+        format: Optional[Union[str, Dict[str, Any]]] = None,
+        seed: Optional[int] = None
     ) -> str:
         """
         Versão assíncrona da geração de resposta no Ollama.
@@ -268,7 +276,8 @@ class LLMClient:
             temperature=temperature,
             top_p=top_p,
             repetition_penalty=repetition_penalty,
-            format=format
+            format=format,
+            seed=seed
         )
 
         import asyncio
