@@ -158,10 +158,78 @@ def _normalize_five_distractors(correta_val: Any, distratores_vals: List[Any]) -
     return list(distratores_vals)[:4]
 
 
+class _ResolverLocalsTransformer(ast.NodeTransformer):
+    """
+    Transforma a função top-level `def resolver()` para retornar seu escopo local (`locals()`),
+    preservando qualquer retorno explícito em `__explicit_return__` para retrocompatibilidade.
+    """
+
+    def __init__(self) -> None:
+        super().__init__()
+        self._in_resolver = False
+
+    def visit_FunctionDef(self, node: ast.FunctionDef) -> ast.AST:
+        if node.name == "resolver" and not self._in_resolver:
+            self._in_resolver = True
+            new_body = []
+            for stmt in node.body:
+                visited = self.visit(stmt)
+                if isinstance(visited, list):
+                    new_body.extend(visited)
+                elif visited is not None:
+                    new_body.append(visited)
+            # Garante retorno de locals() ao final da função resolver()
+            ret_locals = ast.Return(
+                value=ast.Call(
+                    func=ast.Name(id="locals", ctx=ast.Load()),
+                    args=[],
+                    keywords=[]
+                )
+            )
+            new_body.append(ret_locals)
+            node.body = new_body
+            self._in_resolver = False
+            return node
+        # Não transforma funções auxiliares internas
+        return node
+
+    def visit_Return(self, node: ast.Return) -> Any:
+        if not self._in_resolver:
+            return node
+        assign_ret = ast.Assign(
+            targets=[ast.Name(id="__explicit_return__", ctx=ast.Store())],
+            value=node.value if node.value is not None else ast.Constant(value=None)
+        )
+        ret_locals = ast.Return(
+            value=ast.Call(
+                func=ast.Name(id="locals", ctx=ast.Load()),
+                args=[],
+                keywords=[]
+            )
+        )
+        return [assign_ret, ret_locals]
+
+
+def _instrument_resolver_ast(clean_code: str) -> str:
+    """Instrumenta a AST de resolver() para devolver locals() ao executor."""
+    tree = ast.parse(clean_code)
+    has_resolver = any(
+        isinstance(node, ast.FunctionDef) and node.name == "resolver"
+        for node in tree.body
+    )
+    if not has_resolver:
+        raise ValueError("O código fornecido não define a função obrigatória 'def resolver()'.")
+    transformer = _ResolverLocalsTransformer()
+    tree = transformer.visit(tree)
+    ast.fix_missing_locations(tree)
+    return ast.unparse(tree)
+
+
 def execute_solver_code(code: str, timeout: int = 5) -> Dict[str, Any]:
     """
     Executa a função resolver() em um processo filho isolado com timeout estrito.
-    Retorna o dicionário com 'correta' e 'distratores'.
+    Coleta `correta` e variáveis `erro_*` do escopo local (ou retorno explícito legado),
+    deduplica distratores e retorna o dicionário com 'correta' e 'distratores'.
     """
     clean_code = sanitize_solver_code(code)
     check_code_safety(clean_code)
@@ -169,15 +237,56 @@ def execute_solver_code(code: str, timeout: int = 5) -> Dict[str, Any]:
     if "def resolver" not in clean_code:
         raise ValueError("O código fornecido não define a função obrigatória 'def resolver()'.")
 
+    instrumented_code = _instrument_resolver_ast(clean_code)
+
     # Script wrapper seguro para execução em processo isolado
     runner_script = f"""
 import json
 import math
+import types
 
-{clean_code}
+{instrumented_code}
+
+def _is_serializable_val(val):
+    if val is None or isinstance(val, (bool, types.ModuleType, types.FunctionType, type)):
+        return False
+    return isinstance(val, (int, float, str, list, tuple, dict))
 
 try:
-    res = resolver()
+    scope = resolver()
+    if not isinstance(scope, dict):
+        raise ValueError(f"Escopo inválido retornado por resolver(): {{type(scope).__name__}}")
+
+    erro_vals = [
+        v for k, v in scope.items()
+        if k.startswith("erro_") and _is_serializable_val(v)
+    ]
+
+    if "correta" in scope and erro_vals:
+        res = {{
+            "correta": scope["correta"],
+            "distratores": erro_vals,
+            "_raw_erros_count": len(erro_vals)
+        }}
+    elif "__explicit_return__" in scope and isinstance(scope["__explicit_return__"], dict):
+        explicit = scope["__explicit_return__"]
+        raw_d = explicit.get("distratores")
+        res = {{
+            "correta": explicit.get("correta"),
+            "distratores": list(raw_d) if isinstance(raw_d, (list, tuple)) else raw_d,
+            "_raw_erros_count": len(raw_d) if isinstance(raw_d, (list, tuple)) else 0
+        }}
+        if "correta" not in explicit or "distratores" not in explicit:
+            res = explicit
+    elif "correta" in scope:
+        res = {{
+            "correta": scope["correta"],
+            "distratores": erro_vals,
+            "_raw_erros_count": len(erro_vals)
+        }}
+    else:
+        raise ValueError("O dicionário retornado por resolver() deve conter as chaves 'correta' e 'distratores' (ou definir 'correta' e variáveis 'erro_*').")
+
     print("___RESULT_START___")
     print(json.dumps(res))
     print("___RESULT_END___")
@@ -226,11 +335,33 @@ except Exception as e:
     if not isinstance(data["distratores"], (list, tuple)):
         raise ValueError("A chave 'distratores' deve ser uma lista ou tupla.")
 
-    if len(data["distratores"]) == 5:
-        data["distratores"] = _normalize_five_distractors(data["correta"], list(data["distratores"]))
+    raw_distratores = list(data["distratores"])
+    raw_count = data.pop("_raw_erros_count", len(raw_distratores))
 
-    if len(data["distratores"]) != 4:
-        raise ValueError(f"A chave 'distratores' deve conter exatamente 4 valores. Encontrado: {len(data.get('distratores', []))}")
+    if raw_count < 3:
+        raise ValueError(
+            f"Distratores insuficientes no solver: defina pelo menos 3 variáveis 'erro_*' (encontrado: {raw_count})."
+        )
+
+    # Deduplica distratores preservando a ordem e filtrando colisões com 'correta'
+    correta_str = format_number(data["correta"])
+    unique_distractors: List[Any] = []
+    seen_strs: Set[str] = {correta_str}
+    for d in raw_distratores:
+        d_str = format_number(d)
+        if d_str not in seen_strs:
+            seen_strs.add(d_str)
+            unique_distractors.append(d)
+
+    if len(unique_distractors) < 3:
+        num_collisions = max(4 - len(unique_distractors), raw_count - len(unique_distractors))
+        raise ValueError(
+            f"Colisão excessiva de alternativas no solver ({num_collisions} colisões). "
+            f"O solver deve produzir pelo menos 3 distratores únicos distintos do gabarito."
+        )
+
+    # Com 4 ou mais distratores distintos, usa 4; com 3, mantém os 3 para o auto_heal completar o 4º
+    data["distratores"] = unique_distractors[:4]
 
     return data
 

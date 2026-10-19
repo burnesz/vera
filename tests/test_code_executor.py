@@ -219,3 +219,64 @@ def test_validate_solver_consistency_rejects_two_or_more_collisions():
     with pytest.raises(ValueError, match="Colisão excessiva de alternativas"):
         validate_solver_consistency(enunciado, code, result)
 
+
+def test_a1_solver_without_return_collects_correta_and_erros():
+    """A1: O LLM define apenas 'correta' e variáveis 'erro_*' dentro de resolver(), sem escrever return."""
+    enunciado = "Uma fábrica produz 120 peças por hora em 5 horas, com perda de 20 peças ao final."
+    code = """
+def resolver():
+    taxa = 120
+    horas = 5
+    perda = 20
+    bruto = taxa * horas
+    correta = bruto - perda
+    erro_sem_perda = bruto
+    erro_somou_perda = bruto + perda
+    erro_perda_por_hora = (taxa - perda) * horas
+    erro_dividiu = taxa / horas + perda
+"""
+    res = execute_solver_code(code)
+    assert res["correta"] == 580
+    assert res["distratores"] == [600, 620, 500, 44.0]
+    vals = validate_solver_consistency(enunciado, code, res)
+    assert vals == ["580", "600", "620", "500", "44"]
+
+
+def test_a1_solver_with_three_distinct_distractors_auto_heals_fourth():
+    """A1: Com exatamente 3 distratores distintos, o auto_heal completa o quarto (dentro do limite de 1)."""
+    enunciado = "Uma fábrica produz 120 peças por hora em 5 horas, com perda de 20 peças ao final."
+    code = """
+def resolver():
+    taxa = 120
+    horas = 5
+    perda = 20
+    bruto = taxa * horas
+    correta = bruto - perda
+    erro_sem_perda = bruto
+    erro_somou_perda = bruto + perda
+    erro_perda_por_hora = (taxa - perda) * horas
+"""
+    res = execute_solver_code(code)
+    assert res["correta"] == 580
+    assert len(res["distratores"]) == 3
+    vals = validate_solver_consistency(enunciado, code, res)
+    assert len(vals) == 5
+    assert len(set(vals)) == 5
+    assert vals[0] == "580"
+    assert {"600", "620", "500"}.issubset(set(vals))
+
+
+def test_a1_solver_with_fewer_than_three_distractors_fails():
+    """A1: Com menos de 3 distratores, reprovar."""
+    code = """
+def resolver():
+    a = 100
+    b = 20
+    correta = a - b
+    erro_soma = a + b
+    erro_mult = a * b
+"""
+    with pytest.raises(ValueError, match="Distratores insuficientes"):
+        execute_solver_code(code)
+
+
