@@ -459,3 +459,50 @@ def resolver():
         validate_solver_consistency(enunciado, code_ungrounded_correta, res_bad_correta)
     assert exc_corr.value.code == PipelineErrorCode.NEXO_NUMERICO
     assert "35" in str(exc_corr.value)
+
+
+def test_b5_degenerate_ties_detected():
+    """B5: Detecta empate degenerado entre opções comparadas (via min/max ou variáveis comparadas em comando superlativo)."""
+    from app.schemas.question import PipelineErrorCode, PipelineValidationError
+
+    enunciado = (
+        "Uma empresa analisa três planos de internet para 2 meses: "
+        "Plano A tem taxa de 100 reais e mensalidade de 50 reais; "
+        "Plano B tem taxa de 80 reais e mensalidade de 60 reais; "
+        "Plano C tem taxa de 90 reais e mensalidade de 70 reais. "
+        "Qual o custo total da opção mais econômica?"
+    )
+
+    # 1. Empate em min(custo_a, custo_b, custo_c): ambos A e B custam 200
+    code_tie_min = """
+def resolver():
+    custo_a = 100 + 2 * 50
+    custo_b = 80 + 2 * 60
+    custo_c = 90 + 2 * 70
+    correta = min(custo_a, custo_b, custo_c)
+    erro_1 = custo_c
+    erro_2 = 100 + 50
+    erro_3 = 80 + 60
+    erro_4 = 90 + 70
+"""
+    res_tie = execute_solver_code(code_tie_min)
+    with pytest.raises(PipelineValidationError) as exc_tie:
+        validate_solver_consistency(enunciado, code_tie_min, res_tie)
+    assert exc_tie.value.code == PipelineErrorCode.CASO_DEGENERADO
+
+    # 2. Empate sem usar min(), atribuindo correta = custo_a quando custo_a == custo_b e enunciado pede 'mais econômica'
+    code_tie_vars = """
+def resolver():
+    custo_a = 100 + 2 * 50
+    custo_b = 80 + 2 * 60
+    custo_c = 90 + 2 * 70
+    correta = custo_a
+    erro_1 = custo_c
+    erro_2 = 100 + 50
+    erro_3 = 80 + 60
+    erro_4 = 90 + 70
+"""
+    res_tie_vars = execute_solver_code(code_tie_vars)
+    with pytest.raises(PipelineValidationError) as exc_tie_vars:
+        validate_solver_consistency(enunciado, code_tie_vars, res_tie_vars)
+    assert exc_tie_vars.value.code == PipelineErrorCode.CASO_DEGENERADO

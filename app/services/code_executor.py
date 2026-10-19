@@ -451,12 +451,21 @@ try:
         v for k, v in scope.items()
         if k.startswith("erro_") and _is_serializable_val(v)
     ]
+    locals_numeric = {{
+        k: float(v) for k, v in scope.items()
+        if not k.startswith("erro_")
+        and k not in ("correta", "__explicit_return__")
+        and isinstance(v, (int, float))
+        and not isinstance(v, bool)
+        and math.isfinite(float(v))
+    }}
 
     if "correta" in scope and erro_vals:
         res = {{
             "correta": scope["correta"],
             "distratores": erro_vals,
-            "_raw_erros_count": len(erro_vals)
+            "_raw_erros_count": len(erro_vals),
+            "_locals_numeric": locals_numeric
         }}
     elif "__explicit_return__" in scope and isinstance(scope["__explicit_return__"], dict):
         explicit = scope["__explicit_return__"]
@@ -464,7 +473,8 @@ try:
         res = {{
             "correta": explicit.get("correta"),
             "distratores": list(raw_d) if isinstance(raw_d, (list, tuple)) else raw_d,
-            "_raw_erros_count": len(raw_d) if isinstance(raw_d, (list, tuple)) else 0
+            "_raw_erros_count": len(raw_d) if isinstance(raw_d, (list, tuple)) else 0,
+            "_locals_numeric": locals_numeric
         }}
         if "correta" not in explicit or "distratores" not in explicit:
             res = explicit
@@ -472,7 +482,8 @@ try:
         res = {{
             "correta": scope["correta"],
             "distratores": erro_vals,
-            "_raw_erros_count": len(erro_vals)
+            "_raw_erros_count": len(erro_vals),
+            "_locals_numeric": locals_numeric
         }}
     else:
         raise ValueError("O dicionário retornado por resolver() deve conter as chaves 'correta' e 'distratores' (ou definir 'correta' e variáveis 'erro_*').")
@@ -983,6 +994,104 @@ def validate_solver_complexity(
     }
 
 
+_COMPARATIVE_SUPERLATIVE_RE = re.compile(
+    r"\b(mais\s+econ[oô]mic[oa]|mais\s+vantajos[oa]|mais\s+barat[oa]|mais\s+car[oa]"
+    r"|menor\s+custo|maior\s+custo|menor\s+pre[cç]o|maior\s+pre[cç]o"
+    r"|menor\s+valor|maior\s+valor|menor\s+tempo|maior\s+lucro"
+    r"|[oa]\s+maior|[oa]\s+menor|melhor\s+op[cç][aã]o)\b",
+    re.IGNORECASE,
+)
+
+
+def validate_no_degenerate_ties(
+    enunciado: str,
+    code: str,
+    result: Dict[str, Any]
+) -> None:
+    """
+    B5: Detecta deterministamente casos degenerados de empate entre opções comparadas
+    (ex.: quando o solver usa `min(...)`/`max(...)` ou compara opções `custo_a`, `custo_b`, etc.
+    e duas ou mais opções empatam no valor vencedor pedido por 'a mais econômica', 'o maior', 'o menor').
+    """
+    locals_numeric = result.get("_locals_numeric")
+    if not isinstance(locals_numeric, dict):
+        locals_numeric = {}
+
+    clean_code = sanitize_solver_code(code)
+    try:
+        tree = ast.parse(clean_code)
+    except SyntaxError:
+        return
+
+    resolver_node: Optional[ast.FunctionDef] = None
+    for node in tree.body:
+        if isinstance(node, ast.FunctionDef) and node.name == "resolver":
+            resolver_node = node
+            break
+    if resolver_node is None:
+        return
+
+    # 1. Verifica chamadas a min(...) / max(...) dentro de resolver()
+    for node in ast.walk(resolver_node):
+        if isinstance(node, ast.Call) and isinstance(node.func, ast.Name) and node.func.id in ("min", "max"):
+            func_name = node.func.id
+            candidate_nodes: List[ast.AST] = []
+            if len(node.args) >= 2:
+                candidate_nodes = list(node.args)
+            elif len(node.args) == 1 and isinstance(node.args[0], (ast.List, ast.Tuple, ast.Set)):
+                candidate_nodes = list(node.args[0].elts)
+
+            resolved_vals: List[float] = []
+            for c_node in candidate_nodes:
+                if isinstance(c_node, ast.Name) and c_node.id in locals_numeric:
+                    resolved_vals.append(float(locals_numeric[c_node.id]))
+                elif isinstance(c_node, ast.Constant) and isinstance(c_node.value, (int, float)) and not isinstance(c_node.value, bool):
+                    resolved_vals.append(float(c_node.value))
+
+            if len(resolved_vals) >= 2:
+                ext_val = min(resolved_vals) if func_name == "min" else max(resolved_vals)
+                tie_count = sum(1 for v in resolved_vals if abs(v - ext_val) < 1e-6)
+                if tie_count >= 2:
+                    raise PipelineValidationError(
+                        PipelineErrorCode.CASO_DEGENERADO,
+                        f"Empate degenerado detectado em {func_name}(): {tie_count} opções empatam no valor extremo ({format_number(ext_val)})."
+                    )
+
+    # 2. Se o enunciado pede superlativo/comparativo ('mais econômica', 'o maior', 'o menor', etc.),
+    # verifica se 2+ variáveis calculadas de um mesmo grupo de opções (ex: custo_a, custo_b) empatam na resposta correta
+    correta_val = result.get("correta")
+    if (
+        locals_numeric
+        and isinstance(correta_val, (int, float))
+        and not isinstance(correta_val, bool)
+        and _COMPARATIVE_SUPERLATIVE_RE.search(enunciado or "")
+    ):
+        computed_vars: Set[str] = set()
+        for stmt in resolver_node.body:
+            if isinstance(stmt, ast.Assign) and any(isinstance(c, (ast.BinOp, ast.Call)) for c in ast.walk(stmt.value)):
+                for target in stmt.targets:
+                    for name in _extract_stored_names_from_ast(target):
+                        if not name.startswith("erro_") and name != "correta":
+                            computed_vars.add(name)
+
+        prefix_groups: Dict[str, List[Tuple[str, float]]] = {}
+        for var_name in computed_vars:
+            if "_" in var_name and var_name in locals_numeric:
+                prefix = var_name.rsplit("_", 1)[0]
+                prefix_groups.setdefault(prefix, []).append((var_name, float(locals_numeric[var_name])))
+
+        c_float = float(correta_val)
+        for prefix, items in prefix_groups.items():
+            if len(items) >= 2:
+                tied_vars = [name for name, val in items if abs(val - c_float) < 1e-6]
+                if len(tied_vars) >= 2:
+                    raise PipelineValidationError(
+                        PipelineErrorCode.CASO_DEGENERADO,
+                        f"Empate degenerado entre opções comparadas ({', '.join(sorted(tied_vars))} = {format_number(c_float)}) "
+                        f"para pergunta comparativa/superlativa."
+                    )
+
+
 def validate_solver_consistency(
     enunciado: str,
     code: str,
@@ -997,6 +1106,8 @@ def validate_solver_consistency(
        e exige que cada 'erro_*' dependa de pelo menos uma variável fundamentada no enunciado/tabela.
     Retorna a lista de 5 valores formatados [correta, distrator1, distrator2, distrator3, distrator4].
     """
+    validate_no_degenerate_ties(enunciado=enunciado, code=code, result=result)
+
     correta_val = result["correta"]
     distratores_vals = list(result["distratores"])
 
