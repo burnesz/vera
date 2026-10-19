@@ -697,6 +697,166 @@ def auto_heal_distractors(
     return accepted
 
 
+def _extract_numeric_literals_from_ast(node: ast.AST) -> Set[float]:
+    """Extrai todos os literais numéricos (int/float, exceto bool) presentes em uma subárvore AST."""
+    nums: Set[float] = set()
+    for child in ast.walk(node):
+        if isinstance(child, ast.Constant) and isinstance(child.value, (int, float)) and not isinstance(child.value, bool):
+            nums.add(float(child.value))
+    return nums
+
+
+def _extract_loaded_names_from_ast(node: ast.AST) -> Set[str]:
+    """Extrai todos os identificadores lidos (Load) em uma subárvore AST."""
+    return {
+        child.id
+        for child in ast.walk(node)
+        if isinstance(child, ast.Name) and isinstance(child.ctx, ast.Load)
+    }
+
+
+def _extract_stored_names_from_ast(node: ast.AST) -> Set[str]:
+    """Extrai todos os identificadores escritos (Store) em um alvo de atribuição AST."""
+    return {
+        child.id
+        for child in ast.walk(node)
+        if isinstance(child, ast.Name) and isinstance(child.ctx, ast.Store)
+    }
+
+
+def _slice_correta_and_validate_distractors(
+    code: str,
+    enun_floats: Set[float]
+) -> Set[float]:
+    """
+    Executa backward slicing na AST de resolver() (A5 / DSR-07):
+    1. Extrai apenas os literais numéricos presentes na fatia de código que calcula 'correta'.
+    2. Identifica as variáveis fundamentadas no enunciado/tabela.
+    3. Garante que cada variável 'erro_*' dependa de pelo menos uma variável fundamentada
+       (literais soltos em 'erro_*' só são aceitos nessa condição).
+    """
+    clean_code = sanitize_solver_code(code)
+    try:
+        tree = ast.parse(clean_code)
+    except SyntaxError:
+        code_before_return = clean_code.split("return")[0] if "return" in clean_code else clean_code
+        code_no_comments = re.sub(r"#.*", "", code_before_return)
+        return {float(n) for n in re.findall(r"\b\d+(?:\.\d+)?\b", code_no_comments)}
+
+    target_body: List[ast.stmt] = tree.body
+    for node in tree.body:
+        if isinstance(node, ast.FunctionDef) and node.name == "resolver":
+            target_body = node.body
+            break
+
+    # Coleta todas as atribuições (targets, used_vars, literals, value_node) na ordem do corpo
+    assign_records: List[Tuple[Set[str], Set[str], Set[float], ast.AST]] = []
+    return_correta_expr: Optional[ast.AST] = None
+
+    for stmt in target_body:
+        for sub in ast.walk(stmt):
+            if isinstance(sub, ast.Assign) and sub.value is not None:
+                targets: Set[str] = set()
+                for t in sub.targets:
+                    targets |= _extract_stored_names_from_ast(t)
+                used = _extract_loaded_names_from_ast(sub.value)
+                lits = _extract_numeric_literals_from_ast(sub.value)
+                assign_records.append((targets, used, lits, sub.value))
+            elif isinstance(sub, ast.AnnAssign) and sub.value is not None:
+                targets = _extract_stored_names_from_ast(sub.target)
+                used = _extract_loaded_names_from_ast(sub.value)
+                lits = _extract_numeric_literals_from_ast(sub.value)
+                assign_records.append((targets, used, lits, sub.value))
+            elif isinstance(sub, ast.AugAssign) and sub.value is not None:
+                targets = _extract_stored_names_from_ast(sub.target)
+                used = _extract_loaded_names_from_ast(sub.value) | targets
+                lits = _extract_numeric_literals_from_ast(sub.value)
+                assign_records.append((targets, used, lits, sub.value))
+            elif isinstance(sub, ast.Return) and isinstance(sub.value, ast.Dict):
+                for k_node, v_node in zip(sub.value.keys, sub.value.values):
+                    if isinstance(k_node, ast.Constant) and k_node.value == "correta" and v_node is not None:
+                        return_correta_expr = v_node
+
+    has_correta_var = any("correta" in rec[0] for rec in assign_records)
+    if not has_correta_var and return_correta_expr is not None:
+        ret_lits = (
+            set()
+            if isinstance(return_correta_expr, ast.Constant)
+            else _extract_numeric_literals_from_ast(return_correta_expr)
+        )
+        assign_records.append((
+            {"correta"},
+            _extract_loaded_names_from_ast(return_correta_expr),
+            ret_lits,
+            return_correta_expr
+        ))
+
+    # 1. Backward slicing de 'correta'
+    slice_vars: Set[str] = {"correta"}
+    changed = True
+    while changed:
+        changed = False
+        for targets, used, _, _ in reversed(assign_records):
+            if targets & slice_vars:
+                new_vars = used - slice_vars
+                if new_vars:
+                    slice_vars |= new_vars
+                    changed = True
+
+    correta_floats: Set[float] = set()
+    for targets, _, lits, _ in assign_records:
+        if targets & slice_vars:
+            correta_floats |= lits
+
+    # 2. Identificação de variáveis fundamentadas (grounded_vars)
+    all_assigned_vars = {v for targets, _, _, _ in assign_records for v in targets}
+    grounded_vars: Set[str] = {
+        v for v in (slice_vars & all_assigned_vars)
+        if not v.startswith("erro_")
+    }
+    changed = True
+    while changed:
+        changed = False
+        for targets, used, lits, _ in assign_records:
+            non_erro_targets = {t for t in targets if not t.startswith("erro_")}
+            if not non_erro_targets or non_erro_targets.issubset(grounded_vars):
+                continue
+            lits_ok = all(n in enun_floats or n in ALLOWED_NUMERIC_CONSTANTS for n in lits)
+            has_enun_lit = any(n in enun_floats for n in lits)
+            has_grounded_dep = bool(used & grounded_vars)
+            if lits_ok and (has_enun_lit or has_grounded_dep):
+                grounded_vars |= non_erro_targets
+                changed = True
+
+    # 3. Validação de dependência das variáveis de distratores 'erro_*'
+    var_direct_deps: Dict[str, Set[str]] = {}
+    erro_vars: List[str] = []
+    for targets, used, _, _ in assign_records:
+        for t in targets:
+            var_direct_deps.setdefault(t, set()).update(used)
+            if t.startswith("erro_") and t not in erro_vars:
+                erro_vars.append(t)
+
+    for erro_var in erro_vars:
+        # Fecho transitivo de dependências de erro_var
+        deps: Set[str] = set(var_direct_deps.get(erro_var, set()))
+        worklist = list(deps)
+        while worklist:
+            curr = worklist.pop()
+            for nxt in var_direct_deps.get(curr, set()):
+                if nxt not in deps:
+                    deps.add(nxt)
+                    worklist.append(nxt)
+        if not (deps & grounded_vars):
+            raise PipelineValidationError(
+                PipelineErrorCode.NEXO_NUMERICO,
+                f"Distrator '{erro_var}' não depende de nenhuma variável fundamentada no enunciado/tabela "
+                f"(literais soltos só são aceitos quando combinados com variáveis fundamentadas)."
+            )
+
+    return correta_floats
+
+
 def validate_solver_consistency(
     enunciado: str,
     code: str,
@@ -707,8 +867,8 @@ def validate_solver_consistency(
     Valida a consistência matemática e o nexo entre o código do solver e o texto do enunciado:
     1. Se vierem 5 distratores, verifica se 1 é igual ao gabarito e o descarta para reutilizar 4.
     2. Unicidade estrita: o gabarito e os 4 distratores devem ser distintos (com Auto-Healing limitado a 1 colisão).
-    3. Checagem de nexo numérico: todo número utilizado no código antes do return deve estar presente no enunciado
-       (em algarismos ou por extenso).
+    3. Checagem de nexo numérico (A5 / DSR-07): aplica backward slicing na AST sobre a fatia de 'correta'
+       e exige que cada 'erro_*' dependa de pelo menos uma variável fundamentada no enunciado/tabela.
     Retorna a lista de 5 valores formatados [correta, distrator1, distrator2, distrator3, distrator4].
     """
     correta_val = result["correta"]
@@ -750,20 +910,7 @@ def validate_solver_consistency(
             f"Alternativas duplicadas geradas pelo solver mesmo após auto-healing: {all_values}. Valores repetidos: {set(duplicates)}."
         )
 
-    # 2. Checagem de Nexo Numérico (Groundedness)
-    # Extrai o corpo do código antes do 'return' e remove comentários
-    code_before_return = code.split("return")[0] if "return" in code else code
-    code_no_comments = re.sub(r"#.*", "", code_before_return)
-
-    # Extrai todos os números literais no código
-    raw_code_nums = re.findall(r"\b\d+(?:\.\d+)?\b", code_no_comments)
-    code_floats: Set[float] = set()
-    for n in raw_code_nums:
-        try:
-            code_floats.add(float(n))
-        except ValueError:
-            pass
-
+    # 2. Extração dos dados numéricos fundamentados no enunciado e na tabela
     combined_source = enunciado
     if tabela_dados:
         combined_source = f"{enunciado}\n{json.dumps(tabela_dados, ensure_ascii=False)}"
@@ -807,6 +954,9 @@ def validate_solver_consistency(
                     enun_floats.add(round(100.0 - val_pct, 6))
                     enun_floats.add(round((100.0 + val_pct) / 100.0, 6))
 
+    # 3. Checagem de Nexo Numérico via Backward Slicing na AST (A5)
+    code_floats = _slice_correta_and_validate_distractors(code, enun_floats)
+
     # 5. Verificação explícita de π (A7): se usar 3.14 (ou aproximação de π) no solver, deve constar no enunciado
     pi_approximations = {n for n in code_floats if abs(n - 3.14159265) < 0.005}
     if pi_approximations and not (pi_approximations & enun_floats):
@@ -815,7 +965,7 @@ def validate_solver_consistency(
             "Aproximação de π não declarada no enunciado: se usar π, escreva 'considere π = 3,14' no enunciado e use 3.14 no solver"
         )
 
-    # Identifica números no código que não constam no enunciado nem na lista de constantes neutras
+    # Identifica números na fatia de 'correta' que não constam no enunciado nem na lista de constantes neutras
     missing_numbers = {
         n for n in code_floats
         if n not in enun_floats and n not in ALLOWED_NUMERIC_CONSTANTS

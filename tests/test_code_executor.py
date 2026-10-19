@@ -395,3 +395,67 @@ def resolver():
     hint_col = _classify_retry_hint(exc_col.value)
     assert "Distratores distintos" in hint_col
     assert "Nexo numérico" not in hint_col
+
+
+def test_a5_backward_slicing_correta_and_distractor_dependency():
+    """A5: Groundedness via backward slicing na fatia de 'correta'; 'erro_*' aceita literal solto só se depender de variável fundamentada."""
+    from app.schemas.question import PipelineErrorCode, PipelineValidationError
+
+    enunciado = "Uma fábrica produz 120 peças por hora durante 5 horas, descartando 20 peças defeituosas ao final."
+
+    # 1. Caso válido: 'correta' 100% fundamentada; 'erro_4' usa literal solto (15), mas depende de 'bruto' (fundamentada)
+    code_ok = """
+def resolver():
+    taxa = 120
+    horas = 5
+    descarte = 20
+    bruto = taxa * horas
+    correta = bruto - descarte
+    erro_sem_descarte = bruto
+    erro_somou_descarte = bruto + descarte
+    erro_descarte_por_hora = (taxa - descarte) * horas
+    erro_ajuste_arbitrario = bruto - 15
+"""
+    res_ok = execute_solver_code(code_ok)
+    vals = validate_solver_consistency(enunciado, code_ok, res_ok)
+    assert vals[0] == "580"
+    assert "585" in vals
+
+    # 2. Caso inválido (erro_* com literal solto sem depender de variável fundamentada): deve reprovar!
+    code_ungrounded_distractor = """
+def resolver():
+    taxa = 120
+    horas = 5
+    descarte = 20
+    bruto = taxa * horas
+    correta = bruto - descarte
+    erro_1 = bruto
+    erro_2 = bruto + descarte
+    erro_3 = (taxa - descarte) * horas
+    erro_chute_solto = 499
+"""
+    res_bad_dist = execute_solver_code(code_ungrounded_distractor)
+    with pytest.raises(PipelineValidationError) as exc_dist:
+        validate_solver_consistency(enunciado, code_ungrounded_distractor, res_bad_dist)
+    assert exc_dist.value.code == PipelineErrorCode.NEXO_NUMERICO
+    assert "erro_chute_solto" in str(exc_dist.value)
+
+    # 3. Caso inválido (literal não fundamentado na fatia de 'correta'): deve reprovar!
+    code_ungrounded_correta = """
+def resolver():
+    taxa = 120
+    horas = 5
+    descarte = 20
+    taxa_oculta = 35
+    bruto = taxa * horas
+    correta = bruto - descarte - taxa_oculta
+    erro_1 = bruto
+    erro_2 = bruto + descarte
+    erro_3 = (taxa - descarte) * horas
+    erro_4 = taxa * descarte
+"""
+    res_bad_correta = execute_solver_code(code_ungrounded_correta)
+    with pytest.raises(PipelineValidationError) as exc_corr:
+        validate_solver_consistency(enunciado, code_ungrounded_correta, res_bad_correta)
+    assert exc_corr.value.code == PipelineErrorCode.NEXO_NUMERICO
+    assert "35" in str(exc_corr.value)
