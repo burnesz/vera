@@ -558,9 +558,10 @@ def test_three_stage_validation_semantic_failure_rejects():
 def test_stage_1b_rejects_excessive_unused_data_and_injects_retry_hint():
     """Valida se a Etapa 1b reprova quando dados_nao_utilizados tem > 1 item e passa alerta_tentativa_anterior no retry."""
     from app.services.question_service import _classify_retry_hint
+    from app.schemas.question import PipelineErrorCode
 
-    assert "2 etapas" in _classify_retry_hint("Complexidade insuficiente para o ENEM (item trivial)")
-    assert "len([" in _classify_retry_hint("Números utilizados na lógica do solver ausentes no enunciado")
+    assert "2 etapas" in _classify_retry_hint(PipelineErrorCode.COMPLEXIDADE)
+    assert "len([" in _classify_retry_hint(PipelineErrorCode.NEXO_NUMERICO)
 
     db = TestingSessionLocal()
     try:
@@ -629,3 +630,59 @@ def test_stage_1b_rejects_excessive_unused_data_and_injects_retry_hint():
         db.close()
 
 
+def test_a7_collision_retry_injects_colisao_hint_not_nexo():
+    """A7: Colisão excessiva de distratores gera hint de COLISAO no retry, corrigindo o bug de precedência com NEXO_NUMERICO."""
+    db = TestingSessionLocal()
+    try:
+        mock_llm = MagicMock(spec=LLMClient)
+        mock_vs = MagicMock(spec=PineconeVectorStore)
+        mock_vs.search.return_value = []
+
+        # 1ª tentativa: 2 distratores colidem com correta (80) -> COLISAO
+        t1_pot = json.dumps({
+            "planejamento": "Plano com colisão.",
+            "enunciado": "Um atleta fez 50 pontos no sábado e 30 pontos no domingo. Qual a pontuação total no fim de semana?",
+            "erros_tipicos": ["Erro 1", "Erro 2", "Erro 3", "Erro 4"],
+            "solver": "def resolver():\n    a = 50\n    b = 30\n    correta = a + b\n    erro_1 = 80\n    erro_2 = 80\n    erro_3 = 50\n    erro_4 = 30"
+        })
+        # 2ª tentativa: Sucesso
+        t2_pot = json.dumps({
+            "planejamento": "Plano sem colisão.",
+            "enunciado": "Um atleta fez 50 pontos no sábado e 30 pontos no domingo. Qual a pontuação total no fim de semana?",
+            "erros_tipicos": ["Erro 1", "Erro 2", "Erro 3", "Erro 4"],
+            "solver": "def resolver():\n    a = 50\n    b = 30\n    correta = a + b\n    erro_1 = a - b\n    erro_2 = a\n    erro_3 = b\n    erro_4 = a * b"
+        })
+        t2_blind = json.dumps({
+            "resolucao_passo_a_passo": "50 + 30 = 80.",
+            "premissas_assumidas": [],
+            "dados_nao_utilizados": [],
+            "pergunta_respondivel": True,
+            "resultado_obtido": 80
+        })
+        t2_equiv = json.dumps({
+            "equivalentes": True,
+            "explicacao_equivalencia": "Ambos 80."
+        })
+        t2_audit = json.dumps({
+            "analise": "Item adequado",
+            "incoerencia_ou_absurdo": False,
+            "comando_ambiguo_ou_incompativel": False,
+            "deficit_ou_contradicao": False,
+            "complexidade_insuficiente": False
+        })
+
+        mock_llm.generate.side_effect = [t1_pot, t2_pot, t2_blind, t2_equiv, t2_audit]
+
+        service = QuestionService(llm_client=mock_llm, vector_store=mock_vs)
+        questao = service.generate_single_questao_inedita(
+            db=db,
+            habilidade_codigo="H01",
+            max_attempts=2
+        )
+
+        assert questao is not None
+        second_attempt_prompt = mock_llm.generate.call_args_list[1].kwargs["prompt"]
+        assert "Distratores distintos:" in second_attempt_prompt
+        assert "Nexo numérico:" not in second_attempt_prompt
+    finally:
+        db.close()

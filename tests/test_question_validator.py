@@ -344,7 +344,7 @@ def test_a3_tabela_dados_exceeds_six_rows_rejected():
 def test_a4_erros_tipicos_schema_and_pydantic_validation():
     """A4: Garante minItems = maxItems = 4 no JSON Schema do Ollama e validação Pydantic com hint específico."""
     from pydantic import ValidationError
-    from app.schemas.question import QuestaoEnunciadoSolverOutput, POT_PHASE1_JSON_SCHEMA
+    from app.schemas.question import QuestaoEnunciadoSolverOutput, POT_PHASE1_JSON_SCHEMA, PipelineErrorCode
     from app.services.question_service import _classify_retry_hint
 
     # 1. Verifica JSON Schema enviado no format do Ollama
@@ -363,7 +363,7 @@ def test_a4_erros_tipicos_schema_and_pydantic_validation():
         )
     err_str = str(exc_info.value)
     assert "ERROS_TIPICOS_INVALIDOS" in err_str
-    hint = _classify_retry_hint(err_str)
+    hint = _classify_retry_hint(PipelineErrorCode.ERROS_TIPICOS_INVALIDOS)
     assert "exatamente 4 erros" in hint
 
     # 3. Aprova com exatamente 4 erros típicos não vazios

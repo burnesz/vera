@@ -8,6 +8,7 @@ Atende à arquitetura Program-Aided Generation (PoT):
 """
 
 import ast
+import builtins
 import json
 import logging
 import random
@@ -15,6 +16,8 @@ import re
 import subprocess
 import sys
 from typing import Dict, Any, List, Tuple, Set, Optional
+
+from app.schemas.question import PipelineErrorCode, PipelineValidationError
 
 logger = logging.getLogger(__name__)
 
@@ -94,8 +97,6 @@ def sanitize_solver_code(code: str) -> str:
         code = match.group(1).strip()
     return code
 
-
-import builtins
 
 ALLOWED_BUILTINS: Set[str] = set(dir(builtins)) | {"math", "json", "resolver"}
 
@@ -244,12 +245,32 @@ def _check_stmts_free_vars(stmts: List[ast.stmt], bound: Set[str]) -> Optional[s
 def check_free_variables(tree: ast.Module) -> None:
     """
     Gate estático (0ms): detecta nomes livres (ex.: `tabela_dados` ou variáveis externas)
-    dentro do módulo e de `resolver()` antes de iniciar qualquer subprocesso.
+    e uso direto de `math.pi` / `pi` dentro do módulo e de `resolver()` antes de iniciar subprocesso.
     """
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Attribute) and node.attr == "pi":
+            raise PipelineValidationError(
+                PipelineErrorCode.USO_PI,
+                "Uso de math.pi detectado: se usar π, escreva 'considere π = 3,14' no enunciado e use 3.14 no solver"
+            )
+        if isinstance(node, ast.ImportFrom) and node.module == "math":
+            for alias in node.names:
+                if alias.name == "pi":
+                    raise PipelineValidationError(
+                        PipelineErrorCode.USO_PI,
+                        "Import de math.pi detectado: se usar π, escreva 'considere π = 3,14' no enunciado e use 3.14 no solver"
+                    )
+
     bound: Set[str] = set(ALLOWED_BUILTINS)
     free = _check_stmts_free_vars(tree.body, bound)
     if free:
-        raise ValueError(
+        if free.lower() in {"pi", "π"}:
+            raise PipelineValidationError(
+                PipelineErrorCode.USO_PI,
+                "Variável 'pi' não declarada: se usar π, escreva 'considere π = 3,14' no enunciado e use 3.14 no solver"
+            )
+        raise PipelineValidationError(
+            PipelineErrorCode.NOME_LIVRE,
             f"Variável externa/livre '{free}' não definida: "
             f"declare os valores como variáveis dentro de resolver(); não use variáveis externas"
         )
@@ -265,7 +286,10 @@ def check_code_safety(code: str) -> ast.Module:
     try:
         tree = ast.parse(code)
     except SyntaxError as e:
-        raise ValueError(f"Erro de sintaxe no código Python do solver: {e}")
+        raise PipelineValidationError(
+            PipelineErrorCode.SINTAXE,
+            f"Erro de sintaxe no código Python do solver: {e}"
+        )
 
     for node in ast.walk(tree):
         # Bloqueia import de módulos restritos
@@ -505,7 +529,8 @@ except Exception as e:
     raw_count = data.pop("_raw_erros_count", len(raw_distratores))
 
     if raw_count < 3:
-        raise ValueError(
+        raise PipelineValidationError(
+            PipelineErrorCode.DISTRATORES_INSUFICIENTES,
             f"Distratores insuficientes no solver: defina pelo menos 3 variáveis 'erro_*' (encontrado: {raw_count})."
         )
 
@@ -521,7 +546,8 @@ except Exception as e:
 
     if len(unique_distractors) < 3:
         num_collisions = max(4 - len(unique_distractors), raw_count - len(unique_distractors))
-        raise ValueError(
+        raise PipelineValidationError(
+            PipelineErrorCode.COLISAO,
             f"Colisão excessiva de alternativas no solver ({num_collisions} colisões). "
             f"O solver deve produzir pelo menos 3 distratores únicos distintos do gabarito."
         )
@@ -700,7 +726,8 @@ def validate_solver_consistency(
     num_collisions = 4 - len(unique_valid_distractors)
 
     if num_collisions > 1:
-        raise ValueError(
+        raise PipelineValidationError(
+            PipelineErrorCode.COLISAO,
             f"Colisão excessiva de alternativas no solver ({num_collisions} colisões em {all_values}). "
             f"O solver deve produzir pelo menos 3 distratores únicos distintos do gabarito."
         )
@@ -718,7 +745,8 @@ def validate_solver_consistency(
 
     if len(set(all_values)) != 5:
         duplicates = [v for v in all_values if all_values.count(v) > 1]
-        raise ValueError(
+        raise PipelineValidationError(
+            PipelineErrorCode.COLISAO,
             f"Alternativas duplicadas geradas pelo solver mesmo após auto-healing: {all_values}. Valores repetidos: {set(duplicates)}."
         )
 
@@ -779,6 +807,14 @@ def validate_solver_consistency(
                     enun_floats.add(round(100.0 - val_pct, 6))
                     enun_floats.add(round((100.0 + val_pct) / 100.0, 6))
 
+    # 5. Verificação explícita de π (A7): se usar 3.14 (ou aproximação de π) no solver, deve constar no enunciado
+    pi_approximations = {n for n in code_floats if abs(n - 3.14159265) < 0.005}
+    if pi_approximations and not (pi_approximations & enun_floats):
+        raise PipelineValidationError(
+            PipelineErrorCode.USO_PI,
+            "Aproximação de π não declarada no enunciado: se usar π, escreva 'considere π = 3,14' no enunciado e use 3.14 no solver"
+        )
+
     # Identifica números no código que não constam no enunciado nem na lista de constantes neutras
     missing_numbers = {
         n for n in code_floats
@@ -787,7 +823,8 @@ def validate_solver_consistency(
 
     if missing_numbers:
         missing_fmt = sorted([int(x) if x.is_integer() else x for x in missing_numbers])
-        raise ValueError(
+        raise PipelineValidationError(
+            PipelineErrorCode.NEXO_NUMERICO,
             f"Números utilizados na lógica do solver ausentes no enunciado da questão: {missing_fmt}. "
             f"O enunciado e o solver devem utilizar os mesmos dados numéricos."
         )

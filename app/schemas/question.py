@@ -3,10 +3,43 @@ Schemas Pydantic para validação estrutural e transferência de dados de Quest�
 Atende a RN-Q01 (validação estrutural de unicidade e formato) e RN-Q02 (schema JSON estrito).
 """
 
+from enum import Enum
 from typing import Dict, Optional, List, Any
 import uuid
 from datetime import datetime
 from pydantic import BaseModel, Field, field_validator, ConfigDict
+
+
+class PipelineErrorCode(str, Enum):
+    """Códigos tipificados de falha na pipeline PoT (A7)."""
+    SINTAXE = "SINTAXE"
+    SEGURANCA = "SEGURANCA"
+    TIMEOUT = "TIMEOUT"
+    NOME_LIVRE = "NOME_LIVRE"
+    USO_PI = "USO_PI"
+    DISTRATORES_INSUFICIENTES = "DISTRATORES_INSUFICIENTES"
+    ERROS_TIPICOS_INVALIDOS = "ERROS_TIPICOS_INVALIDOS"
+    NEXO_NUMERICO = "NEXO_NUMERICO"
+    COLISAO = "COLISAO"
+    TABELA_INVALIDA = "TABELA_INVALIDA"
+    TERMO_PROIBIDO = "TERMO_PROIBIDO"
+    COMPLEXIDADE = "COMPLEXIDADE"
+    CASO_DEGENERADO = "CASO_DEGENERADO"
+    NAO_RESPONDIVEL = "NAO_RESPONDIVEL"
+    PREMISSA_OCULTA = "PREMISSA_OCULTA"
+    DADOS_OCIOSOS = "DADOS_OCIOSOS"
+    INCONSISTENCIA_CEGA = "INCONSISTENCIA_CEGA"
+    NAO_EQUIVALENTE = "NAO_EQUIVALENTE"
+    AUDITORIA = "AUDITORIA"
+
+
+class PipelineValidationError(ValueError):
+    """Exceção tipificada da pipeline PoT que carrega um PipelineErrorCode (subclasse de ValueError)."""
+
+    def __init__(self, code: PipelineErrorCode, message: str):
+        super().__init__(message)
+        self.code = code
+        self.message = message
 
 
 class QuestaoEnunciadoSolverOutput(BaseModel):

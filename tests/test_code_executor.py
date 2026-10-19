@@ -290,6 +290,7 @@ def test_a2_static_gate_syntax_error_classified():
 def test_a2_static_gate_detects_free_variable_tabela_dados():
     """A2: Detecta nomes livres (ex: tabela_dados) em 0ms com hint específico."""
     from app.services.question_service import _classify_retry_hint
+    from app.schemas.question import PipelineErrorCode, PipelineValidationError
 
     code_with_free_var = """
 def resolver():
@@ -300,13 +301,14 @@ def resolver():
     erro_3 = total * 2
     erro_4 = total / 2
 """
-    with pytest.raises(ValueError) as exc_info:
+    with pytest.raises(PipelineValidationError) as exc_info:
         execute_solver_code(code_with_free_var)
 
     err_msg = str(exc_info.value)
+    assert exc_info.value.code == PipelineErrorCode.NOME_LIVRE
     assert "tabela_dados" in err_msg
     assert "declare os valores como variáveis dentro de resolver(); não use variáveis externas" in err_msg
-    assert _classify_retry_hint(err_msg) == "declare os valores como variáveis dentro de resolver(); não use variáveis externas"
+    assert _classify_retry_hint(exc_info.value) == "declare os valores como variáveis dentro de resolver(); não use variáveis externas"
 
 
 def test_a6_percentage_in_table_header_accepts_decimal_and_complement():
@@ -341,5 +343,55 @@ def resolver():
     assert len(set(vals)) == 5
 
 
+def test_a7_typed_error_codes_and_pi_hint():
+    """A7: Erros tipificados com código Enum corrigem precedência COLISAO vs NEXO_NUMERICO e dão hint de pi."""
+    from app.services.question_service import _classify_retry_hint
+    from app.schemas.question import PipelineErrorCode, PipelineValidationError
 
+    # 1. Caso math.pi no solver -> código USO_PI -> hint específico de pi
+    code_math_pi = """
+def resolver():
+    r = 10
+    correta = math.pi * r * r
+    erro_1 = 2 * math.pi * r
+    erro_2 = r * r
+    erro_3 = 4 * math.pi * r
+    erro_4 = math.pi * r
+"""
+    with pytest.raises(PipelineValidationError) as exc_pi:
+        execute_solver_code(code_math_pi)
+    assert exc_pi.value.code == PipelineErrorCode.USO_PI
+    assert _classify_retry_hint(exc_pi.value) == "se usar π, escreva 'considere π = 3,14' no enunciado e use 3.14 no solver"
 
+    # 2. Caso 3.14 sem estar no enunciado -> código USO_PI -> hint específico de pi
+    code_314 = """
+def resolver():
+    r = 10
+    correta = 3.14 * r * r
+    erro_1 = 2 * 3.14 * r
+    erro_2 = r * r
+    erro_3 = 4 * 3.14 * r
+    erro_4 = 3.14 * r
+"""
+    res_314 = execute_solver_code(code_314)
+    with pytest.raises(PipelineValidationError) as exc_314:
+        validate_solver_consistency(
+            "Um jardim circular possui raio de 10 metros. Qual sua área?",
+            code_314,
+            res_314
+        )
+    assert exc_314.value.code == PipelineErrorCode.USO_PI
+    assert _classify_retry_hint(exc_314.value) == "se usar π, escreva 'considere π = 3,14' no enunciado e use 3.14 no solver"
+
+    # 3. Colisão de distratores em validate_solver_consistency (antes envolvida em 'Erro de nexo numérico: Colisão...')
+    # deve carregar código COLISAO e mapear para hint de distratores distintos, nunca NEXO_NUMERICO!
+    with pytest.raises(PipelineValidationError) as exc_col:
+        validate_solver_consistency(
+            "Em uma corrida de 100 metros rasos em 10 segundos, qual a velocidade média?",
+            "def resolver():\n    d = 100\n    t = 10\n    correta = d / t\n    return {'correta': correta, 'distratores': [10, 10, 20, 30]}",
+            {"correta": 10, "distratores": [10, 10, 20, 30]}
+        )
+    assert exc_col.value.code == PipelineErrorCode.COLISAO
+    hint_col = _classify_retry_hint(exc_col.value)
+    assert "Distratores distintos" in hint_col
+    assert "Nexo numérico" not in hint_col

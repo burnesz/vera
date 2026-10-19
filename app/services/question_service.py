@@ -15,7 +15,7 @@ import time
 import logging
 import uuid
 import random
-from typing import List, Dict, Any, Optional, Callable, Tuple
+from typing import List, Dict, Any, Optional, Callable, Tuple, Union
 from sqlalchemy.orm import Session
 from sqlalchemy import func
 
@@ -48,6 +48,8 @@ from app.core.prompts import (
     FORMAS_ABERTURA
 )
 from app.schemas.question import (
+    PipelineErrorCode,
+    PipelineValidationError,
     QuestaoEnunciadoSolverOutput,
     QuestaoBlindSolvingOutput,
     QuestaoEquivalenciaOutput,
@@ -60,42 +62,43 @@ from pydantic import ValidationError
 
 logger = logging.getLogger(__name__)
 
+_RETRY_HINTS_BY_CODE: Dict[PipelineErrorCode, str] = {
+    PipelineErrorCode.SINTAXE: "Sintaxe estrita: retorne JSON válido com 'planejamento', 'enunciado', 'tabela_dados' (opcional), 'erros_tipicos' (4 itens) e função def resolver().",
+    PipelineErrorCode.SEGURANCA: "Código seguro: não utilize imports externos ou funções de sistema; defina apenas cálculos matemáticos dentro de def resolver().",
+    PipelineErrorCode.TIMEOUT: "Eficiência no solver: evite laços infinitos ou simulações pesadas; use fórmulas aritméticas diretas dentro de def resolver().",
+    PipelineErrorCode.NOME_LIVRE: "declare os valores como variáveis dentro de resolver(); não use variáveis externas",
+    PipelineErrorCode.USO_PI: "se usar π, escreva 'considere π = 3,14' no enunciado e use 3.14 no solver",
+    PipelineErrorCode.DISTRATORES_INSUFICIENTES: "Distratores insuficientes: defina 4 variáveis 'erro_*' dentro de resolver() produzindo pelo menos 3 valores distintos do gabarito.",
+    PipelineErrorCode.ERROS_TIPICOS_INVALIDOS: "Erros típicos: liste exatamente 4 erros cognitivos em 'erros_tipicos' e defina 4 variáveis 'erro_*' correspondentes no solver.",
+    PipelineErrorCode.NEXO_NUMERICO: "Nexo numérico: use no solver apenas números presentes no enunciado/tabela (para quantidade de itens/linhas, use len([...])).",
+    PipelineErrorCode.COLISAO: "Distratores distintos: calcule 4 variáveis de erros típicos que gerem 4 valores numéricos diferentes entre si e da resposta correta.",
+    PipelineErrorCode.TABELA_INVALIDA: "Tabela uniforme: em 'tabela_dados', use no máximo 6 linhas e exatamente as mesmas chaves em todas as linhas.",
+    PipelineErrorCode.TERMO_PROIBIDO: "Linguagem limpa: nunca cite termos internos como 'solver', 'python', 'código', 'algoritmo', 'distrator' ou 'gabarito' no enunciado.",
+    PipelineErrorCode.COMPLEXIDADE: "Nível trivial: exija pelo menos 2 etapas de raciocínio encadeadas; proibido resolver apenas somando ou lendo a tabela.",
+    PipelineErrorCode.CASO_DEGENERADO: "Desempate estrito: em questões de comparação ('mais econômica', 'o maior', 'o menor'), garanta que não haja empate entre opções.",
+    PipelineErrorCode.NAO_RESPONDIVEL: "Comando numérico inequívoco: a pergunta final deve pedir um número com unidade explícita (nunca pergunte 'qual plano/opção').",
+    PipelineErrorCode.PREMISSA_OCULTA: "Premissas e dados completos: declare todas as bases, áreas, pesos ou convenções no enunciado e garanta que a soma da tabela bata com o texto.",
+    PipelineErrorCode.DADOS_OCIOSOS: "Dados com função: todo número citado no enunciado ou tabela deve entrar no cálculo (máximo de 1 dado extra contextual).",
+    PipelineErrorCode.INCONSISTENCIA_CEGA: "Clareza na resolução: redija enunciado e comando inequívocos para que o problema admita uma única interpretação e resultado.",
+    PipelineErrorCode.NAO_EQUIVALENTE: "Alinhamento enunciado-solver: garanta que a fórmula de 'correta' em def resolver() calcule exatamente o que o comando final pede.",
+    PipelineErrorCode.AUDITORIA: "Verossimilhança: utilize ordens de grandeza e contextos fisicamente realistas.",
+}
 
-def _classify_retry_hint(last_error: Optional[str]) -> Optional[str]:
+
+def _classify_retry_hint(error: Union[PipelineErrorCode, PipelineValidationError, None]) -> Optional[str]:
     """
-    Converte o erro da tentativa anterior em uma diretriz curta de categoria (1 linha),
-    orientando a próxima geração no Stateless Retry sem expor o rascunho/código anterior
-    (evitando Context Anchoring Bias).
+    Mapeia diretamente o código tipificado de falha (PipelineErrorCode) para uma diretriz curta
+    de 1 linha no Stateless Retry, sem busca por substring (A7).
     """
-    if not last_error:
+    if error is None:
         return None
-
-    low = last_error.lower()
-    if "complexidade" in low or "trivial" in low:
-        return "Nível trivial: exija pelo menos 2 etapas de raciocínio encadeadas; proibido resolver apenas somando ou lendo a tabela."
-    if "premissa" in low or "déficit" in low or "deficit" in low or "contradi" in low:
-        return "Premissas e dados completos: declare todas as bases, áreas, pesos ou convenções no enunciado e garanta que a soma da tabela bata com o texto."
-    if "respondível" in low or "ambíguo" in low or "ambiguo" in low or "incompatível" in low:
-        return "Comando numérico inequívoco: a pergunta final deve pedir um número com unidade explícita (nunca pergunte 'qual plano/opção')."
-    if "ocioso" in low or "não utilizado" in low:
-        return "Dados com função: todo número citado no enunciado ou tabela deve entrar no cálculo (máximo de 1 dado extra contextual)."
-    if "incoerência" in low or "absurdo" in low:
-        return "Verossimilhança: utilize ordens de grandeza e contextos fisicamente realistas."
-    if "erros_tipicos_invalidos" in low or "erros_tipicos" in low or "distratores insuficientes" in low:
-        return "Erros típicos: liste exatamente 4 erros cognitivos em 'erros_tipicos' e defina 4 variáveis 'erro_*' correspondentes no solver."
-    if "nexo" in low or "ausentes no enunciado" in low:
-        return "Nexo numérico: use no solver apenas números presentes no enunciado/tabela (para quantidade de itens/linhas, use len([...]))."
-    if "colisão" in low or "duplicad" in low:
-        return "Distratores distintos: calcule 4 variáveis de erros típicos que gerem 4 valores numéricos diferentes entre si e da resposta correta."
-    if "divergência" in low or "equivalência" in low:
-        return "Alinhamento enunciado-solver: garanta que a fórmula de 'correta' em def resolver() calcule exatamente o que o comando final pede."
-    if "tabela_invalida" in low or "mesmas chaves" in low or "máximo 6 linhas" in low:
-        return "Tabela uniforme: em 'tabela_dados', use no máximo 6 linhas e exatamente as mesmas chaves em todas as linhas."
-    if "variável externa" in low or "variáveis externas" in low or "variável livre" in low or "nameerror" in low:
-        return "declare os valores como variáveis dentro de resolver(); não use variáveis externas"
-    if "termo técnico" in low or "proibido" in low:
-        return "Linguagem limpa: nunca cite termos internos como 'solver', 'python', 'código', 'algoritmo', 'distrator' ou 'gabarito' no enunciado."
-    return "Sintaxe estrita: retorne JSON válido com 'planejamento', 'enunciado', 'tabela_dados' (opcional), 'erros_tipicos' (4 itens) e função def resolver()."
+    if isinstance(error, PipelineValidationError):
+        code = error.code
+    elif isinstance(error, PipelineErrorCode):
+        code = error
+    else:
+        return _RETRY_HINTS_BY_CODE[PipelineErrorCode.SINTAXE]
+    return _RETRY_HINTS_BY_CODE.get(code, _RETRY_HINTS_BY_CODE[PipelineErrorCode.SINTAXE])
 
 
 class QuestionService:
@@ -348,6 +351,7 @@ class QuestionService:
         )
 
         last_error: Optional[str] = None
+        last_error_code: Optional[PipelineErrorCode] = None
         enunciado_anterior: Optional[str] = None
         solver_anterior: Optional[str] = None
 
@@ -363,10 +367,10 @@ class QuestionService:
                     db=db
                 )
                 curr_temp = min(temperature + 0.1 * (attempt - 1), 0.6)
-                retry_hint = _classify_retry_hint(last_error)
+                retry_hint = _classify_retry_hint(last_error_code)
                 logger.info(
                     f"PoT Stateless Retry: Tentativa limpa {attempt}/{max_attempts} para {clean_hab} "
-                    f"(Novo tema: '{curr_tema}' | Temp: {curr_temp:.1f} | Alerta: '{retry_hint}')..."
+                    f"(Novo tema: '{curr_tema}' | Temp: {curr_temp:.1f} | Código: {last_error_code} | Alerta: '{retry_hint}')..."
                 )
             else:
                 curr_tema = tema
@@ -397,6 +401,7 @@ class QuestionService:
                     format=POT_PHASE1_JSON_SCHEMA
                 )
             except Exception as e:
+                last_error_code = PipelineErrorCode.SINTAXE
                 last_error = f"Falha na chamada ao LLM (Fase 1 PoT): {e}"
                 logger.warning(f"Tentativa {attempt}/{max_attempts} falhou na inferência: {e}")
                 continue
@@ -408,6 +413,7 @@ class QuestionService:
                 parsed_data = json.loads(sanitized_json, strict=False)
                 parsed_data = sanitize_parsed_dict_values(parsed_data)
             except Exception as e:
+                last_error_code = PipelineErrorCode.SINTAXE
                 last_error = f"Erro ao decodificar JSON gerado pelo LLM: {e}"
                 logger.warning(f"Tentativa {attempt}/{max_attempts} falhou no JSON: {e}")
                 continue
@@ -429,6 +435,13 @@ class QuestionService:
                 enunciado_anterior = pot_output.enunciado
                 solver_anterior = pot_output.solver
             except ValidationError as e:
+                err_locs = {loc_part for err in e.errors() for loc_part in err.get("loc", ())}
+                if "tabela_dados" in err_locs:
+                    last_error_code = PipelineErrorCode.TABELA_INVALIDA
+                elif "erros_tipicos" in err_locs:
+                    last_error_code = PipelineErrorCode.ERROS_TIPICOS_INVALIDOS
+                else:
+                    last_error_code = PipelineErrorCode.SINTAXE
                 last_error = f"Erro no schema do solver: {e.errors()}"
                 logger.warning(f"Tentativa {attempt}/{max_attempts} falhou no schema Pydantic: {e}")
                 continue
@@ -437,6 +450,7 @@ class QuestionService:
             # 1. Vazamento de termos técnicos de bastidor ('solver', 'python', 'código', etc.)
             ok_terms, err_terms = check_prohibited_terms(pot_output.enunciado)
             if not ok_terms:
+                last_error_code = PipelineErrorCode.TERMO_PROIBIDO
                 last_error = err_terms
                 logger.warning(f"Tentativa {attempt}/{max_attempts} descartada por termo proibido: {err_terms}")
                 continue
@@ -445,6 +459,12 @@ class QuestionService:
             try:
                 solver_result = execute_solver_code(pot_output.solver, timeout=5)
             except Exception as e:
+                if isinstance(e, PipelineValidationError):
+                    last_error_code = e.code
+                elif isinstance(e, TimeoutError):
+                    last_error_code = PipelineErrorCode.TIMEOUT
+                else:
+                    last_error_code = PipelineErrorCode.SINTAXE
                 last_error = f"Erro na execução da função resolver(): {e}"
                 logger.warning(f"Tentativa {attempt}/{max_attempts} falhou na execução do código: {e}")
                 continue
@@ -458,6 +478,10 @@ class QuestionService:
                     tabela_dados=pot_output.tabela_dados
                 )
             except Exception as e:
+                if isinstance(e, PipelineValidationError):
+                    last_error_code = e.code
+                else:
+                    last_error_code = PipelineErrorCode.NEXO_NUMERICO
                 last_error = f"Erro de consistência matemática ou nexo numérico: {e}"
                 logger.warning(f"Tentativa {attempt}/{max_attempts} falhou na checagem de nexo: {e}")
                 continue
@@ -472,12 +496,14 @@ class QuestionService:
                     tabela_dados=pot_output.tabela_dados
                 )
             except Exception as e:
+                last_error_code = PipelineErrorCode.SINTAXE
                 last_error = f"Falha na resolução cega da LLM: {e}"
                 logger.warning(f"Tentativa {attempt}/{max_attempts} falhou na resolução cega: {e}")
                 continue
 
             # Validação Etapa 1b: Auto-relato de Premissas, Pergunta Respondível e Dados Ociosos (Early Exit)
             if not getattr(blind_sol, "pergunta_respondivel", True):
+                last_error_code = PipelineErrorCode.NAO_RESPONDIVEL
                 last_error = "O resolvedor cego apontou que a pergunta não é respondível numericamente com os dados fornecidos."
                 logger.warning(f"Tentativa {attempt}/{max_attempts} descartada (pergunta não respondível): {last_error}")
                 continue
@@ -489,6 +515,7 @@ class QuestionService:
                     if isinstance(p, str) and not re.search(r"^(nenhuma|n/a|nenhum|nada|sem premissas?)\b", p.strip(), re.I)
                 ]
                 if premissas_reais:
+                    last_error_code = PipelineErrorCode.PREMISSA_OCULTA
                     last_error = f"Premissas implícitas assumidas na resolução: {'; '.join(premissas_reais)}"
                     logger.warning(f"Tentativa {attempt}/{max_attempts} descartada por premissa implícita (Early Exit): {last_error}")
                     continue
@@ -500,6 +527,7 @@ class QuestionService:
                     if isinstance(d, str) and not re.search(r"^(nenhum|nenhuma|n/a|nada|todos foram usados)\b", d.strip(), re.I)
                 ]
                 if len(ociosos_reais) > 1:
+                    last_error_code = PipelineErrorCode.DADOS_OCIOSOS
                     last_error = f"Dados ociosos em excesso no enunciado/tabela ({len(ociosos_reais)} não utilizados): {'; '.join(ociosos_reais)}"
                     logger.warning(f"Tentativa {attempt}/{max_attempts} descartada por excesso de dados ociosos (Early Exit): {last_error}")
                     continue
@@ -511,11 +539,13 @@ class QuestionService:
                     resultado_obtido=blind_sol.resultado_obtido
                 )
             except Exception as e:
+                last_error_code = PipelineErrorCode.NAO_EQUIVALENTE
                 last_error = f"Falha no confronto de equivalência: {e}"
                 logger.warning(f"Tentativa {attempt}/{max_attempts} falhou na equivalência: {e}")
                 continue
 
             if not equiv.equivalentes:
+                last_error_code = PipelineErrorCode.NAO_EQUIVALENTE
                 motivo = equiv.explicacao_equivalencia or "Divergência conceitual ou numérica entre o solver e a resolução cega."
                 last_error = f"Divergência matemática no confronto: {motivo}"
                 logger.warning(
@@ -533,11 +563,20 @@ class QuestionService:
                     letra_gabarito=gabarito
                 )
             except Exception as e:
+                last_error_code = PipelineErrorCode.AUDITORIA
                 last_error = f"Falha na auditoria semântica: {e}"
                 logger.warning(f"Tentativa {attempt}/{max_attempts} falhou na auditoria semântica: {e}")
                 continue
 
             if not audit.aprovada:
+                if audit.complexidade_insuficiente:
+                    last_error_code = PipelineErrorCode.COMPLEXIDADE
+                elif audit.comando_ambiguo_ou_incompativel or audit.possui_ambiguidade:
+                    last_error_code = PipelineErrorCode.NAO_RESPONDIVEL
+                elif audit.deficit_ou_contradicao or audit.deficit_informacoes:
+                    last_error_code = PipelineErrorCode.PREMISSA_OCULTA
+                else:
+                    last_error_code = PipelineErrorCode.AUDITORIA
                 last_error = f"Rejeição semântica: {audit.motivo_rejeicao}"
                 logger.warning(f"Tentativa {attempt}/{max_attempts} falhou na auditoria semântica: {audit.motivo_rejeicao}")
                 continue
