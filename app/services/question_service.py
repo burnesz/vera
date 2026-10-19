@@ -141,6 +141,20 @@ class QuestionService:
                 logger.warning(f"Erro ao carregar queries semânticas de '{self.queries_path}': {e}")
         return mapping
 
+    def sortear_tipologia(self, habilidade_codigo: str, excluir: Optional[str] = None) -> Optional[str]:
+        """
+        Sorteia uma tipologia matemática específica para a habilidade a partir de habilidades_queries.json (B1).
+        """
+        clean_hab = habilidade_codigo.strip().upper()
+        if clean_hab.startswith("H") and clean_hab[1:].isdigit():
+            clean_hab = f"H{int(clean_hab[1:]):02d}"
+        hab_data = self._habilidades_queries.get(clean_hab) or {}
+        tipologias = hab_data.get("tipologias") or []
+        if not tipologias:
+            return None
+        opcoes = [t for t in tipologias if t != excluir] or tipologias
+        return random.choice(opcoes)
+
     def retrieve_few_shot_examples(
         self,
         db: Session,
@@ -354,6 +368,7 @@ class QuestionService:
         last_error_code: Optional[PipelineErrorCode] = None
         enunciado_anterior: Optional[str] = None
         solver_anterior: Optional[str] = None
+        curr_tipologia: Optional[str] = None
 
         for attempt in range(1, max_attempts + 1):
             # Se for retry após falha estrutural, aplica amostragem independente (Stateless Retry)
@@ -361,6 +376,7 @@ class QuestionService:
             retry_hint: Optional[str] = None
             attempt_seed = random.randint(1, 2_000_000_000)
             base_temp = min(temperature, 0.3)
+            curr_tipologia = self.sortear_tipologia(clean_hab, excluir=curr_tipologia)
             if attempt > 1:
                 curr_tema, curr_abertura = sortear_contexto_criativo()
                 curr_few_shot = self.retrieve_rag_few_shot_examples(
@@ -372,14 +388,17 @@ class QuestionService:
                 retry_hint = _classify_retry_hint(last_error_code)
                 logger.info(
                     f"PoT Stateless Retry: Tentativa limpa {attempt}/{max_attempts} para {clean_hab} "
-                    f"(Novo tema: '{curr_tema}' | Temp: {curr_temp:.2f} | Seed: {attempt_seed} | Código: {last_error_code} | Alerta: '{retry_hint}')..."
+                    f"(Novo tema: '{curr_tema}' | Tipologia: '{curr_tipologia}' | Temp: {curr_temp:.2f} | Seed: {attempt_seed} | Código: {last_error_code} | Alerta: '{retry_hint}')..."
                 )
             else:
                 curr_tema = tema
                 curr_abertura = abertura
                 curr_few_shot = few_shot_dicts
                 curr_temp = round(base_temp, 2)
-                logger.info(f"PoT: Tentativa {attempt}/{max_attempts} para {clean_hab} (Temp: {curr_temp:.2f} | Seed: {attempt_seed})...")
+                logger.info(
+                    f"PoT: Tentativa {attempt}/{max_attempts} para {clean_hab} "
+                    f"(Tipologia: '{curr_tipologia}' | Temp: {curr_temp:.2f} | Seed: {attempt_seed})..."
+                )
 
             # Geração limpa sem poluição de contexto ou ancoragem em rascunhos anteriores (Stateless)
             prompt_pot = build_enunciado_solver_prompt(
@@ -390,6 +409,7 @@ class QuestionService:
                 exemplos_referencia=curr_few_shot,
                 tema=curr_tema,
                 abertura=curr_abertura,
+                tipologia=curr_tipologia,
                 enunciados_recentes=enunciados_recentes,
                 alerta_tentativa_anterior=retry_hint
             )

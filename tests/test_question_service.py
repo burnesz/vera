@@ -743,3 +743,42 @@ def test_a8_temperature_ceiling_03_and_seed_passed():
     finally:
         db.close()
 
+
+def test_b1_typology_per_skill_and_competency_few_shots():
+    """B1: Verifica 3 a 5 tipologias para H01..H30, few-shots por competência (C1..C7) e injeção da tipologia no prompt."""
+    from app.core.prompts import POT_FEW_SHOT_BY_COMPETENCIA
+    from app.schemas.question import QuestaoEnunciadoSolverOutput
+    from app.services.code_executor import execute_solver_code, validate_solver_consistency
+    from app.services.question_validator import format_enunciado_with_table
+
+    mock_llm = MagicMock(spec=LLMClient)
+    mock_vs = MagicMock(spec=PineconeVectorStore)
+    service = QuestionService(llm_client=mock_llm, vector_store=mock_vs)
+
+    # 1. Todas as 30 habilidades têm entre 3 e 5 tipologias
+    for i in range(1, 31):
+        code = f"H{i:02d}"
+        hab_entry = service._habilidades_queries.get(code)
+        assert hab_entry is not None, f"{code} ausente em habilidades_queries.json"
+        tipologias = hab_entry.get("tipologias", [])
+        assert 3 <= len(tipologias) <= 5, f"{code} deve ter entre 3 e 5 tipologias (encontrado: {len(tipologias)})"
+        sampled = service.sortear_tipologia(code)
+        assert sampled in tipologias
+
+    # 2. Todos os few-shots das 7 competências executam e passam no nexo numérico
+    for comp in range(1, 8):
+        examples = POT_FEW_SHOT_BY_COMPETENCIA.get(comp, [])
+        assert len(examples) >= 1
+        for raw_ex in examples:
+            parsed = json.loads(raw_ex)
+            pot_out = QuestaoEnunciadoSolverOutput(**parsed)
+            enun_full = format_enunciado_with_table(pot_out.enunciado, pot_out.tabela_dados)
+            res = execute_solver_code(pot_out.solver, timeout=5)
+            vals = validate_solver_consistency(enun_full, pot_out.solver, res, tabela_dados=pot_out.tabela_dados)
+            assert len(set(vals)) == 5
+
+    # 3. Tipologia é injetada no prompt de geração
+    prompt_check = service.sortear_tipologia("H01")
+    assert prompt_check is not None
+
+

@@ -378,9 +378,118 @@ POT_FEW_SHOT_EXAMPLES: List[str] = [
 ]
 
 
-def sortear_few_shot() -> str:
-    """Retorna um exemplo few-shot aleatório (formatado), para não ancorar sempre na mesma estrutura."""
-    exemplo = random.choice(POT_FEW_SHOT_EXAMPLES)
+# Mapeamento de few-shots específicos por Competência do ENEM (C1 a C7) para B1
+POT_FEW_SHOT_BY_COMPETENCIA: Dict[int, List[str]] = {
+    # C1 (H01-H05): Números, operações, porcentagens sucessivas e contagem
+    1: [
+        POT_FEW_SHOT_EXAMPLES[1],
+        """{
+  "planejamento": "Dados: 4 opções de prato principal, 3 de bebida e 2 de sobremesa; desconto de 5 reais no combo completo de 35 reais para 20 clientes. Etapas: (1) calcular o total de combinações distintas pelo princípio multiplicativo (4 * 3 * 2); (2) somar ao valor arrecadado com 20 combos com desconto. Erros típicos: somar as opções em vez de multiplicar; esquecer as sobremesas; multiplicar sem o desconto.",
+  "enunciado": "Um restaurante universitário oferece um combo promocional em que o cliente escolhe 1 entre 4 pratos principais, 1 entre 3 sucos naturais e 1 entre 2 sobremesas. Para comemorar o aniversário do restaurante, cada combo completo, cujo preço normal é R$ 35,00, recebeu um desconto de R$ 5,00, e um grupo de estudantes comprou exatamente uma unidade de cada combinação distinta possível. Qual foi o valor total, em reais, arrecadado com a venda de todas essas combinações distintas?",
+  "erros_tipicos": [
+    "Somar as quantidades de opções (4 + 3 + 2) em vez de aplicar o princípio multiplicativo",
+    "Multiplicar o número correto de combinações pelo preço cheio de R$ 35,00 sem subtrair o desconto",
+    "Calcular apenas o número de combinações possíveis (4 * 3 * 2) sem multiplicar pelo valor pago por combo",
+    "Esquecer de incluir as 2 opções de sobremesa na contagem das combinações"
+  ],
+  "solver": "def resolver():\\n    pratos, sucos, sobremesas = 4, 3, 2\\n    preco_cheio, desconto = 35, 5\\n    total_combinacoes = pratos * sucos * sobremesas\\n    preco_combo = preco_cheio - desconto\\n    correta = total_combinacoes * preco_combo\\n    erro_soma_opcoes = (pratos + sucos + sobremesas) * preco_combo\\n    erro_sem_desconto = total_combinacoes * preco_cheio\\n    erro_so_combinacoes = total_combinacoes\\n    erro_sem_sobremesa = (pratos * sucos) * preco_combo"
+}"""
+    ],
+    # C2 (H06-H09): Geometria plana/espacial, Pitágoras, semelhança e malhas
+    2: [
+        """{
+  "planejamento": "Dados: deslocamento ortogonal de 60 m para leste e 80 m para norte em um terreno, cercado com 3 fios de arame na diagonal. Etapas: (1) calcular a distância em linha reta pela hipotenusa (sqrt(60^2 + 80^2) = 100 m); (2) multiplicar por 3 fios de arame. Erros típicos: somar os catetos (60 + 80) em vez de usar Pitágoras; parar na medida de 1 fio; esquecer de extrair a raiz.",
+  "enunciado": "Em um parque ecológico, uma trilha liga o portão de entrada a um mirante por meio de dois trechos perpendiculares: 60 metros na direção leste e, em seguida, 80 metros na direção norte. A administração decidiu instalar uma cerca de proteção em linha reta ligando diretamente o portão ao mirante, utilizando 3 fios paralelos de aço em toda a extensão dessa linha reta. Qual é o comprimento total, em metros, de fio de aço necessário para construir essa cerca?",
+  "erros_tipicos": [
+    "Somar os comprimentos dos dois trechos perpendiculares (60 + 80) em vez de aplicar o Teorema de Pitágoras",
+    "Calcular apenas a distância em linha reta (hipotenusa) esquecendo de multiplicar pelos 3 fios",
+    "Multiplicar a diferença entre os trechos (80 - 60) pelos 3 fios",
+    "Calcular o perímetro completo do triângulo retângulo (60 + 80 + 100) sem multiplicar pelos 3 fios"
+  ],
+  "solver": "def resolver():\\n    trecho_leste = 60\\n    trecho_norte = 80\\n    num_fios = 3\\n    distancia_reta = (trecho_leste**2 + trecho_norte**2) ** 0.5\\n    correta = round(distancia_reta * num_fios, 2)\\n    erro_soma_catetos = (trecho_leste + trecho_norte) * num_fios\\n    erro_um_fio = round(distancia_reta, 2)\\n    erro_diferenca = (trecho_norte - trecho_leste) * num_fios\\n    erro_perimetro = round(trecho_leste + trecho_norte + distancia_reta, 2)"
+}"""
+    ],
+    # C3 (H10-H14): Grandezas e medidas, escalas, áreas e volumes
+    3: [
+        POT_FEW_SHOT_EXAMPLES[2]
+    ],
+    # C4 (H15-H18): Variação de grandezas, proporcionalidade e regra de três
+    4: [
+        """{
+  "planejamento": "Dados: reservatório de 1200 L com vazão de entrada de 40 L/min e vazão de saída de 15 L/min, iniciando já com 200 L. Etapas: (1) calcular o volume que falta encher (1200 - 200 = 1000 L); (2) calcular a vazão líquida (40 - 15 = 25 L/min); (3) dividir o volume restante pela vazão líquida. Erros típicos: esquecer de descontar os 200 L iniciais; somar as vazões; dividir apenas pela vazão de entrada.",
+  "enunciado": "Um tanque industrial com capacidade total de 1.200 litros já contém inicialmente 200 litros de água. Para completá-lo, abre-se uma torneira que despeja 40 litros por minuto, ao mesmo tempo em que uma válvula de drenagem retira 15 litros por minuto de forma contínua. Mantendo-se essas vazões constantes, em quantos minutos o tanque atingirá sua capacidade máxima?",
+  "erros_tipicos": [
+    "Esquecer de subtrair os 200 litros iniciais, dividindo 1.200 litros pela vazão líquida",
+    "Dividir o volume restante apenas pela vazão de entrada de 40 L/min, ignorando a drenagem",
+    "Somar as vazões de entrada e saída (40 + 15) em vez de subtrair",
+    "Somar o volume inicial de 200 litros à capacidade total antes de dividir pela vazão líquida"
+  ],
+  "solver": "def resolver():\\n    capacidade = 1200\\n    volume_inicial = 200\\n    entrada = 40\\n    saida = 15\\n    falta_encher = capacidade - volume_inicial\\n    vazao_liquida = entrada - saida\\n    correta = round(falta_encher / vazao_liquida, 2)\\n    erro_sem_volume_inicial = round(capacidade / vazao_liquida, 2)\\n    erro_sem_saida = round(falta_encher / entrada, 2)\\n    erro_soma_vazoes = round(falta_encher / (entrada + saida), 2)\\n    erro_somou_inicial = round((capacidade + volume_inicial) / vazao_liquida, 2)"
+}"""
+    ],
+    # C5 (H19-H23): Modelagem algébrica, funções e equações
+    5: [
+        """{
+  "planejamento": "Dados: plano A cobra R$ 120 fixos mais R$ 3 por entrega; plano B cobra R$ 60 fixos mais R$ 5 por entrega. Etapas: (1) igualar ou comparar os custos para 40 entregas mensais; (2) calcular a economia ao escolher o plano mais barato para 40 entregas (ou o custo do plano mais econômico). Vamos pedir o custo total, em reais, no plano mais econômico para 40 entregas.",
+  "enunciado": "Uma cooperativa de entregas analisa duas propostas de contrato mensal com uma empresa de logística:\\n- Plano A: taxa fixa mensal de R$ 120,00 mais R$ 3,00 por entrega realizada;\\n- Plano B: taxa fixa mensal de R$ 60,00 mais R$ 5,00 por entrega realizada.\\nPara um mês em que a cooperativa realizará exatamente 40 entregas, qual será o valor total pago, em reais, caso escolha o plano mais econômico?",
+  "erros_tipicos": [
+    "Escolher o custo do plano mais caro (Plano B) em vez do mais econômico",
+    "Calcular a média aritmética entre os custos dos dois planos",
+    "Calcular apenas a parcela variável das 40 entregas no Plano A esquecendo a taxa fixa",
+    "Calcular a diferença de custo entre os dois planos em vez do valor total do mais econômico"
+  ],
+  "solver": "def resolver():\\n    fixo_a, var_a = 120, 3\\n    fixo_b, var_b = 60, 5\\n    entregas = 40\\n    custo_a = fixo_a + var_a * entregas\\n    custo_b = fixo_b + var_b * entregas\\n    correta = min(custo_a, custo_b)\\n    erro_plano_caro = max(custo_a, custo_b)\\n    erro_media_planos = (custo_a + custo_b) / 2\\n    erro_sem_taxa_fixa = var_a * entregas\\n    erro_diferenca = abs(custo_b - custo_a)"
+}"""
+    ],
+    # C6 (H24-H26): Tabelas, gráficos, inferência e variação tabular
+    6: [
+        POT_FEW_SHOT_EXAMPLES[0],
+        POT_FEW_SHOT_EXAMPLES[2]
+    ],
+    # C7 (H27-H30): Estatística (média ponderada, mediana) e probabilidade
+    7: [
+        POT_FEW_SHOT_EXAMPLES[0]
+    ]
+}
+
+
+def _infer_competencia_from_habilidade(habilidade_codigo: Optional[str]) -> Optional[int]:
+    """Infere o número da competência (1 a 7) a partir do código da habilidade (H01 a H30)."""
+    if not habilidade_codigo:
+        return None
+    clean = habilidade_codigo.strip().upper()
+    if clean.startswith("H") and clean[1:].isdigit():
+        num = int(clean[1:])
+        if 1 <= num <= 5:
+            return 1
+        if 6 <= num <= 9:
+            return 2
+        if 10 <= num <= 14:
+            return 3
+        if 15 <= num <= 18:
+            return 4
+        if 19 <= num <= 23:
+            return 5
+        if 24 <= num <= 26:
+            return 6
+        if 27 <= num <= 30:
+            return 7
+    return None
+
+
+def sortear_few_shot(
+    competencia: Optional[int] = None,
+    habilidade_codigo: Optional[str] = None
+) -> str:
+    """
+    Retorna um exemplo few-shot alinhado à competência/habilidade (B1),
+    evitando ancorar sempre nos mesmos 3 exemplos genéricos.
+    """
+    comp = competencia or _infer_competencia_from_habilidade(habilidade_codigo)
+    pool = POT_FEW_SHOT_BY_COMPETENCIA.get(comp, []) if comp else []
+    if not pool:
+        pool = POT_FEW_SHOT_EXAMPLES
+    exemplo = random.choice(pool)
     return (
         "--- [EXEMPLO DE FORMATO E DE QUALIDADE ESPERADOS] ---\n"
         "(Copie apenas o FORMATO e o nível de exigência. NÃO copie o tema, os números nem o tipo de cálculo.)\n"
@@ -399,6 +508,7 @@ def build_enunciado_solver_prompt(
     exemplos_referencia: Optional[List[Dict[str, Any]]] = None,
     tema: Optional[str] = None,
     abertura: Optional[str] = None,
+    tipologia: Optional[str] = None,
     exemplo_few_shot: Optional[str] = None,
     enunciados_recentes: Optional[List[str]] = None,
     alerta_tentativa_anterior: Optional[str] = None
@@ -448,8 +558,10 @@ JÁ FORAM GERADOS (NÃO repita contexto, estrutura nem tipo de cálculo):
 """
 
     diretriz_criativa = ""
-    if tema or abertura:
+    if tema or abertura or tipologia:
         linhas_criativas = []
+        if tipologia:
+            linhas_criativas.append(f"- Tipologia matemática obrigatória para esta questão: {tipologia}.")
         if tema:
             linhas_criativas.append(f"- Contexto temático sugerido: {tema}.")
         if abertura:
@@ -463,7 +575,11 @@ JÁ FORAM GERADOS (NÃO repita contexto, estrutura nem tipo de cálculo):
             f"- {alerta_tentativa_anterior}\n"
         )
 
-    few_shot = exemplo_few_shot if exemplo_few_shot is not None else sortear_few_shot()
+    few_shot = (
+        exemplo_few_shot
+        if exemplo_few_shot is not None
+        else sortear_few_shot(competencia=competencia, habilidade_codigo=habilidade_codigo)
+    )
 
     prompt = f"""{POT_QUESTION_GENERATOR_SYSTEM_PROMPT}
 
