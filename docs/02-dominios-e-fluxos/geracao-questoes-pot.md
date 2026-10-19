@@ -93,11 +93,10 @@ Nenhuma questão inédita pode ser salva ou exibida ao estudante sem cumprir **t
 - O LLM **nunca** escolhe a letra do gabarito na geração PoT.
 - A função `assemble_alternatives_and_gabarito` (`app/services/code_executor.py`) formata os números no padrão brasileiro (`format_number`: inteiros limpos ou decimais com vírgula até 2 casas), embaralha as 5 opções com `random.shuffle` e atribui deterministicamente as letras `"A"` a `"E"`, identificando a letra exata correspondente a `correta`.
 
-### `RN-Q03` — Defesa em Cascata: Auto-Healing Limitado (Máx. 1 Colisão), Stateless Retry Tipificado (`A7`) e Teto de Tempo por Habilidade
+### `RN-Q03` — Defesa em Cascata: Auto-Healing Limitado (Máx. 1 Colisão) e Stateless Retry Tipificado (`A7`)
 - **Linha 1 (`auto_heal_distractors` limitado a 1 distrator)**:
   - Se houver **apenas 1 colisão** (`3` distratores únicos distintos de `correta`), o backend cura esse único distrator deterministicamente em `0ms`. Se houver **$\ge 2$ colisões** (ou $< 3$ distratores), a tentativa é reprovada imediatamente com código tipificado (`COLISAO` / `DISTRATORES_INSUFICIENTES`).
 - **Linha 2 (*Stateless Retry* Tipificado sem Ancoragem)**: toda falha carrega um código de `PipelineErrorCode` (`SINTAXE`, `NOME_LIVRE`, `USO_PI`, `DISTRATORES_INSUFICIENTES`, `ERROS_TIPICOS_INVALIDOS`, `NEXO_NUMERICO`, `COLISAO`, `TABELA_INVALIDA`, `COMPLEXIDADE`, `CASO_DEGENERADO`, `INCONSISTENCIA_CEGA`, `NAO_RESPONDIVEL`, `PREMISSA_OCULTA`, `DADOS_OCIOSOS`, `NAO_EQUIVALENTE`, `AUDITORIA`), mapeado em `_classify_retry_hint` para uma diretriz de 1 linha sem busca por substring.
-- **Teto Temporal de Execução (`timeout_seconds`, padrão 360s / 6 min)**: a geração de cada item inédito em `QuestionService` e no script CLI `populate_questoes_ineditas.py` possui controle de tempo acumulado. Caso o ciclo de retentativas para a habilidade ultrapasse o teto definido (ex.: 6 minutos), a operação é interrompida com `TimeoutError`, registrando falha e liberando o pipeline para avançar imediatamente à próxima habilidade.
 
 ### `RN-Q04` — Rastreabilidade e Auditoria na Persistência
 - Na tabela `questoes_ineditas`:
