@@ -26,9 +26,15 @@ class QuestaoEnunciadoSolverOutput(BaseModel):
         None,
         description="Se o problema envolver tabela de dados, coloque-a aqui como uma lista de dicionários (cada dicionário é uma linha)."
     )
+    erros_tipicos: Optional[List[str]] = Field(
+        None,
+        min_length=4,
+        max_length=4,
+        description="Lista com exatamente 4 erros típicos de alunos que originam as variáveis erro_* no solver."
+    )
     solver: str = Field(
         ...,
-        description="Função Python def resolver() calculando a resposta exata ('correta') e 4 distratores plausíveis ('distratores')."
+        description="Função Python def resolver() calculando a resposta exata ('correta') e 4 distratores plausíveis ('erro_*')."
     )
 
     @field_validator("enunciado")
@@ -59,6 +65,20 @@ class QuestaoEnunciadoSolverOutput(BaseModel):
                     )
         return v
 
+    @field_validator("erros_tipicos", mode="before")
+    @classmethod
+    def validate_erros_tipicos(cls, v: Optional[List[str]]) -> Optional[List[str]]:
+        if v is None:
+            return None
+        if not isinstance(v, list) or len(v) != 4:
+            raise ValueError(
+                f"ERROS_TIPICOS_INVALIDOS: 'erros_tipicos' deve conter exatamente 4 itens (recebido: {len(v) if isinstance(v, list) else type(v).__name__})."
+            )
+        cleaned = [str(item).strip() for item in v if str(item).strip()]
+        if len(cleaned) != 4:
+            raise ValueError("ERROS_TIPICOS_INVALIDOS: os 4 itens de 'erros_tipicos' não podem ser vazios.")
+        return cleaned
+
     @field_validator("solver")
     @classmethod
     def validate_solver(cls, v: str) -> str:
@@ -66,6 +86,29 @@ class QuestaoEnunciadoSolverOutput(BaseModel):
         if "def resolver" not in clean:
             raise ValueError("O código do solver deve definir obrigatoriamente a função 'def resolver()'.")
         return clean
+
+
+POT_PHASE1_JSON_SCHEMA: Dict[str, Any] = {
+    "type": "object",
+    "properties": {
+        "planejamento": {"type": "string"},
+        "enunciado": {"type": "string"},
+        "tabela_dados": {
+            "anyOf": [
+                {"type": "array", "items": {"type": "object"}, "maxItems": 6},
+                {"type": "null"}
+            ]
+        },
+        "erros_tipicos": {
+            "type": "array",
+            "items": {"type": "string"},
+            "minItems": 4,
+            "maxItems": 4
+        },
+        "solver": {"type": "string"}
+    },
+    "required": ["planejamento", "enunciado", "erros_tipicos", "solver"]
+}
 
 
 class QuestaoJustificativaOutput(BaseModel):

@@ -341,4 +341,39 @@ def test_a3_tabela_dados_exceeds_six_rows_rejected():
     assert "TABELA_INVALIDA" in str(exc_info.value)
 
 
+def test_a4_erros_tipicos_schema_and_pydantic_validation():
+    """A4: Garante minItems = maxItems = 4 no JSON Schema do Ollama e validação Pydantic com hint específico."""
+    from pydantic import ValidationError
+    from app.schemas.question import QuestaoEnunciadoSolverOutput, POT_PHASE1_JSON_SCHEMA
+    from app.services.question_service import _classify_retry_hint
+
+    # 1. Verifica JSON Schema enviado no format do Ollama
+    erros_schema = POT_PHASE1_JSON_SCHEMA["properties"]["erros_tipicos"]
+    assert erros_schema["type"] == "array"
+    assert erros_schema["minItems"] == 4
+    assert erros_schema["maxItems"] == 4
+    assert "erros_tipicos" in POT_PHASE1_JSON_SCHEMA["required"]
+
+    # 2. Reprova quando erros_tipicos tem menos ou mais de 4 itens
+    with pytest.raises(ValidationError) as exc_info:
+        QuestaoEnunciadoSolverOutput(
+            enunciado="Uma loja vende pacotes de café de 500 g por 20 reais. Qual o custo de 3 kg?",
+            erros_tipicos=["Erro 1", "Erro 2", "Erro 3"],  # Apenas 3!
+            solver="def resolver():\n    correta = 120\n    erro_1 = 60\n    erro_2 = 80\n    erro_3 = 100\n    erro_4 = 140"
+        )
+    err_str = str(exc_info.value)
+    assert "ERROS_TIPICOS_INVALIDOS" in err_str
+    hint = _classify_retry_hint(err_str)
+    assert "exatamente 4 erros" in hint
+
+    # 3. Aprova com exatamente 4 erros típicos não vazios
+    valid_out = QuestaoEnunciadoSolverOutput(
+        enunciado="Uma loja vende pacotes de café de 500 g por 20 reais. Qual o custo de 3 kg?",
+        erros_tipicos=["Erro 1", "Erro 2", "Erro 3", "Erro 4"],
+        solver="def resolver():\n    correta = 120\n    erro_1 = 60\n    erro_2 = 80\n    erro_3 = 100\n    erro_4 = 140"
+    )
+    assert len(valid_out.erros_tipicos) == 4
+
+
+
 

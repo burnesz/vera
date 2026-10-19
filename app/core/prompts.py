@@ -339,12 +339,24 @@ POT_FEW_SHOT_EXAMPLES: List[str] = [
     {"Turma": "B", "Alunos": 40, "Nota média": 6},
     {"Turma": "C", "Alunos": 20, "Nota média": 8}
   ],
+  "erros_tipicos": [
+    "Calcular a média aritmética simples das notas sem ponderar pelo número de alunos",
+    "Esquecer de incluir a turma C na soma e no divisor",
+    "Inverter os pesos das turmas A e C",
+    "Esquecer a turma A no cálculo"
+  ],
   "solver": "def resolver():\\n    alunos_a, alunos_b, alunos_c = 40, 40, 20\\n    nota_a, nota_b, nota_c = 4, 6, 8\\n    total_alunos = alunos_a + alunos_b + alunos_c\\n    correta = round((alunos_a*nota_a + alunos_b*nota_b + alunos_c*nota_c) / total_alunos, 2)\\n    erro_media_simples = round((nota_a + nota_b + nota_c) / len([nota_a, nota_b, nota_c]), 2)\\n    erro_esqueceu_turma_c = round((alunos_a*nota_a + alunos_b*nota_b) / (alunos_a + alunos_b), 2)\\n    erro_pesos_trocados = round((alunos_c*nota_a + alunos_b*nota_b + alunos_a*nota_c) / total_alunos, 2)\\n    erro_esqueceu_turma_a = round((alunos_b*nota_b + alunos_c*nota_c) / (alunos_b + alunos_c), 2)"
 }""",
     # --- Exemplo 2: sem tabela, porcentagens sucessivas ---
     """{
   "planejamento": "Dados: preço R$ 250, desconto de 20%, acréscimo de 10% sobre o valor já com desconto. Etapas: (1) aplicar o desconto; (2) aplicar o acréscimo sobre o resultado. Erros típicos: somar os percentuais (-20% + 10%); parar após o desconto; ignorar o desconto; responder o valor do desconto.",
   "enunciado": "Uma loja de eletrodomésticos anuncia um liquidificador por R$ 250,00. Na promoção de fim de semana, o preço recebe um desconto de 20%. Quem opta pelo pagamento parcelado paga um acréscimo de 10% sobre o valor já com desconto. Qual é o valor total, em reais, pago por um cliente que compra esse liquidificador de forma parcelada na promoção?",
+  "erros_tipicos": [
+    "Somar algebricamente os percentuais (-20% + 10% = -10%) sobre o preço original",
+    "Parar na primeira etapa, informando apenas o preço com desconto à vista",
+    "Aplicar apenas o acréscimo de 10% sobre o preço original ignorando o desconto",
+    "Calcular apenas o valor absoluto do desconto inicial"
+  ],
   "solver": "def resolver():\\n    preco = 250\\n    desconto = 20\\n    acrescimo = 10\\n    com_desconto = preco * (1 - desconto/100)\\n    correta = round(com_desconto * (1 + acrescimo/100), 2)\\n    erro_soma_percentuais = round(preco * (1 - desconto/100 + acrescimo/100), 2)\\n    erro_so_desconto = round(com_desconto, 2)\\n    erro_ignorou_desconto = round(preco * (1 + acrescimo/100), 2)\\n    erro_valor_do_desconto = round(preco * desconto/100, 2)"
 }""",
     # --- Exemplo 3: com tabela, conversão de unidades + área + custo ---
@@ -354,6 +366,12 @@ POT_FEW_SHOT_EXAMPLES: List[str] = [
   "tabela_dados": [
     {"Cômodo": "Sala", "Largura (m)": 5, "Comprimento (m)": 6},
     {"Cômodo": "Quarto", "Largura (m)": 3, "Comprimento (m)": 4}
+  ],
+  "erros_tipicos": [
+    "Calcular o perímetro de cada cômodo em vez da área antes de multiplicar pelo preço",
+    "Considerar apenas a área da sala no orçamento",
+    "Somar as áreas dos dois cômodos esquecendo de multiplicar pelo preço por m²",
+    "Considerar apenas a área do quarto no cálculo do custo"
   ],
   "solver": "def resolver():\\n    largura_sala, comp_sala = 5, 6\\n    largura_quarto, comp_quarto = 3, 4\\n    preco_m2 = 45\\n    area_sala = largura_sala * comp_sala\\n    area_quarto = largura_quarto * comp_quarto\\n    correta = (area_sala + area_quarto) * preco_m2\\n    erro_perimetro = (2*(largura_sala+comp_sala) + 2*(largura_quarto+comp_quarto)) * preco_m2\\n    erro_esqueceu_quarto = area_sala * preco_m2\\n    erro_esqueceu_preco = area_sala + area_quarto\\n    erro_so_quarto = area_quarto * preco_m2"
 }""",
@@ -471,13 +489,14 @@ Gere agora uma QUESTÃO INÉDITA para a habilidade {habilidade_codigo}.{diretriz
 Antes de responder, confira mentalmente:
 [ ] a pergunta pede um NÚMERO com unidade?   [ ] há pelo menos 2 etapas?
 [ ] todo dado é usado e nenhum dado essencial falta (base, área, pesos)?   [ ] texto e tabela não se contradizem?
-[ ] os valores são realistas?   [ ] os 4 distratores vêm de variáveis `erro_*` nomeadas (nada de ± fixo, × 0,8, × 1,2)?
+[ ] os valores são realistas?   [ ] 'erros_tipicos' tem exatamente 4 itens e os 4 distratores vêm de variáveis `erro_*` nomeadas (nada de ± fixo, × 0,8, × 1,2)?
 
-Responda EXCLUSIVAMENTE em formato JSON com as chaves 'planejamento', 'enunciado', 'tabela_dados' (opcional) e 'solver':
+Responda EXCLUSIVAMENTE em formato JSON com as chaves 'planejamento', 'enunciado', 'tabela_dados' (opcional), 'erros_tipicos' (4 itens) e 'solver':
 {{
   "planejamento": "Dados, etapas de raciocínio e erros típicos que viram distratores...",
   "enunciado": "Texto contextualizado da questão com comando final que pede um número...",
   "tabela_dados": [{{"Coluna1": "A", "Coluna2": 10}}],
+  "erros_tipicos": ["Erro 1...", "Erro 2...", "Erro 3...", "Erro 4..."],
   "solver": "def resolver():\\n    # variáveis com os dados do enunciado\\n    correta = ...\\n    erro_tipo_1 = ...\\n    erro_tipo_2 = ...\\n    erro_tipo_3 = ...\\n    erro_tipo_4 = ..."
 }}
 """

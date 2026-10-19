@@ -53,7 +53,8 @@ from app.schemas.question import (
     QuestaoEquivalenciaOutput,
     QuestaoAuditoriaSemanticaOutput,
     BatchPopulationSummary,
-    BatchPopulationItemResult
+    BatchPopulationItemResult,
+    POT_PHASE1_JSON_SCHEMA
 )
 from pydantic import ValidationError
 
@@ -80,6 +81,8 @@ def _classify_retry_hint(last_error: Optional[str]) -> Optional[str]:
         return "Dados com função: todo número citado no enunciado ou tabela deve entrar no cálculo (máximo de 1 dado extra contextual)."
     if "incoerência" in low or "absurdo" in low:
         return "Verossimilhança: utilize ordens de grandeza e contextos fisicamente realistas."
+    if "erros_tipicos_invalidos" in low or "erros_tipicos" in low or "distratores insuficientes" in low:
+        return "Erros típicos: liste exatamente 4 erros cognitivos em 'erros_tipicos' e defina 4 variáveis 'erro_*' correspondentes no solver."
     if "nexo" in low or "ausentes no enunciado" in low:
         return "Nexo numérico: use no solver apenas números presentes no enunciado/tabela (para quantidade de itens/linhas, use len([...]))."
     if "colisão" in low or "duplicad" in low:
@@ -92,7 +95,7 @@ def _classify_retry_hint(last_error: Optional[str]) -> Optional[str]:
         return "declare os valores como variáveis dentro de resolver(); não use variáveis externas"
     if "termo técnico" in low or "proibido" in low:
         return "Linguagem limpa: nunca cite termos internos como 'solver', 'python', 'código', 'algoritmo', 'distrator' ou 'gabarito' no enunciado."
-    return "Sintaxe estrita: retorne JSON válido com 'planejamento', 'enunciado', 'tabela_dados' (opcional) e função def resolver() em Python puro sem erros."
+    return "Sintaxe estrita: retorne JSON válido com 'planejamento', 'enunciado', 'tabela_dados' (opcional), 'erros_tipicos' (4 itens) e função def resolver()."
 
 
 class QuestionService:
@@ -391,7 +394,7 @@ class QuestionService:
                     max_tokens=1536,
                     temperature=curr_temp,
                     top_p=top_p,
-                    format="json"
+                    format=POT_PHASE1_JSON_SCHEMA
                 )
             except Exception as e:
                 last_error = f"Falha na chamada ao LLM (Fase 1 PoT): {e}"

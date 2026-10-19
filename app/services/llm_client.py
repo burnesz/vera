@@ -1,6 +1,6 @@
 import time
 import logging
-from typing import Dict, Any, Optional, Tuple
+from typing import Dict, Any, Optional, Tuple, Union
 import httpx
 
 from app.core.config import settings
@@ -66,7 +66,7 @@ class LLMClient:
         temperature: float = 0.0,
         top_p: float = 0.9,
         repetition_penalty: float = 1.0,
-        format: Optional[str] = None
+        format: Optional[Union[str, Dict[str, Any]]] = None
     ) -> Tuple[str, Dict[str, Any]]:
         resolved_max_tokens = max_tokens if max_tokens is not None else settings.LLM_MAX_TOKENS
 
@@ -189,7 +189,7 @@ class LLMClient:
         temperature: float = 0.0,
         top_p: float = 0.9,
         repetition_penalty: float = 1.0,
-        format: Optional[str] = None
+        format: Optional[Union[str, Dict[str, Any]]] = None
     ) -> str:
         """
         Gera resposta a partir de um prompt usando política de retry com backoff exponencial.
@@ -254,7 +254,7 @@ class LLMClient:
         temperature: float = 0.0,
         top_p: float = 0.9,
         repetition_penalty: float = 1.0,
-        format: Optional[str] = None
+        format: Optional[Union[str, Dict[str, Any]]] = None
     ) -> str:
         """
         Versão assíncrona da geração de resposta no Ollama.
@@ -308,7 +308,7 @@ class LLMClient:
             raise last_exception
         raise LLMConnectionError(f"Não foi possível obter resposta assíncrona após {self.max_retries} tentativas: {last_exception}")
 
-    def _generate_mock_response(self, prompt: str, format: Optional[str] = None) -> str:
+    def _generate_mock_response(self, prompt: str, format: Optional[Union[str, Dict[str, Any]]] = None) -> str:
         """
         Gera resposta didática ou estruturada simulada para ambiente de desenvolvimento e testes.
         """
@@ -332,11 +332,17 @@ class LLMClient:
             mock_pot = {
                 "planejamento": "Dados: capacidade 1200 L, entrada 40 L/min, saída 10 L/min. Etapas: (1) calcular taxa líquida; (2) dividir capacidade pela taxa líquida.",
                 "enunciado": "Um reservatório com capacidade de 1200 litros é abastecido a uma taxa de 40 litros por minuto, enquanto uma válvula esvazia a 10 litros por minuto. Estando inicialmente vazio, qual é o tempo necessário, em minutos, para enchê-lo completamente?",
+                "erros_tipicos": [
+                    "Desconsiderar a vazão de saída no cálculo",
+                    "Dividir a capacidade apenas pela vazão de saída",
+                    "Somar as vazões de entrada e saída em vez de subtrair",
+                    "Multiplicar a taxa líquida pela vazão de saída"
+                ],
                 "solver": "def resolver():\n    capacidade = 1200\n    entrada = 40\n    saida = 10\n    taxa_liquida = entrada - saida\n    correta = capacidade / taxa_liquida\n    erro_sem_saida = capacidade / entrada\n    erro_so_saida = capacidade / saida\n    erro_soma_taxas = capacidade / (entrada + saida)\n    erro_multiplicou_taxa = (entrada - saida) * saida"
             }
             return json.dumps(mock_pot, ensure_ascii=False)
 
-        if format == "json" or "retorne estritamente um objeto json" in prompt.lower() or "schema json" in prompt.lower():
+        if format == "json" or isinstance(format, dict) or "retorne estritamente um objeto json" in prompt.lower() or "schema json" in prompt.lower():
             mock_question = {
                 "enunciado": "Um reservatório de água com capacidade de 1.200 litros é abastecido por uma bomba com vazão constante de 40 litros por minuto. Paralelamente, uma válvula esvazia o reservatório a uma taxa constante de 10 litros por minuto. Estando o reservatório inicialmente vazio, o tempo necessário para enchê-lo completamente é de:",
                 "alternativas": {
