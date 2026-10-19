@@ -307,10 +307,10 @@ O solver calcula a resposta correta e 4 distratores. NÃO gere letras A-E nem ga
    - responder só a etapa intermediária; confundir área com perímetro; inverter a razão
    Os 4 distratores devem ser números DIFERENTES entre si e da correta, positivos, com a mesma unidade e a mesma quantidade de casas decimais da correta, sem decimais sem sentido para contagens (não existe 104,4 camisas).
 
-8. TABELA: ISOLAMENTO.
+8. TABELA: ISOLAMENTO, CHAVES UNIFORMES E LIMITE DE 6 LINHAS.
    Se usar tabela, no 'enunciado' escreva só o contexto, o anúncio ("A tabela a seguir apresenta...") e a pergunta.
    NUNCA repita os dados da tabela no enunciado (nem em listas, nem em texto corrido, nem com pipes '|').
-   Os dados ficam SOMENTE em 'tabela_dados' (lista de dicionários, números em formato JSON: ponto decimal, sem aspas).
+   Os dados ficam SOMENTE em 'tabela_dados' (lista de dicionários com no MÁXIMO 6 linhas; todas as linhas devem ter exatamente as mesmas chaves/colunas; números em formato JSON: ponto decimal, sem aspas).
    Pode haver questão SEM tabela: nesse caso omita 'tabela_dados' e coloque todos os dados no enunciado.
 
 9. SOLVER: Python puro, função resolver().

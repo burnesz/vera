@@ -39,6 +39,26 @@ class QuestaoEnunciadoSolverOutput(BaseModel):
             raise ValueError("O enunciado deve conter uma situação-problema completa (mínimo de 30 caracteres).")
         return clean
 
+    @field_validator("tabela_dados")
+    @classmethod
+    def validate_tabela_dados(cls, v: Optional[List[Dict[str, Any]]]) -> Optional[List[Dict[str, Any]]]:
+        if v is None:
+            return None
+        if len(v) > 6:
+            raise ValueError(f"TABELA_INVALIDA: 'tabela_dados' excede o limite máximo de 6 linhas (recebido: {len(v)}).")
+        if len(v) > 0:
+            expected_keys = list(v[0].keys())
+            if not expected_keys:
+                raise ValueError("TABELA_INVALIDA: as linhas de 'tabela_dados' devem conter pelo menos uma coluna.")
+            expected_set = set(expected_keys)
+            for idx, row in enumerate(v, 1):
+                if not isinstance(row, dict) or set(row.keys()) != expected_set or len(row.keys()) != len(expected_keys):
+                    raise ValueError(
+                        f"TABELA_INVALIDA: todas as linhas de 'tabela_dados' devem ter exatamente as mesmas chaves. "
+                        f"Chaves esperadas: {expected_keys}; linha {idx}: {list(row.keys()) if isinstance(row, dict) else type(row).__name__}."
+                    )
+        return v
+
     @field_validator("solver")
     @classmethod
     def validate_solver(cls, v: str) -> str:

@@ -298,3 +298,47 @@ def test_questao_auditoria_semantica_4_macro_criteria():
     assert "Incoerência semântica ou física" in audit_legado.motivo_rejeicao
 
 
+def test_a3_tabela_dados_heterogeneous_keys_rejected():
+    """A3: Reprova tabela_dados quando as linhas possuem chaves heterogêneas."""
+    from pydantic import ValidationError
+    from app.schemas.question import QuestaoEnunciadoSolverOutput
+    from app.services.question_validator import validate_tabela_dados
+
+    tabela_heterogenea = [
+        {"Setor": "A", "Consumo (kWh)": 120},
+        {"Setor": "B", "Gasto (kWh)": 150},  # Chave diferente!
+    ]
+    ok, err = validate_tabela_dados(tabela_heterogenea)
+    assert ok is False
+    assert "TABELA_INVALIDA" in err
+
+    with pytest.raises(ValidationError) as exc_info:
+        QuestaoEnunciadoSolverOutput(
+            enunciado="A tabela a seguir mostra o consumo elétrico de dois setores de uma empresa. Qual o consumo total?",
+            tabela_dados=tabela_heterogenea,
+            solver="def resolver():\n    correta = 270\n    erro_1 = 120\n    erro_2 = 150\n    erro_3 = 30"
+        )
+    assert "TABELA_INVALIDA" in str(exc_info.value)
+
+
+def test_a3_tabela_dados_exceeds_six_rows_rejected():
+    """A3: Reprova tabela_dados com mais de 6 linhas."""
+    from pydantic import ValidationError
+    from app.schemas.question import QuestaoEnunciadoSolverOutput
+    from app.services.question_validator import validate_tabela_dados
+
+    tabela_7_linhas = [{"Dia": f"Dia {i}", "Valor": i * 10} for i in range(1, 8)]
+    ok, err = validate_tabela_dados(tabela_7_linhas)
+    assert ok is False
+    assert "TABELA_INVALIDA" in err
+
+    with pytest.raises(ValidationError) as exc_info:
+        QuestaoEnunciadoSolverOutput(
+            enunciado="A tabela a seguir mostra os valores anotados ao longo de sete dias consecutivos. Qual a soma?",
+            tabela_dados=tabela_7_linhas,
+            solver="def resolver():\n    correta = 280\n    erro_1 = 210\n    erro_2 = 140\n    erro_3 = 70"
+        )
+    assert "TABELA_INVALIDA" in str(exc_info.value)
+
+
+

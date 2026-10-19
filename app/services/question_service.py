@@ -86,6 +86,8 @@ def _classify_retry_hint(last_error: Optional[str]) -> Optional[str]:
         return "Distratores distintos: calcule 4 variáveis de erros típicos que gerem 4 valores numéricos diferentes entre si e da resposta correta."
     if "divergência" in low or "equivalência" in low:
         return "Alinhamento enunciado-solver: garanta que a fórmula de 'correta' em def resolver() calcule exatamente o que o comando final pede."
+    if "tabela_invalida" in low or "mesmas chaves" in low or "máximo 6 linhas" in low:
+        return "Tabela uniforme: em 'tabela_dados', use no máximo 6 linhas e exatamente as mesmas chaves em todas as linhas."
     if "variável externa" in low or "variáveis externas" in low or "variável livre" in low or "nameerror" in low:
         return "declare os valores como variáveis dentro de resolver(); não use variáveis externas"
     if "termo técnico" in low or "proibido" in low:

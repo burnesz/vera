@@ -392,6 +392,33 @@ def check_table_duplication(enunciado: str, tabela_dados: Optional[List[Dict[str
     if not tabela_dados or not enunciado:
         return True, None
     if "|" in enunciado:
-        return False, "O texto do enunciado contém estrutura de tabela bruta (pipes '|'). Os dados devem residir exclusivamente em 'tabela_dados'."
+        return False, "TABELA_INVALIDA: O texto do enunciado contém estrutura de tabela bruta (pipes '|'). Os dados devem residir exclusivamente em 'tabela_dados'."
     return True, None
+
+
+def validate_tabela_dados(tabela_dados: Optional[List[Dict[str, Any]]]) -> Tuple[bool, Optional[str]]:
+    """
+    Valida a integridade estrutural de tabela_dados (A3):
+    1. Máximo de 6 linhas.
+    2. Todas as linhas devem ter exatamente as mesmas chaves.
+    """
+    if tabela_dados is None:
+        return True, None
+    if not isinstance(tabela_dados, list):
+        return False, "TABELA_INVALIDA: 'tabela_dados' deve ser uma lista de dicionários."
+    if len(tabela_dados) > 6:
+        return False, f"TABELA_INVALIDA: 'tabela_dados' deve ter no máximo 6 linhas (encontrado: {len(tabela_dados)})."
+    if len(tabela_dados) > 0:
+        if not isinstance(tabela_dados[0], dict) or not tabela_dados[0]:
+            return False, "TABELA_INVALIDA: as linhas de 'tabela_dados' não podem ser vazias."
+        expected_keys = list(tabela_dados[0].keys())
+        expected_set = set(expected_keys)
+        for idx, row in enumerate(tabela_dados, 1):
+            if not isinstance(row, dict) or set(row.keys()) != expected_set or len(row.keys()) != len(expected_keys):
+                return False, (
+                    f"TABELA_INVALIDA: todas as linhas de 'tabela_dados' devem ter exatamente as mesmas chaves. "
+                    f"Esperado {expected_keys}, linha {idx} possui {list(row.keys()) if isinstance(row, dict) else type(row).__name__}."
+                )
+    return True, None
+
 
