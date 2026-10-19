@@ -42,6 +42,8 @@ from app.services.code_executor import (
 from app.core.prompts import (
     AUDITORIA_CRITERIOS_B3,
     build_enunciado_solver_prompt,
+    build_enunciado_plan_only_prompt,
+    build_solver_only_prompt,
     build_blind_solving_prompt,
     build_equivalencia_gabarito_prompt,
     build_auditoria_semantica_prompt,
@@ -54,12 +56,15 @@ from app.schemas.question import (
     PipelineErrorCode,
     PipelineValidationError,
     QuestaoEnunciadoSolverOutput,
+    QuestaoPlanejamentoEnunciadoOutput,
     QuestaoBlindSolvingOutput,
     QuestaoEquivalenciaOutput,
     QuestaoAuditoriaSemanticaOutput,
     BatchPopulationSummary,
     BatchPopulationItemResult,
-    POT_PHASE1_JSON_SCHEMA
+    POT_PHASE1_JSON_SCHEMA,
+    POT_PHASE1A_JSON_SCHEMA,
+    POT_PHASE1B_SOLVER_JSON_SCHEMA
 )
 from pydantic import ValidationError
 
@@ -403,46 +408,120 @@ class QuestionService:
                     f"(Tipologia: '{curr_tipologia}' | Temp: {curr_temp:.2f} | Seed: {attempt_seed})..."
                 )
 
-            # Geração limpa sem poluição de contexto ou ancoragem em rascunhos anteriores (Stateless)
-            prompt_pot = build_enunciado_solver_prompt(
-                habilidade_codigo=habilidade.codigo,
-                habilidade_descricao=habilidade.descricao,
-                competencia=habilidade.competencia,
-                eixo_tematico=habilidade.eixo_tematico,
-                exemplos_referencia=curr_few_shot,
-                tema=curr_tema,
-                abertura=curr_abertura,
-                tipologia=curr_tipologia,
-                enunciados_recentes=enunciados_recentes,
-                alerta_tentativa_anterior=retry_hint
-            )
-
-            try:
-                raw_pot_output = self.llm_client.generate(
-                    prompt=prompt_pot,
-                    max_tokens=1536,
-                    temperature=curr_temp,
-                    top_p=top_p,
-                    format=POT_PHASE1_JSON_SCHEMA,
-                    seed=attempt_seed
+            if settings.POT_DECOMPOSE_PHASE1:
+                prompt_1a = build_enunciado_plan_only_prompt(
+                    habilidade_codigo=habilidade.codigo,
+                    habilidade_descricao=habilidade.descricao,
+                    competencia=habilidade.competencia,
+                    eixo_tematico=habilidade.eixo_tematico,
+                    exemplos_referencia=curr_few_shot,
+                    tema=curr_tema,
+                    abertura=curr_abertura,
+                    tipologia=curr_tipologia,
+                    enunciados_recentes=enunciados_recentes,
+                    alerta_tentativa_anterior=retry_hint
                 )
-            except Exception as e:
-                last_error_code = PipelineErrorCode.SINTAXE
-                last_error = f"Falha na chamada ao LLM (Fase 1 PoT): {e}"
-                logger.warning(f"Tentativa {attempt}/{max_attempts} falhou na inferência: {e}")
-                continue
+                try:
+                    raw_1a = self.llm_client.generate(
+                        prompt=prompt_1a,
+                        max_tokens=800,
+                        temperature=curr_temp,
+                        top_p=top_p,
+                        format=POT_PHASE1A_JSON_SCHEMA,
+                        seed=attempt_seed
+                    )
+                    json_1a = sanitize_latex_json_text(extract_json_from_text(raw_1a))
+                    parsed_1a = sanitize_parsed_dict_values(json.loads(json_1a, strict=False))
+                    plan_out = QuestaoPlanejamentoEnunciadoOutput(**parsed_1a)
+                except ValidationError as e:
+                    err_locs = {loc_part for err in e.errors() for loc_part in err.get("loc", ())}
+                    if "tabela_dados" in err_locs:
+                        last_error_code = PipelineErrorCode.TABELA_INVALIDA
+                    elif "erros_tipicos" in err_locs:
+                        last_error_code = PipelineErrorCode.ERROS_TIPICOS_INVALIDOS
+                    else:
+                        last_error_code = PipelineErrorCode.SINTAXE
+                    last_error = f"Erro no schema da Etapa 1a (planejamento/enunciado): {e.errors()}"
+                    logger.warning(f"Tentativa {attempt}/{max_attempts} falhou na Etapa 1a: {e}")
+                    continue
+                except Exception as e:
+                    last_error_code = PipelineErrorCode.SINTAXE
+                    last_error = f"Falha na Etapa 1a (planejamento/enunciado): {e}"
+                    logger.warning(f"Tentativa {attempt}/{max_attempts} falhou na Etapa 1a: {e}")
+                    continue
 
-            # Parsing e decodificação JSON com sanitização de LaTeX
-            try:
-                json_str = extract_json_from_text(raw_pot_output)
-                sanitized_json = sanitize_latex_json_text(json_str)
-                parsed_data = json.loads(sanitized_json, strict=False)
-                parsed_data = sanitize_parsed_dict_values(parsed_data)
-            except Exception as e:
-                last_error_code = PipelineErrorCode.SINTAXE
-                last_error = f"Erro ao decodificar JSON gerado pelo LLM: {e}"
-                logger.warning(f"Tentativa {attempt}/{max_attempts} falhou no JSON: {e}")
-                continue
+                prompt_1b = build_solver_only_prompt(
+                    enunciado=plan_out.enunciado,
+                    tabela_dados=plan_out.tabela_dados,
+                    planejamento=plan_out.planejamento,
+                    erros_tipicos=plan_out.erros_tipicos,
+                    alerta_tentativa_anterior=retry_hint
+                )
+                solver_temp = round(min(curr_temp, getattr(settings, "POT_SOLVER_ONLY_TEMP", 0.1)), 2)
+                try:
+                    raw_1b = self.llm_client.generate(
+                        prompt=prompt_1b,
+                        max_tokens=512,
+                        temperature=solver_temp,
+                        top_p=top_p,
+                        format=POT_PHASE1B_SOLVER_JSON_SCHEMA,
+                        seed=attempt_seed
+                    )
+                    json_1b = sanitize_latex_json_text(extract_json_from_text(raw_1b))
+                    parsed_1b = sanitize_parsed_dict_values(json.loads(json_1b, strict=False))
+                    parsed_data = {
+                        "planejamento": plan_out.planejamento,
+                        "enunciado": plan_out.enunciado,
+                        "tabela_dados": plan_out.tabela_dados,
+                        "erros_tipicos": plan_out.erros_tipicos,
+                        "solver": parsed_1b.get("solver", "") if isinstance(parsed_1b, dict) else ""
+                    }
+                except Exception as e:
+                    last_error_code = PipelineErrorCode.SINTAXE
+                    last_error = f"Falha na Etapa 1b (geração do solver): {e}"
+                    logger.warning(f"Tentativa {attempt}/{max_attempts} falhou na Etapa 1b: {e}")
+                    continue
+            else:
+                # Geração limpa sem poluição de contexto ou ancoragem em rascunhos anteriores (Stateless)
+                prompt_pot = build_enunciado_solver_prompt(
+                    habilidade_codigo=habilidade.codigo,
+                    habilidade_descricao=habilidade.descricao,
+                    competencia=habilidade.competencia,
+                    eixo_tematico=habilidade.eixo_tematico,
+                    exemplos_referencia=curr_few_shot,
+                    tema=curr_tema,
+                    abertura=curr_abertura,
+                    tipologia=curr_tipologia,
+                    enunciados_recentes=enunciados_recentes,
+                    alerta_tentativa_anterior=retry_hint
+                )
+
+                try:
+                    raw_pot_output = self.llm_client.generate(
+                        prompt=prompt_pot,
+                        max_tokens=1024,
+                        temperature=curr_temp,
+                        top_p=top_p,
+                        format=POT_PHASE1_JSON_SCHEMA,
+                        seed=attempt_seed
+                    )
+                except Exception as e:
+                    last_error_code = PipelineErrorCode.SINTAXE
+                    last_error = f"Falha na chamada ao LLM (Fase 1 PoT): {e}"
+                    logger.warning(f"Tentativa {attempt}/{max_attempts} falhou na inferência: {e}")
+                    continue
+
+                # Parsing e decodificação JSON com sanitização de LaTeX
+                try:
+                    json_str = extract_json_from_text(raw_pot_output)
+                    sanitized_json = sanitize_latex_json_text(json_str)
+                    parsed_data = json.loads(sanitized_json, strict=False)
+                    parsed_data = sanitize_parsed_dict_values(parsed_data)
+                except Exception as e:
+                    last_error_code = PipelineErrorCode.SINTAXE
+                    last_error = f"Erro ao decodificar JSON gerado pelo LLM: {e}"
+                    logger.warning(f"Tentativa {attempt}/{max_attempts} falhou no JSON: {e}")
+                    continue
 
             # Validação do Schema Pydantic da Fase 1 (exige solver em Python)
             try:
@@ -704,7 +783,7 @@ class QuestionService:
         )
         raw = self.llm_client.generate(
             prompt=prompt,
-            max_tokens=800,
+            max_tokens=600,
             temperature=temperature,
             top_p=0.9,
             format="json"
@@ -733,7 +812,7 @@ class QuestionService:
         )
         raw = self.llm_client.generate(
             prompt=prompt,
-            max_tokens=300,
+            max_tokens=200,
             temperature=0.0,
             top_p=0.9,
             format="json"

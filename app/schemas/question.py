@@ -144,6 +144,80 @@ POT_PHASE1_JSON_SCHEMA: Dict[str, Any] = {
 }
 
 
+class QuestaoPlanejamentoEnunciadoOutput(BaseModel):
+    """
+    Schema para a Etapa 1a da decomposição experimental da Fase 1 (POT_DECOMPOSE_PHASE1=True):
+    planejamento + enunciado + tabela_dados (opcional) + 4 erros_tipicos (sem solver).
+    """
+    planejamento: str = Field(
+        ...,
+        description="Planejamento prévio dos dados, etapas de raciocínio e erros típicos dos distratores."
+    )
+    enunciado: str = Field(
+        ...,
+        description="Texto contextualizado da questão com comando final inequívoco."
+    )
+    tabela_dados: Optional[List[Dict[str, Any]]] = Field(
+        None,
+        description="Tabela estruturada opcional (máximo 6 linhas com as mesmas chaves)."
+    )
+    erros_tipicos: List[str] = Field(
+        ...,
+        min_length=4,
+        max_length=4,
+        description="Lista com exatamente 4 erros típicos de alunos que originarão as variáveis erro_* no solver."
+    )
+
+    @field_validator("enunciado")
+    @classmethod
+    def validate_enunciado(cls, v: str) -> str:
+        return QuestaoEnunciadoSolverOutput.validate_enunciado(v)
+
+    @field_validator("tabela_dados")
+    @classmethod
+    def validate_tabela_dados(cls, v: Optional[List[Dict[str, Any]]]) -> Optional[List[Dict[str, Any]]]:
+        return QuestaoEnunciadoSolverOutput.validate_tabela_dados(v)
+
+    @field_validator("erros_tipicos", mode="before")
+    @classmethod
+    def validate_erros_tipicos(cls, v: Optional[List[str]]) -> List[str]:
+        res = QuestaoEnunciadoSolverOutput.validate_erros_tipicos(v)
+        if res is None:
+            raise ValueError("ERROS_TIPICOS_INVALIDOS: 'erros_tipicos' deve conter exatamente 4 itens.")
+        return res
+
+
+POT_PHASE1A_JSON_SCHEMA: Dict[str, Any] = {
+    "type": "object",
+    "properties": {
+        "planejamento": {"type": "string"},
+        "enunciado": {"type": "string"},
+        "tabela_dados": {
+            "anyOf": [
+                {"type": "array", "items": {"type": "object"}, "maxItems": 6},
+                {"type": "null"}
+            ]
+        },
+        "erros_tipicos": {
+            "type": "array",
+            "items": {"type": "string"},
+            "minItems": 4,
+            "maxItems": 4
+        }
+    },
+    "required": ["planejamento", "enunciado", "erros_tipicos"]
+}
+
+POT_PHASE1B_SOLVER_JSON_SCHEMA: Dict[str, Any] = {
+    "type": "object",
+    "properties": {
+        "solver": {"type": "string"}
+    },
+    "required": ["solver"]
+}
+
+
+
 class QuestaoJustificativaOutput(BaseModel):
     """
     Schema estruturado para a Fase 2 da geração Program-Aided (PoT):

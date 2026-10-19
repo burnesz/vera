@@ -974,3 +974,32 @@ def test_b4_blind_solving_self_consistency_behind_flag(monkeypatch):
         assert expected_hint in mock_llm.generate.call_args_list[4].kwargs["prompt"]
     finally:
         db.close()
+
+
+def test_phase_c_keep_alive_and_decompose_phase1(monkeypatch):
+    """Fase C: Verifica keep_alive no payload do LLMClient e experimento POT_DECOMPOSE_PHASE1=True em 2 chamadas."""
+    from app.core.config import settings
+
+    # 1. Verifica keep_alive no payload do LLMClient
+    client = LLMClient(mock_mode=True)
+    _, payload = client._build_payload_and_url(prompt="Teste", max_tokens=256, temperature=0.1, seed=42)
+    assert payload.get("keep_alive") == settings.LLM_KEEP_ALIVE
+    assert payload["options"]["seed"] == 42
+
+    # 2. Verifica decomposição da Fase 1 em duas chamadas quando POT_DECOMPOSE_PHASE1=True
+    monkeypatch.setattr(settings, "POT_DECOMPOSE_PHASE1", True)
+    db = TestingSessionLocal()
+    try:
+        mock_vs = MagicMock(spec=PineconeVectorStore)
+        mock_vs.search.return_value = []
+        service = QuestionService(llm_client=client, vector_store=mock_vs)
+        questao = service.generate_single_questao_inedita(
+            db=db,
+            habilidade_codigo="H01",
+            max_attempts=1
+        )
+        assert questao is not None
+        assert questao.is_validated is True
+        assert "# Planejamento PoT:" in questao.thought_scratchpad
+    finally:
+        db.close()

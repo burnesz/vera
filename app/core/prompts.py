@@ -4,6 +4,7 @@ Versionamento e formatação de prompts conversacionais com Chain-of-Thought (Co
 """
 
 import re
+import json
 import random
 from collections import deque
 from typing import List, Dict, Any, Optional, Tuple
@@ -522,6 +523,8 @@ def build_enunciado_solver_prompt(
         for idx, ex in enumerate(exemplos_referencia, 1):
             ano = ex.get("ano", "ENEM")
             enun = ex.get("enunciado", "").strip()
+            if len(enun) > 900:
+                enun = enun[:900].rstrip() + "..."
             gab = str(ex.get("gabarito", "")).strip().upper()
             alts = ex.get("alternativas") or {}
             valor_resp = alts.get(gab, "").strip() if isinstance(alts, dict) and gab else ""
@@ -617,6 +620,85 @@ Responda EXCLUSIVAMENTE em formato JSON com as chaves 'planejamento', 'enunciado
 }}
 """
     return prompt
+
+
+def build_enunciado_plan_only_prompt(
+    habilidade_codigo: str,
+    habilidade_descricao: str,
+    competencia: int,
+    eixo_tematico: Optional[str] = None,
+    exemplos_referencia: Optional[List[Dict[str, Any]]] = None,
+    tema: Optional[str] = None,
+    abertura: Optional[str] = None,
+    tipologia: Optional[str] = None,
+    enunciados_recentes: Optional[List[str]] = None,
+    alerta_tentativa_anterior: Optional[str] = None
+) -> str:
+    """
+    Fase C (Experimento de decomposição — Etapa 1a):
+    Gera apenas 'planejamento', 'enunciado', 'tabela_dados' (opcional, máx 6 linhas) e 'erros_tipicos' (4 itens).
+    """
+    base = build_enunciado_solver_prompt(
+        habilidade_codigo=habilidade_codigo,
+        habilidade_descricao=habilidade_descricao,
+        competencia=competencia,
+        eixo_tematico=eixo_tematico,
+        exemplos_referencia=exemplos_referencia,
+        tema=tema,
+        abertura=abertura,
+        tipologia=tipologia,
+        enunciados_recentes=enunciados_recentes,
+        alerta_tentativa_anterior=alerta_tentativa_anterior
+    )
+    return (
+        base
+        + "\nNOTA IMPORTANTE (ETAPA 1A — PLANEJAMENTO E ENUNCIADO):\n"
+        "Nesta chamada, gere APENAS 'planejamento', 'enunciado', 'tabela_dados' (ou null) e 'erros_tipicos' (exatamente 4 itens). "
+        "NÃO inclua a chave 'solver' ainda.\n"
+    )
+
+
+def build_solver_only_prompt(
+    enunciado: str,
+    tabela_dados: Optional[List[Dict[str, Any]]],
+    planejamento: str,
+    erros_tipicos: List[str],
+    alerta_tentativa_anterior: Optional[str] = None
+) -> str:
+    """
+    Fase C (Experimento de decomposição — Etapa 1b):
+    Gera apenas o 'solver' (`def resolver(): ...`) condicionado ao enunciado, tabela, planejamento e 4 erros típicos da Etapa 1a.
+    """
+    tabela_json = json.dumps(tabela_dados, ensure_ascii=False) if tabela_dados else "null"
+    erros_json = json.dumps(erros_tipicos, ensure_ascii=False)
+    bloco_alerta = f"\nATENÇÃO: {alerta_tentativa_anterior}\n" if alerta_tentativa_anterior else ""
+    return f"""Você é um programador matemático especialista no ENEM.
+Escreva EXCLUSIVAMENTE a função Python `def resolver():` para resolver a questão abaixo e calcular a variável `correta` e as 4 variáveis `erro_*` correspondentes aos 4 erros típicos listados.
+
+REGRAS OBRIGATÓRIAS DO SOLVER:
+1. Declare todos os dados do enunciado e da tabela como variáveis locais numéricas dentro de `def resolver():`. NÃO use variáveis externas (como `tabela_dados`).
+2. A fatia de cálculo de `correta` deve ter pelo menos 3 operações e 2 tipos distintos de operação.
+3. Todo número usado em `correta` deve constar no enunciado/tabela. Se usar π, use o valor declarado no enunciado (ex: 3.14).
+4. Defina `correta` e exatamente 4 variáveis começando com `erro_` (ex: `erro_1`, `erro_2`, `erro_3`, `erro_4`), onde cada `erro_*` depende de pelo menos uma variável fundamentada no enunciado/tabela e produz valor distinto de `correta`.
+5. NÃO escreva `return` no final da função.{bloco_alerta}
+
+PLANEJAMENTO:
+{planejamento}
+
+ENUNCIADO:
+{enunciado}
+
+TABELA DE DADOS:
+{tabela_json}
+
+4 ERROS TÍPICOS A CODIFICAR NAS VARIÁVEIS `erro_*`:
+{erros_json}
+
+Responda EXCLUSIVAMENTE em JSON:
+{{
+  "solver": "def resolver():\\n    ..."
+}}
+"""
 
 
 def _formatar_tabela(tabela_dados: Optional[List[Dict[str, Any]]]) -> str:

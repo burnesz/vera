@@ -69,32 +69,30 @@ Nenhuma questão inédita pode ser salva ou exibida ao estudante sem cumprir **t
      - Se `dados_nao_utilizados` apontar **$> 1$ dado/coluna não utilizado** no cálculo (violando o limite máximo de 1 coluna/dado extra contextual), reprova deterministicamente e aciona o *Stateless Retry* antes da Etapa 2.
 6. **Validação Etapa 2 — Confronto Direto de Equivalência com *Early Exit* (`QuestaoEquivalenciaOutput`, `temperature=0.0`)**:
    - Compara `resultado_solver` vs. `resultado_obtido` aceitando equivalências matemáticas legítimas (ex.: `2500` vs. `"R$ 2.500,00"`, `0.5` vs. `"50%"`, arredondamentos compatíveis). Se `equivalentes == False`, interrompe imediatamente (*Early Exit*) e aciona o *Stateless Retry*.
-7. **Validação Etapa 3 — Auditoria Semântica Determinística (`QuestaoAuditoriaSemanticaOutput`, `temperature=0.0`)**:
-   - Checagens mecânicas estruturais (como termos proibidos de bastidores: `"solver"`, `"python"`, `"código"`) são validadas deterministicamente em Python (`check_prohibited_terms`) com 0ms antes das chamadas LLM.
-   - O LLM na Etapa 3 avalia `analise` + exclusivamente 4 macro-critérios semânticos e contextuais humanos:
+7. **Validação Etapa 3 — Auditoria Semântica em Chamadas Binárias Separadas (`QuestaoAuditoriaSemanticaOutput`, `temperature=0.0` — `B3`)**:
+   - Checagens mecânicas estruturais (termos proibidos `check_prohibited_terms`, complexidade determinística `validate_solver_complexity`, empates degenerados `validate_no_degenerate_ties`, variáveis livres `check_free_variables`, uniformidade de `tabela_dados`) são validadas deterministicamente em Python com 0ms antes das chamadas LLM.
+   - A Etapa 3 executa até 5 chamadas sim/não curtas (`temperature=0.0`, `max_tokens=160`) com *Early Exit* no primeiro defeito detectado:
      - `incoerencia_ou_absurdo`: contradições físicas, bom senso ou erro conceitual grave.
-     - `comando_ambiguo_ou_incompativel`: comando duplo, omissão de unidade esperada ou pergunta incompatível com alternativas numéricas.
+     - `comando_ambiguo_ou_incompativel`: comando duplo, empate entre opções ou pergunta incompatível com alternativas numéricas.
      - `deficit_ou_contradicao`: omissão de dado essencial ou contradição entre texto e tabela.
-     - `complexidade_insuficiente`: item trivial abaixo do padrão ENEM.
+     - `desalinhamento_comando_grandeza` (`B3a`): o comando final não pergunta exatamente a grandeza definida no enunciado/gabarito.
+     - `fuga_habilidade_alvo` (`B3b`): a resolução da questão não exige a habilidade-alvo da Matriz do ENEM.
    - A aprovação (`aprovada = not any(...)`) e o `motivo_rejeicao` são calculados em Python no backend.
 
 ### Diretrizes de Geração da Fase 1 (`POT_QUESTION_GENERATOR_SYSTEM_PROMPT` — `DSR-07`)
-- **Janela de Contexto e Orçamento**: `num_ctx=4096` e `max_tokens=1536` na Fase 1 para acomodar o prompt (instruções + RAG few-shots ~2.5k tokens) e a resposta JSON sem sobrecarregar a VRAM e sem offload desnecessário de KV-Cache para CPU.
-- **Temperatura Base 0.2**: A geração inicia em `temperature=0.2` (evitando cópia determinística do *few-shot* na 1ª tentativa) e escala `+0.1` por retry até `0.6`, enquanto as 3 etapas de validação operam estritamente em `temperature=0.0`.
-- **Planejamento Obrigatório (`planejamento`)**: a primeira chave do JSON obriga o modelo a estruturar dados, etapas de raciocínio ($\ge 2$) e erros típicos antes de redigir `enunciado` e `solver`.
-- **Complexidade padrão ENEM e Premissas explícitas**: no mínimo 2 etapas de raciocínio encadeadas; toda base, área ou peso deve estar declarado; distratores modelados por variáveis nomeadas de erros típicos.
-- **Banco de 3 Few-Shots Multi-Etapas (`POT_FEW_SHOT_EXAMPLES`)**: sorteia 1 dentre 3 exemplos canônicos (média ponderada com `len([...])`, porcentagens sucessivas e área/custo com tabela) via `sortear_few_shot()`.
-- **Ancoragem RAG com valor real da resposta**: nos 2 exemplos históricos do RAG (`exemplos_referencia`), `build_enunciado_solver_prompt` resolve `alternativas[gabarito]` e injeta `Resposta Correta Oficial: <valor>`.
+- **Janela de Contexto, `keep_alive` e Orçamento (`Fase C`)**: `num_ctx=4096`, `keep_alive="30m"` no `LLMClient` e `max_tokens=1024` na Fase 1 (`600` na Resolução Cega, `200` na Equivalência), com truncamento de enunciados históricos longos do RAG em `900` caracteres e opção experimental de decomposição em 2 chamadas (`POT_DECOMPOSE_PHASE1=False` por padrão).
+- **Teto de Temperatura 0.3 e Seed Aleatória (`A8`)**: A geração inicia em `temperature=0.2` e tem teto estrito de `0.3` para o solver, variando `seed` aleatória por tentativa e sorteando tipologia matemática específica por habilidade (`B1`: 3 a 5 tipologias para `H01`–`H30`) e *few-shot* alinhado por competência (`C1`–`C7`).
+- **Montagem do Retorno no Backend (`A1`) e Erros Típicos (`A4`)**: o JSON Schema impõe `erros_tipicos` com `minItems = maxItems = 4`. O LLM define apenas `correta` e variáveis `erro_*` dentro de `def resolver()`; o backend instrumenta a AST para capturar `locals()`, filtra `erro_*` e monta `{'correta', 'distratores'}`.
+- **Complexidade Determinística na AST (`B2`)**: a fatia de `correta` deve possuir no mínimo `POT_MIN_OPERATIONS=3` operações e `POT_MIN_OPERATION_TYPES=2` tipos distintos de operação.
 
 ### `RN-Q02` — Atribuição Determinística de Alternativas e Gabarito
 - O LLM **nunca** escolhe a letra do gabarito na geração PoT.
 - A função `assemble_alternatives_and_gabarito` (`app/services/code_executor.py`) formata os números no padrão brasileiro (`format_number`: inteiros limpos ou decimais com vírgula até 2 casas), embaralha as 5 opções com `random.shuffle` e atribui deterministicamente as letras `"A"` a `"E"`, identificando a letra exata correspondente a `correta`.
 
-### `RN-Q03` — Defesa em Cascata: Auto-Healing Limitado (Máx. 1 Colisão) e Stateless Retry Guiado
+### `RN-Q03` — Defesa em Cascata: Auto-Healing Limitado (Máx. 1 Colisão) e Stateless Retry Tipificado (`A7`)
 - **Linha 1 (`auto_heal_distractors` limitado a 1 distrator)**:
-  - Se o solver retornar 5 itens em `distratores` sendo 1 igual a `correta`, o item coincidente é descartado (`_normalize_five_distractors`), preservando os 4 distratores calculados por erros típicos.
-  - Se, dentre os 4 distratores, houver **apenas 1 colisão** (`3` distratores únicos distintos de `correta`), o backend cura esse único distrator deterministicamente em `0ms`. Se houver **$\ge 2$ colisões**, a tentativa é reprovada imediatamente para evitar alternativas artificiais em série.
-- **Linha 2 (*Stateless Retry* Guiado sem Ancoragem)**: em caso de falha estrutural na Fase 1 ou reprovação nas Etapas 1b/2/3 da validação, descarta-se toda a tentativa e inicia-se uma nova iteração (até `max_attempts=5`) com contexto limpo, novo sorteio de tema/abertura (`sortear_contexto_criativo`), nova amostragem dos Top-10 candidatos no Pinecone, **escalonamento dinâmico de temperatura** (`curr_temp = min(0.2 + 0.1 * (attempt - 1), 0.6)`), lista de `enunciados_recentes` da habilidade e **apenas uma diretriz curta da categoria do erro anterior** (`_classify_retry_hint`), orientando sem ancorar.
+  - Se houver **apenas 1 colisão** (`3` distratores únicos distintos de `correta`), o backend cura esse único distrator deterministicamente em `0ms`. Se houver **$\ge 2$ colisões** (ou $< 3$ distratores), a tentativa é reprovada imediatamente com código tipificado (`COLISAO` / `DISTRATORES_INSUFICIENTES`).
+- **Linha 2 (*Stateless Retry* Tipificado sem Ancoragem)**: toda falha carrega um código de `PipelineErrorCode` (`SINTAXE`, `NOME_LIVRE`, `USO_PI`, `DISTRATORES_INSUFICIENTES`, `ERROS_TIPICOS_INVALIDOS`, `NEXO_NUMERICO`, `COLISAO`, `TABELA_INVALIDA`, `COMPLEXIDADE`, `CASO_DEGENERADO`, `INCONSISTENCIA_CEGA`, `NAO_RESPONDIVEL`, `PREMISSA_OCULTA`, `DADOS_OCIOSOS`, `NAO_EQUIVALENTE`, `AUDITORIA`), mapeado em `_classify_retry_hint` para uma diretriz de 1 linha sem busca por substring.
 
 ### `RN-Q04` — Rastreabilidade e Auditoria na Persistência
 - Na tabela `questoes_ineditas`:

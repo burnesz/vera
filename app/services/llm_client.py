@@ -86,6 +86,7 @@ class LLMClient:
             "model": self.model_name,
             "prompt": prompt,
             "stream": False,
+            "keep_alive": getattr(settings, "LLM_KEEP_ALIVE", "30m"),
             "options": options
         }
         if format:
@@ -350,6 +351,24 @@ class LLMClient:
                 "dados_nao_utilizados": [],
                 "pergunta_respondivel": True,
                 "resultado_obtido": 40
+            }, ensure_ascii=False)
+
+        if "etapa 1a — planejamento e enunciado" in prompt.lower():
+            return json.dumps({
+                "planejamento": "Dados: capacidade 1200 L, entrada 40 L/min, saída 10 L/min. Etapas: (1) calcular taxa líquida; (2) dividir capacidade pela taxa líquida.",
+                "enunciado": "Um reservatório com capacidade de 1200 litros é abastecido a uma taxa de 40 litros por minuto, enquanto uma válvula esvazia a 10 litros por minuto. Estando inicialmente vazio, qual é o tempo necessário, em minutos, para enchê-lo completamente?",
+                "tabela_dados": None,
+                "erros_tipicos": [
+                    "Desconsiderar a vazão de saída no cálculo",
+                    "Dividir a capacidade apenas pela vazão de saída",
+                    "Somar as vazões de entrada e saída em vez de subtrair",
+                    "Multiplicar a taxa líquida pela vazão de saída"
+                ]
+            }, ensure_ascii=False)
+
+        if "escreva exclusivamente a função python `def resolver():`" in prompt.lower():
+            return json.dumps({
+                "solver": "def resolver():\n    capacidade = 1200\n    volume_inicial = 0\n    entrada = 40\n    saida = 10\n    falta = capacidade - volume_inicial\n    taxa_liquida = entrada - saida\n    correta = falta / taxa_liquida\n    erro_sem_saida = falta / entrada\n    erro_so_saida = falta / saida\n    erro_soma_taxas = falta / (entrada + saida)\n    erro_multiplicou_taxa = (entrada - saida) * saida"
             }, ensure_ascii=False)
 
         if "solver" in prompt.lower():
