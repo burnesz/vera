@@ -309,4 +309,37 @@ def resolver():
     assert _classify_retry_hint(err_msg) == "declare os valores como variáveis dentro de resolver(); não use variáveis externas"
 
 
+def test_a6_percentage_in_table_header_accepts_decimal_and_complement():
+    """A6: Coluna 'Percentual Utilizado (%)' com 70 e 60 aceita 0.7, 0.6, 0.3 e 0.4 no solver."""
+    from app.services.question_validator import format_enunciado_with_table
+
+    enunciado_base = (
+        "Dois servidores de armazenamento possuem capacidades de 500 GB e 800 GB. "
+        "A tabela a seguir informa o percentual utilizado de cada servidor. "
+        "Qual é o espaço total utilizado, em GB, somando os dois servidores?"
+    )
+    tabela = [
+        {"Servidor": "S1", "Capacidade (GB)": 500, "Percentual Utilizado (%)": 70},
+        {"Servidor": "S2", "Capacidade (GB)": 800, "Percentual Utilizado (%)": 60},
+    ]
+    enunciado_full = format_enunciado_with_table(enunciado_base, tabela)
+    code = """
+def resolver():
+    cap_s1 = 500
+    cap_s2 = 800
+    uso_s1 = cap_s1 * 0.7
+    uso_s2 = cap_s2 * 0.6
+    correta = uso_s1 + uso_s2
+    erro_complemento = cap_s1 * 0.3 + cap_s2 * 0.4
+    erro_so_s1 = uso_s1
+    erro_so_s2 = uso_s2
+    erro_media_simples = (cap_s1 + cap_s2) * 0.5
+"""
+    res = execute_solver_code(code)
+    vals = validate_solver_consistency(enunciado_full, code, res, tabela_dados=tabela)
+    assert vals[0] == "830"
+    assert len(set(vals)) == 5
+
+
+
 

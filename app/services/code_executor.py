@@ -674,7 +674,8 @@ def auto_heal_distractors(
 def validate_solver_consistency(
     enunciado: str,
     code: str,
-    result: Dict[str, Any]
+    result: Dict[str, Any],
+    tabela_dados: Optional[List[Dict[str, Any]]] = None
 ) -> List[str]:
     """
     Valida a consistência matemática e o nexo entre o código do solver e o texto do enunciado:
@@ -735,11 +736,15 @@ def validate_solver_consistency(
         except ValueError:
             pass
 
-    # Extrai números presentes no enunciado com suporte a separador de milhar brasileiro (1.200 ou 1.200,50)
+    combined_source = enunciado
+    if tabela_dados:
+        combined_source = f"{enunciado}\n{json.dumps(tabela_dados, ensure_ascii=False)}"
+
+    # Extrai números presentes no enunciado/tabela com suporte a separador de milhar brasileiro (1.200 ou 1.200,50)
     enun_floats: Set[float] = set()
 
     # 1. Padrão de milhar brasileiro: ex 1.200 ou 1.200,50
-    for match in re.finditer(r"\b\d{1,3}(?:\.\d{3})+(?:,\d+)?\b", enunciado):
+    for match in re.finditer(r"\b\d{1,3}(?:\.\d{3})+(?:,\d+)?\b", combined_source):
         raw_val = match.group(0).replace(".", "").replace(",", ".")
         try:
             enun_floats.add(float(raw_val))
@@ -747,30 +752,32 @@ def validate_solver_consistency(
             pass
 
     # 2. Padrão decimal padrão ou inteiro simples: ex 34, 12.5, 12,5
-    raw_enun_matches = re.findall(r"\b\d+(?:[\.,]\d+)?\b", enunciado)
+    raw_enun_matches = re.findall(r"\b\d+(?:[\.,]\d+)?\b", combined_source)
     for n in raw_enun_matches:
         try:
             enun_floats.add(float(n.replace(",", ".")))
         except ValueError:
             pass
 
-    # 3. Tratamento de porcentagens: ex '2%' ou '15%' -> adiciona também 0.02, 0.15 e complementos (0.98, 0.85, 85)
-    for match in re.finditer(r"(\d+(?:[\.,]\d+)?)\s*%", enunciado):
-        val_str = match.group(1).replace(",", ".")
-        try:
-            val_pct = float(val_str)
-            enun_floats.add(round(val_pct / 100.0, 6))
-            if 0 < val_pct < 100:
-                enun_floats.add(round(100.0 - val_pct, 6))
-                enun_floats.add(round((100.0 - val_pct) / 100.0, 6))
-                enun_floats.add(round((100.0 + val_pct) / 100.0, 6))
-        except ValueError:
-            pass
-
-    # 4. Numerais por extenso e termos multiplicativos/fracionários em português
-    for word in re.findall(r"[a-zA-ZÀ-ÿ]+", enunciado.lower()):
+    # 3. Numerais por extenso e termos multiplicativos/fracionários em português
+    for word in re.findall(r"[a-zA-ZÀ-ÿ]+", combined_source.lower()):
         if word in _WORDS_TO_NUMBERS:
             enun_floats.add(_WORDS_TO_NUMBERS[word])
+
+    # 4. Tratamento de porcentagens (A6):
+    # Se o enunciado ou a tabela mencionar '%', 'percentual' ou 'porcentagem' (inclusive no cabeçalho),
+    # aceita N/100 e (100-N)/100 para todo N in (0, 100] presente.
+    has_pct_context = bool(
+        re.search(r"(%|percentua(?:l|is)|porcentagen(?:s)?|porcentagem)", combined_source, re.IGNORECASE)
+    )
+    if has_pct_context:
+        for val_pct in list(enun_floats):
+            if 0 < val_pct <= 100:
+                enun_floats.add(round(val_pct / 100.0, 6))
+                enun_floats.add(round((100.0 - val_pct) / 100.0, 6))
+                if val_pct < 100:
+                    enun_floats.add(round(100.0 - val_pct, 6))
+                    enun_floats.add(round((100.0 + val_pct) / 100.0, 6))
 
     # Identifica números no código que não constam no enunciado nem na lista de constantes neutras
     missing_numbers = {

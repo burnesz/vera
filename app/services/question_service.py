@@ -454,7 +454,8 @@ class QuestionService:
                 formatted_values = validate_solver_consistency(
                     enunciado=pot_output.enunciado,
                     code=pot_output.solver,
-                    result=solver_result
+                    result=solver_result,
+                    tabela_dados=pot_output.tabela_dados
                 )
             except Exception as e:
                 last_error = f"Erro de consistência matemática ou nexo numérico: {e}"
