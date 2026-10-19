@@ -347,7 +347,7 @@ class LLMClient:
                     "Somar as vazões de entrada e saída em vez de subtrair",
                     "Multiplicar a taxa líquida pela vazão de saída"
                 ],
-                "solver": "def resolver():\n    capacidade = 1200\n    entrada = 40\n    saida = 10\n    taxa_liquida = entrada - saida\n    correta = capacidade / taxa_liquida\n    erro_sem_saida = capacidade / entrada\n    erro_so_saida = capacidade / saida\n    erro_soma_taxas = capacidade / (entrada + saida)\n    erro_multiplicou_taxa = (entrada - saida) * saida"
+                "solver": "def resolver():\n    capacidade = 1200\n    volume_inicial = 0\n    entrada = 40\n    saida = 10\n    falta = capacidade - volume_inicial\n    taxa_liquida = entrada - saida\n    correta = falta / taxa_liquida\n    erro_sem_saida = falta / entrada\n    erro_so_saida = falta / saida\n    erro_soma_taxas = falta / (entrada + saida)\n    erro_multiplicou_taxa = (entrada - saida) * saida"
             }
             return json.dumps(mock_pot, ensure_ascii=False)
 

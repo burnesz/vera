@@ -49,6 +49,10 @@ class Settings(BaseSettings):
     # RAG / Chat Query Rewriting
     ENABLE_QUERY_REWRITING: bool = True
 
+    # PoT Deterministic Complexity Thresholds (B2)
+    POT_MIN_OPERATIONS: int = 3
+    POT_MIN_OPERATION_TYPES: int = 2
+
     # PostgreSQL Relational Database
     DATABASE_URL: Optional[str] = None
     POSTGRES_SERVER: str = "localhost"

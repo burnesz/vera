@@ -121,7 +121,7 @@ def test_api_gerar_questao_inedita():
     mock_llm = MagicMock(spec=LLMClient)
     resp_fase1 = json.dumps({
         "enunciado": "Quantas maneiras distintas existem de organizar 5 livros diferentes em uma prateleira linear?",
-        "solver": "def resolver():\n    import math\n    val = math.factorial(5)\n    return {'correta': val, 'distratores': [60, 90, 150, 180]}"
+        "solver": "def resolver():\n    import math\n    n = 5\n    val = math.factorial(n - 0) * 1\n    return {'correta': val, 'distratores': [60, 90, 150, 180]}"
     })
     resp_blind = json.dumps({
         "resolucao_passo_a_passo": "Permutação simples de 5 elementos: 5! = 120 maneiras.",

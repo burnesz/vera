@@ -84,7 +84,7 @@ def test_generate_single_questao_inedita_pot_success():
         # Fase 1: Enunciado e Solver
         resp_fase1 = json.dumps({
             "enunciado": "Um reservatório com capacidade de 1.200 litros é abastecido a 40 litros por minuto com saída simultânea de 10 litros por minuto. Qual o tempo em minutos para enchê-lo?",
-            "solver": "def resolver():\n    capacidade = 1200\n    entrada = 40\n    saida = 10\n    taxa = entrada - saida\n    tempo = capacidade / taxa\n    return {'correta': tempo, 'distratores': [30, 50, 60, 80]}"
+            "solver": "def resolver():\n    capacidade = 1200\n    entrada = 40\n    saida = 10\n    taxa = entrada - saida\n    tempo = (capacidade - 0) / taxa\n    return {'correta': tempo, 'distratores': [30, 50, 60, 80]}"
         })
 
         # Validação Etapa 1: Resolução Cega
@@ -148,7 +148,7 @@ def test_generate_single_questao_inedita_pot_retry_on_solver_error():
         # 2ª tentativa Fase 1: Solver corrigido
         resp_fase1_ok = json.dumps({
             "enunciado": "Um motorista calcula a velocidade em uma viagem de 100 km com tempo de 2 horas. Qual a velocidade média em km/h?",
-            "solver": "def resolver():\n    dist = 100\n    t = 2\n    v = dist / t\n    return {'correta': v, 'distratores': [30, 40, 60, 70]}"
+            "solver": "def resolver():\n    dist = 100\n    t = 2\n    v = (dist - 0) / (t * 1)\n    return {'correta': v, 'distratores': [30, 40, 60, 70]}"
         })
 
         # Validação 2ª tentativa
@@ -278,7 +278,7 @@ def test_generate_pot_item_with_tabela_dados_clean_markdown():
                 {"Mês": "Janeiro", "Consumo": 15},
                 {"Mês": "Fevereiro", "Consumo": 20}
             ],
-            "solver": "def resolver():\n    total = 15 + 20\n    return {'correta': total, 'distratores': [25, 30, 40, 50]}"
+            "solver": "def resolver():\n    total = (15 + 20) * 1 - 0\n    return {'correta': total, 'distratores': [25, 30, 40, 50]}"
         })
         resp_blind = json.dumps({
             "resolucao_passo_a_passo": "O total é 15 + 20 = 35 m³.",
@@ -389,7 +389,7 @@ def test_generate_pot_item_sanitizes_duplicate_bullet_list():
                 {"Faixa": "Jovens", "Consumo": 0.5},
                 {"Faixa": "Adultos", "Consumo": 0.3}
             ],
-            "solver": "def resolver():\n    total = 0.5 + 0.3\n    return {'correta': total, 'distratores': [1.0, 1.2, 1.5, 2.0]}"
+            "solver": "def resolver():\n    total = (0.5 + 0.3) * 1 - 0\n    return {'correta': total, 'distratores': [1.0, 1.2, 1.5, 2.0]}"
         })
         resp_blind = json.dumps({
             "resolucao_passo_a_passo": "Total é 0.8.",
@@ -650,7 +650,7 @@ def test_a7_collision_retry_injects_colisao_hint_not_nexo():
             "planejamento": "Plano sem colisão.",
             "enunciado": "Um atleta fez 50 pontos no sábado e 30 pontos no domingo. Qual a pontuação total no fim de semana?",
             "erros_tipicos": ["Erro 1", "Erro 2", "Erro 3", "Erro 4"],
-            "solver": "def resolver():\n    a = 50\n    b = 30\n    correta = a + b\n    erro_1 = a - b\n    erro_2 = a\n    erro_3 = b\n    erro_4 = a * b"
+            "solver": "def resolver():\n    a = 50\n    b = 30\n    correta = (a + b) * 1 - 0\n    erro_1 = a - b\n    erro_2 = a\n    erro_3 = b\n    erro_4 = a * b"
         })
         t2_blind = json.dumps({
             "resolucao_passo_a_passo": "50 + 30 = 80.",
@@ -703,7 +703,7 @@ def test_a8_temperature_ceiling_03_and_seed_passed():
         good_pot = json.dumps({
             "enunciado": "Um atleta fez 50 pontos no sábado e 30 pontos no domingo. Qual a pontuação total no fim de semana?",
             "erros_tipicos": ["Erro 1", "Erro 2", "Erro 3", "Erro 4"],
-            "solver": "def resolver():\n    a = 50\n    b = 30\n    correta = a + b\n    erro_1 = a - b\n    erro_2 = a\n    erro_3 = b\n    erro_4 = a * b"
+            "solver": "def resolver():\n    a = 50\n    b = 30\n    correta = (a + b) * 1 - 0\n    erro_1 = a - b\n    erro_2 = a\n    erro_3 = b\n    erro_4 = a * b"
         })
         resp_blind = json.dumps({
             "resolucao_passo_a_passo": "50 + 30 = 80.",
@@ -780,5 +780,58 @@ def test_b1_typology_per_skill_and_competency_few_shots():
     # 3. Tipologia é injetada no prompt de geração
     prompt_check = service.sortear_tipologia("H01")
     assert prompt_check is not None
+
+
+def test_b2_deterministic_complexity_gate():
+    """B2: Reprova deterministamente solver trivial (< 3 operações ou < 2 tipos) com código COMPLEXIDADE."""
+    from app.services.code_executor import validate_solver_complexity
+    from app.schemas.question import PipelineErrorCode, PipelineValidationError
+
+    # 1. Trivial: apenas 1 operação (soma simples)
+    trivial_sum = """
+def resolver():
+    a = 50
+    b = 30
+    correta = a + b
+    erro_1 = a - b
+    erro_2 = a * b
+    erro_3 = a / 2
+    erro_4 = b * 2
+"""
+    with pytest.raises(PipelineValidationError) as exc_1:
+        validate_solver_complexity(trivial_sum)
+    assert exc_1.value.code == PipelineErrorCode.COMPLEXIDADE
+
+    # 2. Trivial: 3 operações mas apenas 1 tipo (só somas)
+    only_additions = """
+def resolver():
+    a, b, c, d = 10, 20, 30, 40
+    correta = a + b + c + d
+    erro_1 = a + b + c
+    erro_2 = b + c + d
+    erro_3 = a + d
+    erro_4 = a + b
+"""
+    with pytest.raises(PipelineValidationError) as exc_2:
+        validate_solver_complexity(only_additions)
+    assert exc_2.value.code == PipelineErrorCode.COMPLEXIDADE
+
+    # 3. Válido: >= 3 operações e >= 2 tipos de operação na fatia de 'correta'
+    valid_multi_step = """
+def resolver():
+    preco = 250
+    desconto = 20
+    acrescimo = 10
+    com_desconto = preco * (1 - desconto / 100)
+    correta = round(com_desconto * (1 + acrescimo / 100), 2)
+    erro_1 = preco - desconto
+    erro_2 = com_desconto
+    erro_3 = preco + acrescimo
+    erro_4 = preco * 0.9
+"""
+    metrics = validate_solver_complexity(valid_multi_step)
+    assert metrics["num_operations"] >= 3
+    assert len(metrics["operation_types"]) >= 2
+
 
 

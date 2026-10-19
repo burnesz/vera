@@ -35,6 +35,7 @@ from app.services.question_validator import (
 )
 from app.services.code_executor import (
     execute_solver_code,
+    validate_solver_complexity,
     validate_solver_consistency,
     assemble_alternatives_and_gabarito
 )
@@ -500,13 +501,14 @@ class QuestionService:
                     result=solver_result,
                     tabela_dados=pot_output.tabela_dados
                 )
+                validate_solver_complexity(pot_output.solver)
             except Exception as e:
                 if isinstance(e, PipelineValidationError):
                     last_error_code = e.code
                 else:
                     last_error_code = PipelineErrorCode.NEXO_NUMERICO
                 last_error = f"Erro de consistência matemática ou nexo numérico: {e}"
-                logger.warning(f"Tentativa {attempt}/{max_attempts} falhou na checagem de nexo: {e}")
+                logger.warning(f"Tentativa {attempt}/{max_attempts} falhou na checagem de nexo/complexidade: {e}")
                 continue
 
             # --- MONTAGEM ALGORÍTMICA DE ALTERNATIVAS E GABARITO ---

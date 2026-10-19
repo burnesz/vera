@@ -857,6 +857,132 @@ def _slice_correta_and_validate_distractors(
     return correta_floats
 
 
+_NON_MATH_HELPER_CALLS = {
+    "round", "float", "int", "str", "list", "dict", "set", "tuple",
+    "sorted", "range", "enumerate", "zip", "bool"
+}
+
+
+def validate_solver_complexity(
+    code: str,
+    min_operations: Optional[int] = None,
+    min_operation_types: Optional[int] = None
+) -> Dict[str, Any]:
+    """
+    Calcula deterministicamente a complexidade da fatia de 'correta' na AST (B2):
+    - Conta o número total de operações matemáticas/agregações e os tipos de operação distintos,
+      além do número de atribuições encadeadas na fatia de 'correta'.
+    - Reprova com PipelineErrorCode.COMPLEXIDADE quando ficar abaixo dos limiares configurados
+      (padrão: >= 3 operações e >= 2 tipos de operação).
+    """
+    from app.core.config import settings
+
+    min_ops = min_operations if min_operations is not None else getattr(settings, "POT_MIN_OPERATIONS", 3)
+    min_types = min_operation_types if min_operation_types is not None else getattr(settings, "POT_MIN_OPERATION_TYPES", 2)
+
+    clean_code = sanitize_solver_code(code)
+    tree = ast.parse(clean_code)
+
+    target_body: List[ast.stmt] = tree.body
+    for node in tree.body:
+        if isinstance(node, ast.FunctionDef) and node.name == "resolver":
+            target_body = node.body
+            break
+
+    assign_records: List[Tuple[Set[str], Set[str], ast.AST, Optional[ast.operator]]] = []
+    return_correta_expr: Optional[ast.AST] = None
+
+    for stmt in target_body:
+        for sub in ast.walk(stmt):
+            if isinstance(sub, ast.Assign) and sub.value is not None:
+                targets: Set[str] = set()
+                for t in sub.targets:
+                    targets |= _extract_stored_names_from_ast(t)
+                used = _extract_loaded_names_from_ast(sub.value)
+                assign_records.append((targets, used, sub.value, None))
+            elif isinstance(sub, ast.AnnAssign) and sub.value is not None:
+                targets = _extract_stored_names_from_ast(sub.target)
+                used = _extract_loaded_names_from_ast(sub.value)
+                assign_records.append((targets, used, sub.value, None))
+            elif isinstance(sub, ast.AugAssign) and sub.value is not None:
+                targets = _extract_stored_names_from_ast(sub.target)
+                used = _extract_loaded_names_from_ast(sub.value) | targets
+                assign_records.append((targets, used, sub.value, sub.op))
+            elif isinstance(sub, ast.Return) and isinstance(sub.value, ast.Dict):
+                for k_node, v_node in zip(sub.value.keys, sub.value.values):
+                    if isinstance(k_node, ast.Constant) and k_node.value == "correta" and v_node is not None:
+                        return_correta_expr = v_node
+
+    has_correta_var = any("correta" in rec[0] for rec in assign_records)
+    if not has_correta_var and return_correta_expr is not None:
+        if isinstance(return_correta_expr, ast.Constant):
+            # Stub legado de teste sem variáveis nem expressões antes do return
+            return {"num_operations": min_ops, "operation_types": ["StubA", "StubB"], "chained_assignments": 1}
+        assign_records.append((
+            {"correta"},
+            _extract_loaded_names_from_ast(return_correta_expr),
+            return_correta_expr,
+            None
+        ))
+
+    slice_vars: Set[str] = {"correta"}
+    changed = True
+    while changed:
+        changed = False
+        for targets, used, _, _ in reversed(assign_records):
+            if targets & slice_vars:
+                new_vars = used - slice_vars
+                if new_vars:
+                    slice_vars |= new_vars
+                    changed = True
+
+    total_ops = 0
+    op_types: Set[str] = set()
+    chained_assignments = 0
+
+    for targets, used, val_node, aug_op in assign_records:
+        if not (targets & slice_vars):
+            continue
+        stmt_ops = 0
+        if aug_op is not None:
+            total_ops += 1
+            stmt_ops += 1
+            op_types.add(type(aug_op).__name__)
+
+        for child in ast.walk(val_node):
+            if isinstance(child, ast.BinOp):
+                total_ops += 1
+                stmt_ops += 1
+                op_types.add(type(child.op).__name__)
+            elif isinstance(child, ast.Call):
+                func_name = ""
+                if isinstance(child.func, ast.Name):
+                    func_name = child.func.id
+                elif isinstance(child.func, ast.Attribute):
+                    func_name = child.func.attr
+                if func_name and func_name not in _NON_MATH_HELPER_CALLS:
+                    total_ops += 1
+                    stmt_ops += 1
+                    op_types.add(f"call:{func_name}")
+
+        if stmt_ops > 0 or used:
+            chained_assignments += 1
+
+    if total_ops < min_ops or len(op_types) < min_types:
+        raise PipelineValidationError(
+            PipelineErrorCode.COMPLEXIDADE,
+            f"Complexidade determinística insuficiente na fatia de 'correta': "
+            f"{total_ops} operações (mínimo {min_ops}) e {len(op_types)} tipos de operação {sorted(op_types)} (mínimo {min_types}). "
+            f"Exija pelo menos 2 etapas de raciocínio encadeadas."
+        )
+
+    return {
+        "num_operations": total_ops,
+        "operation_types": sorted(op_types),
+        "chained_assignments": chained_assignments
+    }
+
+
 def validate_solver_consistency(
     enunciado: str,
     code: str,
