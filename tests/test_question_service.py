@@ -891,99 +891,12 @@ def test_b3_separate_yes_no_audit_calls_and_early_exit():
         db.close()
 
 
-def test_b4_blind_solving_self_consistency_behind_flag(monkeypatch):
-    """B4: Quando ENABLE_BLIND_SOLVING_SELF_CONSISTENCY=True, roda resolução cega 2x (0.0 e 0.3) e aplica early exit com INCONSISTENCIA_CEGA se divergirem."""
-    from app.core.config import settings
-    from app.schemas.question import PipelineErrorCode
-    from app.services.question_service import _classify_retry_hint
-
-    monkeypatch.setattr(settings, "ENABLE_BLIND_SOLVING_SELF_CONSISTENCY", True)
-    monkeypatch.setattr(settings, "BLIND_SOLVING_SECOND_TEMP", 0.3)
-
-    db = TestingSessionLocal()
-    try:
-        mock_llm = MagicMock(spec=LLMClient)
-        mock_vs = MagicMock(spec=PineconeVectorStore)
-        mock_vs.search.return_value = []
-
-        pot_resp = json.dumps({
-            "planejamento": "Plano de duas etapas.",
-            "enunciado": "Um atleta fez 50 pontos no sábado e 30 pontos no domingo. Qual a pontuação total no fim de semana?",
-            "erros_tipicos": ["Erro 1", "Erro 2", "Erro 3", "Erro 4"],
-            "solver": "def resolver():\n    a = 50\n    b = 30\n    correta = (a + b) * 1 - 0\n    erro_1 = a - b\n    erro_2 = a\n    erro_3 = b\n    erro_4 = a * b"
-        })
-        blind_1 = json.dumps({
-            "resolucao_passo_a_passo": "50 + 30 = 80.",
-            "premissas_assumidas": [],
-            "dados_nao_utilizados": [],
-            "pergunta_respondivel": True,
-            "resultado_obtido": 80
-        })
-        # Na 1ª tentativa, a 2ª resolução cega diverge (obtém 20 em vez de 80)
-        blind_2_divergent = json.dumps({
-            "resolucao_passo_a_passo": "50 - 30 = 20.",
-            "premissas_assumidas": [],
-            "dados_nao_utilizados": [],
-            "pergunta_respondivel": True,
-            "resultado_obtido": 20
-        })
-        equiv_false = json.dumps({
-            "equivalentes": False,
-            "explicacao_equivalencia": "80 != 20"
-        })
-
-        # Na 2ª tentativa, as duas resoluções cegas concordam (80 e 80 -> 0ms fast path!)
-        blind_2_consistent = json.dumps({
-            "resolucao_passo_a_passo": "Soma 50 + 30 = 80.",
-            "premissas_assumidas": [],
-            "dados_nao_utilizados": [],
-            "pergunta_respondivel": True,
-            "resultado_obtido": 80
-        })
-        equiv_true = json.dumps({
-            "equivalentes": True,
-            "explicacao_equivalencia": "Ambos 80."
-        })
-        audit_ok = json.dumps({
-            "analise": "Item adequado",
-            "incoerencia_ou_absurdo": False,
-            "comando_ambiguo_ou_incompativel": False,
-            "deficit_ou_contradicao": False,
-            "complexidade_insuficiente": False
-        })
-
-        mock_llm.generate.side_effect = [
-            # Tentativa 1: Fase 1 + Blind 1 (T=0.0) + Blind 2 (T=0.3) + Equiv check entre Blind 1 e Blind 2 -> Early Exit!
-            pot_resp, blind_1, blind_2_divergent, equiv_false,
-            # Tentativa 2: Fase 1 + Blind 1 (T=0.0) + Blind 2 (T=0.3) + Etapa 2 + Etapa 3
-            pot_resp, blind_1, blind_2_consistent, equiv_true, audit_ok
-        ]
-
-        service = QuestionService(llm_client=mock_llm, vector_store=mock_vs)
-        questao = service.generate_single_questao_inedita(
-            db=db,
-            habilidade_codigo="H01",
-            max_attempts=2
-        )
-        assert questao is not None
-        # Verifica temperaturas das duas chamadas cegas da 1ª tentativa (índices 1 e 2)
-        assert mock_llm.generate.call_args_list[1].kwargs["temperature"] == 0.0
-        assert mock_llm.generate.call_args_list[2].kwargs["temperature"] == 0.3
-        # Verifica que o prompt da 2ª tentativa (índice 4) recebeu o hint de INCONSISTENCIA_CEGA
-        expected_hint = _classify_retry_hint(PipelineErrorCode.INCONSISTENCIA_CEGA)
-        assert expected_hint in mock_llm.generate.call_args_list[4].kwargs["prompt"]
-    finally:
-        db.close()
-
-
 def test_phase_c_keep_alive_and_decompose_phase1():
     """Fase C: Verifica keep_alive no payload do LLMClient e decomposição da Fase 1 em 2 chamadas por padrão."""
-    from app.core.config import settings
-
     # 1. Verifica keep_alive no payload do LLMClient
     client = LLMClient(mock_mode=True)
     _, payload = client._build_payload_and_url(prompt="Teste", max_tokens=256, temperature=0.1, seed=42)
-    assert payload.get("keep_alive") == settings.LLM_KEEP_ALIVE
+    assert payload.get("keep_alive") == "30m"
     assert payload["options"]["seed"] == 42
 
     # 2. Verifica decomposição da Fase 1 em duas chamadas por padrão (mock_mode=True roda 1a e 1b)

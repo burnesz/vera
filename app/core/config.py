@@ -22,9 +22,9 @@ class Settings(BaseSettings):
     LLM_TIMEOUT_SECONDS: float = 300.0
     LLM_MAX_TOKENS: int = 1024
     LLM_NUM_CTX: int = 4096
-    LLM_KEEP_ALIVE: str = "30m"
 
     # Vector Store (Pinecone)
+
     PINECONE_API_KEY: str = ""
     PINECONE_ENVIRONMENT: str = "us-east-1"
     PINECONE_INDEX_NAME: str = "vera-math-index"
@@ -53,13 +53,6 @@ class Settings(BaseSettings):
     # PoT Deterministic Complexity Thresholds (B2)
     POT_MIN_OPERATIONS: int = 3
     POT_MIN_OPERATION_TYPES: int = 2
-
-    # PoT Blind Solving Self-Consistency (B4)
-    ENABLE_BLIND_SOLVING_SELF_CONSISTENCY: bool = False
-    BLIND_SOLVING_SECOND_TEMP: float = 0.3
-
-    # PoT Phase 1b Solver Generation Temperature
-    POT_SOLVER_ONLY_TEMP: float = 0.1
 
 
 

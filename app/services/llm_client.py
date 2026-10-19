@@ -86,7 +86,7 @@ class LLMClient:
             "model": self.model_name,
             "prompt": prompt,
             "stream": False,
-            "keep_alive": getattr(settings, "LLM_KEEP_ALIVE", "30m"),
+            "keep_alive": "30m",
             "options": options
         }
         if format:
