@@ -337,6 +337,21 @@ class LLMClient:
             }
             return json.dumps(mock_just, ensure_ascii=False)
 
+        if "auditoria binária de critério único" in prompt.lower():
+            return json.dumps({"defeito": False, "evidencia": "Critério atendido."}, ensure_ascii=False)
+
+        if "juiz de equivalência matemática" in prompt.lower():
+            return json.dumps({"equivalentes": True, "explicacao_equivalencia": "Resultados equivalentes."}, ensure_ascii=False)
+
+        if "resolucao_passo_a_passo" in prompt.lower() and "premissas_assumidas" in prompt.lower():
+            return json.dumps({
+                "resolucao_passo_a_passo": "Taxa líquida: 40 - 10 = 30 L/min. Tempo: 1200 / 30 = 40 min.",
+                "premissas_assumidas": [],
+                "dados_nao_utilizados": [],
+                "pergunta_respondivel": True,
+                "resultado_obtido": 40
+            }, ensure_ascii=False)
+
         if "solver" in prompt.lower():
             mock_pot = {
                 "planejamento": "Dados: capacidade 1200 L, entrada 40 L/min, saída 10 L/min. Etapas: (1) calcular taxa líquida; (2) dividir capacidade pela taxa líquida.",

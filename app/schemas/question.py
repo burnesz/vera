@@ -198,7 +198,7 @@ class QuestaoEquivalenciaOutput(BaseModel):
 class QuestaoAuditoriaSemanticaOutput(BaseModel):
     """
     Schema para a Chamada 3 da Fase de Validação: Auditoria Semântica e Pedagógica.
-    Avalia a presença de defeitos no item através de 4 macro-critérios semânticos.
+    Avalia a presença de defeitos no item através de critérios semânticos e pedagógicos (B3).
     """
     analise: Optional[str] = Field(
         None,
@@ -216,9 +216,17 @@ class QuestaoAuditoriaSemanticaOutput(BaseModel):
         False,
         description="True se faltarem informações indispensáveis ou se texto e tabela se contradisserem."
     )
+    desalinhamento_comando_grandeza: bool = Field(
+        False,
+        description="True se o comando final NÃO perguntar exatamente a grandeza definida no enunciado/gabarito (B3a)."
+    )
+    fuga_habilidade_alvo: bool = Field(
+        False,
+        description="True se a resolução da questão NÃO exigir a habilidade-alvo especificada (B3b)."
+    )
     complexidade_insuficiente: bool = Field(
         False,
-        description="True se o item for trivial demais para o ENEM (operação direta única ou leitura sem cálculo)."
+        description="Sinal secundário: True se o item for trivial demais para o ENEM (operação direta única)."
     )
 
     # Campos legados mantidos para compatibilidade retroativa total com testes
@@ -234,6 +242,8 @@ class QuestaoAuditoriaSemanticaOutput(BaseModel):
             self.incoerencia_ou_absurdo,
             self.comando_ambiguo_ou_incompativel,
             self.deficit_ou_contradicao,
+            self.desalinhamento_comando_grandeza,
+            self.fuga_habilidade_alvo,
             self.complexidade_insuficiente
         ]
         flags_legadas = [
@@ -254,6 +264,10 @@ class QuestaoAuditoriaSemanticaOutput(BaseModel):
             motivos.append("Comando ambíguo, sem unidade clara ou incompatível com resposta numérica.")
         if self.deficit_ou_contradicao or self.deficit_informacoes:
             motivos.append("Déficit de dados essenciais ou contradição entre texto e tabela.")
+        if self.desalinhamento_comando_grandeza:
+            motivos.append("Desalinhamento entre a grandeza definida no enunciado e o que o comando final pergunta.")
+        if self.fuga_habilidade_alvo:
+            motivos.append("A questão não exige a habilidade-alvo da Matriz de Referência do ENEM.")
         if self.complexidade_insuficiente:
             motivos.append("Complexidade insuficiente para o ENEM (item trivial de operação direta).")
         if self.erros_ou_vazamentos:

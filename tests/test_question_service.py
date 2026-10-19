@@ -834,4 +834,58 @@ def resolver():
     assert len(metrics["operation_types"]) >= 2
 
 
+def test_b3_separate_yes_no_audit_calls_and_early_exit():
+    """B3: Etapa 3 executa chamadas sim/não separadas com temperature=0.0 por critério e faz early exit no 1º defeito."""
+    db = TestingSessionLocal()
+    try:
+        mock_llm = MagicMock(spec=LLMClient)
+        mock_vs = MagicMock(spec=PineconeVectorStore)
+        service = QuestionService(llm_client=mock_llm, vector_store=mock_vs)
 
+        # 1. Quando o 4º critério (desalinhamento_comando_grandeza) acusa defeito=True, para na 4ª chamada (não faz a 5ª)
+        mock_llm.generate.side_effect = [
+            json.dumps({"defeito": False, "justificativa_curta": "OK 1"}),
+            json.dumps({"defeito": False, "justificativa_curta": "OK 2"}),
+            json.dumps({"defeito": False, "justificativa_curta": "OK 3"}),
+            json.dumps({"defeito": True, "justificativa_curta": "Pergunta em reais, mas calcula litros."}),
+        ]
+        audit_fail = service._run_semantic_audit(
+            enunciado="Um tanque tem 500 L...",
+            alternativas={"A": "100", "B": "200", "C": "300", "D": "400", "E": "500"},
+            letra_gabarito="A",
+            habilidade_codigo="H01",
+            habilidade_descricao="Reconhecer representações numéricas."
+        )
+        assert audit_fail.aprovada is False
+        assert audit_fail.desalinhamento_comando_grandeza is True
+        assert mock_llm.generate.call_count == 4
+        for c in mock_llm.generate.call_args_list:
+            assert c.kwargs["temperature"] == 0.0
+
+        # 2. Quando todos os 5 critérios retornam defeito=False, aprova após 5 chamadas curtas
+        mock_llm.reset_mock()
+        mock_llm.generate.side_effect = [
+            json.dumps({"defeito": False, "justificativa_curta": "OK"}) for _ in range(5)
+        ]
+        audit_ok = service._run_semantic_audit(
+            enunciado="Enunciado válido...",
+            alternativas={"A": "100", "B": "200", "C": "300", "D": "400", "E": "500"},
+            letra_gabarito="A",
+            habilidade_codigo="H01",
+            habilidade_descricao="Reconhecer representações numéricas."
+        )
+        assert audit_ok.aprovada is True
+        assert mock_llm.generate.call_count == 5
+
+        # 3. Fluxo completo em mock_mode=True passa pelas 5 chamadas separadas da Etapa 3
+        real_mock_llm = LLMClient(mock_mode=True)
+        service_mock = QuestionService(llm_client=real_mock_llm, vector_store=mock_vs)
+        mock_vs.search.return_value = []
+        questao = service_mock.generate_single_questao_inedita(
+            db=db,
+            habilidade_codigo="H01",
+            max_attempts=1
+        )
+        assert questao is not None
+    finally:
+        db.close()

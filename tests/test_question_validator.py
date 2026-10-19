@@ -375,5 +375,21 @@ def test_a4_erros_tipicos_schema_and_pydantic_validation():
     assert len(valid_out.erros_tipicos) == 4
 
 
+def test_b3_questao_auditoria_semantica_new_criteria():
+    """B3: Verifica os novos critérios desalinhamento_comando_grandeza e fuga_habilidade_alvo no schema."""
+    from app.schemas.question import QuestaoAuditoriaSemanticaOutput
 
+    audit_desalinhado = QuestaoAuditoriaSemanticaOutput(
+        analise="O comando pergunta o valor total em reais, mas o solver calcula a quantidade de pacotes.",
+        desalinhamento_comando_grandeza=True,
+    )
+    assert audit_desalinhado.aprovada is False
+    assert "Desalinhamento" in audit_desalinhado.motivo_rejeicao
+
+    audit_fuga = QuestaoAuditoriaSemanticaOutput(
+        analise="A questão exige análise combinatória em vez de leitura de gráficos (H24).",
+        fuga_habilidade_alvo=True,
+    )
+    assert audit_fuga.aprovada is False
+    assert "habilidade-alvo" in audit_fuga.motivo_rejeicao
 

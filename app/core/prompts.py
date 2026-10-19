@@ -763,7 +763,87 @@ Responda EXCLUSIVAMENTE em formato JSON com o schema:
   "incoerencia_ou_absurdo": bool,
   "comando_ambiguo_ou_incompativel": bool,
   "deficit_ou_contradicao": bool,
+  "desalinhamento_comando_grandeza": bool,
+  "fuga_habilidade_alvo": bool,
   "complexidade_insuficiente": bool
 }}
 """
     return prompt
+
+
+AUDITORIA_CRITERIOS_B3: Dict[str, str] = {
+    "incoerencia_ou_absurdo": (
+        "CRITÉRIO 1 (Incoerência ou Absurdo Físico/Semântico): "
+        "A situação descrita é absurda, fisicamente impossível ou conceitualmente errada? "
+        "(Ex.: consumo de 4 L de água por casa por dia, velocidades/tempos biologicamente impossíveis, "
+        "equipamento incompatível com o esporte ou 'consumir calorias' em vez de 'gastar calorias' no treino)."
+    ),
+    "comando_ambiguo_ou_incompativel": (
+        "CRITÉRIO 2 (Comando Ambíguo ou Incompatível com as Alternativas): "
+        "O comando final é dúbio, omite a unidade esperada ou faz uma pergunta incompatível com alternativas numéricas "
+        "(ex.: pergunta 'qual plano é mais econômico?' quando as alternativas são números), ou há empate entre opções comparadas?"
+    ),
+    "deficit_ou_contradicao": (
+        "CRITÉRIO 3 (Déficit de Dados ou Contradição Texto-Tabela): "
+        "Faltam informações/bases essenciais para calcular a resposta ou o texto contradiz os valores/totais da tabela?"
+    ),
+    "desalinhamento_comando_grandeza": (
+        "CRITÉRIO 4 (Alinhamento Comando-Grandeza): "
+        "O comando final deixa de perguntar exatamente a grandeza que o enunciado e o valor do gabarito definem "
+        "(ex.: o enunciado e o gabarito calculam o desconto, mas a pergunta final pede o preço final, ou vice-versa)?"
+    ),
+    "fuga_habilidade_alvo": (
+        "CRITÉRIO 5 (Aderência à Habilidade-Alvo do ENEM): "
+        "A resolução da questão deixa de exigir o raciocínio matemático previsto na habilidade-alvo especificada abaixo?"
+    ),
+}
+
+
+def build_auditoria_criterio_prompt(
+    criterio: str,
+    enunciado: str,
+    alternativas: Dict[str, str],
+    tabela_dados: Optional[List[Dict[str, Any]]] = None,
+    letra_gabarito: Optional[str] = None,
+    habilidade_codigo: Optional[str] = None,
+    habilidade_descricao: Optional[str] = None
+) -> str:
+    """
+    Constrói prompt binário curto (sim/não) para um único critério da Etapa 3 da Auditoria Semântica (B3).
+    """
+    alts_formatted = "\n".join([f"  {k}) {v}" for k, v in sorted(alternativas.items())])
+    has_md_table = bool(re.search(r"\|(?:\s*:?-+:?\s*\|)+", enunciado or ""))
+    tabela_txt = "" if has_md_table else _formatar_tabela(tabela_dados)
+    bloco_tabela = f"\nTabela de Dados:\n{tabela_txt}\n" if tabela_txt else ""
+    bloco_gab = (
+        f"\nAlternativa correta segundo o sistema: {letra_gabarito} ({alternativas.get(letra_gabarito, '')})\n"
+        if letra_gabarito
+        else ""
+    )
+    bloco_hab = (
+        f"\nHabilidade-Alvo: {habilidade_codigo} — {habilidade_descricao}\n"
+        if habilidade_codigo or habilidade_descricao
+        else ""
+    )
+    pergunta_criterio = AUDITORIA_CRITERIOS_B3.get(
+        criterio,
+        f"CRITÉRIO ({criterio}): O item apresenta este defeito pedagógico ou semântico?"
+    )
+
+    return f"""Você é um Revisor Técnico Oficial do INEP (Auditoria Binária de Critério Único — {criterio}).
+Avalie EXCLUSIVAMENTE o critério abaixo sobre o item submetido.
+
+ITEM SUBMETIDO:
+Enunciado:
+{enunciado}
+{bloco_tabela}Alternativas:
+{alts_formatted}{bloco_gab}{bloco_hab}
+PERGUNTA DE AUDITORIA (true = o defeito EXISTE; false = o item está CORRETO neste critério):
+{pergunta_criterio}
+
+Responda EXCLUSIVAMENTE em JSON curto:
+{{
+  "defeito": false,
+  "evidencia": "1 frase curta justificando"
+}}
+"""
