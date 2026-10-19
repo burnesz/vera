@@ -86,6 +86,8 @@ def _classify_retry_hint(last_error: Optional[str]) -> Optional[str]:
         return "Distratores distintos: calcule 4 variáveis de erros típicos que gerem 4 valores numéricos diferentes entre si e da resposta correta."
     if "divergência" in low or "equivalência" in low:
         return "Alinhamento enunciado-solver: garanta que a fórmula de 'correta' em def resolver() calcule exatamente o que o comando final pede."
+    if "variável externa" in low or "variáveis externas" in low or "variável livre" in low or "nameerror" in low:
+        return "declare os valores como variáveis dentro de resolver(); não use variáveis externas"
     if "termo técnico" in low or "proibido" in low:
         return "Linguagem limpa: nunca cite termos internos como 'solver', 'python', 'código', 'algoritmo', 'distrator' ou 'gabarito' no enunciado."
     return "Sintaxe estrita: retorne JSON válido com 'planejamento', 'enunciado', 'tabela_dados' (opcional) e função def resolver() em Python puro sem erros."

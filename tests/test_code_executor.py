@@ -280,3 +280,33 @@ def resolver():
         execute_solver_code(code)
 
 
+def test_a2_static_gate_syntax_error_classified():
+    """A2: ast.parse classifica SyntaxError em 0ms antes de executar subprocesso."""
+    bad_code = "def resolver():\n    correta = (10 + 20\n    erro_1 = 5\n"
+    with pytest.raises(ValueError, match="Erro de sintaxe no código Python do solver"):
+        execute_solver_code(bad_code)
+
+
+def test_a2_static_gate_detects_free_variable_tabela_dados():
+    """A2: Detecta nomes livres (ex: tabela_dados) em 0ms com hint específico."""
+    from app.services.question_service import _classify_retry_hint
+
+    code_with_free_var = """
+def resolver():
+    total = sum(linha['Valor'] for linha in tabela_dados)
+    correta = total
+    erro_1 = total + 10
+    erro_2 = total - 10
+    erro_3 = total * 2
+    erro_4 = total / 2
+"""
+    with pytest.raises(ValueError) as exc_info:
+        execute_solver_code(code_with_free_var)
+
+    err_msg = str(exc_info.value)
+    assert "tabela_dados" in err_msg
+    assert "declare os valores como variáveis dentro de resolver(); não use variáveis externas" in err_msg
+    assert _classify_retry_hint(err_msg) == "declare os valores como variáveis dentro de resolver(); não use variáveis externas"
+
+
+

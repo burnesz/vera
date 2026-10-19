@@ -95,9 +95,172 @@ def sanitize_solver_code(code: str) -> str:
     return code
 
 
-def check_code_safety(code: str) -> None:
+import builtins
+
+ALLOWED_BUILTINS: Set[str] = set(dir(builtins)) | {"math", "json", "resolver"}
+
+
+def _extract_store_names(node: ast.AST) -> Set[str]:
+    """Extrai todos os identificadores atribuídos (ctx=Store) em um nó de destino da AST."""
+    names: Set[str] = set()
+    for sub in ast.walk(node):
+        if isinstance(sub, ast.Name) and isinstance(sub.ctx, ast.Store):
+            names.add(sub.id)
+    return names
+
+
+def _check_expr_free_vars(node: Optional[ast.AST], bound: Set[str]) -> Optional[str]:
     """
-    Realiza inspeção estática da AST do código para bloquear operações e imports potencialmente inseguros.
+    Inspeciona recursivamente uma expressão AST buscando nomes livres (ast.Name com ctx=Load)
+    não presentes em `bound`, respeitando o escopo local de comprehensions e lambdas.
+    """
+    if node is None:
+        return None
+
+    if isinstance(node, ast.Name):
+        if isinstance(node.ctx, ast.Load) and node.id not in bound:
+            return node.id
+        return None
+
+    if isinstance(node, (ast.ListComp, ast.SetComp, ast.GeneratorExp, ast.DictComp)):
+        comp_bound = set(bound)
+        for gen in node.generators:
+            free = _check_expr_free_vars(gen.iter, comp_bound)
+            if free:
+                return free
+            comp_bound.update(_extract_store_names(gen.target))
+            for if_clause in gen.ifs:
+                free = _check_expr_free_vars(if_clause, comp_bound)
+                if free:
+                    return free
+        if isinstance(node, ast.DictComp):
+            free = _check_expr_free_vars(node.key, comp_bound)
+            if free:
+                return free
+            return _check_expr_free_vars(node.value, comp_bound)
+        return _check_expr_free_vars(node.elt, comp_bound)
+
+    if isinstance(node, ast.Lambda):
+        lam_bound = set(bound)
+        for arg in node.args.posonlyargs + node.args.args + node.args.kwonlyargs:
+            lam_bound.add(arg.arg)
+        if node.args.vararg:
+            lam_bound.add(node.args.vararg.arg)
+        if node.args.kwarg:
+            lam_bound.add(node.args.kwarg.arg)
+        return _check_expr_free_vars(node.body, lam_bound)
+
+    if isinstance(node, ast.NamedExpr):
+        free = _check_expr_free_vars(node.value, bound)
+        if free:
+            return free
+        bound.update(_extract_store_names(node.target))
+        return None
+
+    for child in ast.iter_child_nodes(node):
+        free = _check_expr_free_vars(child, bound)
+        if free:
+            return free
+    return None
+
+
+def _check_stmts_free_vars(stmts: List[ast.stmt], bound: Set[str]) -> Optional[str]:
+    """Percorre sequencialmente uma lista de statements AST verificando variáveis livres."""
+    for stmt in stmts:
+        if isinstance(stmt, ast.Assign):
+            free = _check_expr_free_vars(stmt.value, bound)
+            if free:
+                return free
+            for target in stmt.targets:
+                # Se for indexação/atributo (ex: lista[i] = 1), verifica Loads no target
+                if not isinstance(target, ast.Name):
+                    for child in ast.iter_child_nodes(target):
+                        free = _check_expr_free_vars(child, bound)
+                        if free:
+                            return free
+                bound.update(_extract_store_names(target))
+        elif isinstance(stmt, ast.AnnAssign):
+            if stmt.value:
+                free = _check_expr_free_vars(stmt.value, bound)
+                if free:
+                    return free
+            bound.update(_extract_store_names(stmt.target))
+        elif isinstance(stmt, ast.AugAssign):
+            if isinstance(stmt.target, ast.Name) and stmt.target.id not in bound:
+                return stmt.target.id
+            free = _check_expr_free_vars(stmt.target, bound)
+            if free:
+                return free
+            free = _check_expr_free_vars(stmt.value, bound)
+            if free:
+                return free
+        elif isinstance(stmt, (ast.For, ast.AsyncFor)):
+            free = _check_expr_free_vars(stmt.iter, bound)
+            if free:
+                return free
+            bound.update(_extract_store_names(stmt.target))
+            free = _check_stmts_free_vars(stmt.body, bound)
+            if free:
+                return free
+            free = _check_stmts_free_vars(stmt.orelse, bound)
+            if free:
+                return free
+        elif isinstance(stmt, (ast.While, ast.If)):
+            free = _check_expr_free_vars(stmt.test, bound)
+            if free:
+                return free
+            free = _check_stmts_free_vars(stmt.body, bound)
+            if free:
+                return free
+            free = _check_stmts_free_vars(stmt.orelse, bound)
+            if free:
+                return free
+        elif isinstance(stmt, ast.Import):
+            for alias in stmt.names:
+                bound.add(alias.asname or alias.name.split(".")[0])
+        elif isinstance(stmt, ast.ImportFrom):
+            for alias in stmt.names:
+                bound.add(alias.asname or alias.name)
+        elif isinstance(stmt, ast.FunctionDef):
+            bound.add(stmt.name)
+            fn_bound = set(bound)
+            for arg in stmt.args.posonlyargs + stmt.args.args + stmt.args.kwonlyargs:
+                fn_bound.add(arg.arg)
+            if stmt.args.vararg:
+                fn_bound.add(stmt.args.vararg.arg)
+            if stmt.args.kwarg:
+                fn_bound.add(stmt.args.kwarg.arg)
+            free = _check_stmts_free_vars(stmt.body, fn_bound)
+            if free:
+                return free
+        else:
+            for child in ast.iter_child_nodes(stmt):
+                free = _check_expr_free_vars(child, bound)
+                if free:
+                    return free
+    return None
+
+
+def check_free_variables(tree: ast.Module) -> None:
+    """
+    Gate estático (0ms): detecta nomes livres (ex.: `tabela_dados` ou variáveis externas)
+    dentro do módulo e de `resolver()` antes de iniciar qualquer subprocesso.
+    """
+    bound: Set[str] = set(ALLOWED_BUILTINS)
+    free = _check_stmts_free_vars(tree.body, bound)
+    if free:
+        raise ValueError(
+            f"Variável externa/livre '{free}' não definida: "
+            f"declare os valores como variáveis dentro de resolver(); não use variáveis externas"
+        )
+
+
+def check_code_safety(code: str) -> ast.Module:
+    """
+    Realiza inspeção estática (0ms) da AST do código para:
+    1. Classificar erros de sintaxe (`SyntaxError`).
+    2. Bloquear operações e imports potencialmente inseguros.
+    3. Detectar variáveis livres / externas não declaradas dentro de `resolver()`.
     """
     try:
         tree = ast.parse(code)
@@ -120,6 +283,9 @@ def check_code_safety(code: str) -> None:
         elif isinstance(node, ast.Call):
             if isinstance(node.func, ast.Name) and node.func.id in BLOCKED_CALLS:
                 raise PermissionError(f"Chamada de função não permitida no solver: '{node.func.id}()'")
+
+    check_free_variables(tree)
+    return tree
 
 
 def _normalize_five_distractors(correta_val: Any, distratores_vals: List[Any]) -> List[Any]:
