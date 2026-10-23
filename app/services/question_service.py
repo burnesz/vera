@@ -392,7 +392,7 @@ class QuestionService:
                     k=len(few_shot_dicts) or 2,
                     db=db
                 )
-                curr_temp = round(min(base_temp + 0.05 * (attempt - 1), 0.3), 2)
+                curr_temp = round(min(base_temp + 0.1 * (attempt - 1), 0.3), 2)
                 retry_hint = _classify_retry_hint(last_error_code)
                 logger.info(
                     f"PoT Stateless Retry: Tentativa limpa {attempt}/{max_attempts} para {clean_hab} "
@@ -462,7 +462,7 @@ class QuestionService:
                     erros_tipicos=plan_out.erros_tipicos,
                     alerta_tentativa_anterior=retry_hint
                 )
-                solver_temp = round(min(curr_temp, 0.1), 2)
+                solver_temp = 0.0
                 try:
                     raw_1b = self.llm_client.generate(
                         prompt=prompt_1b,
