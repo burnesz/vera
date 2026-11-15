@@ -15,10 +15,29 @@ from app.core.prompts import (
 from app.db.models.submission import RespostaItem, SimuladoTentativa
 from app.db.models.feedback import Feedback
 from app.db.models.habilidade import HabilidadeEnem
+from app.services.feedback_verifier import (
+    FeedbackVerification,
+    build_correction_hint,
+    verify_feedback,
+)
 from app.services.llm_client import LLMClient
 from app.services.vectorstore import PineconeVectorStore
 
 logger = logging.getLogger("vera.services.feedback")
+
+# Tentativas totais de geração antes de recusar o feedback (RN-FB04).
+MAX_FEEDBACK_ATTEMPTS = 3
+
+
+class FeedbackVerificationError(RuntimeError):
+    """
+    Nenhuma tentativa de geração passou na verificação automática contra o gabarito (RN-FB04).
+    O feedback reprovado não é persistido nem exibido ao estudante.
+    """
+
+    def __init__(self, message: str, verificacoes: List[FeedbackVerification]):
+        super().__init__(message)
+        self.verificacoes = verificacoes
 
 
 class FeedbackService:
@@ -214,19 +233,54 @@ class FeedbackService:
             context_chunks=context_chunks,
         )
 
-        messages = [
-            {"role": "system", "content": VERA_QUESTION_FEEDBACK_SYSTEM_PROMPT},
-            {"role": "user", "content": prompt},
-        ]
+        # 6. Inferência + pós-processamento: verificação contra gabarito e Matriz (RN-FB04).
+        # Cada nova tentativa reconstrói o prompt do zero (Stateless Retry), anexando a
+        # instrução corretiva derivada das violações da tentativa anterior.
+        verificacoes: List[FeedbackVerification] = []
+        thought: Optional[str] = None
+        clean_reply = ""
+        correction_hint = ""
+        for attempt in range(1, MAX_FEEDBACK_ATTEMPTS + 1):
+            messages = [
+                {"role": "system", "content": VERA_QUESTION_FEEDBACK_SYSTEM_PROMPT},
+                {"role": "user", "content": prompt + correction_hint},
+            ]
 
-        logger.info(f"Disparando geração de feedback pedagógico no LLM para {hab_cod} (marcada='{marcada}', gabarito='{gabarito}')...")
-        raw_reply = self.llm_client.generate(messages, temperature=0.3)
+            logger.info(
+                f"Disparando geração de feedback pedagógico no LLM para {hab_cod} "
+                f"(marcada='{marcada}', gabarito='{gabarito}', tentativa {attempt}/{MAX_FEEDBACK_ATTEMPTS})..."
+            )
+            raw_reply = self.llm_client.generate(messages, temperature=0.3)
 
-        thought, clean_reply = parse_cot_response(raw_reply)
-        if not clean_reply:
-            clean_reply = raw_reply.strip()
+            thought, clean_reply = parse_cot_response(raw_reply)
+            if not clean_reply:
+                clean_reply = raw_reply.strip()
 
-        # 6. Salva na tabela feedbacks do PostgreSQL
+            verificacao = verify_feedback(
+                content=clean_reply,
+                gabarito=gabarito,
+                alternativa_marcada=marcada,
+                alternativas=alternativas,
+                habilidade_codigo=hab_cod,
+            )
+            verificacoes.append(verificacao)
+            if verificacao.aprovado:
+                logger.info(f"Feedback aprovado na verificação automática (tentativa {attempt}/{MAX_FEEDBACK_ATTEMPTS}).")
+                break
+
+            logger.warning(
+                f"Feedback reprovado na verificação automática (tentativa {attempt}/{MAX_FEEDBACK_ATTEMPTS}): "
+                f"{verificacao.violacoes} — {verificacao.detalhes}"
+            )
+            correction_hint = build_correction_hint(verificacao, gabarito, marcada, hab_cod)
+        else:
+            raise FeedbackVerificationError(
+                f"A explicação gerada não passou na verificação automática contra o gabarito após "
+                f"{MAX_FEEDBACK_ATTEMPTS} tentativas.",
+                verificacoes,
+            )
+
+        # 7. Salva na tabela feedbacks do PostgreSQL
         feedback = Feedback(
             resposta_item_id=resposta.id,
             feedback_content=clean_reply,

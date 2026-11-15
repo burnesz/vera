@@ -253,3 +253,93 @@ def test_api_listar_minhas_tentativas(setup_seed):
     assert len(tentativas) >= 1
     assert "score_percentual" in tentativas[0]
     assert "total_acertos" in tentativas[0]
+
+
+def _nova_resposta_errada(setup_seed):
+    """Cria uma nova tentativa com resposta errada (B) ainda sem feedback persistido."""
+    db = TestingSessionLocal()
+    respostas = [
+        RespostaItemInput(
+            simulado_item_id=setup_seed["simulado_item_id"],
+            questao_id=setup_seed["questao_id"],
+            alternativa_marcada="B",
+            alternativa_selecionada="B",
+        )
+    ]
+    tentativa = simulado_service.submeter_tentativa_simulado(
+        db, setup_seed["simulado_id"], setup_seed["user_id"], respostas
+    )
+    resposta = db.query(RespostaItem).filter(RespostaItem.tentativa_id == tentativa.id).first()
+    assert db.query(Feedback).filter(Feedback.resposta_item_id == resposta.id).first() is None
+    return db, resposta
+
+
+FEEDBACK_ALUCINADO = (
+    "<pensamento>O aluno acertou.</pensamento>\n"
+    "<resposta>Parabéns! A alternativa B é a correta, pois 20 vezes 10 resulta em 200 reais.</resposta>"
+)
+FEEDBACK_CONSISTENTE = (
+    "<pensamento>Diagnóstico do distrator B.</pensamento>\n"
+    "<resposta>Você multiplicou o preço de compra. A resposta correta é a alternativa C: "
+    "$$Lucro = (25 - 20) \\times 50 = 250$$</resposta>"
+)
+
+
+def _vectorstore_vazio():
+    vs = MagicMock()
+    vs.search.return_value = []
+    return vs
+
+
+def test_feedback_reprovado_e_regerado_com_dica_corretiva(setup_seed):
+    db, resposta = _nova_resposta_errada(setup_seed)
+    mock_llm = MagicMock()
+    mock_llm.generate.side_effect = [FEEDBACK_ALUCINADO, FEEDBACK_CONSISTENTE]
+
+    service = FeedbackService(llm_client=mock_llm, vector_store=_vectorstore_vazio())
+    feedback = service.gerar_ou_obter_feedback_item(db, resposta.id, setup_seed["user_id"])
+
+    assert mock_llm.generate.call_count == 2
+    assert feedback.is_verified is True
+    assert "alternativa C" in feedback.feedback_content
+    # A 2ª tentativa recebe a instrução corretiva com o motivo da reprovação
+    segundo_prompt = mock_llm.generate.call_args_list[1].args[0][1]["content"]
+    assert "CORREÇÃO OBRIGATÓRIA" in segundo_prompt
+    primeiro_prompt = mock_llm.generate.call_args_list[0].args[0][1]["content"]
+    assert "CORREÇÃO OBRIGATÓRIA" not in primeiro_prompt
+
+
+def test_feedback_sempre_reprovado_nao_e_persistido(setup_seed):
+    from app.services.feedback_service import FeedbackVerificationError, MAX_FEEDBACK_ATTEMPTS
+
+    db, resposta = _nova_resposta_errada(setup_seed)
+    mock_llm = MagicMock()
+    mock_llm.generate.return_value = FEEDBACK_ALUCINADO
+
+    service = FeedbackService(llm_client=mock_llm, vector_store=_vectorstore_vazio())
+    with pytest.raises(FeedbackVerificationError) as exc_info:
+        service.gerar_ou_obter_feedback_item(db, resposta.id, setup_seed["user_id"])
+
+    assert mock_llm.generate.call_count == MAX_FEEDBACK_ATTEMPTS
+    assert len(exc_info.value.verificacoes) == MAX_FEEDBACK_ATTEMPTS
+    assert all("MARCADA_COMO_CORRETA" in v.violacoes for v in exc_info.value.verificacoes)
+    assert db.query(Feedback).filter(Feedback.resposta_item_id == resposta.id).first() is None
+
+
+def test_api_feedback_reprovado_retorna_422(setup_seed, monkeypatch):
+    from app.services.feedback_service import feedback_service as singleton
+
+    _, resposta = _nova_resposta_errada(setup_seed)
+    mock_llm = MagicMock()
+    mock_llm.generate.return_value = FEEDBACK_ALUCINADO
+    monkeypatch.setattr(singleton, "llm_client", mock_llm)
+    monkeypatch.setattr(singleton, "vector_store", _vectorstore_vazio())
+
+    token = create_access_token(subject=str(setup_seed["user_id"]))
+    response = client.post(
+        "/api/v1/feedback/explicar",
+        json={"resposta_item_id": str(resposta.id)},
+        headers={"Authorization": f"Bearer {token}"},
+    )
+    assert response.status_code == 422
+    assert "verificação automática" in response.json()["detail"]

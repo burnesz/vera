@@ -5,7 +5,7 @@ from sqlalchemy.orm import Session
 from app.api.deps import get_db, get_current_active_user
 from app.db.models.user import User
 from app.schemas.feedback import FeedbackExplicacaoRequest, FeedbackExplicacaoResponse
-from app.services.feedback_service import feedback_service
+from app.services.feedback_service import FeedbackVerificationError, feedback_service
 
 router = APIRouter()
 
@@ -40,6 +40,12 @@ def solicitar_feedback_questao(
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=str(e),
+        )
+    except FeedbackVerificationError as e:
+        # RN-FB04: feedback reprovado na verificação contra o gabarito não é exibido.
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=f"{e} Tente solicitar a explicação novamente.",
         )
     except Exception as e:
         raise HTTPException(

@@ -1000,4 +1000,5 @@ DADOS DA SUBMISSÃO:
 - Gabarito oficial do ENEM: Alternativa {gabarito_oficial} ({gab_texto}) [CORRETA]
 
 Gere sua resposta dividida em <pensamento> (análise analítica interna) e <resposta> (feedback acolhedor, resolução em LaTeX e recomendações de estudo para a habilidade {habilidade_codigo}).
+Na <resposta>, afirme explicitamente que a resposta correta é a alternativa {gabarito_oficial} e cite apenas a habilidade {habilidade_codigo}; nunca apresente a alternativa {alternativa_marcada} como correta.
 """
