@@ -14,8 +14,8 @@
 - [Decisão de Engenharia DSR (Armazenamento Híbrido)](#-decisão-de-engenharia-dsr-armazenamento-híbrido)
 - [Fluxos Centrais de IA](#-fluxos-centrais-de-ia)
   - [1. Simulado ENEM & Diagnóstico de Lacunas](#1-simulado-enem--diagnóstico-de-lacunas)
-  - [2. Feedback Pedagógico (RAG + CoT)](#2-feedback-pedagógico-rag--cot)
-  - [3. Geração de Questões Inéditas (Few-Shot Determinístico)](#3-geração-de-questões-inéditas-few-shot-determinístico)
+  - [2. Feedback Pedagógico por Item (RAG + CoT)](#2-feedback-pedagógico-por-item-rag--cot)
+  - [3. Geração de Questões Inéditas (Program-Aided Generation — PoT)](#3-geração-de-questões-inéditas-program-aided-generation--pot)
   - [4. Tutora Virtual Interativa](#4-tutora-virtual-interativa)
 - [Pilha Tecnológica](#-pilha-tecnológica)
 - [Estrutura do Repositório](#-estrutura-do-repositório)
@@ -69,7 +69,9 @@ flowchart TD
         Simulado_Service["Engine de Simulados Estratificados"]
         Question_Service["Pipeline de Geração de Questões"]
         Question_Validator["Validador Estrutural (JSON, Unicidade)"]
+        Code_Executor["CodeExecutor PoT (AST + Subprocesso 5s)"]
         Chat_Service["Orquestrador de Tutoria RAG"]
+        Feedback_Service["Feedback por Item (RAG + CoT)"]
         LLM_Client["LLM Client (Ollama Qwen 2.5 + Retry/Backoff)"]
     end
 
@@ -87,13 +89,19 @@ flowchart TD
     API_Router --> Question_Service
     API_Router --> Chat_Service
     API_Router --> Auth_Service
+    API_Router --> Feedback_Service
 
     Simulado_Service <--> Postgres
-    Question_Service <-->|Few-Shot Determinístico| Postgres
+    Question_Service <-->|Few-Shot RAG Top-10 + Fallback| Pinecone
+    Question_Service <--> Postgres
     Question_Service --> Question_Validator
+    Question_Service --> Code_Executor
     Question_Service <--> LLM_Client
     Chat_Service <--> LLM_Client
     Chat_Service <-->|Embeddings Multilingual-E5| Pinecone
+    Feedback_Service <--> Pinecone
+    Feedback_Service <--> Postgres
+    Feedback_Service <--> LLM_Client
 
     LLM_Client <-->|HTTP /api/chat| OllamaLocal
 ```
@@ -106,7 +114,7 @@ Durante o desenvolvimento do protótipo e os ciclos de avaliação da DSR, adoto
 
 | Componente | Repositório | Estratégia de Consulta | Justificativa Técnica |
 |---|---|---|---|
-| **Acervo Histórico do ENEM (2009–2024)** | **PostgreSQL** (`questoes_enem`) | Filtragem relacional direta (`WHERE habilidade_codigo = :habilidade`) | **100% determinístico**. Na geração de questões inéditas, o modelo necessita de itens de exemplo *da mesma habilidade*. A busca relacional elimina ruídos semânticos do Pinecone (que poderia resgatar itens de habilidades vizinhas por termos correlatos). Custo zero de embeddings e integridade relacional com simulados. |
+| **Acervo Histórico do ENEM (2009–2024)** | **PostgreSQL** (`questoes_enem`) + **Pinecone** (namespace `questoes_enem`) | Busca semântica Top-10 no Pinecone **filtrada por `habilidade_codigo`**, com sorteio de 2 exemplos; *fallback* relacional (`WHERE habilidade_codigo = :habilidade ORDER BY random()`) | O filtro por metadado garante exemplos *da mesma habilidade*, e o sorteio dentre os 10 candidatos evita repetição de narrativas (`DSR-04`). O PostgreSQL continua sendo a fonte da verdade para simulados e garante disponibilidade offline. |
 | **Materiais Didáticos Teóricos** | **Pinecone** (`materiais_didaticos`) | Busca vetorial por similaridade de cosseno (1024 dimensões) | **Similaridade semântica**. Quando o estudante erra ou faz uma pergunta conceitual na tutoria, a busca semântica recupera os trechos explicativos mais pertinentes nos materiais didáticos (PDFs processados). |
 | **Questões Inéditas Geradas** | **PostgreSQL** (`questoes_ineditas`) | Inserção após validação estrutural estrita | Persistência auditável de itens gerados pelo LLM com histórico de geração, gabarito e justificativa. |
 
@@ -121,20 +129,19 @@ Durante o desenvolvimento do protótipo e os ciclos de avaliação da DSR, adoto
 - Interface cronometrada com folha de respostas dinâmica, marcação de dúvidas e submissão formal.
 - Na submissão, a correção automática identifica imediatamente quais habilidades apresentaram erro.
 
-### 2. Feedback Pedagógico (RAG + CoT)
-- **Retrieval**: Recupera trechos conceituais relevantes da habilidade no namespace `materiais_didaticos` do Pinecone.
-- **CoT**: Prompt direciona o LLM a pensar passo a passo no scratchpad (`<pensamento>`), calculando o resultado e analisando por que a alternativa marcada pelo estudante é um distrator plausível.
-- **Verificação**: Checagem de consistência contra o gabarito oficial do INEP antes de entregar a resposta final.
+- A submissão atualiza o diagnóstico acumulado por habilidade (`desempenho_habilidades`: crítico < 50% ≤ em desenvolvimento < 75% ≤ consolidado), exibido no Dashboard por competência e habilidade.
 
-### 3. Geração de Questões Inéditas (Few-Shot Determinístico)
-- **Seleção de Contexto**: O `QuestionService` resgata $k$ questões históricas reais do PostgreSQL exatamente da habilidade solicitada.
-- **Prompt Few-Shot**: O LLM gera uma questão inédita (situação-problema contextualizada no cotidiano, 5 alternativas e 1 gabarito).
-- **Validação Estrutural Estrita (`QuestionValidator`)**:
-  - Validação de Schema JSON (campos `enunciado`, `alternativas`, `gabarito_correto`, `justificativa`).
-  - Presença das 5 alternativas (A, B, C, D, E).
-  - Unicidade estrita: rejeita questões com textos ou números repetidos entre alternativas.
-  - Exatamente um gabarito pertencente ao conjunto {A, B, C, D, E}.
-  - Descarte e re-tentativa automática caso falhe nas regras (RN-Q01).
+### 2. Feedback Pedagógico por Item (RAG + CoT)
+- **Retrieval**: Para cada questão errada, monta uma query determinística (query canônica da habilidade + comando final do item) e recupera os 3 trechos mais relevantes no namespace `materiais_didaticos` do Pinecone.
+- **CoT**: O prompt recebe a alternativa marcada e o gabarito oficial e exige `<pensamento>` (diagnóstico do distrator e resolução) e `<resposta>` (explicação acolhedora em LaTeX e o que estudar).
+- **Cache**: O feedback é persistido na tabela `feedbacks` (um por resposta) e só pode ser acessado pelo dono da tentativa.
+
+### 3. Geração de Questões Inéditas (Program-Aided Generation — PoT)
+- **Seleção de Contexto**: Top-10 questões históricas da mesma habilidade no Pinecone, com sorteio de 2 exemplos, tema, abertura e tipologia (fallback no PostgreSQL).
+- **Geração em 2 chamadas**: o LLM escreve planejamento, enunciado e 4 erros típicos; depois, uma função Python `def resolver()` que calcula a resposta correta e os distratores.
+- **Execução Determinística (`CodeExecutor`)**: AST segura, subprocesso com timeout de 5s, nexo numérico com o enunciado e montagem das alternativas A–E e do gabarito por código (o LLM nunca escolhe a letra).
+- **Validação em 3 Etapas**: Resolução Cega (sem alternativas/gabarito) → Confronto de Equivalência → Auditoria Semântica por critério; qualquer falha dispara *Stateless Retry* (até 5 tentativas).
+- Detalhes: [docs/02-dominios-e-fluxos/geracao-questoes-pot.md](docs/02-dominios-e-fluxos/geracao-questoes-pot.md).
 
 ### 4. Tutora Virtual Interativa
 - Chat conversacional com suporte a equações matemáticas em **LaTeX / KaTeX**.
@@ -148,13 +155,13 @@ Durante o desenvolvimento do protótipo e os ciclos de avaliação da DSR, adoto
 ### Backend & Inteligência Artificial
 - **Linguagem**: Python 3.10+
 - **Framework Web**: [FastAPI](https://fastapi.tiangolo.com/) com rotas assíncronas e esquemas Pydantic v2
-- **Orquestração LLM**: LangChain / Prompts estruturados versionados
+- **Orquestração LLM**: Orquestração nativa em Python + Pydantic v2 (sem LangChain — `DSR-01`), prompts versionados em `app/core/prompts.py`
 - **Modelo de Linguagem (LLM)**: `qwen2.5:7b-instruct-q4_K_M` executado localmente via [Ollama](https://ollama.com/)
 - **Embeddings Vetoriais**: `intfloat/multilingual-e5-large` (1024 dimensões)
-- **Banco Vetorial**: [Pinecone](https://www.pinecone.io/) (Namespace `materiais_didaticos`)
+- **Banco Vetorial**: [Pinecone](https://www.pinecone.io/) (Namespaces `materiais_didaticos` e `questoes_enem`)
 - **Banco Relacional & ORM**: PostgreSQL 15 + SQLAlchemy 2.0
 - **Autenticação**: JWT (JSON Web Tokens) com senhas criptografadas via Bcrypt
-- **Testes Automatizados**: Pytest (65+ testes unitários e de integração)
+- **Testes Automatizados**: Pytest (166 testes unitários e de integração)
 
 ### Frontend Web
 - **Linguagem & Framework**: React 18, TypeScript, [Vite](https://vitejs.dev/)
@@ -172,7 +179,7 @@ vera/
 │   ├── api/                    # Camada de rotas HTTP
 │   │   ├── deps.py             # Injeção de dependências (DB, Autenticação)
 │   │   ├── router.py           # Agregador central de rotas
-│   │   └── v1/                 # Endpoints v1 (auth, simulado, questoes, chat, health)
+│   │   └── v1/                 # Endpoints v1 (auth, simulado, questoes, chat, dashboard, feedback, health)
 │   ├── core/                   # Configurações globais e prompts
 │   │   ├── config.py           # Leitura de variáveis de ambiente (Pydantic Settings)
 │   │   ├── prompts.py          # Templates de CoT, Few-Shot e Tutoria
@@ -184,15 +191,19 @@ vera/
 │   │   └── models/             # Modelos relacionais (User, QuestaoEnem, Simulado, etc.)
 │   ├── pipeline/               # Ingestão e processamento de dados offline
 │   │   ├── chunking.py         # Chunking semântico de PDFs didáticos
+│   │   ├── formula_extractor.py # OCR de fórmulas (pix2tex)
 │   │   ├── extract_inep.py     # Parser dos microdados brutos do INEP
 │   │   └── index_embeddings.py # Vetorização e carga no Pinecone
 │   ├── schemas/                # Schemas Pydantic para validação de entrada/saída
 │   └── services/               # Lógica de negócio e orquestração de IA
 │       ├── chat_service.py     # Sessões de conversa e injeção de contexto RAG
+│       ├── feedback_service.py # Feedback pedagógico por item errado (RAG + CoT)
 │       ├── llm_client.py       # Cliente HTTP assíncrono para o daemon do Ollama
-│       ├── question_service.py # Engine de geração de questões com Few-Shot
-│       ├── question_validator.py # Validação estrutural de itens gerados (RN-Q01)
-│       ├── simulado_service.py # Montagem, amostragem e correção de simulados
+│       ├── question_service.py # Pipeline PoT de geração e validação em 3 etapas
+│       ├── code_executor.py    # Execução segura do solver Python (AST, timeout, nexo numérico)
+│       ├── question_validator.py # Sanitização JSON/LaTeX e formatação de tabelas
+│       ├── simulado_service.py # Montagem, amostragem, correção e diagnóstico de simulados
+│       ├── storage.py          # Cliente Cloudflare R2
 │       └── vectorstore.py      # Interface de busca vetorial no Pinecone
 ├── data/                       # Arquivos de dados e acervos enriquecidos
 │   └── itens_prova_2009_2024_enriquecido.csv # Microdados tratados do INEP
@@ -201,21 +212,21 @@ vera/
 │   │   ├── components/         # Componentes reutilizáveis (MathText, Navbar, Sidebar, etc.)
 │   │   ├── context/            # Estado global (AuthContext com token JWT e perfil)
 │   │   ├── pages/              # Telas (HomePage, SimuladoPage, ChatPage, Login, etc.)
-│   │   └── services/           # Clientes HTTP (api.ts, simuladoService.ts, chatService.ts)
+│   │   ├── services/           # Clientes HTTP (api, auth, simulado, chat, dashboard, feedback)
+│   │   └── types/              # Tipos TypeScript dos contratos da API
 │   ├── Dockerfile              # Build multi-stage com Nginx
 │   └── package.json            # Dependências do frontend
 ├── scripts/                    # Utilitários de CLI e migração
 │   ├── init_db.sql             # DDL completo das tabelas PostgreSQL
 │   ├── seed_habilidades.py     # Carga das 30 habilidades da Matriz do ENEM
 │   ├── seed_questoes.py        # Carga dos itens do ENEM a partir do CSV
-│   ├── populate_questoes_ineditas.py # Geração em lote de itens inéditos via Ollama
+│   ├── seed_questoes_pinecone.py # Vetorização das questões históricas (namespace questoes_enem)
+│   ├── populate_questoes_ineditas.py # Geração em lote de itens inéditos via pipeline PoT
+│   ├── clean_tiny_chunks.py    # Limpeza de chunks curtos no Pinecone
+│   ├── search_pinecone.py      # Inspeção de consultas semânticas
 │   └── ollama_forwarder.py     # Proxy de compatibilidade de rede
-├── tests/                      # Bateria de testes unitários e de integração
-│   ├── test_auth.py            # Testes de autenticação e tokens
-│   ├── test_chat.py            # Testes do serviço conversacional RAG
-│   ├── test_question_service.py# Testes da geração few-shot de itens
-│   ├── test_question_validator.py # Testes dos critérios de rejeição de questões
-│   └── test_simulados.py       # Testes de geração e correção de simulados
+├── tests/                      # 18 módulos Pytest (auth, chat, PoT, code executor, simulados, feedback, ...)
+├── docs/                       # Memória do projeto (notas modulares por domínio, ver AGENTS.md)
 ├── docker-compose.yml          # Orquestração dos containers (API + DB + Web)
 ├── Dockerfile                  # Container da API FastAPI
 ├── requirements.txt            # Dependências Python
@@ -247,7 +258,8 @@ ACCESS_TOKEN_EXPIRE_MINUTES=1440
 # LLM Local (Ollama)
 LLM_ENDPOINT_URL=http://localhost:11434
 LLM_MODEL=qwen2.5:7b-instruct-q4_K_M
-LLM_TIMEOUT_SECONDS=120.0
+LLM_TIMEOUT_SECONDS=300.0
+LLM_NUM_CTX=4096
 
 # Banco Vetorial (Pinecone)
 PINECONE_API_KEY=seu_pinecone_api_key
@@ -359,7 +371,7 @@ python scripts/seed_questoes.py
 ```
 
 ### 3. Povoar Questões Inéditas com o LLM Local
-Executa o pipeline de geração de questões com *few-shot* a partir dos dados do PostgreSQL:
+Executa o pipeline PoT (few-shot RAG + solver Python + validação em 3 etapas):
 ```bash
 # Gerar 1 questão inédita para todas as 30 habilidades via Ollama local:
 python scripts/populate_questoes_ineditas.py --habilidades all --count 1
@@ -375,16 +387,16 @@ python scripts/populate_questoes_ineditas.py --habilidades all --mock
 
 ## 🧪 Suíte de Testes
 
-O projeto conta com mais de 60 testes automatizados cobrindo autenticação, integridade dos modelos relacionais, geração de simulados, regras do validador de questões e endpoints da API.
+O projeto conta com 166 testes automatizados cobrindo autenticação, modelos relacionais, ingestão, `LLMClient`, `CodeExecutor`, pipeline PoT, simulados, feedback por item, chat e endpoints da API.
 
 Execute a suíte com o Pytest:
 
 ```bash
-# Executar todos os testes
-pytest -v
+# Executar todos os testes (sempre pelo ambiente virtual)
+./.venv/bin/pytest -v
 
 # Executar com relatório de cobertura
-pytest --cov=app tests/
+./.venv/bin/pytest --cov=app tests/
 ```
 
 ---
@@ -393,7 +405,9 @@ pytest --cov=app tests/
 
 Para atender ao rigor acadêmico da pesquisa de TCC baseada em DSR:
 
-- **Baseline Comparativa**: O sistema conta com serviço desacoplado que opera o mesmo modelo `Qwen2.5-7B` em **zero-shot** (sem injeção de contexto RAG e sem exemplos *few-shot* históricos).
+> Status: planejado (Fase 4) — `app/services/baseline_service.py` e `evaluation/` ainda não foram implementados.
+
+- **Baseline Comparativa**: O sistema contará com serviço desacoplado que opera o mesmo modelo `Qwen2.5-7B` em **zero-shot** (sem injeção de contexto RAG e sem exemplos *few-shot* históricos).
 - **Métricas Quantitativas**:
   - Precisão e recall da recuperação semântica no namespace `materiais_didaticos`.
   - Latência e tempo de inferência local.
