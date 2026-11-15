@@ -1,7 +1,9 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { simuladoService } from '../services/simuladoService';
+import { feedbackService } from '../services/feedbackService';
 import type { Simulado, SimuladoResumo, AlternativaLetra, SimuladoResultado, RespostaItemInput } from '../types/simulado';
+import type { FeedbackVera } from '../types/feedback';
 import { MathText } from '../components/MathText';
 import {
   Clock,
@@ -26,6 +28,7 @@ import {
   Save,
   Trash2,
   Sparkles,
+  BookOpen,
 } from 'lucide-react';
 
 interface SimuladoPageProps {
@@ -62,9 +65,14 @@ export const SimuladoPage: React.FC<SimuladoPageProps> = ({ onNavigate }) => {
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const [isLoadingExam, setIsLoadingExam] = useState<boolean>(false);
 
-  // Dados do Resultado (Modo Gabarito)
+  // Dados do Resultado (Modo Gabarito e Revisão)
   const [resultado, setResultado] = useState<SimuladoResultado | null>(null);
   const [isLoadingResult, setIsLoadingResult] = useState<boolean>(false);
+  const [resultadoTab, setResultadoTab] = useState<'detalhado' | 'resumo'>('detalhado');
+  const [currentReviewIndex, setCurrentReviewIndex] = useState<number>(0);
+  const [feedbacksMap, setFeedbacksMap] = useState<Record<string, FeedbackVera>>({});
+  const [isLoadingFeedback, setIsLoadingFeedback] = useState<Record<string, boolean>>({});
+  const [expandedThought, setExpandedThought] = useState<Record<string, boolean>>({});
 
   // Carrega a lista de simulados do estudante
   const carregarMeusSimulados = useCallback(async () => {
@@ -244,6 +252,8 @@ export const SimuladoPage: React.FC<SimuladoPageProps> = ({ onNavigate }) => {
     try {
       const res = await simuladoService.obterResultadoSimulado(simuladoId, tentativaId || undefined);
       setResultado(res);
+      setCurrentReviewIndex(0);
+      setResultadoTab('detalhado');
       setViewMode('result');
       window.scrollTo({ top: 0, behavior: 'smooth' });
     } catch (err) {
@@ -252,6 +262,36 @@ export const SimuladoPage: React.FC<SimuladoPageProps> = ({ onNavigate }) => {
       setIsLoadingResult(false);
     }
   };
+
+  // Solicita explicação pedagógica personalizada da Tutora VERA para um erro
+  const handlePedirExplicacaoVera = async (respostaItemId?: string | null) => {
+    if (!respostaItemId) return;
+    setIsLoadingFeedback((prev) => ({ ...prev, [respostaItemId]: true }));
+    try {
+      const fb = await feedbackService.solicitarFeedback(respostaItemId);
+      setFeedbacksMap((prev) => ({ ...prev, [respostaItemId]: fb }));
+    } catch (err) {
+      console.error('Erro ao solicitar feedback da Tutora VERA:', err);
+      alert('Não foi possível gerar a explicação com a Tutora VERA no momento. Tente novamente em alguns instantes.');
+    } finally {
+      setIsLoadingFeedback((prev) => ({ ...prev, [respostaItemId]: false }));
+    }
+  };
+
+  // Resgata feedbacks já salvos no banco para questões erradas quando o resultado é carregado
+  useEffect(() => {
+    if (viewMode === 'result' && resultado) {
+      resultado.itens.forEach((item) => {
+        if (!item.is_correto && item.resposta_item_id && !feedbacksMap[item.resposta_item_id]) {
+          feedbackService.obterFeedback(item.resposta_item_id).then((fb) => {
+            if (fb) {
+              setFeedbacksMap((prev) => ({ ...prev, [item.resposta_item_id!]: fb }));
+            }
+          });
+        }
+      });
+    }
+  }, [viewMode, resultado]);
 
   const handleSelectAlternativa = (letra: AlternativaLetra) => {
     if (!currentQuestion || !simulado) return;
@@ -299,6 +339,8 @@ export const SimuladoPage: React.FC<SimuladoPageProps> = ({ onNavigate }) => {
     try {
       const res = await simuladoService.submeterSimulado(simulado.id, payload, simulado.itens, user?.id);
       setResultado(res);
+      setCurrentReviewIndex(0);
+      setResultadoTab('detalhado');
       setShowConfirmModal(false);
       setViewMode('result');
 
@@ -1248,69 +1290,598 @@ export const SimuladoPage: React.FC<SimuladoPageProps> = ({ onNavigate }) => {
           </div>
         </div>
 
-        {/* Grade de Conferência Item a Item */}
-        <div className="card">
-          <div style={{ marginBottom: '1.5rem', borderBottom: '1px solid var(--border-light)', paddingBottom: '1rem' }}>
-            <h2 style={{ fontSize: '1.4rem', fontWeight: 800, color: 'var(--ocean-950)' }}>
-              Gabarito Oficial e Conferência dos Itens
-            </h2>
-            <p style={{ fontSize: '0.9rem', color: 'var(--text-muted)' }}>
-              Verifique os acertos e erros de cada item para focar seus estudos nas habilidades necessárias.
-            </p>
+        {/* Seletor de Modo de Visualização do Gabarito */}
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            gap: '1rem',
+            marginBottom: '1.5rem',
+            flexWrap: 'wrap',
+          }}
+        >
+          <div style={{ display: 'flex', gap: '0.5rem' }}>
+            <button
+              onClick={() => setResultadoTab('detalhado')}
+              className={`btn ${resultadoTab === 'detalhado' ? 'btn-primary' : 'btn-outline'}`}
+              style={{ fontWeight: 700, gap: '0.45rem' }}
+            >
+              <BookOpen size={18} />
+              Revisão Detalhada das Questões
+            </button>
+            <button
+              onClick={() => setResultadoTab('resumo')}
+              className={`btn ${resultadoTab === 'resumo' ? 'btn-primary' : 'btn-outline'}`}
+              style={{ fontWeight: 700, gap: '0.45rem' }}
+            >
+              <FileSpreadsheet size={18} />
+              Gabarito Rápido (Grade 1..{resultado.itens.length})
+            </button>
           </div>
 
-          <div
-            style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fill, minmax(130px, 1fr))',
-              gap: '0.75rem',
-            }}
-          >
-            {resultado.itens.map((item) => (
+          <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>
+            Clique em qualquer item para ver o enunciado, alternativas e pedir a explicação da Vera.
+          </span>
+        </div>
+
+        {/* =========================================================================
+            ABA 1: REVISÃO DETALHADA QUESTÃO A QUESTÃO
+            ========================================================================= */}
+        {resultadoTab === 'detalhado' && (() => {
+          const currentReviewItem = resultado.itens[currentReviewIndex] || resultado.itens[0];
+          const letrasDisponiveis: AlternativaLetra[] = ['A', 'B', 'C', 'D', 'E'];
+          const fbAtual = currentReviewItem.resposta_item_id
+            ? feedbacksMap[currentReviewItem.resposta_item_id]
+            : null;
+          const isCurrentLoadingFb = currentReviewItem.resposta_item_id
+            ? !!isLoadingFeedback[currentReviewItem.resposta_item_id]
+            : false;
+          const isThoughtOpen = currentReviewItem.resposta_item_id
+            ? !!expandedThought[currentReviewItem.resposta_item_id]
+            : false;
+
+          return (
+            <div>
+              {/* Barra de Navegação Rápida entre Questões (1..45) */}
               <div
-                key={item.ordem}
+                className="card"
                 style={{
-                  padding: '0.75rem',
-                  borderRadius: 'var(--radius-md)',
-                  border: `1.5px solid ${item.is_correto ? 'var(--color-success)' : 'var(--color-danger)'}`,
-                  backgroundColor: item.is_correto ? 'var(--color-success-bg)' : 'var(--color-danger-bg)',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  gap: '0.25rem',
+                  padding: '1rem 1.25rem',
+                  marginBottom: '1.5rem',
+                  backgroundColor: 'var(--white)',
                 }}
               >
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <strong style={{ fontSize: '0.95rem', color: 'var(--text-primary)' }}>Q{item.ordem}</strong>
-                  <span
-                    style={{
-                      fontSize: '0.75rem',
-                      fontWeight: 700,
-                      color: item.is_correto ? 'var(--color-success)' : 'var(--color-danger)',
-                    }}
-                  >
-                    {item.is_correto ? 'ACERTOU' : 'ERROU'}
-                  </span>
-                </div>
-                <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
-                  Sua: <strong>{item.alternativa_selecionada || 'Em branco'}</strong>
-                </div>
-                <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
-                  Oficial: <strong>{item.gabarito_oficial}</strong>
+                <div style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-muted)', marginBottom: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                  Navegação pelos Itens do Simulado (Verde: Acerto • Vermelho: Erro)
                 </div>
                 <div
                   style={{
-                    fontSize: '0.75rem',
-                    fontWeight: 600,
-                    color: 'var(--ocean-900)',
-                    marginTop: '0.25rem',
+                    display: 'flex',
+                    gap: '0.4rem',
+                    flexWrap: 'wrap',
+                    alignItems: 'center',
                   }}
                 >
-                  Hab: {item.habilidade_codigo}
+                  {resultado.itens.map((it, idx) => {
+                    const isSelected = idx === currentReviewIndex;
+                    return (
+                      <button
+                        key={it.ordem}
+                        onClick={() => {
+                          setCurrentReviewIndex(idx);
+                          window.scrollTo({ top: 380, behavior: 'smooth' });
+                        }}
+                        title={`Questão ${it.ordem} (${it.is_correto ? 'Acertou' : 'Errou'} - Hab: ${it.habilidade_codigo})`}
+                        style={{
+                          width: '34px',
+                          height: '34px',
+                          borderRadius: 'var(--radius-sm)',
+                          border: isSelected ? '2.5px solid var(--ocean-950)' : '1px solid transparent',
+                          backgroundColor: it.is_correto ? 'var(--color-success)' : 'var(--color-danger)',
+                          color: 'var(--white)',
+                          fontWeight: 800,
+                          fontSize: '0.8rem',
+                          cursor: 'pointer',
+                          transform: isSelected ? 'scale(1.15)' : 'scale(1)',
+                          boxShadow: isSelected ? '0 3px 8px rgba(0,0,0,0.25)' : 'none',
+                          transition: 'transform 0.15s ease, box-shadow 0.15s ease',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                        }}
+                      >
+                        {it.ordem}
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
-            ))}
+
+              {/* Card da Questão Selecionada em Modo Read-Only */}
+              <div
+                className="card"
+                style={{
+                  padding: '2rem',
+                  borderTop: `6px solid ${currentReviewItem.is_correto ? 'var(--color-success)' : 'var(--color-danger)'}`,
+                  marginBottom: '2rem',
+                }}
+              >
+                {/* Cabeçalho da Questão */}
+                <div
+                  style={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    marginBottom: '1.5rem',
+                    paddingBottom: '1rem',
+                    borderBottom: '1px solid var(--border-light)',
+                    flexWrap: 'wrap',
+                    gap: '0.75rem',
+                  }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap' }}>
+                    <span
+                      style={{
+                        backgroundColor: 'var(--ocean-700)',
+                        color: 'var(--white)',
+                        fontWeight: 800,
+                        fontSize: '0.9rem',
+                        padding: '0.3rem 0.75rem',
+                        borderRadius: 'var(--radius-sm)',
+                      }}
+                    >
+                      Questão {currentReviewItem.ordem} de {resultado.itens.length}
+                    </span>
+
+                    <span className="badge badge-ocean" style={{ fontSize: '0.8rem', padding: '0.25rem 0.65rem' }}>
+                      Habilidade {currentReviewItem.habilidade_codigo}
+                    </span>
+
+                    {currentReviewItem.is_correto ? (
+                      <span className="badge badge-success" style={{ gap: '0.35rem', display: 'inline-flex', alignItems: 'center' }}>
+                        <CheckCircle2 size={14} />
+                        Você Acertou
+                      </span>
+                    ) : (
+                      <span className="badge badge-danger" style={{ gap: '0.35rem', display: 'inline-flex', alignItems: 'center' }}>
+                        <AlertTriangle size={14} />
+                        Você Errou
+                      </span>
+                    )}
+                  </div>
+
+                  {/* Botões Anterior / Próxima */}
+                  <div style={{ display: 'flex', gap: '0.5rem' }}>
+                    <button
+                      onClick={() => setCurrentReviewIndex((prev) => Math.max(0, prev - 1))}
+                      disabled={currentReviewIndex === 0}
+                      className="btn btn-outline btn-sm"
+                      style={{ gap: '0.25rem', fontWeight: 700 }}
+                    >
+                      <ChevronLeft size={16} />
+                      Anterior
+                    </button>
+                    <button
+                      onClick={() => setCurrentReviewIndex((prev) => Math.min(resultado.itens.length - 1, prev + 1))}
+                      disabled={currentReviewIndex === resultado.itens.length - 1}
+                      className="btn btn-outline btn-sm"
+                      style={{ gap: '0.25rem', fontWeight: 700 }}
+                    >
+                      Próxima
+                      <ChevronRight size={16} />
+                    </button>
+                  </div>
+                </div>
+
+                {/* Enunciado Formatado em KaTeX */}
+                <div style={{ fontSize: '1.05rem', lineHeight: 1.75, color: 'var(--text-primary)', marginBottom: '2rem' }}>
+                  <MathText
+                    content={
+                      currentReviewItem.enunciado ||
+                      `(Enunciado do item ${currentReviewItem.ordem} — Habilidade ${currentReviewItem.habilidade_codigo})`
+                    }
+                  />
+                </div>
+
+                {/* Alternativas em Modo Somente Leitura */}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.85rem', marginBottom: '2rem' }}>
+                  {letrasDisponiveis.map((letra) => {
+                    const textoAlt = currentReviewItem.alternativas
+                      ? currentReviewItem.alternativas[letra]
+                      : null;
+                    const isMarcada = currentReviewItem.alternativa_selecionada === letra;
+                    const isOficial = currentReviewItem.gabarito_oficial === letra;
+
+                    let borderColor = 'var(--border-light)';
+                    let bgColor = 'var(--white)';
+                    let tagBadge: React.ReactNode = null;
+
+                    if (isMarcada && currentReviewItem.is_correto) {
+                      borderColor = 'var(--color-success)';
+                      bgColor = 'var(--color-success-bg)';
+                      tagBadge = (
+                        <span className="badge badge-success" style={{ gap: '0.25rem' }}>
+                          <CheckCircle2 size={12} />
+                          Sua Resposta & Gabarito Oficial
+                        </span>
+                      );
+                    } else if (isMarcada && !currentReviewItem.is_correto) {
+                      borderColor = 'var(--color-danger)';
+                      bgColor = 'var(--color-danger-bg)';
+                      tagBadge = (
+                        <span className="badge badge-danger" style={{ gap: '0.25rem' }}>
+                          <AlertTriangle size={12} />
+                          Sua Resposta (Incorreta)
+                        </span>
+                      );
+                    } else if (isOficial) {
+                      borderColor = 'var(--color-success)';
+                      bgColor = 'var(--color-success-bg)';
+                      tagBadge = (
+                        <span className="badge badge-success" style={{ gap: '0.25rem' }}>
+                          <CheckCircle2 size={12} />
+                          Gabarito Oficial (Correta)
+                        </span>
+                      );
+                    }
+
+                    return (
+                      <div
+                        key={letra}
+                        style={{
+                          padding: '1rem 1.25rem',
+                          borderRadius: 'var(--radius-md)',
+                          border: `1.5px solid ${borderColor}`,
+                          backgroundColor: bgColor,
+                          display: 'flex',
+                          alignItems: 'flex-start',
+                          justifyContent: 'space-between',
+                          gap: '1rem',
+                          userSelect: 'none',
+                        }}
+                      >
+                        <div style={{ display: 'flex', alignItems: 'flex-start', gap: '0.85rem', flex: 1 }}>
+                          <span
+                            style={{
+                              width: '28px',
+                              height: '28px',
+                              borderRadius: '50%',
+                              backgroundColor: isOficial
+                                ? 'var(--color-success)'
+                                : isMarcada
+                                ? 'var(--color-danger)'
+                                : 'var(--ocean-100)',
+                              color: isOficial || isMarcada ? 'var(--white)' : 'var(--ocean-800)',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              fontWeight: 800,
+                              fontSize: '0.85rem',
+                              flexShrink: 0,
+                            }}
+                          >
+                            {letra}
+                          </span>
+
+                          <div style={{ flex: 1, fontSize: '0.975rem', lineHeight: 1.5, color: 'var(--text-primary)' }}>
+                            {textoAlt ? <MathText content={textoAlt} /> : `Alternativa ${letra}`}
+                          </div>
+                        </div>
+
+                        {tagBadge && <div>{tagBadge}</div>}
+                      </div>
+                    );
+                  })}
+                </div>
+
+                {/* Justificativa Oficial do Banco (se disponível) */}
+                {currentReviewItem.justificativa && (
+                  <div
+                    style={{
+                      padding: '1.25rem',
+                      borderRadius: 'var(--radius-md)',
+                      backgroundColor: 'var(--surface-subtle)',
+                      border: '1px solid var(--border-light)',
+                      marginBottom: '2rem',
+                    }}
+                  >
+                    <div style={{ fontSize: '0.825rem', fontWeight: 800, color: 'var(--ocean-900)', marginBottom: '0.5rem', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                      Resolução Oficial / Justificativa do Acervo:
+                    </div>
+                    <div style={{ fontSize: '0.925rem', color: 'var(--text-secondary)', lineHeight: 1.6 }}>
+                      <MathText content={currentReviewItem.justificativa} />
+                    </div>
+                  </div>
+                )}
+
+                {/* =========================================================================
+                    ÁREA DE FEEDBACK DA TUTORA VERA (PARA QUESTÕES ERRADAS)
+                    ========================================================================= */}
+                {!currentReviewItem.is_correto && (
+                  <div style={{ marginTop: '2rem' }}>
+                    {!fbAtual ? (
+                      /* CTA para solicitar explicação */
+                      <div
+                        style={{
+                          backgroundColor: 'var(--ocean-50)',
+                          border: '2px dashed var(--ocean-400)',
+                          borderRadius: 'var(--radius-lg)',
+                          padding: '2rem 1.75rem',
+                          textAlign: 'center',
+                        }}
+                      >
+                        <div
+                          style={{
+                            width: '56px',
+                            height: '56px',
+                            borderRadius: '50%',
+                            backgroundColor: 'var(--ocean-600)',
+                            color: 'var(--white)',
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            marginBottom: '1rem',
+                            boxShadow: '0 4px 12px rgba(2, 132, 199, 0.3)',
+                          }}
+                        >
+                          <BotMessageSquare size={28} />
+                        </div>
+
+                        <h4 style={{ fontSize: '1.3rem', fontWeight: 800, color: 'var(--ocean-950)', marginBottom: '0.5rem' }}>
+                          Quer entender exatamente por que você errou esta questão?
+                        </h4>
+
+                        <p style={{ color: 'var(--text-secondary)', maxWidth: '620px', margin: '0 auto 1.5rem', fontSize: '0.95rem', lineHeight: 1.6 }}>
+                          A <strong>Tutora VERA</strong> analisa a alternativa que você marcou (
+                          <strong>{currentReviewItem.alternativa_selecionada || 'Em branco'}</strong>),
+                          identifica qual foi o distrator cognitivo, demonstra o passo a passo matemático correto em LaTeX
+                          e sugere o que revisar na habilidade <strong>{currentReviewItem.habilidade_codigo}</strong>.
+                        </p>
+
+                        <button
+                          onClick={() => handlePedirExplicacaoVera(currentReviewItem.resposta_item_id)}
+                          disabled={isCurrentLoadingFb}
+                          className="btn btn-primary btn-lg"
+                          style={{
+                            padding: '0.85rem 2rem',
+                            fontWeight: 800,
+                            gap: '0.65rem',
+                            boxShadow: 'var(--shadow-ocean)',
+                          }}
+                        >
+                          <Sparkles size={20} />
+                          {isCurrentLoadingFb
+                            ? 'Vera está consultando materiais didáticos e gerando sua explicação...'
+                            : 'Pedir explicação da Vera'}
+                        </button>
+                      </div>
+                    ) : (
+                      /* Card de Explicação Gerada pela VERA */
+                      <div
+                        style={{
+                          borderRadius: 'var(--radius-lg)',
+                          border: '2px solid var(--ocean-500)',
+                          backgroundColor: 'var(--white)',
+                          boxShadow: 'var(--shadow-md)',
+                          overflow: 'hidden',
+                        }}
+                      >
+                        {/* Topo do Card VERA */}
+                        <div
+                          style={{
+                            background: 'linear-gradient(135deg, var(--ocean-800) 0%, var(--ocean-600) 100%)',
+                            color: 'var(--white)',
+                            padding: '1.25rem 1.5rem',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'space-between',
+                            flexWrap: 'wrap',
+                            gap: '0.75rem',
+                          }}
+                        >
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                            <div
+                              style={{
+                                width: '38px',
+                                height: '38px',
+                                borderRadius: '10px',
+                                backgroundColor: 'rgba(255, 255, 255, 0.2)',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                              }}
+                            >
+                              <BotMessageSquare size={22} />
+                            </div>
+                            <div>
+                              <div style={{ fontWeight: 800, fontSize: '1.1rem', letterSpacing: '-0.02em' }}>
+                                Explicação Pedagógica da Tutora VERA
+                              </div>
+                              <div style={{ fontSize: '0.75rem', opacity: 0.85 }}>
+                                Diagnóstico do Distrator • RAG Ativo ({currentReviewItem.habilidade_codigo})
+                              </div>
+                            </div>
+                          </div>
+
+                          <div style={{ display: 'flex', gap: '0.5rem' }}>
+                            <span
+                              style={{
+                                backgroundColor: 'rgba(255, 255, 255, 0.2)',
+                                padding: '0.25rem 0.65rem',
+                                borderRadius: 'var(--radius-full)',
+                                fontSize: '0.75rem',
+                                fontWeight: 700,
+                              }}
+                            >
+                              Ancorado em Apostilas
+                            </span>
+                          </div>
+                        </div>
+
+                        {/* Bloco Retrátil de Raciocínio Interno (Chain-of-Thought) */}
+                        {fbAtual.thought_scratchpad && (
+                          <div style={{ borderBottom: '1px solid var(--border-light)', backgroundColor: 'var(--surface-subtle)' }}>
+                            <button
+                              onClick={() => {
+                                const respId = currentReviewItem.resposta_item_id!;
+                                setExpandedThought((prev) => ({ ...prev, [respId]: !prev[respId] }));
+                              }}
+                              style={{
+                                width: '100%',
+                                padding: '0.85rem 1.5rem',
+                                border: 'none',
+                                background: 'transparent',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'space-between',
+                                cursor: 'pointer',
+                                fontSize: '0.85rem',
+                                fontWeight: 700,
+                                color: 'var(--ocean-800)',
+                              }}
+                            >
+                              <span style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                <Sparkles size={16} />
+                                {isThoughtOpen
+                                  ? 'Ocultar Raciocínio Interno da Tutora (Chain-of-Thought)'
+                                  : 'Ver Raciocínio Interno da Tutora (<pensamento>)'}
+                              </span>
+                              <span style={{ fontSize: '0.8rem', opacity: 0.7 }}>
+                                {isThoughtOpen ? '▲ Fechar' : '▼ Expandir'}
+                              </span>
+                            </button>
+
+                            {isThoughtOpen && (
+                              <div style={{ padding: '1rem 1.5rem 1.25rem', borderTop: '1px solid var(--border-light)', fontSize: '0.875rem', color: 'var(--text-secondary)', lineHeight: 1.6 }}>
+                                <MathText content={fbAtual.thought_scratchpad} />
+                              </div>
+                            )}
+                          </div>
+                        )}
+
+                        {/* Corpo Principal da Resposta com KaTeX */}
+                        <div style={{ padding: '1.75rem 1.5rem', fontSize: '1.025rem', lineHeight: 1.75, color: 'var(--text-primary)' }}>
+                          <MathText content={fbAtual.feedback_content} />
+                        </div>
+
+                        {/* Rodapé do Card VERA */}
+                        <div
+                          style={{
+                            padding: '1rem 1.5rem',
+                            backgroundColor: 'var(--surface-subtle)',
+                            borderTop: '1px solid var(--border-light)',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'space-between',
+                            flexWrap: 'wrap',
+                            gap: '0.75rem',
+                          }}
+                        >
+                          <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
+                            Ficou alguma dúvida sobre o método ou a fórmula usada?
+                          </span>
+
+                          <button
+                            onClick={() => onNavigate('chat')}
+                            className="btn btn-outline btn-sm"
+                            style={{ gap: '0.4rem', fontWeight: 700 }}
+                          >
+                            <BotMessageSquare size={16} />
+                            Continuar Conversa no Chat da VERA
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            </div>
+          );
+        })()}
+
+        {/* =========================================================================
+            ABA 2: GRADE RÁPIDA DE CONFERÊNCIA (1..45)
+            ========================================================================= */}
+        {resultadoTab === 'resumo' && (
+          <div className="card">
+            <div style={{ marginBottom: '1.5rem', borderBottom: '1px solid var(--border-light)', paddingBottom: '1rem' }}>
+              <h2 style={{ fontSize: '1.4rem', fontWeight: 800, color: 'var(--ocean-950)' }}>
+                Gabarito Geral dos 45 Itens
+              </h2>
+              <p style={{ fontSize: '0.9rem', color: 'var(--text-muted)' }}>
+                Clique em qualquer questão para abrir a revisão detalhada e solicitar a explicação da VERA.
+              </p>
+            </div>
+
+            <div
+              style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fill, minmax(135px, 1fr))',
+                gap: '0.75rem',
+              }}
+            >
+              {resultado.itens.map((item, idx) => (
+                <div
+                  key={item.ordem}
+                  onClick={() => {
+                    setCurrentReviewIndex(idx);
+                    setResultadoTab('detalhado');
+                    window.scrollTo({ top: 380, behavior: 'smooth' });
+                  }}
+                  style={{
+                    padding: '0.85rem',
+                    borderRadius: 'var(--radius-md)',
+                    border: `1.5px solid ${item.is_correto ? 'var(--color-success)' : 'var(--color-danger)'}`,
+                    backgroundColor: item.is_correto ? 'var(--color-success-bg)' : 'var(--color-danger-bg)',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '0.25rem',
+                    cursor: 'pointer',
+                    transition: 'transform 0.15s ease, box-shadow 0.15s ease',
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.transform = 'translateY(-2px)';
+                    e.currentTarget.style.boxShadow = 'var(--shadow-sm)';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.transform = 'translateY(0)';
+                    e.currentTarget.style.boxShadow = 'none';
+                  }}
+                >
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <strong style={{ fontSize: '0.95rem', color: 'var(--text-primary)' }}>Q{item.ordem}</strong>
+                    <span
+                      style={{
+                        fontSize: '0.75rem',
+                        fontWeight: 700,
+                        color: item.is_correto ? 'var(--color-success)' : 'var(--color-danger)',
+                      }}
+                    >
+                      {item.is_correto ? 'ACERTOU' : 'ERROU'}
+                    </span>
+                  </div>
+                  <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
+                    Sua: <strong>{item.alternativa_selecionada || 'Em branco'}</strong>
+                  </div>
+                  <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
+                    Oficial: <strong>{item.gabarito_oficial}</strong>
+                  </div>
+                  <div
+                    style={{
+                      fontSize: '0.75rem',
+                      fontWeight: 700,
+                      color: 'var(--ocean-900)',
+                      marginTop: '0.25rem',
+                    }}
+                  >
+                    Hab: {item.habilidade_codigo}
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
-        </div>
+        )}
       </div>
     );
   }
