@@ -28,7 +28,7 @@ Para erradicar erros aritméticos, colisões de alternativas e viés de confirma
 ```mermaid
 flowchart TD
     A["Habilidade Alvo (H01-H30)"] --> B["RAG Few-Shot: Top-10 no Pinecone (questoes_enem)\nFiltrado por habilidade_codigo + Sorteio de 2 Exemplos\n+ Sorteio de Tema/Abertura + Sorteio de 1 de 3 Few-Shots PoT\n(Fallback Determinístico no PostgreSQL)"]
-    B --> C["Fase 1 (PoT, Temp=0.2, max_tokens=1536, num_ctx=4096):\nLLM gera JSON com planejamento + enunciado + tabela_dados (opcional) + solver Python"]
+    B --> C["Fase 1 (PoT, num_ctx=4096) em 2 chamadas:\n1a (Temp 0.2-0.3, max_tokens=800): planejamento + enunciado\n+ tabela_dados (opcional) + 4 erros_tipicos\n1b (Temp 0.0, max_tokens=512): solver def resolver()"]
     C --> D["CodeExecutor: AST Check + Subprocesso Isolado (Timeout 5s)\n+ Normalização de 5->4 distratores se 1 coincidir com gabarito"]
     D --> E{"Groundedness Numérico OK?\n<= 1 colisão de distrator?"}
     E -- "Falha Estrutural ou >= 2 colisões" --> F["Linha 2: Stateless Retry Guiado\n(Contexto limpo + diretriz curta da categoria do erro + enunciados_recentes)"]
@@ -37,10 +37,10 @@ flowchart TD
     G --> H["Validação Etapa 1: Resolução Cega Pura\n(LLM recebe enunciado + tabela e retorna\npremissas_assumidas, dados_nao_utilizados e pergunta_respondivel)"]
     H --> H2{"Etapa 1b: pergunta não respondível,\npremissa implícita ou > 1 dado ocioso?"}
     H2 -- "Sim (Early Exit)" --> F
-    H2 -- "Não" --> I["Validação Etapa 2: Confronto de Equivalência\n(Juiz compara resultado_solver vs resultado_obtido)"]
+    H2 -- "Não" --> I["Validação Etapa 2: Confronto de Equivalência\n(atalho Python 0ms para igualdade exata/numérica;\nsenão Juiz LLM compara resultado_solver vs resultado_obtido)"]
     I -- "Divergentes (equivalentes = False)" --> J["Early Exit / Curto-Circuito"]
     J --> F
-    I -- "Equivalentes (True)" --> K["Validação Etapa 3: Auditoria Semântica\n(LLM avalia analise + 4 macro-flags booleanas)"]
+    I -- "Equivalentes (True)" --> K["Validação Etapa 3: Auditoria Semântica\n(checagens determinísticas + até 5 chamadas sim/não\npor critério com Early Exit)"]
     K --> L{"Backend: Alguma flag True?\n(not aprovada)"}
     L -- "Sim (Reprovada)" --> F
     L -- "Não (Aprovada)" --> M["Persistência em questoes_ineditas\n(planejamento + solver -> thought_scratchpad,\nresolucao_cega -> justificativa)"]
@@ -68,7 +68,8 @@ Nenhuma questão inédita pode ser salva ou exibida ao estudante sem cumprir **t
      - Se `premissas_assumidas` não for vazia (após normalização de marcadores como `"Nenhuma"`/`"N/A"`), reprova deterministicamente.
      - Se `dados_nao_utilizados` apontar **$> 1$ dado/coluna não utilizado** no cálculo (violando o limite máximo de 1 coluna/dado extra contextual), reprova deterministicamente e aciona o *Stateless Retry* antes da Etapa 2.
 6. **Validação Etapa 2 — Confronto Direto de Equivalência com *Early Exit* (`QuestaoEquivalenciaOutput`, `temperature=0.0`)**:
-   - Compara `resultado_solver` vs. `resultado_obtido` aceitando equivalências matemáticas legítimas (ex.: `2500` vs. `"R$ 2.500,00"`, `0.5` vs. `"50%"`, arredondamentos compatíveis). Se `equivalentes == False`, interrompe imediatamente (*Early Exit*) e aciona o *Stateless Retry*.
+   - **Atalho determinístico (0ms)**: se `resultado_solver` e `resultado_obtido` forem textualmente iguais ou numericamente iguais após conversão para `float`, a equivalência é confirmada em Python sem chamar o LLM (`_run_equivalence_check`).
+   - Caso contrário, o juiz LLM (`max_tokens=200`) compara `resultado_solver` vs. `resultado_obtido` aceitando equivalências matemáticas legítimas (ex.: `2500` vs. `"R$ 2.500,00"`, `0.5` vs. `"50%"`, arredondamentos compatíveis). Se `equivalentes == False`, interrompe imediatamente (*Early Exit*) e aciona o *Stateless Retry*.
 7. **Validação Etapa 3 — Auditoria Semântica em Chamadas Binárias Separadas (`QuestaoAuditoriaSemanticaOutput`, `temperature=0.0` — `B3`)**:
    - Checagens mecânicas estruturais (termos proibidos `check_prohibited_terms`, complexidade determinística `validate_solver_complexity`, empates degenerados `validate_no_degenerate_ties`, variáveis livres `check_free_variables`, uniformidade de `tabela_dados`) são validadas deterministicamente em Python com 0ms antes das chamadas LLM.
    - A Etapa 3 executa até 5 chamadas sim/não curtas (`temperature=0.0`, `max_tokens=160`) com *Early Exit* no primeiro defeito detectado:
@@ -84,7 +85,7 @@ Nenhuma questão inédita pode ser salva ou exibida ao estudante sem cumprir **t
   - **Etapa 1a**: Geração de `planejamento`, `enunciado`, `tabela_dados` (opcional) e `erros_tipicos` (4 itens obrigatórios via `POT_PHASE1A_JSON_SCHEMA`).
   - **Etapa 1b**: Geração exclusiva da função Python `def resolver():` em temperatura determinística (fixada em 0.0) condicionada ao texto fixado em 1a (`POT_PHASE1B_SOLVER_JSON_SCHEMA`).
 - **Janela de Contexto, `keep_alive` e Orçamento**: `num_ctx=4096`, `keep_alive="30m"` no `LLMClient` e orçamentos ajustados (`max_tokens=800` na 1a, `512` no solver 1b, `600` na Resolução Cega, `200` na Equivalência), com truncamento de enunciados históricos longos do RAG em `900` caracteres.
-- **Teto de Temperatura 0.3 e Seed Aleatória (`A8`)**: A geração inicia em `temperature=0.2` e tem teto estrito de `0.3` na 1a e `0.0` no solver 1b, variando `seed` aleatória por tentativa e sorteando tipologia matemática específica por habilidade (`B1`: 3 a 5 tipologias para `H01`–`H30`) e *few-shot* alinhado por competência (`C1`–`C7`).
+- **Teto de Temperatura 0.3 e Seed Aleatória (`A8`)**: A geração 1a inicia em `temperature=0.2` e sobe `+0.1` por *retry* até o teto estrito de `0.3`; o solver 1b é fixado em `0.0`. A `seed` aleatória varia por tentativa e sorteando tipologia matemática específica por habilidade (`B1`: 3 a 5 tipologias para `H01`–`H30`) e *few-shot* alinhado por competência (`C1`–`C7`).
 - **Montagem do Retorno no Backend (`A1`) e Erros Típicos (`A4`)**: o JSON Schema impõe `erros_tipicos` com `minItems = maxItems = 4`. O LLM define apenas `correta` e variáveis `erro_*` dentro de `def resolver()`; o backend instrumenta a AST para capturar `locals()`, filtra `erro_*` e monta `{'correta', 'distratores'}`.
 - **Complexidade Determinística na AST (`B2`)**: a fatia de `correta` deve possuir no mínimo `POT_MIN_OPERATIONS=3` operações e `POT_MIN_OPERATION_TYPES=2` tipos distintos de operação.
 
@@ -96,7 +97,7 @@ Nenhuma questão inédita pode ser salva ou exibida ao estudante sem cumprir **t
 ### `RN-Q03` — Defesa em Cascata: Auto-Healing Limitado (Máx. 1 Colisão) e Stateless Retry Tipificado (`A7`)
 - **Linha 1 (`auto_heal_distractors` limitado a 1 distrator)**:
   - Se houver **apenas 1 colisão** (`3` distratores únicos distintos de `correta`), o backend cura esse único distrator deterministicamente em `0ms`. Se houver **$\ge 2$ colisões** (ou $< 3$ distratores), a tentativa é reprovada imediatamente com código tipificado (`COLISAO` / `DISTRATORES_INSUFICIENTES`).
-- **Linha 2 (*Stateless Retry* Tipificado sem Ancoragem)**: toda falha carrega um código de `PipelineErrorCode` (`SINTAXE`, `NOME_LIVRE`, `USO_PI`, `DISTRATORES_INSUFICIENTES`, `ERROS_TIPICOS_INVALIDOS`, `NEXO_NUMERICO`, `COLISAO`, `TABELA_INVALIDA`, `COMPLEXIDADE`, `CASO_DEGENERADO`, `INCONSISTENCIA_CEGA`, `NAO_RESPONDIVEL`, `PREMISSA_OCULTA`, `DADOS_OCIOSOS`, `NAO_EQUIVALENTE`, `AUDITORIA`), mapeado em `_classify_retry_hint` para uma diretriz de 1 linha sem busca por substring.
+- **Linha 2 (*Stateless Retry* Tipificado sem Ancoragem)**: até `max_attempts=5` tentativas; toda falha carrega um código de `PipelineErrorCode` (`app/schemas/question.py`: `SINTAXE`, `SEGURANCA`, `TIMEOUT`, `NOME_LIVRE`, `USO_PI`, `DISTRATORES_INSUFICIENTES`, `ERROS_TIPICOS_INVALIDOS`, `NEXO_NUMERICO`, `COLISAO`, `TABELA_INVALIDA`, `TERMO_PROIBIDO`, `COMPLEXIDADE`, `CASO_DEGENERADO`, `NAO_RESPONDIVEL`, `PREMISSA_OCULTA`, `DADOS_OCIOSOS`, `NAO_EQUIVALENTE`, `AUDITORIA`), mapeado em `_classify_retry_hint` para uma diretriz de 1 linha sem busca por substring. `INCONSISTENCIA_CEGA` permanece no enum, mas deixou de ser emitido após a remoção da autoconsistência da Resolução Cega (`d3ef37c`).
 
 ### `RN-Q04` — Rastreabilidade e Auditoria na Persistência
 - Na tabela `questoes_ineditas`:
