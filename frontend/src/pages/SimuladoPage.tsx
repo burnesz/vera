@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { simuladoService } from '../services/simuladoService';
 import { feedbackService } from '../services/feedbackService';
+import { ApiError } from '../services/api';
 import type { Simulado, SimuladoResumo, AlternativaLetra, SimuladoResultado, RespostaItemInput } from '../types/simulado';
 import type { FeedbackVera } from '../types/feedback';
 import { MathText } from '../components/MathText';
@@ -29,6 +30,7 @@ import {
   Trash2,
   Sparkles,
   BookOpen,
+  X,
 } from 'lucide-react';
 
 interface SimuladoPageProps {
@@ -40,6 +42,7 @@ type TabType = 'pendentes' | 'arquivados';
 
 export const SimuladoPage: React.FC<SimuladoPageProps> = ({ onNavigate }) => {
   const { user, isAuthenticated } = useAuth();
+  const userId = user?.id;
 
   // Estados de navegação interna da página
   const [viewMode, setViewMode] = useState<ViewMode>('hub');
@@ -74,18 +77,33 @@ export const SimuladoPage: React.FC<SimuladoPageProps> = ({ onNavigate }) => {
   const [isLoadingFeedback, setIsLoadingFeedback] = useState<Record<string, boolean>>({});
   const [expandedThought, setExpandedThought] = useState<Record<string, boolean>>({});
 
+  // Mensagem de erro visível ao estudante (sem dados fictícios quando o backend falha)
+  const [erro, setErro] = useState<string | null>(null);
+  const mostrarErro = (contexto: string, err: unknown) => {
+    console.error(contexto, err);
+    const detalhe =
+      err instanceof ApiError && err.status === 0
+        ? 'Não foi possível conectar ao servidor da VERA. Verifique se o backend está em execução.'
+        : err instanceof Error && err.message
+        ? err.message
+        : 'Erro inesperado ao comunicar com o servidor.';
+    setErro(`${contexto} ${detalhe}`);
+  };
+
   // Carrega a lista de simulados do estudante
   const carregarMeusSimulados = useCallback(async () => {
     setIsLoadingList(true);
     try {
-      const data = await simuladoService.listarSimulados(user?.id);
+      const data = await simuladoService.listarSimulados();
       setSimulados(data);
     } catch (err) {
-      console.error('Erro ao carregar simulados do estudante:', err);
+      mostrarErro('Não foi possível carregar seus simulados.', err);
     } finally {
       setIsLoadingList(false);
     }
-  }, [user]);
+    // Recarrega a lista quando o estudante autenticado muda.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [userId]);
 
   useEffect(() => {
     carregarMeusSimulados();
@@ -176,7 +194,7 @@ export const SimuladoPage: React.FC<SimuladoPageProps> = ({ onNavigate }) => {
       setViewMode('exam');
       window.scrollTo({ top: 0, behavior: 'smooth' });
     } catch (err) {
-      console.error('Erro ao abrir simulado:', err);
+      mostrarErro('Não foi possível abrir o simulado.', err);
     } finally {
       setIsLoadingExam(false);
     }
@@ -187,7 +205,7 @@ export const SimuladoPage: React.FC<SimuladoPageProps> = ({ onNavigate }) => {
     setIsGenerating(true);
     try {
       const title = novoTitulo.trim() || `Simulado ENEM Matemática #${simulados.length + 1}`;
-      const novo = await simuladoService.gerarSimulado(title, user?.id);
+      const novo = await simuladoService.gerarSimulado(title);
       setShowNewModal(false);
       setNovoTitulo('');
       // Inicia imediatamente o novo simulado
@@ -202,7 +220,8 @@ export const SimuladoPage: React.FC<SimuladoPageProps> = ({ onNavigate }) => {
       carregarMeusSimulados();
       window.scrollTo({ top: 0, behavior: 'smooth' });
     } catch (err) {
-      console.error('Erro ao gerar novo simulado:', err);
+      setShowNewModal(false);
+      mostrarErro('Não foi possível gerar o simulado.', err);
     } finally {
       setIsGenerating(false);
     }
@@ -213,7 +232,7 @@ export const SimuladoPage: React.FC<SimuladoPageProps> = ({ onNavigate }) => {
     if (!simuladoParaExcluir) return;
     setIsDeleting(true);
     try {
-      await simuladoService.excluirSimulado(simuladoParaExcluir.id, user?.id);
+      await simuladoService.excluirSimulado(simuladoParaExcluir.id);
       setSimulados((prev) => prev.filter((s) => s.id !== simuladoParaExcluir.id));
       try {
         localStorage.removeItem(`vera_timer_${simuladoParaExcluir.id}`);
@@ -224,8 +243,8 @@ export const SimuladoPage: React.FC<SimuladoPageProps> = ({ onNavigate }) => {
       }
       setSimuladoParaExcluir(null);
     } catch (err) {
-      console.error('Erro ao excluir simulado:', err);
-      alert('Não foi possível excluir o simulado. Verifique sua conexão e tente novamente.');
+      setSimuladoParaExcluir(null);
+      mostrarErro('Não foi possível excluir o simulado.', err);
     } finally {
       setIsDeleting(false);
     }
@@ -257,7 +276,7 @@ export const SimuladoPage: React.FC<SimuladoPageProps> = ({ onNavigate }) => {
       setViewMode('result');
       window.scrollTo({ top: 0, behavior: 'smooth' });
     } catch (err) {
-      console.error('Erro ao recuperar resultado do simulado:', err);
+      mostrarErro('Não foi possível carregar o resultado do simulado.', err);
     } finally {
       setIsLoadingResult(false);
     }
@@ -271,8 +290,7 @@ export const SimuladoPage: React.FC<SimuladoPageProps> = ({ onNavigate }) => {
       const fb = await feedbackService.solicitarFeedback(respostaItemId);
       setFeedbacksMap((prev) => ({ ...prev, [respostaItemId]: fb }));
     } catch (err) {
-      console.error('Erro ao solicitar feedback da Tutora VERA:', err);
-      alert('Não foi possível gerar a explicação com a Tutora VERA no momento. Tente novamente em alguns instantes.');
+      mostrarErro('A Tutora VERA não conseguiu gerar a explicação.', err);
     } finally {
       setIsLoadingFeedback((prev) => ({ ...prev, [respostaItemId]: false }));
     }
@@ -337,7 +355,7 @@ export const SimuladoPage: React.FC<SimuladoPageProps> = ({ onNavigate }) => {
     });
 
     try {
-      const res = await simuladoService.submeterSimulado(simulado.id, payload, simulado.itens, user?.id);
+      const res = await simuladoService.submeterSimulado(simulado.id, payload);
       setResultado(res);
       setCurrentReviewIndex(0);
       setResultadoTab('detalhado');
@@ -356,7 +374,9 @@ export const SimuladoPage: React.FC<SimuladoPageProps> = ({ onNavigate }) => {
       carregarMeusSimulados();
       window.scrollTo({ top: 0, behavior: 'smooth' });
     } catch (err) {
-      console.error('Erro ao submeter simulado:', err);
+      // As respostas continuam salvas localmente; o estudante pode tentar enviar de novo.
+      setShowConfirmModal(false);
+      mostrarErro('Não foi possível enviar o simulado para correção. Suas respostas foram mantidas.', err);
     } finally {
       setIsSubmitting(false);
     }
@@ -386,6 +406,41 @@ export const SimuladoPage: React.FC<SimuladoPageProps> = ({ onNavigate }) => {
     }
     return 0;
   };
+
+  const errorBanner = erro ? (
+    <div
+      role="alert"
+      style={{
+        position: 'fixed',
+        top: '1rem',
+        left: '50%',
+        transform: 'translateX(-50%)',
+        zIndex: 2000,
+        width: 'min(640px, calc(100% - 2rem))',
+        backgroundColor: 'var(--color-danger-bg)',
+        border: '1px solid #fca5a5',
+        color: 'var(--color-danger)',
+        padding: '0.85rem 1rem',
+        borderRadius: 'var(--radius-md)',
+        boxShadow: '0 8px 24px rgba(0, 0, 0, 0.12)',
+        display: 'flex',
+        alignItems: 'flex-start',
+        gap: '0.6rem',
+        fontSize: '0.9rem',
+        fontWeight: 500,
+      }}
+    >
+      <AlertTriangle size={18} style={{ flexShrink: 0, marginTop: '0.1rem' }} />
+      <span style={{ flex: 1 }}>{erro}</span>
+      <button
+        onClick={() => setErro(null)}
+        aria-label="Fechar aviso"
+        style={{ background: 'none', border: 'none', color: 'inherit', cursor: 'pointer', padding: 0 }}
+      >
+        <X size={18} />
+      </button>
+    </div>
+  ) : null;
 
   // Bloqueio de acesso para estudantes não autenticados
   if (!isAuthenticated) {
@@ -449,6 +504,7 @@ export const SimuladoPage: React.FC<SimuladoPageProps> = ({ onNavigate }) => {
   if (viewMode === 'hub') {
     return (
       <div className="container" style={{ padding: '2.5rem 1.25rem 4rem' }}>
+        {errorBanner}
         {/* Cabeçalho Principal do Hub */}
         <div
           style={{
@@ -1182,6 +1238,7 @@ export const SimuladoPage: React.FC<SimuladoPageProps> = ({ onNavigate }) => {
   if (viewMode === 'result' && resultado) {
     return (
       <div className="container" style={{ padding: '2.5rem 1.25rem 4rem' }}>
+        {errorBanner}
         {/* Botão de Retorno ao Hub */}
         <div style={{ marginBottom: '1.5rem' }}>
           <button
@@ -1891,6 +1948,7 @@ export const SimuladoPage: React.FC<SimuladoPageProps> = ({ onNavigate }) => {
   // =========================================================================
   return (
     <div className="container" style={{ padding: '1.5rem 1.25rem 4rem' }}>
+      {errorBanner}
       {/* Barra Superior Fixa: Voltar, Título, Cronômetro e Botão de Entrega */}
       <div
         className="card"
