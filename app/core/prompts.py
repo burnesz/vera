@@ -929,3 +929,75 @@ Responda EXCLUSIVAMENTE em JSON curto:
   "evidencia": "1 frase curta justificando"
 }}
 """
+
+
+# =============================================================================
+# FEEDBACK PEDAGÓGICO PONTUAL POR ITEM (TUTORA VERA)
+# =============================================================================
+
+VERA_QUESTION_FEEDBACK_SYSTEM_PROMPT = """Você é VERA (Validação e Ensino com Recuperação Aumentada), uma tutora especialista em Matemática e na Matriz de Referência do ENEM.
+Sua missão é fornecer um feedback pedagógico acolhedor, analítico e altamente didático para um estudante que cometeu um erro em uma questão de simulado.
+
+DIRETRIZES DE ATUAÇÃO E MODO PENSAMENTO (Chain-of-Thought Scratchpad):
+Você deve OBRIGATORIAMENTE estruturar sua geração em duas etapas delimitadas por tags:
+
+1. ETAPA DE PENSAMENTO E AUTO-VALIDAÇÃO (<pensamento>...</pensamento>):
+   - Diagnóstico do Distrator: Analise exatamente qual equívoco cognitivo, confusão de conceito, erro de leitura ou deslize aritmético leva à alternativa marcada pelo estudante.
+   - Resolução Matemática Rigorosa: Resolva a questão passo a passo mentalmente até o gabarito oficial.
+   - Ancoragem Teórica: Conecte os trechos didáticos fornecidos (teoria/fórmulas) com a resolução.
+   - Planejamento Didático: Estruture a explicação em: Diagnóstico do Erro, Resolução Guiada e Recomendações de Estudo.
+
+2. ETAPA DE RESPOSTA DIDÁTICA AO ESTUDANTE (<resposta>...</resposta>):
+   - Diagnóstico Acolhedor do Erro: Mostre com empatia onde esteve a armadilha ou o detalhe que passou despercebido na alternativa que ele marcou.
+   - Resolução Passo a Passo: Demonstre como chegar ao gabarito oficial de forma intuitiva, formatando expressões matemáticas em LaTeX ($...$ inline e $$...$$ em bloco).
+   - O que Estudar: Indique os pontos conceituais essenciais desta habilidade que o estudante deve revisar para não cair mais nessa pegadinha.
+"""
+
+
+def build_question_feedback_prompt(
+    habilidade_codigo: str,
+    habilidade_descricao: str,
+    enunciado: str,
+    alternativas: Dict[str, str],
+    alternativa_marcada: str,
+    gabarito_oficial: str,
+    context_chunks: Optional[List[Dict[str, Any]]] = None,
+) -> str:
+    """
+    Constrói o prompt direcionado para a Tutora VERA analisar o erro do estudante em uma questão.
+    """
+    chunks_text = ""
+    if context_chunks:
+        blocos = []
+        for i, chunk in enumerate(context_chunks, 1):
+            titulo = chunk.get("title") or chunk.get("document_name") or f"Material Didático {i}"
+            texto = chunk.get("text", "").strip()
+            if texto:
+                blocos.append(f"--- Trecho Teórico {i} ({titulo}) ---\n{texto}")
+        if blocos:
+            chunks_text = "\n\nCONTEÚDO TEÓRICO DIDÁTICO DE APOIO (RAG):\n" + "\n\n".join(blocos) + "\n"
+
+    alts_formatted = "\n".join([f"{letra}) {texto}" for letra, texto in sorted(alternativas.items())])
+    resp_texto = alternativas.get(alternativa_marcada, "")
+    gab_texto = alternativas.get(gabarito_oficial, "")
+
+    return f"""Analise a questão de simulado abaixo e o erro cometido pelo estudante.
+
+{chunks_text}
+HABILIDADE DO ENEM:
+Código: {habilidade_codigo}
+Descrição: {habilidade_descricao}
+
+QUESTÃO DO SIMULADO:
+Enunciado:
+{enunciado}
+
+Alternativas:
+{alts_formatted}
+
+DADOS DA SUBMISSÃO:
+- Resposta assinalada pelo estudante: Alternativa {alternativa_marcada} ({resp_texto}) [INCORRETA]
+- Gabarito oficial do ENEM: Alternativa {gabarito_oficial} ({gab_texto}) [CORRETA]
+
+Gere sua resposta dividida em <pensamento> (análise analítica interna) e <resposta> (feedback acolhedor, resolução em LaTeX e recomendações de estudo para a habilidade {habilidade_codigo}).
+"""
