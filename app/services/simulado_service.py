@@ -11,6 +11,7 @@ from app.db.models.simulado import Simulado, SimuladoItem
 from app.db.models.questao_enem import QuestaoEnem
 from app.db.models.questao_inedita import QuestaoInedita
 from app.db.models.submission import SimuladoTentativa, RespostaItem
+from app.db.models.history import DesempenhoHabilidade
 from app.schemas.simulado import RespostaItemInput
 
 logger = logging.getLogger("vera.services.simulado")
@@ -244,6 +245,8 @@ def submeter_tentativa_simulado(
     db.add(tentativa)
     db.flush()
 
+    habilidade_stats: Dict[str, Dict[str, int]] = defaultdict(lambda: {"total": 0, "acertos": 0})
+
     for item in simulado.itens:
         qid = item.questao_enem_id or item.questao_inedita_id
         alternativa_marcada = (
@@ -252,17 +255,25 @@ def submeter_tentativa_simulado(
             or "X"
         )
         
-        # Obtém gabarito da questão histórica ou inédita
+        # Obtém gabarito e habilidade da questão histórica ou inédita
         if item.origem_questao == "enem" and item.questao_enem:
             gabarito = item.questao_enem.gabarito.strip().upper()
+            hab_cod = item.questao_enem.habilidade_codigo
         elif item.origem_questao == "inedita" and item.questao_inedita:
             gabarito = item.questao_inedita.gabarito.strip().upper()
+            hab_cod = item.questao_inedita.habilidade_codigo
         else:
             gabarito = ""
+            hab_cod = ""
 
         is_correta = (alternativa_marcada == gabarito) if alternativa_marcada != "X" else False
         if is_correta:
             total_acertos += 1
+
+        if hab_cod:
+            habilidade_stats[hab_cod]["total"] += 1
+            if is_correta:
+                habilidade_stats[hab_cod]["acertos"] += 1
 
         resposta_db = RespostaItem(
             tentativa_id=tentativa.id,
@@ -277,9 +288,37 @@ def submeter_tentativa_simulado(
     tentativa.total_acertos = total_acertos
     tentativa.score_percentual = round((total_acertos / total_itens) * 100, 2) if total_itens > 0 else 0.0
 
+    # Atualiza a tabela agregadora desempenho_habilidades do estudante (RN-SIM03)
+    for hab_cod, stats in habilidade_stats.items():
+        desemp = db.query(DesempenhoHabilidade).filter(
+            DesempenhoHabilidade.user_id == user_id,
+            DesempenhoHabilidade.habilidade_codigo == hab_cod
+        ).first()
+        if not desemp:
+            desemp = DesempenhoHabilidade(
+                user_id=user_id,
+                habilidade_codigo=hab_cod,
+                total_questoes=0,
+                total_acertos=0,
+                taxa_acerto=0.0,
+                nivel_dominio="em_desenvolvimento"
+            )
+            db.add(desemp)
+
+        desemp.total_questoes += stats["total"]
+        desemp.total_acertos += stats["acertos"]
+        taxa = (desemp.total_acertos / desemp.total_questoes) if desemp.total_questoes > 0 else 0.0
+        desemp.taxa_acerto = round(taxa, 3)
+        if desemp.taxa_acerto < 0.50:
+            desemp.nivel_dominio = "critico"
+        elif desemp.taxa_acerto < 0.75:
+            desemp.nivel_dominio = "em_desenvolvimento"
+        else:
+            desemp.nivel_dominio = "consolidado"
+
     db.commit()
     db.refresh(tentativa)
-    logger.info(f"Tentativa '{tentativa.id}' submetida: {total_acertos}/{total_itens} acertos ({tentativa.score_percentual}%).")
+    logger.info(f"Tentativa '{tentativa.id}' submetida: {total_acertos}/{total_itens} acertos ({tentativa.score_percentual}%). Diagnóstico atualizado para {len(habilidade_stats)} habilidades.")
     return tentativa
 
 
@@ -391,5 +430,24 @@ def excluir_simulado(
     db.commit()
     logger.info(f"Simulado '{simulado_id}' excluído com sucesso pelo usuário '{user_id}'.")
     return True
+
+
+def listar_tentativas_usuario(db: Session, user_id: uuid.UUID) -> List[SimuladoTentativa]:
+    """
+    Retorna todas as tentativas finalizadas do usuário ordenadas da mais recente para a mais antiga.
+    """
+    return (
+        db.query(SimuladoTentativa)
+        .options(
+            joinedload(SimuladoTentativa.simulado)
+        )
+        .filter(
+            SimuladoTentativa.user_id == user_id,
+            SimuladoTentativa.status == "completed"
+        )
+        .order_by(SimuladoTentativa.completed_at.desc())
+        .all()
+    )
+
 
 

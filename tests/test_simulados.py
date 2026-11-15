@@ -47,6 +47,7 @@ def setup_database_data():
     """
     Popula as habilidades, questões históricas e questões inéditas de teste.
     """
+    app.dependency_overrides[get_db] = override_get_db
     db = TestingSessionLocal()
     # 1. Habilidades
     for hab in HABILIDADES_MAT:

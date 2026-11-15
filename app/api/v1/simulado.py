@@ -13,6 +13,7 @@ from app.schemas.simulado import (
     SimuladoSubmissaoRequest,
     SimuladoResultadoResponse,
     ItemCorrecaoResponse,
+    SimuladoTentativaHistoricoResponse,
 )
 from app.services import simulado_service
 
@@ -215,6 +216,35 @@ def submeter_simulado(
 
 
 @router.get(
+    "/tentativas/me",
+    response_model=List[SimuladoTentativaHistoricoResponse],
+    summary="Lista todas as tentativas concluídas do estudante autenticado",
+)
+def listar_minhas_tentativas(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_active_user),
+):
+    """
+    Retorna o histórico cronológico de tentativas de simulados finalizados pelo estudante.
+    """
+    tentativas = simulado_service.listar_tentativas_usuario(db, current_user.id)
+    return [
+        SimuladoTentativaHistoricoResponse(
+            tentativa_id=t.id,
+            simulado_id=t.simulado_id,
+            titulo=t.simulado.titulo if t.simulado else "Simulado ENEM",
+            tipo=t.simulado.tipo if t.simulado else "diagnostico",
+            total_itens=t.total_itens,
+            total_acertos=t.total_acertos,
+            score_percentual=t.score_percentual,
+            started_at=t.started_at,
+            completed_at=t.completed_at,
+        )
+        for t in tentativas
+    ]
+
+
+@router.get(
     "/tentativas/{tentativa_id}",
     response_model=SimuladoResultadoResponse,
     summary="Consulta o resultado de uma tentativa realizada",
@@ -308,15 +338,29 @@ def formatar_resultado_tentativa(tentativa) -> SimuladoResultadoResponse:
         if item.origem_questao == "enem" and item.questao_enem:
             gabarito = item.questao_enem.gabarito
             hab = item.questao_enem.habilidade_codigo
+            enunciado = item.questao_enem.enunciado
+            alternativas = item.questao_enem.alternativas
+            justificativa = (
+                item.questao_enem.metadados.get("justificativa")
+                if isinstance(item.questao_enem.metadados, dict)
+                else None
+            )
         elif item.origem_questao == "inedita" and item.questao_inedita:
             gabarito = item.questao_inedita.gabarito
             hab = item.questao_inedita.habilidade_codigo
+            enunciado = item.questao_inedita.enunciado
+            alternativas = item.questao_inedita.alternativas
+            justificativa = item.questao_inedita.justificativa
         else:
             gabarito = ""
             hab = ""
+            enunciado = ""
+            alternativas = {}
+            justificativa = None
 
         marcada = resposta_dada.alternativa_marcada if resposta_dada else None
         is_correto = resposta_dada.is_correta if resposta_dada else False
+        resp_id = resposta_dada.id if resposta_dada else None
 
         itens_correcao.append(
             ItemCorrecaoResponse(
@@ -327,6 +371,10 @@ def formatar_resultado_tentativa(tentativa) -> SimuladoResultadoResponse:
                 alternativa_selecionada=marcada if marcada != "X" else None,
                 gabarito_oficial=gabarito,
                 is_correto=is_correto,
+                resposta_item_id=resp_id,
+                enunciado=enunciado,
+                alternativas=alternativas,
+                justificativa=justificativa,
             )
         )
 

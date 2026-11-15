@@ -89,6 +89,10 @@ class ItemCorrecaoResponse(BaseModel):
     alternativa_selecionada: Optional[str] = None
     gabarito_oficial: str
     is_correto: bool
+    resposta_item_id: Optional[uuid.UUID] = None
+    enunciado: Optional[str] = None
+    alternativas: Optional[Dict[str, str]] = None
+    justificativa: Optional[str] = None
 
 
 class SimuladoResultadoResponse(BaseModel):
@@ -104,3 +108,18 @@ class SimuladoResultadoResponse(BaseModel):
     itens: List[ItemCorrecaoResponse]
 
     model_config = ConfigDict(from_attributes=True)
+
+
+class SimuladoTentativaHistoricoResponse(BaseModel):
+    tentativa_id: uuid.UUID
+    simulado_id: uuid.UUID
+    titulo: str
+    tipo: str
+    total_itens: int
+    total_acertos: int
+    score_percentual: float
+    started_at: datetime
+    completed_at: Optional[datetime] = None
+
+    model_config = ConfigDict(from_attributes=True)
+

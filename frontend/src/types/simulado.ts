@@ -65,6 +65,22 @@ export interface ItemCorrecao {
   alternativa_selecionada?: AlternativaLetra | null;
   gabarito_oficial: string;
   is_correto: boolean;
+  resposta_item_id?: string | null;
+  enunciado?: string | null;
+  alternativas?: AlternativasDict | null;
+  justificativa?: string | null;
+}
+
+export interface TentativaHistorico {
+  tentativa_id: string;
+  simulado_id: string;
+  titulo: string;
+  tipo: string;
+  total_itens: number;
+  total_acertos: number;
+  score_percentual: number;
+  started_at: string;
+  completed_at?: string | null;
 }
 
 export interface SimuladoResultado {
