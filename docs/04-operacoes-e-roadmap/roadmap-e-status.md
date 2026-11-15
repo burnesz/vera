@@ -43,6 +43,9 @@ Registro atualizado do progresso das 4 fases de desenvolvimento do projeto VERA.
 - [x] Suporte estruturado a `tabela_dados` (conversão automática para Markdown) e sanitização de escapes LaTeX em JSON (`app/services/question_validator.py`)
 - [x] Script multi-round de geração em lote e povoamento de questões inéditas (`scripts/populate_questoes_ineditas.py`)
 - [x] Serviço de Tutoria RAG Interativa com *Query Rewriting*, CoT obrigatório (`<pensamento>` + `<resposta>`) e persistência relacional (`app/services/chat_service.py` e `app/api/v1/chat.py` — `DSR-02`)
+- [x] Feedback pedagógico pontual por item errado com RAG determinístico, CoT e cache em `feedbacks` (`app/services/feedback_service.py` e `app/api/v1/feedback.py` — `RN-FB01`..`03`)
+- [x] Pós-processamento do feedback: verificação automática contra gabarito e habilidade, com Stateless Retry (até 3 tentativas) e HTTP `422` se reprovado (`app/services/feedback_verifier.py` — `RN-FB04`, 2026-11-15)
+- [x] Atualização cumulativa de `desempenho_habilidades` na submissão, histórico de tentativas (`/simulados/tentativas/me`) e API de dashboard (`app/api/v1/dashboard.py` — `RN-SIM03`)
 
 ---
 
@@ -50,19 +53,20 @@ Registro atualizado do progresso das 4 fases de desenvolvimento do projeto VERA.
 
 - [x] Aplicação web SPA em React 18 + TypeScript + Vite com Design System *Ocean & Coral* (`frontend/`)
 - [x] Autenticação, cadastro e proteção de rotas com `AuthContext.tsx`
-- [x] Caderno de Simulado (`SimuladoPage.tsx`) com cronômetro, folha de respostas dinâmica, marcação de revisão e tela pós-submissão de conferência de gabarito
+- [x] Caderno de Simulado (`SimuladoPage.tsx`) com cronômetro, folha de respostas dinâmica, marcação de revisão, revisão item a item pós-submissão e card de feedback da Tutora VERA
 - [x] Interface da Tutora VERA (`ChatPage.tsx`) com renderização matemática KaTeX (`MathText.tsx`), histórico de sessões e card retrátil para o bloco `<pensamento>`
-- [x] Dashboard de diagnóstico do estudante por Competências (`C1`–`C7`) e Habilidades (`StudentDashboard.tsx`)
+- [x] Dashboard de diagnóstico do estudante por Competências (`C1`–`C7`) e Habilidades, com dados reais de `/dashboard/desempenho` (`StudentDashboard.tsx`)
 - [x] Containerização com Docker Compose (`Dockerfile`, `docker-compose.yml`)
-- [x] Suíte de testes automatizados com Pytest (`tests/` — 16 módulos de teste)
+- [x] Remoção do fallback de caderno/correção fictícios no frontend: falhas da API são exibidas ao estudante (`simuladoService.ts`, `SimuladoPage.tsx` — 2026-11-15)
+- [x] Suíte de testes automatizados com Pytest (`tests/` — 19 módulos, 184 testes em 2026-11-15)
 
 ---
 
 ## Fase 4: Avaliação Científica e Conclusão do TCC (Em Andamento)
 
-- [ ] Implementação do serviço de execução em modo **Baseline Zero-Shot** para benchmarking controlado (`app/services/baseline_service.py`)
-- [ ] Implementação do script de cálculo e consolidação de métricas quantitativas (`evaluation/quantitative.py`)
-- [ ] Implementação do formulário e rubrica Likert estruturada para avaliação cega por especialista (`evaluation/likert_rubric.py`)
+- [ ] Implementação do serviço de execução em modo **Baseline Zero-Shot** para benchmarking controlado (`app/services/baseline_service.py` — arquivo ainda vazio)
+- [ ] Implementação do script de cálculo e consolidação de métricas quantitativas (`evaluation/quantitative.py` — arquivo ainda vazio)
+- [ ] Implementação do formulário e rubrica Likert estruturada para avaliação cega por especialista (`evaluation/likert_rubric.py` — arquivo ainda vazio)
 - [ ] Execução dos experimentos comparativos (RAG/PoT vs. Baseline Zero-Shot) e consolidação dos dados na monografia do TCC
 
 ---

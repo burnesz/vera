@@ -33,7 +33,7 @@ related_notes:
 2. **Comandos Não-Interativos**:
    - No ambiente WSL, sempre executar comandos de terminal de forma não-interativa para garantir encerramento limpo (`EOF`).
 3. **Execução da Suíte de Testes (`tests/`)**:
-   - A suíte conta com 16 arquivos de teste automatizados cobrindo autenticação, modelos relacionais, chunking, extração de fórmulas, `LLMClient`, `CodeExecutor`, `QuestionValidator`, RAG, diversidade de prompts, geração PoT, simulados e chat:
+   - A suíte conta com 18 arquivos de teste (166 testes) cobrindo autenticação, modelos relacionais, chunking, extração de fórmulas, `LLMClient`, `CodeExecutor`, `QuestionValidator`, RAG, *query rewriting*, diversidade de prompts, geração PoT, API de questões, seed de questões, simulados, feedback por item e chat:
      ```bash
      ./.venv/bin/pytest -v
      ```
@@ -47,7 +47,7 @@ related_notes:
 | `scripts/seed_habilidades.py` | Popula as 30 habilidades oficiais (`H01`–`H30`) e competências (`C1`–`C7`) na tabela `habilidades_enem`. | `./.venv/bin/python scripts/seed_habilidades.py` |
 | `scripts/seed_questoes.py` | Importa o dataset enriquecido (`data/itens_prova_2009_2024_enriquecido.csv`) com as 402 questões históricas para `questoes_enem`. | `./.venv/bin/python scripts/seed_questoes.py` |
 | `scripts/seed_questoes_pinecone.py` | Gera embeddings E5-large (1024 dims) das 402 questões históricas e faz upsert no namespace `questoes_enem` do Pinecone. | `./.venv/bin/python scripts/seed_questoes_pinecone.py` |
-| `scripts/populate_questoes_ineditas.py` | Executa o pipeline PoT em lote (multi-round com retry) para povoar a tabela `questoes_ineditas` nas 30 habilidades do ENEM. | `./.venv/bin/python scripts/populate_questoes_ineditas.py` |
+| `scripts/populate_questoes_ineditas.py` | Executa o pipeline PoT em lote (multi-round com retry) para povoar a tabela `questoes_ineditas`. Flags: `--habilidades` (`all` ou `H01,H02`), `--count`, `--few-shot-k`, `--mock`, `--skip-existing`, `--tema`, `--abertura`. | `./.venv/bin/python scripts/populate_questoes_ineditas.py --habilidades all --count 1` |
 | `scripts/clean_tiny_chunks.py` | Audita e remove chunks residuais curtos (`< 15` palavras) do namespace `materiais_didaticos` no Pinecone (`RN-CHUNK02`). | `./.venv/bin/python scripts/clean_tiny_chunks.py` |
 | `scripts/search_pinecone.py` | Utilitário CLI para inspecionar e testar consultas semânticas nos namespaces do Pinecone. | `./.venv/bin/python scripts/search_pinecone.py` |
 | `scripts/ollama_forwarder.py` | Proxy/forwarder utilitário para roteamento de chamadas ao daemon do Ollama entre WSL e host Windows quando necessário. | `./.venv/bin/python scripts/ollama_forwarder.py` |

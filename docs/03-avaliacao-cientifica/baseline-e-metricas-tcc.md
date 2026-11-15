@@ -16,6 +16,8 @@ related_notes:
 
 Para fundamentar a monografia de TCC sob a ótica da metodologia **Design Science Research (DSR)**, a plataforma VERA foi projetada para permitir a avaliação empírica rigorosa dos artefatos construídos frente a uma condição de controle científica (**Baseline Zero-Shot**).
 
+> **Status (2026-10-26)**: esta nota descreve o **desenho planejado** da avaliação. `app/services/baseline_service.py`, `evaluation/quantitative.py` e `evaluation/likert_rubric.py` ainda são arquivos vazios (Fase 4 do [roadmap](../04-operacoes-e-roadmap/roadmap-e-status.md)).
+
 ---
 
 ## 1. Configuração da Baseline Experimental (Zero-Shot)
@@ -29,7 +31,7 @@ Para fundamentar a monografia de TCC sob a ótica da metodologia **Design Scienc
 
 ## 2. Métricas Quantitativas (`evaluation/quantitative.py`)
 
-O módulo de avaliação quantitativa acompanha três dimensões de performance e confiabilidade:
+O módulo de avaliação quantitativa deverá acompanhar três dimensões de performance e confiabilidade:
 
 1. **Qualidade da Recuperação Vetorial (RAG)**:
    - *Precision@K* e *Recall@K* na busca semântica sobre os namespaces `materiais_didaticos` e `questoes_enem`.
