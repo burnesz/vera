@@ -57,7 +57,7 @@ erDiagram
 
 ---
 
-## 2. Catálogo das 10 Tabelas Relacionais
+## 2. Catálogo das 12 Tabelas Relacionais
 
 ### 2.1 Autenticação e Matriz Curricular
 
@@ -102,13 +102,14 @@ erDiagram
    - Utiliza o mesmo padrão *Exclusive Arc* (`chk_resposta_item_origem`) apontando para `questao_enem_id` ou `questao_inedita_id`, além de `alternativa_marcada` (`String(1)`), `is_correta` (`Boolean`) e `tempo_gasto_segundos`.
 9. **`desempenho_habilidades` (`app/db/models/history.py` — classe `DesempenhoHabilidade`)**:
    - Tabela agregadora de diagnóstico contínuo por estudante e habilidade (`uq_user_habilidade_desempenho`).
-   - **Colunas**: `total_questoes`, `total_acertos`, `taxa_acerto` (`Float`), `nivel_dominio` (`'critico'`, `'em_desenvolvimento'`, `'consolidado'`), `updated_at`.
+   - **Colunas**: `total_questoes`, `total_acertos`, `taxa_acerto` (`Float`, fração 0.0–1.0), `nivel_dominio` (`'critico'` < 0.50 ≤ `'em_desenvolvimento'` < 0.75 ≤ `'consolidado'`), `updated_at`.
+   - **Escrita**: atualizada de forma cumulativa a cada submissão em `simulado_service.submeter_tentativa_simulado` (`RN-SIM03`); **leitura**: `GET /api/v1/dashboard/desempenho`.
 10. **`feedbacks` (`app/db/models/feedback.py` — classe `Feedback`)**:
-    - Armazena feedbacks individuais gerados para erros em `respostas_itens` (`resposta_item_id UNIQUE`), com `feedback_content`, `thought_scratchpad` e `context_chunks` (`JSONB`).
+    - Armazena feedbacks individuais gerados pelo `FeedbackService` para erros em `respostas_itens` (`resposta_item_id UNIQUE`, funciona como cache — `RN-FB03`), com `feedback_content`, `thought_scratchpad`, `context_chunks` (`JSONB`), `is_verified` e `created_at`.
 
 ### 2.4 Tutoria Conversacional (Chat RAG)
 
-11. **`chat_sessions` e `chat_messages` (`app/db/models/chat.py`)**:
+11–12. **`chat_sessions` e `chat_messages` (`app/db/models/chat.py`)**:
     - `chat_sessions`: `id` (`String(100)`, PK), `user_id` (`FK -> users.id`), `titulo` (gerado a partir da 1ª pergunta), `created_at`, `updated_at`.
     - `chat_messages` (`ChatMessageModel`): `id` (`UUID`), `session_id` (`FK -> chat_sessions.id`), `role` (`'user'`, `'assistant'`, `'system'`), `content` (`Text`, resposta limpa), `thought` (`Text`, bloco `<pensamento>` extraído), `context_chunks` (`JSONB`, trechos recuperados do Pinecone), `created_at`.
 
@@ -120,3 +121,4 @@ erDiagram
 - [Fluxo de Simulados e Diagnóstico](../02-dominios-e-fluxos/simulados-e-diagnostico.md)
 - [Pipeline PoT de Geração de Questões Inéditas](../02-dominios-e-fluxos/geracao-questoes-pot.md)
 - [Fluxo da Tutora Virtual VERA (Chat RAG)](../02-dominios-e-fluxos/tutoria-rag-chat.md)
+- [Feedback Pedagógico Pontual por Item](../02-dominios-e-fluxos/feedback-pedagogico-item.md)

@@ -30,14 +30,14 @@ flowchart TB
     end
 
     subgraph Backend ["Backend FastAPI (/api/v1)"]
-        API["Rotas: /health, /auth, /chat, /simulados, /questoes"]
-        SVC["Serviços: ChatService, QuestionService,\nSimuladoService, CodeExecutor, QuestionValidator"]
+        API["Rotas: /health, /auth, /chat, /simulados,\n/questoes, /dashboard, /feedback"]
+        SVC["Serviços: ChatService, FeedbackService, QuestionService,\nSimuladoService, CodeExecutor, QuestionValidator"]
         LLM["LLMClient (HTTP Resiliente + Retry + Mock)"]
     end
 
     subgraph Storage ["Armazenamento Híbrido & Inferência"]
         OLLAMA[("Ollama Local (:11434)\nqwen2.5:7b-instruct-q4_K_M")]
-        PG[("PostgreSQL 15\n(vera_db - 10 tabelas)")]
+        PG[("PostgreSQL 15\n(vera_db - 12 tabelas)")]
         PC[("Pinecone (vera-math-index)\n• materiais_didaticos\n• questoes_enem")]
         R2[("Cloudflare R2 (S3)\nAcervo de PDFs Didáticos")]
     end
@@ -108,22 +108,31 @@ Todos os endpoints são montados sob `/api/v1` em `app/main.py`:
   - `GET /api/v1/health`: status do serviço e conectividade com Ollama (`RN-INF02`).
 - **Autenticação (`app/api/v1/auth.py`)**:
   - `POST /api/v1/auth/register`: cadastro de estudante (`role="student"`).
-  - `POST /api/v1/auth/login`: autenticação OAuth2/JSON retornando token JWT.
+  - `POST /api/v1/auth/login`: autenticação OAuth2 (form) retornando token JWT.
+  - `POST /api/v1/auth/login/json`: autenticação via corpo JSON (usada pelo frontend).
   - `GET /api/v1/auth/me`: perfil do usuário autenticado.
 - **Tutora Virtual VERA (`app/api/v1/chat.py`)**:
-  - `POST /api/v1/chat` (e `/api/v1/chat/message`): envia mensagem para a tutora RAG com CoT.
+  - `POST /api/v1/chat`: envia mensagem para a tutora RAG com CoT.
   - `GET /api/v1/chat/sessions`: lista sessões persistidas do estudante autenticado.
   - `GET /api/v1/chat/history/{session_id}`: recupera histórico completo de uma sessão.
-  - `DELETE /api/v1/chat/history/{session_id}`: remove/limpa uma sessão de conversa.
+  - `DELETE /api/v1/chat/session/{session_id}`: exclui uma sessão de conversa e seu histórico.
+  - `PATCH /api/v1/chat/session/{session_id}`: renomeia o título de uma sessão.
 - **Simulados (`app/api/v1/simulado.py` — prefixo `/api/v1/simulados`)**:
   - `POST /api/v1/simulados/gerar`: cria novo caderno estratificado de 45 questões (`RN-SIM01`).
   - `GET /api/v1/simulados/{simulado_id}`: obtém caderno para realização da prova **sem gabarito/justificativa** (`RN-SIM02`).
   - `POST /api/v1/simulados/{simulado_id}/submeter`: submete respostas, corrige tentativa, atualiza `desempenho_habilidades` e revela gabarito (`RN-SIM03`).
-  - `GET /api/v1/simulados/tentativas/me`: histórico de tentativas do estudante.
-- **Questões Inéditas e Acervo (`app/api/v1/questoes.py` — prefixo `/api/v1/questoes`)**:
-  - `POST /api/v1/questoes/gerar`: dispara pipeline PoT para gerar e validar uma questão inédita para uma habilidade (`RN-Q01` a `RN-Q04`).
-  - `POST /api/v1/questoes/popular-lote`: geração em lote para múltiplas habilidades.
-  - `GET /api/v1/questoes/ineditas` e `GET /api/v1/questoes/habilidades`: consulta de questões validadas e habilidades da Matriz.
+  - `GET /api/v1/simulados/`: lista os simulados do estudante.
+  - `GET /api/v1/simulados/tentativas/me`: histórico de tentativas concluídas do estudante.
+  - `GET /api/v1/simulados/tentativas/{tentativa_id}` e `GET /api/v1/simulados/{simulado_id}/resultado`: relatório de correção.
+  - `DELETE /api/v1/simulados/{simulado_id}`: exclui um simulado e seus registros associados.
+- **Questões Inéditas (`app/api/v1/questoes.py` — prefixo `/api/v1/questoes`)**:
+  - `POST /api/v1/questoes/ineditas/gerar`: dispara o pipeline PoT para gerar e validar uma questão inédita para uma habilidade (`RN-Q01` a `RN-Q04`, `max_attempts=5`). Geração em lote é feita via `scripts/populate_questoes_ineditas.py`.
+  - `GET /api/v1/questoes/ineditas` e `GET /api/v1/questoes/ineditas/{questao_id}`: consulta de questões inéditas.
+- **Dashboard (`app/api/v1/dashboard.py` — prefixo `/api/v1/dashboard`)**:
+  - `GET /api/v1/dashboard/desempenho`: diagnóstico consolidado por competência (`C1`–`C7`) e habilidade (`H01`–`H30`) + últimas tentativas.
+- **Feedback por Item (`app/api/v1/feedback.py` — prefixo `/api/v1/feedback`)**:
+  - `POST /api/v1/feedback/explicar`: gera ou retorna do cache o feedback da Tutora VERA para uma resposta errada (`RN-FB01` a `RN-FB04`); `422` se a explicação for reprovada na verificação contra o gabarito.
+  - `GET /api/v1/feedback/{resposta_item_id}`: consulta feedback já gerado.
 
 ---
 
