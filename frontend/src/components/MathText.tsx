@@ -20,6 +20,15 @@ interface TextBlock {
 
 type ContentBlock = TableBlock | TextBlock;
 
+// Fórmula inline delimitada por `$`. Nunca abre num `$` precedido por letra (moeda como R$) e nunca fecha antes de dígito.
+//  - forma estrita: `$x^2$`, sem espaço logo após a abertura nem antes do fechamento;
+//  - forma com espaços, comum nas respostas do Qwen3 (feedback e tutora): `$ 150 \times 480 = 72\,000 $`, `$ V $`,
+//    `$ f(x) $`. É aceita se o conteúdo tiver marca de LaTeX (\ ^ _ = {) ou não tiver nenhuma palavra de 2+ letras,
+//    para não capturar dólares soltos num texto como "paguei $ 5 e depois $ 10".
+const NO_WORD = String.raw`(?:(?![A-Za-zÀ-ÿ]{2})[^\n$])`;
+const INLINE_DOLLAR_SOURCE =
+  String.raw`(?<![a-zA-Z\\])\$(?:(?!\s)[^\n$]+?(?<!\s)|\s[^\n$]*?[\\^_={][^\n$]*?|\s${NO_WORD}*?[^\s$]${NO_WORD}*?)\$(?!\d)`;
+
 export const MathText: React.FC<MathTextProps> = ({ content, className = '' }) => {
   if (!content) return null;
 
@@ -62,7 +71,7 @@ function parseTableRow(line: string): string[] {
   }
 
   // Mascara pipes '|' que estejam estritamente dentro de expressões matemáticas LaTeX para não quebrar colunas
-  const mathMaskRegex = /(\\\([\s\S]*?\\\)|\$\$[\s\S]*?\$\$|(?<![a-zA-Z\\])\$(?!\s)[^\n$]+?(?<!\s)\$(?!\d))/g;
+  const mathMaskRegex = new RegExp(`(\\\\\\([\\s\\S]*?\\\\\\)|\\$\\$[\\s\\S]*?\\$\\$|${INLINE_DOLLAR_SOURCE})`, 'g');
   const masked = trimmed.replace(mathMaskRegex, (match) => match.replace(/\|/g, '\uFFF0'));
 
   return masked.split('|').map((cell) => cell.replace(/\uFFF0/g, '|').trim());
@@ -266,8 +275,8 @@ function renderInlineTokens(text: string): React.ReactNode[] {
   // 1. \( ... \)
   // 2. ** ... **
   // 3. * ... *
-  // 4. $ ... $ (delimitador LaTeX inline estrito: não precedido por letras/moedas como R$, não seguido/precedido por espaços, e fecha sem dígito subsequente)
-  const inlineRegex = /(\\\([\s\S]*?\\\)|\*\*[^*]+?\*\*|\*[^*]+?\*|(?<![a-zA-Z\\])\$(?!\s)[^\n$]+?(?<!\s)\$(?!\d))/g;
+  // 4. $ ... $ (ver INLINE_DOLLAR_SOURCE)
+  const inlineRegex = new RegExp(`(\\\\\\([\\s\\S]*?\\\\\\)|\\*\\*[^*]+?\\*\\*|\\*[^*]+?\\*|${INLINE_DOLLAR_SOURCE})`, 'g');
   const parts = text.split(inlineRegex);
 
   return parts.map((part, index) => {

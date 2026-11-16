@@ -65,7 +65,12 @@ O frontend da plataforma VERA (`frontend/`) é uma Single Page Application (SPA)
 ## 3. Diretrizes de UI e Renderização Matemática
 
 1. **Compatibilidade Estrita com `MathText.tsx`**: qualquer texto matemático vindo do backend (enunciados, alternativas, justificativas de questões inéditas ou respostas do chat) deve utilizar delimitadores `$` ou `$$` balanceados para evitar quebras de renderização no KaTeX.
-2. **Transparência Pedagógica**: na `ChatPage.tsx`, o raciocínio interno (`thought`) nunca deve ser misturado ao texto principal da resposta (`reply`); ele deve permanecer encapsulado no card expansível de raciocínio da tutora. O mesmo vale para `feedback_content` vs. `thought_scratchpad` no card de feedback da `SimuladoPage.tsx`.
+   - **Regra do `$` inline (`INLINE_DOLLAR_SOURCE`)**: o `$` de abertura nunca pode vir logo depois de uma letra, o que protege moedas como `R$ 5,00`, e o `$` de fechamento nunca pode vir logo antes de um dígito.
+   - Aceitam-se duas formas:
+     - **estrita**: `$x^2$`;
+     - **com espaços**: `$ 150 \times 480 = 72\,000 $`, `$ V $`, `$ f(x) $`, válida apenas se o conteúdo tiver marca de LaTeX (`\`, `^`, `_`, `=` ou `{`) ou não tiver nenhuma palavra de 2 ou mais letras. Assim, um texto como "paguei $ 5 e depois $ 10" continua como texto.
+   - Decisão de 2026-11-16: o Qwen3 do feedback e da tutora (`RN-INF07`) costuma escrever as fórmulas inline com espaços, e elas apareciam como texto cru no card de feedback e no chat.
+   - Uma fórmula cortada pelo teto de tokens (um `$$` sem fechamento) também aparece crua. Isso se corrige na geração, pelo `LLM_MAX_TOKENS_TUTORIA`, e não no `MathText`.
 
 ---
 
