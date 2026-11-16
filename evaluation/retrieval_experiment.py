@@ -41,7 +41,8 @@ CACHE_DIR = os.path.join(RESULTS_DIR, "cache")
 CANDIDATE_DEPTH = 25
 OPERATIONAL_K = 3  # top_k_context padrão do Chat e top_k do Feedback
 PRIMARY_METRICS = ("hit@3", "mrr@10", "ndcg@10", "cp@3")
-ALL_METRICS = ("hit@1", "hit@3", "hit@5", "hit@10", "mrr@10", "ndcg@10", "cp@3")
+# Precisão@K e Revocação@K são descritivas (média e IC95%): ficam fora da família de testes com correção de Holm.
+ALL_METRICS = ("hit@1", "hit@3", "hit@5", "hit@10", "mrr@10", "ndcg@10", "cp@3", "p@3", "r@3", "p@10", "r@10")
 
 RetrieveFn = Callable[[str], List[Dict[str, Any]]]
 

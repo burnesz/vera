@@ -139,10 +139,15 @@ A unidade ranqueada é o **chunk**, porque é o que chega ao prompt. Cada chunk 
 | **MRR@10** | 1 / posição do primeiro chunk grau 2 | Ordenação | Voorhees (1999); MS MARCO |
 | **nDCG@10** | DCG com ganho linear (rel / log2(i+1)), como trec_eval/BEIR. O ideal usa todos os chunks julgados de cada PDF | Usa os graus 2 e 1 | Järvelin & Kekäläinen (2002); Thakur et al. (2021) |
 | **Context Precision@3** | fração dos 3 chunks com grau ≥ 1 (denominador fixo em 3) | Ruído no prompt. Versão determinística da métrica do RAGAS (que usa LLM como juiz) | Es et al. (2024) |
+| **Precisão@K** (K = 3, 10) | fração dos K chunks com grau 2 (denominador fixo em K) | Descritiva. É a versão estrita do CP@3, que aceita também os correlatos (grau 1) | Manning et al. (2008) |
+| **Revocação@K** (K = 3, 10) | fração das unidades de grau 2 da query (documentos ou segmentos) que aparecem nos K primeiros chunks; vários chunks da mesma unidade contam uma vez | Descritiva | Manning et al. (2008) |
 | **Latência p50/p95** | tempo de embed + Pinecone (+ rerank), sem a query de aquecimento | Eficiência | — |
 
 - A **MAP** não é reportada: com um documento-alvo por query, ela é idêntica à MRR.
-- O **Recall@K** não é reportado em separado: com um artigo-alvo por query, ele coincide com o Hit@K.
+- **Precisão@K e Revocação@K** entraram em 2026-11-16, porque a metodologia da monografia as cita. Foram recalculadas a partir dos rankings salvos (`--recalcular`), sem nova consulta ao Pinecone. As métricas já publicadas não mudaram. As duas são descritivas, com média e IC 95%, e ficam fora da família de testes com Holm, para não alterar os p-valores ajustados das quatro primárias.
+- **Revocação@K e cenários:**
+  - No cenário `fechado`, há em média 1,06 unidade-alvo por query, e a Revocação@K fica próxima do Hit@K.
+  - No cenário `completo`, os segmentos de apostila elevam esse número para 5,5 unidades por query, em média. Com só 3 chunks no prompt, a Revocação@3 é baixa por construção. Isso mede a cobertura das fontes, e não a utilidade do contexto, que é o papel do Hit@3 e do CP@3.
 - Pela crítica de Fuhr (2017) às médias de MRR, a MRR é sempre apresentada **junto** com o Hit@K.
 
 #### 2.1.5 Análise estatística

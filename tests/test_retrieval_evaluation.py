@@ -37,7 +37,7 @@ def test_ndcg_perfect_and_ideal_from_chunk_counts():
 
 def test_evaluate_ranking_keys():
     m = q.evaluate_ranking(["x.pdf", "a.pdf"], {"a.pdf": 2}, {"a.pdf": 1})
-    assert set(m) == {"hit@1", "hit@3", "hit@5", "hit@10", "mrr@10", "ndcg@10", "cp@3"}
+    assert set(m) == {"hit@1", "hit@3", "hit@5", "hit@10", "mrr@10", "ndcg@10", "cp@3", "p@3", "r@3", "p@10", "r@10"}
     assert m["hit@1"] == 0.0 and m["hit@3"] == 1.0
     assert m["mrr@10"] == pytest.approx(0.5)
     assert m["ndcg@10"] == pytest.approx(1 / math.log2(3))
@@ -211,3 +211,15 @@ def test_pipeline_with_fake_retrievers():
     assert "p_holm" in comps[0]
     by_tipo = rx.summarize_by(rows["perfeito"], "tipo")
     assert set(by_tipo) == {"direta", "contextual"}
+
+
+def test_precisao_e_revocacao_por_unidade_relevante():
+    """P@K conta chunks de grau 2 sobre K; R@K conta unidades de grau 2 distintas sobre o total de unidades alvo."""
+    relevantes = {"alvo1.pdf": 2, "alvo2.pdf": 2, "correlato.pdf": 1}
+    ranking = ["alvo1.pdf", "alvo1.pdf", "correlato.pdf", "outro.pdf", "alvo2.pdf"]
+    grades = q.grades_for_ranking(ranking, relevantes)
+    assert q.precision_at_k(grades, 3) == 2 / 3
+    assert q.context_precision_at_k(grades, 3) == 1.0  # o CP aceita o correlato
+    assert q.recall_at_k(ranking, relevantes, 3) == 0.5  # alvo1 duas vezes conta uma
+    assert q.recall_at_k(ranking, relevantes, 5) == 1.0
+    assert q.recall_at_k(ranking, {"x.pdf": 1}, 3) == 0.0  # sem unidade alvo

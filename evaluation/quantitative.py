@@ -71,6 +71,27 @@ def context_precision_at_k(grades: Sequence[int], k: int, min_grade: int = RELAT
     return sum(1 for g in grades[:k] if g >= min_grade) / k
 
 
+def precision_at_k(grades: Sequence[int], k: int, min_grade: int = TARGET_GRADE) -> float:
+    """
+    Precisão@K: fração dos K primeiros chunks vindos de uma unidade com grau >= min_grade (padrão: grau 2, alvo).
+    Difere do CP@K, que aceita também os correlatos (grau 1). Denominador fixo em K.
+    """
+    if k <= 0:
+        return 0.0
+    return sum(1 for g in grades[:k] if g >= min_grade) / k
+
+
+def recall_at_k(units: Sequence[str], relevantes: Mapping[str, int], k: int, min_grade: int = TARGET_GRADE) -> float:
+    """
+    Revocação@K: fração das unidades relevantes da query (documentos ou segmentos de apostila com grau >= min_grade)
+    que aparecem entre os K primeiros chunks. Vários chunks da mesma unidade contam uma vez.
+    """
+    alvo = {u for u, g in relevantes.items() if g >= min_grade}
+    if not alvo:
+        return 0.0
+    return len(alvo & set(units[:k])) / len(alvo)
+
+
 def dcg_at_k(grades: Sequence[int], k: int) -> float:
     return sum(g / math.log2(i + 1) for i, g in enumerate(grades[:k], start=1))
 
@@ -88,6 +109,7 @@ def evaluate_ranking(
     mrr_k: int = 10,
     ndcg_k: int = 10,
     cp_k: int = 3,
+    pr_ks: Iterable[int] = (3, 10),
 ) -> Dict[str, float]:
     """Calcula todas as métricas de uma query a partir do ranking de chunks."""
     grades = grades_for_ranking(document_names, relevantes)
@@ -95,6 +117,9 @@ def evaluate_ranking(
     metrics[f"mrr@{mrr_k}"] = reciprocal_rank(grades, mrr_k)
     metrics[f"ndcg@{ndcg_k}"] = ndcg_at_k(grades, ndcg_k, ideal_grades(relevantes, chunk_counts))
     metrics[f"cp@{cp_k}"] = context_precision_at_k(grades, cp_k)
+    for k in pr_ks:  # Precisão@K e Revocação@K, prometidas na metodologia da monografia
+        metrics[f"p@{k}"] = precision_at_k(grades, k)
+        metrics[f"r@{k}"] = recall_at_k(document_names, relevantes, k)
     return metrics
 
 
