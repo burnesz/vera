@@ -36,7 +36,7 @@ flowchart TB
     end
 
     subgraph Storage ["Armazenamento Híbrido & Inferência"]
-        OLLAMA[("Ollama Local (:11434)\nqwen2.5:7b-instruct-q4_K_M")]
+        OLLAMA[("Ollama Local (:11434)\nqwen2.5:7b-instruct-q4_K_M\nqwen3:8b-q4_K_M (feedback e tutora)")]
         PG[("PostgreSQL 15\n(vera_db - 12 tabelas)")]
         PC[("Pinecone (vera-math-index)\n• materiais_didaticos\n• questoes_enem")]
         R2[("Cloudflare R2 (S3)\nAcervo de PDFs Didáticos")]
@@ -55,7 +55,7 @@ flowchart TB
 
 1. **Frontend Web (`frontend/`)**: SPA em React 18 + TypeScript + Vite com Design System proprietário em Vanilla CSS (*Ocean & Coral Palette*) e renderização de fórmulas via KaTeX (`MathText.tsx`).
 2. **Backend e API (`app/`)**: FastAPI assíncrono, injeção de dependências tipadas (`app/api/deps.py`), validação Pydantic v2 (`app/schemas/`) e autenticação stateless via JWT (`HS256`, expiração padrão de 24h / 1440 min) + hash de senhas Bcrypt (`app/core/security.py`).
-3. **Inferência Local (`app/services/llm_client.py`)**: Comunicação direta com o daemon local do Ollama executando `qwen2.5:7b-instruct-q4_K_M`.
+3. **Inferência Local (`app/services/llm_client.py`)**: Comunicação direta com o daemon local do Ollama executando `qwen2.5:7b-instruct-q4_K_M` e, no feedback e na tutora, `qwen3:8b-q4_K_M` sem raciocínio (**RN-INF07**, `DSR-08`).
 4. **Armazenamento Híbrido**:
    - **PostgreSQL 15**: dados relacionais transacionais e auditoria pedagógica.
    - **Pinecone (`vera-math-index`)**: busca semântica em 1024 dimensões (`intfloat/multilingual-e5-large`, métrica cosseno) dividida nos namespaces `materiais_didaticos` e `questoes_enem`.
@@ -70,6 +70,7 @@ flowchart TB
 | **RN-INF01** | **Variáveis de Ambiente Configuráveis**: o endpoint do LLM e o modelo devem ser lidos obrigatoriamente de `LLM_ENDPOINT_URL` (padrão: `http://localhost:11434`) e `LLM_MODEL` (padrão: `qwen2.5:7b-instruct-q4_K_M`). | `Settings` em `app/core/config.py` e `LLMClient.__init__` em `app/services/llm_client.py`. |
 | **RN-INF02** | **Health-Check Proativo**: a API disponibiliza o endpoint `GET /api/v1/health` que inspeciona a conectividade com o Ollama (`/api/tags`), PostgreSQL e Pinecone. | `app/api/v1/health.py` e `LLMClient.health_check()`. |
 | **RN-INF03** | **Resiliência com Retry e Backoff**: chamadas ao LLM utilizam política de retry exponencial (até 3 tentativas) e timeout estendido (`LLM_TIMEOUT_SECONDS = 300.0`, `LLM_NUM_CTX = 4096`) para absorver picos de carga na GPU/CPU local. | `LLMClient.generate()` e `LLMClient.agenerate()` em `app/services/llm_client.py`. |
+| **RN-INF07** | **Modelo por Função**: o feedback por item e a tutora usam `LLM_MODEL_TUTORIA` (padrão: `qwen3:8b-q4_K_M`) com `LLM_THINK_TUTORIA` (padrão: `false`, raciocínio desligado), escolhidos pelo Experimento 1 de seleção de modelos (`DSR-08`). Os demais usos seguem `LLM_MODEL`. | `cliente_tutoria()` em `app/services/llm_client.py`; padrões de `FeedbackService`, `ChatService` e `BaselineService`. |
 | **RN-INF04** | **Modo Mock para Testes**: o `LLMClient` deve manter suporte a `mock_mode=True` (ou respostas simuladas injetáveis) para execução de suítes Pytest desacopladas do hardware de inferência. | `LLMClient(mock_mode=True)` em `app/services/llm_client.py`. |
 
 ---
@@ -83,6 +84,8 @@ flowchart TB
 | | `ACCESS_TOKEN_EXPIRE_MINUTES` | `1440` | Tempo de expiração do token (24h) |
 | **LLM (Ollama)** | `LLM_ENDPOINT_URL` | `"http://localhost:11434"` | URL do daemon local do Ollama (**RN-INF01**) |
 | | `LLM_MODEL` | `"qwen2.5:7b-instruct-q4_K_M"` | Tag do modelo no Ollama (**RN-INF01**) |
+| | `LLM_MODEL_TUTORIA` | `"qwen3:8b-q4_K_M"` | Modelo do feedback e da tutora (**RN-INF07**, `DSR-08`) |
+| | `LLM_THINK_TUTORIA` | `false` | Liga/desliga o modo de raciocínio do modelo da tutoria (**RN-INF07**) |
 | | `LLM_TIMEOUT_SECONDS` | `300.0` | Timeout máximo por requisição HTTP ao Ollama |
 | | `LLM_MAX_TOKENS` | `1024` | Limite padrão de tokens de saída (`num_predict`) |
 | | `LLM_NUM_CTX` | `4096` | Janela de contexto no Ollama (`num_ctx`), calibrada para acomodar o prompt RAG sem sobrecarregar a VRAM |

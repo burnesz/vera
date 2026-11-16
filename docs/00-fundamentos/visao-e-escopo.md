@@ -26,7 +26,7 @@ related_notes:
 2. **Diagnóstico de Lacunas e Desempenho**: correção automática de submissões, agregação contínua de domínio por habilidade (`critico`, `em_desenvolvimento`, `consolidado`) e visualização por Competência (`C1` a `C7`).
 3. **Tutoria Pedagógica Interativa (Chat RAG)**: a tutora virtual VERA atende o estudante em sessões conversacionais persistentes com *Query Rewriting* (resolução de anáforas), recuperação semântica no acervo de materiais didáticos (`materiais_didaticos`), raciocínio passo a passo explícito via *Chain-of-Thought* (`<pensamento>`), citações de fontes e renderização matemática em LaTeX / KaTeX.
 4. **Geração de Questões Inéditas com Garantia Matemática (PoT)**: pipeline *Program-Aided Generation* em que o LLM redige a situação-problema e uma função Python `resolver()`, executada em subprocesso isolado com validação de AST, nexo numérico (*groundedness*), *Auto-Healing* de distratores e validação cega em 3 etapas.
-5. **Privacidade, Reprodutibilidade e Comparação Científica**: inferência 100% local com o modelo **Qwen 2.5 7B Instruct** (`qwen2.5:7b-instruct-q4_K_M`) via daemon do **Ollama**, sem custo por chamada e preparada para experimentos empíricos controlados (**Baseline Zero-Shot vs. RAG**).
+5. **Privacidade, Reprodutibilidade e Comparação Científica**: inferência 100% local via daemon do **Ollama**, com o **Qwen 2.5 7B Instruct** (`qwen2.5:7b-instruct-q4_K_M`) e, no feedback e na tutora, o **Qwen3 8B** sem raciocínio (`DSR-08`), sem custo por chamada e preparada para experimentos empíricos controlados (**Baseline Zero-Shot vs. RAG**).
 
 ---
 
@@ -70,7 +70,7 @@ As 30 habilidades (`H01`–`H30`), cadastradas na tabela `habilidades_enem` via 
 | **Auto-Healing** | Algoritmo determinístico no backend que substitui distratores duplicados ou em colisão por variações cognitivas plausíveis sem nova chamada ao LLM. |
 | **Stateless Retry** | Nova tentativa de geração com contexto 100% limpo e novo sorteio de tema/exemplos quando ocorre falha estrutural irreparável, evitando *context anchoring bias*. |
 | **Resolução Cega Pura** | Primeira etapa da validação onde o LLM resolve o item recebendo apenas o enunciado (sem alternativas nem gabarito), evitando *sycophancy* (viés de confirmação). |
-| **Baseline** | O mesmo modelo `Qwen2.5-7B-Instruct` operando em modo *zero-shot* (sem RAG e sem exemplos *few-shot*) como controle experimental. |
+| **Baseline** | O mesmo modelo de cada fluxo (Qwen3 8B no feedback e na tutora), com os mesmos prompts, operando em modo *zero-shot* (sem RAG, sem exemplos *few-shot* e sem as verificações) como controle experimental. |
 
 ---
 

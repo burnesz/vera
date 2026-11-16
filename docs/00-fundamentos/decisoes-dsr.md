@@ -1,7 +1,7 @@
 ---
 title: "Catálogo de Decisões de Engenharia DSR (Design Science Research)"
 domain: "fundamentos"
-rules: ["DSR-01", "DSR-02", "DSR-03", "DSR-04", "DSR-05", "DSR-06", "DSR-07"]
+rules: ["DSR-01", "DSR-02", "DSR-03", "DSR-04", "DSR-05", "DSR-06", "DSR-07", "DSR-08"]
 related_code:
   - "app/services/llm_client.py"
   - "app/services/chat_service.py"
@@ -96,6 +96,36 @@ related_notes:
   3. **Complexidade Determinística e Auditoria por Critério (`B2`/`B3`)**: a complexidade passou a ser medida na AST (`POT_MIN_OPERATIONS=3`, `POT_MIN_OPERATION_TYPES=2`), e a auditoria semântica avalia 5 critérios em chamadas binárias separadas (ver Decisão 6).
   4. **Nexo Numérico Inteligente via Backward Slicing na AST (`A5` / `A6`)**: `365` permanece fora de `ALLOWED_NUMERIC_CONSTANTS`, adicionando-se `_WORDS_TO_NUMBERS` e conversões percentuais automáticas (`N/100` e `(100-N)/100` quando `%`, `percentual` ou `porcentagem` constam no enunciado ou tabela). Substituiu-se o recorte textual bruto (`code.split("return")[0]`) por **backward slicing na AST** sobre a fatia de variáveis que calculam `correta` (`_slice_correta_and_validate_distractors`), mantendo nexo numérico estrito de 100% para o gabarito e exigindo que cada distrator `erro_*` dependa transitivamente de pelo menos uma variável fundamentada no enunciado/tabela (permitindo literais auxiliares soltos em `erro_*` apenas sob essa condição).
 - **Arquivos de Referência**: `app/core/prompts.py`, `app/schemas/question.py`, `app/services/question_service.py`, `app/services/code_executor.py`.
+
+---
+
+## Decisão 8 (`DSR-08`): Um Modelo por Função, Escolhido por Experimento
+
+- **Contexto Inicial**: Todos os fluxos usavam o mesmo modelo, o Qwen 2.5 7B (`LLM_MODEL`), escolhido no início do projeto sem comparação com alternativas.
+- **Problema Identificado no Ciclo DSR**: Quando o mesmo modelo gera uma questão e depois a resolve às cegas, os dois assumem as mesmas convenções e a validação aprova itens defeituosos (ver Decisão 7). A escolha do modelo de cada papel precisava de evidência empírica.
+- **Evidência**: Dois experimentos com quatro modelos abertos de até 8B (Qwen 2.5 7B, Qwen3 8B, DeepSeek-R1 8B e Llama 3.1 8B), no repositório do serviço de questões inéditas (`questoes-ineditas-enem`, `data/LEIAME.md`):
+  - **Experimento 1 (avaliador):** 280 questões, 140 autênticas do ENEM e 140 com erros inseridos. O **Qwen3 8B** teve o maior F1 (0,719), significativo pelo teste de McNemar (p ≤ 0,002), e a **maior acurácia na resolução das questões autênticas**:
+
+    | Modelo | Acurácia nas autênticas |
+    | :--- | ---: |
+    | **Qwen3 8B** | **61,4%** |
+    | Qwen 2.5 7B | 43,6% |
+    | DeepSeek-R1 8B | 43,6% |
+    | Llama 3.1 8B | 21,4% |
+
+  - **Experimento 2 (gerador):** com o Qwen3 como avaliador, o **Qwen 2.5 7B** teve a maior taxa de aprovação (20,0%) e o menor tempo por questão aprovada.
+- **Solução Implementada**:
+
+  | Função | Modelo | Justificativa |
+  | :--- | :--- | :--- |
+  | Geração de questões inéditas | Qwen 2.5 7B | Experimento 2 |
+  | Validação das questões | Qwen3 8B, sem raciocínio | Experimento 1 (maior F1) |
+  | **Feedback por item e tutora virtual** | **Qwen3 8B, sem raciocínio** (`LLM_MODEL_TUTORIA`, `RN-INF07`) | Experimento 1: é o modelo que mais acerta a resolução de questões do ENEM, e explicar a resolução corretamente é o núcleo do feedback e da tutoria |
+
+  - **Raciocínio desligado** (`LLM_THINK_TUTORIA=false`): o fluxo já estrutura o raciocínio no bloco `<pensamento>`, e com o modo de raciocínio ligado o Qwen3 fica várias vezes mais lento.
+  - **O verificador do feedback (`RN-FB04`) não cobre esse risco**: ele confere a letra citada contra o gabarito, mas não a correção do raciocínio. Por isso a escolha do modelo importa mesmo com o gabarito no prompt.
+  - **A baseline zero-shot usa o mesmo modelo de cada fluxo** (`app/services/baseline_service.py`), para que a comparação mude só a arquitetura, e não o modelo.
+- **Arquivos de Referência**: `app/core/config.py`, `app/services/llm_client.py` (`cliente_tutoria`), `app/services/feedback_service.py`, `app/services/chat_service.py`, `app/services/baseline_service.py`.
 
 ---
 
