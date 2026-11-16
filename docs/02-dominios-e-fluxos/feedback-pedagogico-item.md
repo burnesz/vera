@@ -37,7 +37,7 @@ flowchart LR
     B -- "Não" --> C["Carrega RespostaItem + questão\n(enem ou inedita) + habilidade"]
     C --> D["Query RAG determinística:\nquery canônica da habilidade\n+ comando final do enunciado"]
     D --> E["Pinecone: materiais_didaticos\n(top_k=3, falha tolerada)"]
-    E --> F["LLM (temperature=0.3)\nVERA_QUESTION_FEEDBACK_SYSTEM_PROMPT\n<pensamento> + <resposta>"]
+    E --> F["LLM Qwen3 8B sem raciocínio (temperature=0.3)\nVERA_QUESTION_FEEDBACK_SYSTEM_PROMPT\n<pensamento> + <resposta>"]
     F --> V{"verify_feedback\n(gabarito + habilidade)"}
     V -- "Aprovado" --> G["Persistência em feedbacks\n(is_verified=True)"]
     V -- "Reprovado (< 3 tentativas)" --> R["Stateless Retry\n+ dica corretiva"] --> F
@@ -58,6 +58,9 @@ flowchart LR
 - O modelo deve emitir `<pensamento>` (diagnóstico do distrator, resolução, ancoragem teórica, planejamento) e `<resposta>` (diagnóstico acolhedor, resolução passo a passo em LaTeX `$...$`/`$$...$$` — `RN-CHAT04` — e o que estudar).
 - A saída é separada por `parse_cot_response`; `thought_scratchpad` guarda o raciocínio e `feedback_content` a resposta limpa (fallback: texto bruto se `<resposta>` vier vazio).
 - Cada tentativa é uma chamada ao `LLMClient.generate` com `temperature=0.3` (até 3 tentativas — ver `RN-FB04`).
+- **Modelo:** `LLM_MODEL_TUTORIA` (Qwen3 8B) com raciocínio desligado (`RN-INF07`), escolhido por ser o modelo que mais acerta a resolução de questões do ENEM no Experimento 1 de seleção de modelos (`DSR-08`).
+- As mensagens (sistema + usuário) são enviadas ao `/api/generate` do Ollama como `system` + `prompt`. Até 15/11/2026, a lista de mensagens era enviada inteira no campo `prompt`, e o Ollama recusava a chamada (HTTP 400); a conversão agora é feita em `LLMClient._build_payload_and_url`.
+- A geração em si (RAG, inferência e verificação) fica em `FeedbackService.gerar_feedback_verificado`, sem acesso ao banco, para ser reutilizada pela avaliação com o especialista (`scripts/run_baseline_pairs.py`).
 - A instrução final do prompt exige que a `<resposta>` afirme explicitamente a alternativa do gabarito, cite apenas a habilidade do item e nunca apresente a alternativa marcada como correta.
 
 ### `RN-FB03` — Cache Relacional e Controle de Acesso
