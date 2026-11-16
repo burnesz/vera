@@ -1,0 +1,14 @@
+{
+  "criado_em": "2026-11-15T23:29:41",
+  "commit_vera": "a74ef92ad1545a3839a54a9c8ef9c1435fd26459",
+  "modelo": "qwen3:8b-q4_K_M (think=False)",
+  "ollama_versao": "0.34.1",
+  "endpoint": "http://localhost:11434",
+  "n_pares_por_fluxo": 10,
+  "semente": 2026,
+  "top_k_contexto": 3,
+  "condicoes": {
+    "vera": "FeedbackService.gerar_feedback_verificado (RAG + verificação RN-FB04) e ChatService.send_message (reescrita + RAG)",
+    "baseline": "BaselineService: mesmos prompts, sem RAG, sem reescrita e sem verificação"
+  }
+}
