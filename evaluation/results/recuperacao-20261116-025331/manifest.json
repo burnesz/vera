@@ -1,0 +1,55 @@
+{
+  "experimento": "recuperacao_materiais_didaticos",
+  "gerado_em": "2026-11-16T02:53:31",
+  "git_commit": "f6a427631ee33d75a011495519fe4f329f5639bd",
+  "gabarito_versao": "2.0",
+  "gabarito_congelado": true,
+  "gabarito_sha256": "4a6e9006a0f2e78537e280ae0371f75e4694d0ebabab56f1321c6f541add01b6",
+  "n_queries": 126,
+  "namespace": "materiais_didaticos",
+  "indice_pinecone": "vera-math-index",
+  "modelo_embeddings": "intfloat/multilingual-e5-large",
+  "reranker": "BAAI/bge-reranker-v2-m3",
+  "bm25": {
+    "k1": 1.2,
+    "b": 0.75,
+    "tokenizacao": "minusculas, sem acentos, stopwords PT, sem stemming"
+  },
+  "profundidade_ranking": 25,
+  "k_operacional": 3,
+  "sistemas": [
+    "e5_denso",
+    "e5_rerank",
+    "bm25"
+  ],
+  "cenarios": [
+    "fechado",
+    "completo"
+  ],
+  "bootstrap": 10000,
+  "seed": 42,
+  "ambiente_ao_iniciar": {
+    "cpus": 16,
+    "carga_media_1_5_15min": [
+      0.34,
+      0.41,
+      0.85
+    ],
+    "torch_threads": 8,
+    "cuda_disponivel": true
+  },
+  "vetores_no_namespace": 4038,
+  "chunks_corpus_bm25_completo": 4038,
+  "chunks_corpus_bm25_fechado": 1285,
+  "ambiente_ao_final": {
+    "cpus": 16,
+    "carga_media_1_5_15min": [
+      3.24,
+      2.54,
+      1.91
+    ],
+    "torch_threads": 16,
+    "cuda_disponivel": true
+  },
+  "dispositivo_embeddings": "cpu"
+}
