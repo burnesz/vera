@@ -22,6 +22,11 @@ class Settings(BaseSettings):
     LLM_TIMEOUT_SECONDS: float = 300.0
     LLM_MAX_TOKENS: int = 1024
     LLM_NUM_CTX: int = 4096
+    # Feedback pedagógico e tutora (RN-INF07): o Qwen3 8B sem raciocínio, que teve a maior acurácia na resolução de
+    # questões autênticas do ENEM no Experimento 1 de seleção de modelos (questoes-ineditas-enem). O LLM_MODEL acima
+    # segue nos demais usos.
+    LLM_MODEL_TUTORIA: str = "qwen3:8b-q4_K_M"
+    LLM_THINK_TUTORIA: Optional[bool] = False
 
     # Vector Store (Pinecone)
 

@@ -1,6 +1,6 @@
 import time
 import logging
-from typing import Dict, Any, Optional, Tuple, Union
+from typing import Dict, Any, List, Optional, Tuple, Union
 import httpx
 
 from app.core.config import settings
@@ -45,6 +45,7 @@ class LLMClient:
         timeout_seconds: Optional[float] = None,
         max_retries: int = 3,
         mock_mode: bool = False,
+        think: Optional[bool] = None,
         **kwargs: Any
     ):
         self.endpoint_url = (endpoint_url or settings.LLM_ENDPOINT_URL).rstrip("/")
@@ -52,6 +53,8 @@ class LLMClient:
         self.timeout_seconds = timeout_seconds or settings.LLM_TIMEOUT_SECONDS
         self.max_retries = max_retries
         self.mock_mode = mock_mode
+        # Modelos com raciocínio (ex.: Qwen3) aceitam ligar/desligar o "thinking"; None mantém o padrão do modelo
+        self.think = think
 
     @property
     def headers(self) -> Dict[str, str]:
@@ -61,7 +64,7 @@ class LLMClient:
 
     def _build_payload_and_url(
         self,
-        prompt: str,
+        prompt: Union[str, List[Dict[str, Any]]],
         max_tokens: Optional[int] = None,
         temperature: float = 0.0,
         top_p: float = 0.9,
@@ -82,6 +85,12 @@ class LLMClient:
         if seed is not None:
             options["seed"] = int(seed)
 
+        # O /api/generate só aceita texto: uma lista de mensagens vira 'system' + 'prompt'
+        system: Optional[str] = None
+        if isinstance(prompt, list):
+            system = "\n\n".join(str(m.get("content", "")) for m in prompt if m.get("role") == "system") or None
+            prompt = "\n\n".join(str(m.get("content", "")) for m in prompt if m.get("role") != "system")
+
         payload: Dict[str, Any] = {
             "model": self.model_name,
             "prompt": prompt,
@@ -89,8 +98,12 @@ class LLMClient:
             "keep_alive": "30m",
             "options": options
         }
+        if system:
+            payload["system"] = system
         if format:
             payload["format"] = format
+        if self.think is not None:
+            payload["think"] = self.think
 
         return url, payload
 
@@ -410,3 +423,11 @@ class LLMClient:
             "3. **Resolução Passo a Passo:** Aplicando o conteúdo teórico correto, chegamos à alternativa do gabarito oficial.\n"
             "4. **Recomendação de Estudo:** Revise o material didático sobre o tema e pratique exercícios com foco na identificação de grandezas."
         )
+
+
+def cliente_tutoria(**kwargs: Any) -> LLMClient:
+    """
+    Cliente do feedback pedagógico e da tutora (RN-INF07): LLM_MODEL_TUTORIA com LLM_THINK_TUTORIA.
+    A baseline zero-shot usa o mesmo cliente, para que a comparação mude só a arquitetura, e não o modelo.
+    """
+    return LLMClient(model_name=settings.LLM_MODEL_TUTORIA, think=settings.LLM_THINK_TUTORIA, **kwargs)
