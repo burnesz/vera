@@ -1,0 +1,1940 @@
+{
+  "versao": "1.0",
+  "congelado": false,
+  "descricao": "Gabarito (qrels) de recuperação para o namespace materiais_didaticos, restrito aos 62 PDFs ENEM_MAT_* derivados da Wikipédia. Relevância graduada: 2 = documento-alvo do tópico (inclui duplicatas exatas), 1 = documento correlato aceitável.",
+  "unidade_de_relevancia": "documento (metadata.document_name dos chunks recuperados)",
+  "escala": {
+    "2": "alvo",
+    "1": "correlato",
+    "0": "não relevante / não julgado"
+  },
+  "observacoes": [
+    "ENEM_MAT_05_analise-combinatoria.pdf e ENEM_MAT_05_arranjo-combinatoria.pdf são bytes idênticos (artigo 'Combinatória').",
+    "ENEM_MAT_06_juros-compostos.pdf e ENEM_MAT_06_juros-simples.pdf são bytes idênticos (artigo 'Juro').",
+    "O prefixo numérico do arquivo (01..07) é um eixo temático próprio do acervo e NÃO corresponde às competências C1..C7 da Matriz do ENEM.",
+    "PDFs TEO_*, caderno_matematica.pdf e ebook-matematica-e-suas-tecnologias.pdf estão fora do gabarito (sem rótulo de tópico)."
+  ],
+  "documentos": [
+    {
+      "document_name": "ENEM_MAT_01_conjuntos-numericos.pdf",
+      "topico": "conjuntos numericos",
+      "eixo_arquivo": "01",
+      "eixo_tematico": "Números e operações",
+      "artigo_wikipedia": "Conjuntos de números",
+      "chunks_indexados": 39,
+      "duplicado_de": null
+    },
+    {
+      "document_name": "ENEM_MAT_01_numeros-irracionais.pdf",
+      "topico": "numeros irracionais",
+      "eixo_arquivo": "01",
+      "eixo_tematico": "Números e operações",
+      "artigo_wikipedia": "Número irracional",
+      "chunks_indexados": 10,
+      "duplicado_de": null
+    },
+    {
+      "document_name": "ENEM_MAT_01_numeros-racionais.pdf",
+      "topico": "numeros racionais",
+      "eixo_arquivo": "01",
+      "eixo_tematico": "Números e operações",
+      "artigo_wikipedia": "Número racional",
+      "chunks_indexados": 25,
+      "duplicado_de": null
+    },
+    {
+      "document_name": "ENEM_MAT_01_porcentagem.pdf",
+      "topico": "porcentagem",
+      "eixo_arquivo": "01",
+      "eixo_tematico": "Números e operações",
+      "artigo_wikipedia": "Porcentagem",
+      "chunks_indexados": 7,
+      "duplicado_de": null
+    },
+    {
+      "document_name": "ENEM_MAT_01_progressao-aritmetica.pdf",
+      "topico": "progressao aritmetica",
+      "eixo_arquivo": "01",
+      "eixo_tematico": "Números e operações",
+      "artigo_wikipedia": "Progressão aritmética",
+      "chunks_indexados": 17,
+      "duplicado_de": null
+    },
+    {
+      "document_name": "ENEM_MAT_01_progressao-geometrica.pdf",
+      "topico": "progressao geometrica",
+      "eixo_arquivo": "01",
+      "eixo_tematico": "Números e operações",
+      "artigo_wikipedia": "Progressão geométrica",
+      "chunks_indexados": 9,
+      "duplicado_de": null
+    },
+    {
+      "document_name": "ENEM_MAT_01_razao-e-proporcao.pdf",
+      "topico": "razao e proporcao",
+      "eixo_arquivo": "01",
+      "eixo_tematico": "Números e operações",
+      "artigo_wikipedia": "Razão (matemática)",
+      "chunks_indexados": 5,
+      "duplicado_de": null
+    },
+    {
+      "document_name": "ENEM_MAT_01_regra-de-tres.pdf",
+      "topico": "regra de tres",
+      "eixo_arquivo": "01",
+      "eixo_tematico": "Números e operações",
+      "artigo_wikipedia": "Regra de três simples",
+      "chunks_indexados": 3,
+      "duplicado_de": null
+    },
+    {
+      "document_name": "ENEM_MAT_01_sistema-de-numeracao.pdf",
+      "topico": "sistema de numeracao",
+      "eixo_arquivo": "01",
+      "eixo_tematico": "Números e operações",
+      "artigo_wikipedia": "Sistema de numeração",
+      "chunks_indexados": 23,
+      "duplicado_de": null
+    },
+    {
+      "document_name": "ENEM_MAT_02_equacao-do-primeiro-grau.pdf",
+      "topico": "equacao do primeiro grau",
+      "eixo_arquivo": "02",
+      "eixo_tematico": "Álgebra e funções",
+      "artigo_wikipedia": "Equação linear",
+      "chunks_indexados": 12,
+      "duplicado_de": null
+    },
+    {
+      "document_name": "ENEM_MAT_02_equacao-do-segundo-grau.pdf",
+      "topico": "equacao do segundo grau",
+      "eixo_arquivo": "02",
+      "eixo_tematico": "Álgebra e funções",
+      "artigo_wikipedia": "Equação quadrática",
+      "chunks_indexados": 25,
+      "duplicado_de": null
+    },
+    {
+      "document_name": "ENEM_MAT_02_funcao-afim.pdf",
+      "topico": "funcao afim",
+      "eixo_arquivo": "02",
+      "eixo_tematico": "Álgebra e funções",
+      "artigo_wikipedia": "Função afim",
+      "chunks_indexados": 12,
+      "duplicado_de": null
+    },
+    {
+      "document_name": "ENEM_MAT_02_funcao-exponencial.pdf",
+      "topico": "funcao exponencial",
+      "eixo_arquivo": "02",
+      "eixo_tematico": "Álgebra e funções",
+      "artigo_wikipedia": "Função exponencial",
+      "chunks_indexados": 11,
+      "duplicado_de": null
+    },
+    {
+      "document_name": "ENEM_MAT_02_funcao-logaritmica.pdf",
+      "topico": "funcao logaritmica",
+      "eixo_arquivo": "02",
+      "eixo_tematico": "Álgebra e funções",
+      "artigo_wikipedia": "Logaritmo",
+      "chunks_indexados": 82,
+      "duplicado_de": null
+    },
+    {
+      "document_name": "ENEM_MAT_02_funcao-quadratica.pdf",
+      "topico": "funcao quadratica",
+      "eixo_arquivo": "02",
+      "eixo_tematico": "Álgebra e funções",
+      "artigo_wikipedia": "Função quadrática",
+      "chunks_indexados": 19,
+      "duplicado_de": null
+    },
+    {
+      "document_name": "ENEM_MAT_02_inequacao.pdf",
+      "topico": "inequacao",
+      "eixo_arquivo": "02",
+      "eixo_tematico": "Álgebra e funções",
+      "artigo_wikipedia": "Inequação",
+      "chunks_indexados": 2,
+      "duplicado_de": null
+    },
+    {
+      "document_name": "ENEM_MAT_02_sequencia-numerica.pdf",
+      "topico": "sequencia numerica",
+      "eixo_arquivo": "02",
+      "eixo_tematico": "Álgebra e funções",
+      "artigo_wikipedia": "Sequência (matemática)",
+      "chunks_indexados": 13,
+      "duplicado_de": null
+    },
+    {
+      "document_name": "ENEM_MAT_02_sistema-de-equacoes-lineares.pdf",
+      "topico": "sistema de equacoes lineares",
+      "eixo_arquivo": "02",
+      "eixo_tematico": "Álgebra e funções",
+      "artigo_wikipedia": "Sistema de equações lineares",
+      "chunks_indexados": 29,
+      "duplicado_de": null
+    },
+    {
+      "document_name": "ENEM_MAT_03_area-geometria.pdf",
+      "topico": "area geometria",
+      "eixo_arquivo": "03",
+      "eixo_tematico": "Geometria e trigonometria",
+      "artigo_wikipedia": "Área",
+      "chunks_indexados": 34,
+      "duplicado_de": null
+    },
+    {
+      "document_name": "ENEM_MAT_03_ciclo-trigonometrico.pdf",
+      "topico": "ciclo trigonometrico",
+      "eixo_arquivo": "03",
+      "eixo_tematico": "Geometria e trigonometria",
+      "artigo_wikipedia": "Círculo unitário",
+      "chunks_indexados": 11,
+      "duplicado_de": null
+    },
+    {
+      "document_name": "ENEM_MAT_03_cilindro.pdf",
+      "topico": "cilindro",
+      "eixo_arquivo": "03",
+      "eixo_tematico": "Geometria e trigonometria",
+      "artigo_wikipedia": "Cilindro",
+      "chunks_indexados": 5,
+      "duplicado_de": null
+    },
+    {
+      "document_name": "ENEM_MAT_03_cone.pdf",
+      "topico": "cone",
+      "eixo_arquivo": "03",
+      "eixo_tematico": "Geometria e trigonometria",
+      "artigo_wikipedia": "Cone",
+      "chunks_indexados": 7,
+      "duplicado_de": null
+    },
+    {
+      "document_name": "ENEM_MAT_03_distancia-entre-dois-pontos.pdf",
+      "topico": "distancia entre dois pontos",
+      "eixo_arquivo": "03",
+      "eixo_tematico": "Geometria e trigonometria",
+      "artigo_wikipedia": "Distância euclidiana",
+      "chunks_indexados": 9,
+      "duplicado_de": null
+    },
+    {
+      "document_name": "ENEM_MAT_03_esfera.pdf",
+      "topico": "esfera",
+      "eixo_arquivo": "03",
+      "eixo_tematico": "Geometria e trigonometria",
+      "artigo_wikipedia": "Esfera",
+      "chunks_indexados": 7,
+      "duplicado_de": null
+    },
+    {
+      "document_name": "ENEM_MAT_03_geometria-analitica.pdf",
+      "topico": "geometria analitica",
+      "eixo_arquivo": "03",
+      "eixo_tematico": "Geometria e trigonometria",
+      "artigo_wikipedia": "Geometria analítica",
+      "chunks_indexados": 28,
+      "duplicado_de": null
+    },
+    {
+      "document_name": "ENEM_MAT_03_geometria-espacial.pdf",
+      "topico": "geometria espacial",
+      "eixo_arquivo": "03",
+      "eixo_tematico": "Geometria e trigonometria",
+      "artigo_wikipedia": "Geometria espacial",
+      "chunks_indexados": 3,
+      "duplicado_de": null
+    },
+    {
+      "document_name": "ENEM_MAT_03_geometria-plana.pdf",
+      "topico": "geometria plana",
+      "eixo_arquivo": "03",
+      "eixo_tematico": "Geometria e trigonometria",
+      "artigo_wikipedia": "Geometria euclidiana",
+      "chunks_indexados": 26,
+      "duplicado_de": null
+    },
+    {
+      "document_name": "ENEM_MAT_03_lei-dos-cossenos.pdf",
+      "topico": "lei dos cossenos",
+      "eixo_arquivo": "03",
+      "eixo_tematico": "Geometria e trigonometria",
+      "artigo_wikipedia": "Lei dos cossenos",
+      "chunks_indexados": 7,
+      "duplicado_de": null
+    },
+    {
+      "document_name": "ENEM_MAT_03_lei-dos-senos.pdf",
+      "topico": "lei dos senos",
+      "eixo_arquivo": "03",
+      "eixo_tematico": "Geometria e trigonometria",
+      "artigo_wikipedia": "Lei dos senos",
+      "chunks_indexados": 7,
+      "duplicado_de": null
+    },
+    {
+      "document_name": "ENEM_MAT_03_perimetro.pdf",
+      "topico": "perimetro",
+      "eixo_arquivo": "03",
+      "eixo_tematico": "Geometria e trigonometria",
+      "artigo_wikipedia": "Perímetro",
+      "chunks_indexados": 4,
+      "duplicado_de": null
+    },
+    {
+      "document_name": "ENEM_MAT_03_piramide-geometria.pdf",
+      "topico": "piramide geometria",
+      "eixo_arquivo": "03",
+      "eixo_tematico": "Geometria e trigonometria",
+      "artigo_wikipedia": "Pirâmide",
+      "chunks_indexados": 7,
+      "duplicado_de": null
+    },
+    {
+      "document_name": "ENEM_MAT_03_plano-cartesiano.pdf",
+      "topico": "plano cartesiano",
+      "eixo_arquivo": "03",
+      "eixo_tematico": "Geometria e trigonometria",
+      "artigo_wikipedia": "Sistema de coordenadas cartesiano",
+      "chunks_indexados": 13,
+      "duplicado_de": null
+    },
+    {
+      "document_name": "ENEM_MAT_03_poligono.pdf",
+      "topico": "poligono",
+      "eixo_arquivo": "03",
+      "eixo_tematico": "Geometria e trigonometria",
+      "artigo_wikipedia": "Polígono",
+      "chunks_indexados": 12,
+      "duplicado_de": null
+    },
+    {
+      "document_name": "ENEM_MAT_03_prisma-geometria.pdf",
+      "topico": "prisma geometria",
+      "eixo_arquivo": "03",
+      "eixo_tematico": "Geometria e trigonometria",
+      "artigo_wikipedia": "Prisma",
+      "chunks_indexados": 6,
+      "duplicado_de": null
+    },
+    {
+      "document_name": "ENEM_MAT_03_semelhanca-de-triangulos.pdf",
+      "topico": "semelhanca de triangulos",
+      "eixo_arquivo": "03",
+      "eixo_tematico": "Geometria e trigonometria",
+      "artigo_wikipedia": "Semelhança de triângulos",
+      "chunks_indexados": 11,
+      "duplicado_de": null
+    },
+    {
+      "document_name": "ENEM_MAT_03_teorema-de-pitagoras.pdf",
+      "topico": "teorema de pitagoras",
+      "eixo_arquivo": "03",
+      "eixo_tematico": "Geometria e trigonometria",
+      "artigo_wikipedia": "Teorema de Pitágoras",
+      "chunks_indexados": 43,
+      "duplicado_de": null
+    },
+    {
+      "document_name": "ENEM_MAT_03_triangulo-retangulo.pdf",
+      "topico": "triangulo retangulo",
+      "eixo_arquivo": "03",
+      "eixo_tematico": "Geometria e trigonometria",
+      "artigo_wikipedia": "Triângulo retângulo",
+      "chunks_indexados": 7,
+      "duplicado_de": null
+    },
+    {
+      "document_name": "ENEM_MAT_03_trigonometria.pdf",
+      "topico": "trigonometria",
+      "eixo_arquivo": "03",
+      "eixo_tematico": "Geometria e trigonometria",
+      "artigo_wikipedia": "Trigonometria",
+      "chunks_indexados": 19,
+      "duplicado_de": null
+    },
+    {
+      "document_name": "ENEM_MAT_03_volume.pdf",
+      "topico": "volume",
+      "eixo_arquivo": "03",
+      "eixo_tematico": "Geometria e trigonometria",
+      "artigo_wikipedia": "Volume",
+      "chunks_indexados": 3,
+      "duplicado_de": null
+    },
+    {
+      "document_name": "ENEM_MAT_04_densidade-demografica.pdf",
+      "topico": "densidade demografica",
+      "eixo_arquivo": "04",
+      "eixo_tematico": "Grandezas e medidas",
+      "artigo_wikipedia": "Densidade populacional",
+      "chunks_indexados": 4,
+      "duplicado_de": null
+    },
+    {
+      "document_name": "ENEM_MAT_04_escala-cartografia.pdf",
+      "topico": "escala cartografia",
+      "eixo_arquivo": "04",
+      "eixo_tematico": "Grandezas e medidas",
+      "artigo_wikipedia": "Escala cartográfica",
+      "chunks_indexados": 8,
+      "duplicado_de": null
+    },
+    {
+      "document_name": "ENEM_MAT_04_sistema-internacional-de-unidades.pdf",
+      "topico": "sistema internacional de unidades",
+      "eixo_arquivo": "04",
+      "eixo_tematico": "Grandezas e medidas",
+      "artigo_wikipedia": "Sistema Internacional de Unidades",
+      "chunks_indexados": 48,
+      "duplicado_de": null
+    },
+    {
+      "document_name": "ENEM_MAT_04_vazao.pdf",
+      "topico": "vazao",
+      "eixo_arquivo": "04",
+      "eixo_tematico": "Grandezas e medidas",
+      "artigo_wikipedia": "Vazão",
+      "chunks_indexados": 5,
+      "duplicado_de": null
+    },
+    {
+      "document_name": "ENEM_MAT_04_velocidade.pdf",
+      "topico": "velocidade",
+      "eixo_arquivo": "04",
+      "eixo_tematico": "Grandezas e medidas",
+      "artigo_wikipedia": "Velocidade",
+      "chunks_indexados": 28,
+      "duplicado_de": null
+    },
+    {
+      "document_name": "ENEM_MAT_05_analise-combinatoria.pdf",
+      "topico": "analise combinatoria",
+      "eixo_arquivo": "05",
+      "eixo_tematico": "Combinatória, estatística e probabilidade",
+      "artigo_wikipedia": "Combinatória",
+      "chunks_indexados": 17,
+      "duplicado_de": null
+    },
+    {
+      "document_name": "ENEM_MAT_05_arranjo-combinatoria.pdf",
+      "topico": "arranjo combinatoria",
+      "eixo_arquivo": "05",
+      "eixo_tematico": "Combinatória, estatística e probabilidade",
+      "artigo_wikipedia": "Combinatória",
+      "chunks_indexados": 17,
+      "duplicado_de": "ENEM_MAT_05_analise-combinatoria.pdf"
+    },
+    {
+      "document_name": "ENEM_MAT_05_combinacao-matematica.pdf",
+      "topico": "combinacao matematica",
+      "eixo_arquivo": "05",
+      "eixo_tematico": "Combinatória, estatística e probabilidade",
+      "artigo_wikipedia": "Combinação",
+      "chunks_indexados": 6,
+      "duplicado_de": null
+    },
+    {
+      "document_name": "ENEM_MAT_05_desvio-padrao.pdf",
+      "topico": "desvio padrao",
+      "eixo_arquivo": "05",
+      "eixo_tematico": "Combinatória, estatística e probabilidade",
+      "artigo_wikipedia": "Desvio padrão",
+      "chunks_indexados": 73,
+      "duplicado_de": null
+    },
+    {
+      "document_name": "ENEM_MAT_05_estatistica.pdf",
+      "topico": "estatistica",
+      "eixo_arquivo": "05",
+      "eixo_tematico": "Combinatória, estatística e probabilidade",
+      "artigo_wikipedia": "Estatística",
+      "chunks_indexados": 14,
+      "duplicado_de": null
+    },
+    {
+      "document_name": "ENEM_MAT_05_media-aritmetica.pdf",
+      "topico": "media aritmetica",
+      "eixo_arquivo": "05",
+      "eixo_tematico": "Combinatória, estatística e probabilidade",
+      "artigo_wikipedia": "Média aritmética",
+      "chunks_indexados": 6,
+      "duplicado_de": null
+    },
+    {
+      "document_name": "ENEM_MAT_05_mediana-estatistica.pdf",
+      "topico": "mediana estatistica",
+      "eixo_arquivo": "05",
+      "eixo_tematico": "Combinatória, estatística e probabilidade",
+      "artigo_wikipedia": "Mediana (estatística)",
+      "chunks_indexados": 54,
+      "duplicado_de": null
+    },
+    {
+      "document_name": "ENEM_MAT_05_moda-estatistica.pdf",
+      "topico": "moda estatistica",
+      "eixo_arquivo": "05",
+      "eixo_tematico": "Combinatória, estatística e probabilidade",
+      "artigo_wikipedia": "Moda (estatística)",
+      "chunks_indexados": 36,
+      "duplicado_de": null
+    },
+    {
+      "document_name": "ENEM_MAT_05_permutacao.pdf",
+      "topico": "permutacao",
+      "eixo_arquivo": "05",
+      "eixo_tematico": "Combinatória, estatística e probabilidade",
+      "artigo_wikipedia": "Permutação",
+      "chunks_indexados": 17,
+      "duplicado_de": null
+    },
+    {
+      "document_name": "ENEM_MAT_05_probabilidade-condicional.pdf",
+      "topico": "probabilidade condicional",
+      "eixo_arquivo": "05",
+      "eixo_tematico": "Combinatória, estatística e probabilidade",
+      "artigo_wikipedia": "Probabilidade condicionada",
+      "chunks_indexados": 2,
+      "duplicado_de": null
+    },
+    {
+      "document_name": "ENEM_MAT_05_probabilidade.pdf",
+      "topico": "probabilidade",
+      "eixo_arquivo": "05",
+      "eixo_tematico": "Combinatória, estatística e probabilidade",
+      "artigo_wikipedia": "Probabilidade",
+      "chunks_indexados": 34,
+      "duplicado_de": null
+    },
+    {
+      "document_name": "ENEM_MAT_05_variancia.pdf",
+      "topico": "variancia",
+      "eixo_arquivo": "05",
+      "eixo_tematico": "Combinatória, estatística e probabilidade",
+      "artigo_wikipedia": "Variância",
+      "chunks_indexados": 13,
+      "duplicado_de": null
+    },
+    {
+      "document_name": "ENEM_MAT_06_amortizacao.pdf",
+      "topico": "amortizacao",
+      "eixo_arquivo": "06",
+      "eixo_tematico": "Matemática financeira",
+      "artigo_wikipedia": "Amortização",
+      "chunks_indexados": 4,
+      "duplicado_de": null
+    },
+    {
+      "document_name": "ENEM_MAT_06_inflacao.pdf",
+      "topico": "inflacao",
+      "eixo_arquivo": "06",
+      "eixo_tematico": "Matemática financeira",
+      "artigo_wikipedia": "Inflação",
+      "chunks_indexados": 38,
+      "duplicado_de": null
+    },
+    {
+      "document_name": "ENEM_MAT_06_juros-compostos.pdf",
+      "topico": "juros compostos",
+      "eixo_arquivo": "06",
+      "eixo_tematico": "Matemática financeira",
+      "artigo_wikipedia": "Juro",
+      "chunks_indexados": 53,
+      "duplicado_de": null
+    },
+    {
+      "document_name": "ENEM_MAT_06_juros-simples.pdf",
+      "topico": "juros simples",
+      "eixo_arquivo": "06",
+      "eixo_tematico": "Matemática financeira",
+      "artigo_wikipedia": "Juro",
+      "chunks_indexados": 53,
+      "duplicado_de": "ENEM_MAT_06_juros-compostos.pdf"
+    },
+    {
+      "document_name": "ENEM_MAT_06_taxa-de-cambio.pdf",
+      "topico": "taxa de cambio",
+      "eixo_arquivo": "06",
+      "eixo_tematico": "Matemática financeira",
+      "artigo_wikipedia": "Taxa de câmbio",
+      "chunks_indexados": 11,
+      "duplicado_de": null
+    },
+    {
+      "document_name": "ENEM_MAT_07_deducao-logica.pdf",
+      "topico": "deducao logica",
+      "eixo_arquivo": "07",
+      "eixo_tematico": "Lógica",
+      "artigo_wikipedia": "Método dedutivo",
+      "chunks_indexados": 71,
+      "duplicado_de": null
+    },
+    {
+      "document_name": "ENEM_MAT_07_logica-proposicional.pdf",
+      "topico": "logica proposicional",
+      "eixo_arquivo": "07",
+      "eixo_tematico": "Lógica",
+      "artigo_wikipedia": "Lógica proposicional",
+      "chunks_indexados": 61,
+      "duplicado_de": null
+    }
+  ],
+  "queries": [
+    {
+      "id": "Q001",
+      "tipo": "direta",
+      "query": "Quais são os conjuntos numéricos e como eles se relacionam entre si?",
+      "topico_alvo": "ENEM_MAT_01_conjuntos-numericos.pdf",
+      "relevantes": {
+        "ENEM_MAT_01_conjuntos-numericos.pdf": 2,
+        "ENEM_MAT_01_numeros-racionais.pdf": 1,
+        "ENEM_MAT_01_numeros-irracionais.pdf": 1
+      }
+    },
+    {
+      "id": "Q002",
+      "tipo": "contextual",
+      "query": "Todo número inteiro também é natural? E todo natural é inteiro? Como organizar esses tipos de números?",
+      "topico_alvo": "ENEM_MAT_01_conjuntos-numericos.pdf",
+      "relevantes": {
+        "ENEM_MAT_01_conjuntos-numericos.pdf": 2,
+        "ENEM_MAT_01_numeros-racionais.pdf": 1,
+        "ENEM_MAT_01_numeros-irracionais.pdf": 1
+      }
+    },
+    {
+      "id": "Q003",
+      "tipo": "direta",
+      "query": "O que é um número irracional?",
+      "topico_alvo": "ENEM_MAT_01_numeros-irracionais.pdf",
+      "relevantes": {
+        "ENEM_MAT_01_numeros-irracionais.pdf": 2,
+        "ENEM_MAT_01_conjuntos-numericos.pdf": 1
+      }
+    },
+    {
+      "id": "Q004",
+      "tipo": "contextual",
+      "query": "Por que a raiz quadrada de 2 e o pi não podem ser escritos como uma fração de inteiros?",
+      "topico_alvo": "ENEM_MAT_01_numeros-irracionais.pdf",
+      "relevantes": {
+        "ENEM_MAT_01_numeros-irracionais.pdf": 2,
+        "ENEM_MAT_01_conjuntos-numericos.pdf": 1
+      }
+    },
+    {
+      "id": "Q005",
+      "tipo": "direta",
+      "query": "O que caracteriza um número racional?",
+      "topico_alvo": "ENEM_MAT_01_numeros-racionais.pdf",
+      "relevantes": {
+        "ENEM_MAT_01_numeros-racionais.pdf": 2,
+        "ENEM_MAT_01_conjuntos-numericos.pdf": 1,
+        "ENEM_MAT_01_razao-e-proporcao.pdf": 1
+      }
+    },
+    {
+      "id": "Q006",
+      "tipo": "contextual",
+      "query": "Uma dízima periódica como 0,333... pode ser escrita como fração de dois inteiros?",
+      "topico_alvo": "ENEM_MAT_01_numeros-racionais.pdf",
+      "relevantes": {
+        "ENEM_MAT_01_numeros-racionais.pdf": 2,
+        "ENEM_MAT_01_conjuntos-numericos.pdf": 1,
+        "ENEM_MAT_01_razao-e-proporcao.pdf": 1
+      }
+    },
+    {
+      "id": "Q007",
+      "tipo": "direta",
+      "query": "Como calcular porcentagem de um valor?",
+      "topico_alvo": "ENEM_MAT_01_porcentagem.pdf",
+      "relevantes": {
+        "ENEM_MAT_01_porcentagem.pdf": 2,
+        "ENEM_MAT_01_razao-e-proporcao.pdf": 1,
+        "ENEM_MAT_06_inflacao.pdf": 1
+      }
+    },
+    {
+      "id": "Q008",
+      "tipo": "contextual",
+      "query": "Uma loja dá 15 por cento de desconto em uma camisa de 80 reais. Quanto vou pagar?",
+      "topico_alvo": "ENEM_MAT_01_porcentagem.pdf",
+      "relevantes": {
+        "ENEM_MAT_01_porcentagem.pdf": 2,
+        "ENEM_MAT_01_razao-e-proporcao.pdf": 1,
+        "ENEM_MAT_06_inflacao.pdf": 1
+      }
+    },
+    {
+      "id": "Q009",
+      "tipo": "direta",
+      "query": "Qual é a fórmula do termo geral de uma progressão aritmética?",
+      "topico_alvo": "ENEM_MAT_01_progressao-aritmetica.pdf",
+      "relevantes": {
+        "ENEM_MAT_01_progressao-aritmetica.pdf": 2,
+        "ENEM_MAT_02_sequencia-numerica.pdf": 1
+      }
+    },
+    {
+      "id": "Q010",
+      "tipo": "contextual",
+      "query": "Uma pessoa guarda 10 reais na primeira semana e a cada semana guarda 5 reais a mais que na anterior. Quanto guardará na vigésima semana?",
+      "topico_alvo": "ENEM_MAT_01_progressao-aritmetica.pdf",
+      "relevantes": {
+        "ENEM_MAT_01_progressao-aritmetica.pdf": 2,
+        "ENEM_MAT_02_sequencia-numerica.pdf": 1
+      }
+    },
+    {
+      "id": "Q011",
+      "tipo": "direta",
+      "query": "Como calcular a soma dos termos de uma progressão geométrica?",
+      "topico_alvo": "ENEM_MAT_01_progressao-geometrica.pdf",
+      "relevantes": {
+        "ENEM_MAT_01_progressao-geometrica.pdf": 2,
+        "ENEM_MAT_02_sequencia-numerica.pdf": 1
+      }
+    },
+    {
+      "id": "Q012",
+      "tipo": "contextual",
+      "query": "Uma cultura de bactérias dobra de tamanho a cada hora. Quantas bactérias haverá depois de 10 horas, começando com 100?",
+      "topico_alvo": "ENEM_MAT_01_progressao-geometrica.pdf",
+      "relevantes": {
+        "ENEM_MAT_01_progressao-geometrica.pdf": 2,
+        "ENEM_MAT_02_sequencia-numerica.pdf": 1
+      }
+    },
+    {
+      "id": "Q013",
+      "tipo": "direta",
+      "query": "O que é razão entre duas grandezas?",
+      "topico_alvo": "ENEM_MAT_01_razao-e-proporcao.pdf",
+      "relevantes": {
+        "ENEM_MAT_01_razao-e-proporcao.pdf": 2,
+        "ENEM_MAT_01_regra-de-tres.pdf": 1,
+        "ENEM_MAT_04_escala-cartografia.pdf": 1
+      }
+    },
+    {
+      "id": "Q014",
+      "tipo": "contextual",
+      "query": "Numa turma há 12 meninas para cada 8 meninos. Como comparar essas quantidades de forma simplificada?",
+      "topico_alvo": "ENEM_MAT_01_razao-e-proporcao.pdf",
+      "relevantes": {
+        "ENEM_MAT_01_razao-e-proporcao.pdf": 2,
+        "ENEM_MAT_01_regra-de-tres.pdf": 1,
+        "ENEM_MAT_04_escala-cartografia.pdf": 1
+      }
+    },
+    {
+      "id": "Q015",
+      "tipo": "direta",
+      "query": "Como resolver uma regra de três simples?",
+      "topico_alvo": "ENEM_MAT_01_regra-de-tres.pdf",
+      "relevantes": {
+        "ENEM_MAT_01_regra-de-tres.pdf": 2,
+        "ENEM_MAT_01_razao-e-proporcao.pdf": 1
+      }
+    },
+    {
+      "id": "Q016",
+      "tipo": "contextual",
+      "query": "Se 4 pedreiros constroem um muro em 6 dias, em quantos dias 3 pedreiros construiriam o mesmo muro?",
+      "topico_alvo": "ENEM_MAT_01_regra-de-tres.pdf",
+      "relevantes": {
+        "ENEM_MAT_01_regra-de-tres.pdf": 2,
+        "ENEM_MAT_01_razao-e-proporcao.pdf": 1
+      }
+    },
+    {
+      "id": "Q017",
+      "tipo": "direta",
+      "query": "Como funciona o sistema de numeração decimal posicional?",
+      "topico_alvo": "ENEM_MAT_01_sistema-de-numeracao.pdf",
+      "relevantes": {
+        "ENEM_MAT_01_sistema-de-numeracao.pdf": 2
+      }
+    },
+    {
+      "id": "Q018",
+      "tipo": "contextual",
+      "query": "Por que o algarismo 3 vale trezentos no número 352 mas vale apenas três no número 523?",
+      "topico_alvo": "ENEM_MAT_01_sistema-de-numeracao.pdf",
+      "relevantes": {
+        "ENEM_MAT_01_sistema-de-numeracao.pdf": 2
+      }
+    },
+    {
+      "id": "Q019",
+      "tipo": "direta",
+      "query": "Como resolver uma equação do primeiro grau?",
+      "topico_alvo": "ENEM_MAT_02_equacao-do-primeiro-grau.pdf",
+      "relevantes": {
+        "ENEM_MAT_02_equacao-do-primeiro-grau.pdf": 2,
+        "ENEM_MAT_02_funcao-afim.pdf": 1,
+        "ENEM_MAT_02_inequacao.pdf": 1
+      }
+    },
+    {
+      "id": "Q020",
+      "tipo": "contextual",
+      "query": "O dobro de um número somado com 7 dá 25. Que número é esse?",
+      "topico_alvo": "ENEM_MAT_02_equacao-do-primeiro-grau.pdf",
+      "relevantes": {
+        "ENEM_MAT_02_equacao-do-primeiro-grau.pdf": 2,
+        "ENEM_MAT_02_funcao-afim.pdf": 1,
+        "ENEM_MAT_02_inequacao.pdf": 1
+      }
+    },
+    {
+      "id": "Q021",
+      "tipo": "direta",
+      "query": "Como usar a fórmula de Bhaskara para resolver uma equação do segundo grau?",
+      "topico_alvo": "ENEM_MAT_02_equacao-do-segundo-grau.pdf",
+      "relevantes": {
+        "ENEM_MAT_02_equacao-do-segundo-grau.pdf": 2,
+        "ENEM_MAT_02_funcao-quadratica.pdf": 1
+      }
+    },
+    {
+      "id": "Q022",
+      "tipo": "contextual",
+      "query": "Quando o discriminante é negativo, quantas raízes reais a equação ax² + bx + c = 0 possui?",
+      "topico_alvo": "ENEM_MAT_02_equacao-do-segundo-grau.pdf",
+      "relevantes": {
+        "ENEM_MAT_02_equacao-do-segundo-grau.pdf": 2,
+        "ENEM_MAT_02_funcao-quadratica.pdf": 1
+      }
+    },
+    {
+      "id": "Q023",
+      "tipo": "direta",
+      "query": "O que é uma função afim e o que significam seus coeficientes?",
+      "topico_alvo": "ENEM_MAT_02_funcao-afim.pdf",
+      "relevantes": {
+        "ENEM_MAT_02_funcao-afim.pdf": 2,
+        "ENEM_MAT_02_equacao-do-primeiro-grau.pdf": 1
+      }
+    },
+    {
+      "id": "Q024",
+      "tipo": "contextual",
+      "query": "Um taxista cobra uma bandeirada fixa mais um valor por quilômetro rodado. Como escrever o preço da corrida em função da distância?",
+      "topico_alvo": "ENEM_MAT_02_funcao-afim.pdf",
+      "relevantes": {
+        "ENEM_MAT_02_funcao-afim.pdf": 2,
+        "ENEM_MAT_02_equacao-do-primeiro-grau.pdf": 1
+      }
+    },
+    {
+      "id": "Q025",
+      "tipo": "direta",
+      "query": "Quais são as propriedades de uma função exponencial?",
+      "topico_alvo": "ENEM_MAT_02_funcao-exponencial.pdf",
+      "relevantes": {
+        "ENEM_MAT_02_funcao-exponencial.pdf": 2,
+        "ENEM_MAT_02_funcao-logaritmica.pdf": 1,
+        "ENEM_MAT_01_progressao-geometrica.pdf": 1
+      }
+    },
+    {
+      "id": "Q026",
+      "tipo": "contextual",
+      "query": "Um medicamento perde metade da sua concentração no sangue a cada 6 horas. Que tipo de função modela esse decaimento?",
+      "topico_alvo": "ENEM_MAT_02_funcao-exponencial.pdf",
+      "relevantes": {
+        "ENEM_MAT_02_funcao-exponencial.pdf": 2,
+        "ENEM_MAT_02_funcao-logaritmica.pdf": 1,
+        "ENEM_MAT_01_progressao-geometrica.pdf": 1
+      }
+    },
+    {
+      "id": "Q027",
+      "tipo": "direta",
+      "query": "Quais são as propriedades dos logaritmos?",
+      "topico_alvo": "ENEM_MAT_02_funcao-logaritmica.pdf",
+      "relevantes": {
+        "ENEM_MAT_02_funcao-logaritmica.pdf": 2,
+        "ENEM_MAT_02_funcao-exponencial.pdf": 1
+      }
+    },
+    {
+      "id": "Q028",
+      "tipo": "contextual",
+      "query": "A escala Richter mede a magnitude de terremotos de forma que cada ponto a mais corresponde a uma energia dez vezes maior. Que operação matemática está por trás disso?",
+      "topico_alvo": "ENEM_MAT_02_funcao-logaritmica.pdf",
+      "relevantes": {
+        "ENEM_MAT_02_funcao-logaritmica.pdf": 2,
+        "ENEM_MAT_02_funcao-exponencial.pdf": 1
+      }
+    },
+    {
+      "id": "Q029",
+      "tipo": "direta",
+      "query": "Como encontrar o vértice de uma função quadrática?",
+      "topico_alvo": "ENEM_MAT_02_funcao-quadratica.pdf",
+      "relevantes": {
+        "ENEM_MAT_02_funcao-quadratica.pdf": 2,
+        "ENEM_MAT_02_equacao-do-segundo-grau.pdf": 1
+      }
+    },
+    {
+      "id": "Q030",
+      "tipo": "contextual",
+      "query": "A altura de uma bola chutada para cima descreve uma parábola. Como calcular a altura máxima que ela atinge?",
+      "topico_alvo": "ENEM_MAT_02_funcao-quadratica.pdf",
+      "relevantes": {
+        "ENEM_MAT_02_funcao-quadratica.pdf": 2,
+        "ENEM_MAT_02_equacao-do-segundo-grau.pdf": 1
+      }
+    },
+    {
+      "id": "Q031",
+      "tipo": "direta",
+      "query": "O que é uma inequação e como resolvê-la?",
+      "topico_alvo": "ENEM_MAT_02_inequacao.pdf",
+      "relevantes": {
+        "ENEM_MAT_02_inequacao.pdf": 2,
+        "ENEM_MAT_02_equacao-do-primeiro-grau.pdf": 1
+      }
+    },
+    {
+      "id": "Q032",
+      "tipo": "contextual",
+      "query": "Para quais valores de x a expressão 3x - 5 é maior que 10?",
+      "topico_alvo": "ENEM_MAT_02_inequacao.pdf",
+      "relevantes": {
+        "ENEM_MAT_02_inequacao.pdf": 2,
+        "ENEM_MAT_02_equacao-do-primeiro-grau.pdf": 1
+      }
+    },
+    {
+      "id": "Q033",
+      "tipo": "direta",
+      "query": "O que é uma sequência numérica em matemática?",
+      "topico_alvo": "ENEM_MAT_02_sequencia-numerica.pdf",
+      "relevantes": {
+        "ENEM_MAT_02_sequencia-numerica.pdf": 2,
+        "ENEM_MAT_01_progressao-aritmetica.pdf": 1,
+        "ENEM_MAT_01_progressao-geometrica.pdf": 1
+      }
+    },
+    {
+      "id": "Q034",
+      "tipo": "contextual",
+      "query": "Qual é o próximo número da lista 1, 1, 2, 3, 5, 8 e qual regra ela segue?",
+      "topico_alvo": "ENEM_MAT_02_sequencia-numerica.pdf",
+      "relevantes": {
+        "ENEM_MAT_02_sequencia-numerica.pdf": 2,
+        "ENEM_MAT_01_progressao-aritmetica.pdf": 1,
+        "ENEM_MAT_01_progressao-geometrica.pdf": 1
+      }
+    },
+    {
+      "id": "Q035",
+      "tipo": "direta",
+      "query": "Como resolver um sistema de equações lineares?",
+      "topico_alvo": "ENEM_MAT_02_sistema-de-equacoes-lineares.pdf",
+      "relevantes": {
+        "ENEM_MAT_02_sistema-de-equacoes-lineares.pdf": 2,
+        "ENEM_MAT_02_equacao-do-primeiro-grau.pdf": 1
+      }
+    },
+    {
+      "id": "Q036",
+      "tipo": "contextual",
+      "query": "Em um estacionamento há carros e motos, totalizando 20 veículos e 64 rodas. Quantos carros há?",
+      "topico_alvo": "ENEM_MAT_02_sistema-de-equacoes-lineares.pdf",
+      "relevantes": {
+        "ENEM_MAT_02_sistema-de-equacoes-lineares.pdf": 2,
+        "ENEM_MAT_02_equacao-do-primeiro-grau.pdf": 1
+      }
+    },
+    {
+      "id": "Q037",
+      "tipo": "direta",
+      "query": "Como calcular a área de figuras planas?",
+      "topico_alvo": "ENEM_MAT_03_area-geometria.pdf",
+      "relevantes": {
+        "ENEM_MAT_03_area-geometria.pdf": 2,
+        "ENEM_MAT_03_geometria-plana.pdf": 1,
+        "ENEM_MAT_03_poligono.pdf": 1,
+        "ENEM_MAT_03_perimetro.pdf": 1
+      }
+    },
+    {
+      "id": "Q038",
+      "tipo": "contextual",
+      "query": "Quantos metros quadrados de piso preciso para cobrir uma sala retangular de 4 m por 5 m?",
+      "topico_alvo": "ENEM_MAT_03_area-geometria.pdf",
+      "relevantes": {
+        "ENEM_MAT_03_area-geometria.pdf": 2,
+        "ENEM_MAT_03_geometria-plana.pdf": 1,
+        "ENEM_MAT_03_poligono.pdf": 1,
+        "ENEM_MAT_03_perimetro.pdf": 1
+      }
+    },
+    {
+      "id": "Q039",
+      "tipo": "direta",
+      "query": "O que é o ciclo trigonométrico?",
+      "topico_alvo": "ENEM_MAT_03_ciclo-trigonometrico.pdf",
+      "relevantes": {
+        "ENEM_MAT_03_ciclo-trigonometrico.pdf": 2,
+        "ENEM_MAT_03_trigonometria.pdf": 1
+      }
+    },
+    {
+      "id": "Q040",
+      "tipo": "contextual",
+      "query": "Como os valores de seno e cosseno de um ângulo aparecem como coordenadas de um ponto numa circunferência de raio 1?",
+      "topico_alvo": "ENEM_MAT_03_ciclo-trigonometrico.pdf",
+      "relevantes": {
+        "ENEM_MAT_03_ciclo-trigonometrico.pdf": 2,
+        "ENEM_MAT_03_trigonometria.pdf": 1
+      }
+    },
+    {
+      "id": "Q041",
+      "tipo": "direta",
+      "query": "Como calcular o volume de um cilindro?",
+      "topico_alvo": "ENEM_MAT_03_cilindro.pdf",
+      "relevantes": {
+        "ENEM_MAT_03_cilindro.pdf": 2,
+        "ENEM_MAT_03_geometria-espacial.pdf": 1,
+        "ENEM_MAT_03_volume.pdf": 1
+      }
+    },
+    {
+      "id": "Q042",
+      "tipo": "contextual",
+      "query": "Uma caixa d'água tem formato de tambor circular com 1 m de raio e 2 m de altura. Quantos litros ela comporta?",
+      "topico_alvo": "ENEM_MAT_03_cilindro.pdf",
+      "relevantes": {
+        "ENEM_MAT_03_cilindro.pdf": 2,
+        "ENEM_MAT_03_geometria-espacial.pdf": 1,
+        "ENEM_MAT_03_volume.pdf": 1
+      }
+    },
+    {
+      "id": "Q043",
+      "tipo": "direta",
+      "query": "Qual é a fórmula do volume de um cone?",
+      "topico_alvo": "ENEM_MAT_03_cone.pdf",
+      "relevantes": {
+        "ENEM_MAT_03_cone.pdf": 2,
+        "ENEM_MAT_03_geometria-espacial.pdf": 1,
+        "ENEM_MAT_03_volume.pdf": 1
+      }
+    },
+    {
+      "id": "Q044",
+      "tipo": "contextual",
+      "query": "Uma casquinha de sorvete tem base circular e termina em ponta. Como calcular quanto sorvete cabe dentro dela?",
+      "topico_alvo": "ENEM_MAT_03_cone.pdf",
+      "relevantes": {
+        "ENEM_MAT_03_cone.pdf": 2,
+        "ENEM_MAT_03_geometria-espacial.pdf": 1,
+        "ENEM_MAT_03_volume.pdf": 1
+      }
+    },
+    {
+      "id": "Q045",
+      "tipo": "direta",
+      "query": "Como calcular a distância entre dois pontos no plano cartesiano?",
+      "topico_alvo": "ENEM_MAT_03_distancia-entre-dois-pontos.pdf",
+      "relevantes": {
+        "ENEM_MAT_03_distancia-entre-dois-pontos.pdf": 2,
+        "ENEM_MAT_03_geometria-analitica.pdf": 1,
+        "ENEM_MAT_03_plano-cartesiano.pdf": 1,
+        "ENEM_MAT_03_teorema-de-pitagoras.pdf": 1
+      }
+    },
+    {
+      "id": "Q046",
+      "tipo": "contextual",
+      "query": "Num mapa quadriculado, uma escola fica no ponto (1, 2) e a casa de um aluno no ponto (4, 6). Qual a distância em linha reta entre elas?",
+      "topico_alvo": "ENEM_MAT_03_distancia-entre-dois-pontos.pdf",
+      "relevantes": {
+        "ENEM_MAT_03_distancia-entre-dois-pontos.pdf": 2,
+        "ENEM_MAT_03_geometria-analitica.pdf": 1,
+        "ENEM_MAT_03_plano-cartesiano.pdf": 1,
+        "ENEM_MAT_03_teorema-de-pitagoras.pdf": 1
+      }
+    },
+    {
+      "id": "Q047",
+      "tipo": "direta",
+      "query": "Como calcular a área da superfície e o volume de uma esfera?",
+      "topico_alvo": "ENEM_MAT_03_esfera.pdf",
+      "relevantes": {
+        "ENEM_MAT_03_esfera.pdf": 2,
+        "ENEM_MAT_03_geometria-espacial.pdf": 1,
+        "ENEM_MAT_03_volume.pdf": 1
+      }
+    },
+    {
+      "id": "Q048",
+      "tipo": "contextual",
+      "query": "Quanto couro é necessário para revestir uma bola de futebol de raio conhecido?",
+      "topico_alvo": "ENEM_MAT_03_esfera.pdf",
+      "relevantes": {
+        "ENEM_MAT_03_esfera.pdf": 2,
+        "ENEM_MAT_03_geometria-espacial.pdf": 1,
+        "ENEM_MAT_03_volume.pdf": 1
+      }
+    },
+    {
+      "id": "Q049",
+      "tipo": "direta",
+      "query": "O que estuda a geometria analítica?",
+      "topico_alvo": "ENEM_MAT_03_geometria-analitica.pdf",
+      "relevantes": {
+        "ENEM_MAT_03_geometria-analitica.pdf": 2,
+        "ENEM_MAT_03_plano-cartesiano.pdf": 1,
+        "ENEM_MAT_03_distancia-entre-dois-pontos.pdf": 1
+      }
+    },
+    {
+      "id": "Q050",
+      "tipo": "contextual",
+      "query": "Como descrever retas e circunferências usando equações com coordenadas x e y?",
+      "topico_alvo": "ENEM_MAT_03_geometria-analitica.pdf",
+      "relevantes": {
+        "ENEM_MAT_03_geometria-analitica.pdf": 2,
+        "ENEM_MAT_03_plano-cartesiano.pdf": 1,
+        "ENEM_MAT_03_distancia-entre-dois-pontos.pdf": 1
+      }
+    },
+    {
+      "id": "Q051",
+      "tipo": "direta",
+      "query": "O que é geometria espacial e quais são os principais sólidos?",
+      "topico_alvo": "ENEM_MAT_03_geometria-espacial.pdf",
+      "relevantes": {
+        "ENEM_MAT_03_geometria-espacial.pdf": 2,
+        "ENEM_MAT_03_volume.pdf": 1,
+        "ENEM_MAT_03_prisma-geometria.pdf": 1,
+        "ENEM_MAT_03_piramide-geometria.pdf": 1,
+        "ENEM_MAT_03_cilindro.pdf": 1,
+        "ENEM_MAT_03_cone.pdf": 1,
+        "ENEM_MAT_03_esfera.pdf": 1
+      }
+    },
+    {
+      "id": "Q052",
+      "tipo": "contextual",
+      "query": "Quais figuras tridimensionais aparecem em embalagens, como caixas, latas e bolas?",
+      "topico_alvo": "ENEM_MAT_03_geometria-espacial.pdf",
+      "relevantes": {
+        "ENEM_MAT_03_geometria-espacial.pdf": 2,
+        "ENEM_MAT_03_volume.pdf": 1,
+        "ENEM_MAT_03_prisma-geometria.pdf": 1,
+        "ENEM_MAT_03_piramide-geometria.pdf": 1,
+        "ENEM_MAT_03_cilindro.pdf": 1,
+        "ENEM_MAT_03_cone.pdf": 1,
+        "ENEM_MAT_03_esfera.pdf": 1
+      }
+    },
+    {
+      "id": "Q053",
+      "tipo": "direta",
+      "query": "Quais são os postulados da geometria euclidiana plana?",
+      "topico_alvo": "ENEM_MAT_03_geometria-plana.pdf",
+      "relevantes": {
+        "ENEM_MAT_03_geometria-plana.pdf": 2,
+        "ENEM_MAT_03_area-geometria.pdf": 1,
+        "ENEM_MAT_03_poligono.pdf": 1,
+        "ENEM_MAT_03_semelhanca-de-triangulos.pdf": 1
+      }
+    },
+    {
+      "id": "Q054",
+      "tipo": "contextual",
+      "query": "Por que duas retas paralelas nunca se encontram, segundo a geometria de Euclides?",
+      "topico_alvo": "ENEM_MAT_03_geometria-plana.pdf",
+      "relevantes": {
+        "ENEM_MAT_03_geometria-plana.pdf": 2,
+        "ENEM_MAT_03_area-geometria.pdf": 1,
+        "ENEM_MAT_03_poligono.pdf": 1,
+        "ENEM_MAT_03_semelhanca-de-triangulos.pdf": 1
+      }
+    },
+    {
+      "id": "Q055",
+      "tipo": "direta",
+      "query": "Como aplicar a lei dos cossenos em um triângulo qualquer?",
+      "topico_alvo": "ENEM_MAT_03_lei-dos-cossenos.pdf",
+      "relevantes": {
+        "ENEM_MAT_03_lei-dos-cossenos.pdf": 2,
+        "ENEM_MAT_03_lei-dos-senos.pdf": 1,
+        "ENEM_MAT_03_trigonometria.pdf": 1
+      }
+    },
+    {
+      "id": "Q056",
+      "tipo": "contextual",
+      "query": "Conheço dois lados de um triângulo e o ângulo entre eles. Como descobrir o terceiro lado se o triângulo não é retângulo?",
+      "topico_alvo": "ENEM_MAT_03_lei-dos-cossenos.pdf",
+      "relevantes": {
+        "ENEM_MAT_03_lei-dos-cossenos.pdf": 2,
+        "ENEM_MAT_03_lei-dos-senos.pdf": 1,
+        "ENEM_MAT_03_trigonometria.pdf": 1
+      }
+    },
+    {
+      "id": "Q057",
+      "tipo": "direta",
+      "query": "O que diz a lei dos senos?",
+      "topico_alvo": "ENEM_MAT_03_lei-dos-senos.pdf",
+      "relevantes": {
+        "ENEM_MAT_03_lei-dos-senos.pdf": 2,
+        "ENEM_MAT_03_lei-dos-cossenos.pdf": 1,
+        "ENEM_MAT_03_trigonometria.pdf": 1
+      }
+    },
+    {
+      "id": "Q058",
+      "tipo": "contextual",
+      "query": "Num triângulo qualquer, a razão entre cada lado e o seno do ângulo oposto é constante. Como usar isso para achar um lado desconhecido?",
+      "topico_alvo": "ENEM_MAT_03_lei-dos-senos.pdf",
+      "relevantes": {
+        "ENEM_MAT_03_lei-dos-senos.pdf": 2,
+        "ENEM_MAT_03_lei-dos-cossenos.pdf": 1,
+        "ENEM_MAT_03_trigonometria.pdf": 1
+      }
+    },
+    {
+      "id": "Q059",
+      "tipo": "direta",
+      "query": "Como calcular o perímetro de uma figura?",
+      "topico_alvo": "ENEM_MAT_03_perimetro.pdf",
+      "relevantes": {
+        "ENEM_MAT_03_perimetro.pdf": 2,
+        "ENEM_MAT_03_area-geometria.pdf": 1,
+        "ENEM_MAT_03_poligono.pdf": 1
+      }
+    },
+    {
+      "id": "Q060",
+      "tipo": "contextual",
+      "query": "Quantos metros de cerca são necessários para contornar um terreno retangular de 20 m por 30 m?",
+      "topico_alvo": "ENEM_MAT_03_perimetro.pdf",
+      "relevantes": {
+        "ENEM_MAT_03_perimetro.pdf": 2,
+        "ENEM_MAT_03_area-geometria.pdf": 1,
+        "ENEM_MAT_03_poligono.pdf": 1
+      }
+    },
+    {
+      "id": "Q061",
+      "tipo": "direta",
+      "query": "Como calcular o volume de uma pirâmide?",
+      "topico_alvo": "ENEM_MAT_03_piramide-geometria.pdf",
+      "relevantes": {
+        "ENEM_MAT_03_piramide-geometria.pdf": 2,
+        "ENEM_MAT_03_geometria-espacial.pdf": 1,
+        "ENEM_MAT_03_volume.pdf": 1
+      }
+    },
+    {
+      "id": "Q062",
+      "tipo": "contextual",
+      "query": "Um sólido tem base quadrada e quatro faces triangulares que se encontram em um vértice no topo. Como calcular quanto espaço ele ocupa?",
+      "topico_alvo": "ENEM_MAT_03_piramide-geometria.pdf",
+      "relevantes": {
+        "ENEM_MAT_03_piramide-geometria.pdf": 2,
+        "ENEM_MAT_03_geometria-espacial.pdf": 1,
+        "ENEM_MAT_03_volume.pdf": 1
+      }
+    },
+    {
+      "id": "Q063",
+      "tipo": "direta",
+      "query": "O que é o plano cartesiano e como localizar pontos nele?",
+      "topico_alvo": "ENEM_MAT_03_plano-cartesiano.pdf",
+      "relevantes": {
+        "ENEM_MAT_03_plano-cartesiano.pdf": 2,
+        "ENEM_MAT_03_geometria-analitica.pdf": 1,
+        "ENEM_MAT_03_distancia-entre-dois-pontos.pdf": 1
+      }
+    },
+    {
+      "id": "Q064",
+      "tipo": "contextual",
+      "query": "Como marcar um ponto usando um eixo horizontal x e um eixo vertical y, e o que são os quadrantes?",
+      "topico_alvo": "ENEM_MAT_03_plano-cartesiano.pdf",
+      "relevantes": {
+        "ENEM_MAT_03_plano-cartesiano.pdf": 2,
+        "ENEM_MAT_03_geometria-analitica.pdf": 1,
+        "ENEM_MAT_03_distancia-entre-dois-pontos.pdf": 1
+      }
+    },
+    {
+      "id": "Q065",
+      "tipo": "direta",
+      "query": "O que é um polígono e como calcular a soma dos ângulos internos?",
+      "topico_alvo": "ENEM_MAT_03_poligono.pdf",
+      "relevantes": {
+        "ENEM_MAT_03_poligono.pdf": 2,
+        "ENEM_MAT_03_geometria-plana.pdf": 1,
+        "ENEM_MAT_03_area-geometria.pdf": 1,
+        "ENEM_MAT_03_perimetro.pdf": 1
+      }
+    },
+    {
+      "id": "Q066",
+      "tipo": "contextual",
+      "query": "Quantas diagonais tem um hexágono e qual a soma dos seus ângulos internos?",
+      "topico_alvo": "ENEM_MAT_03_poligono.pdf",
+      "relevantes": {
+        "ENEM_MAT_03_poligono.pdf": 2,
+        "ENEM_MAT_03_geometria-plana.pdf": 1,
+        "ENEM_MAT_03_area-geometria.pdf": 1,
+        "ENEM_MAT_03_perimetro.pdf": 1
+      }
+    },
+    {
+      "id": "Q067",
+      "tipo": "direta",
+      "query": "O que é um prisma e como calcular seu volume?",
+      "topico_alvo": "ENEM_MAT_03_prisma-geometria.pdf",
+      "relevantes": {
+        "ENEM_MAT_03_prisma-geometria.pdf": 2,
+        "ENEM_MAT_03_geometria-espacial.pdf": 1,
+        "ENEM_MAT_03_volume.pdf": 1
+      }
+    },
+    {
+      "id": "Q068",
+      "tipo": "contextual",
+      "query": "Uma caixa de sapatos tem duas bases retangulares iguais e paralelas. Como calcular a capacidade dela?",
+      "topico_alvo": "ENEM_MAT_03_prisma-geometria.pdf",
+      "relevantes": {
+        "ENEM_MAT_03_prisma-geometria.pdf": 2,
+        "ENEM_MAT_03_geometria-espacial.pdf": 1,
+        "ENEM_MAT_03_volume.pdf": 1
+      }
+    },
+    {
+      "id": "Q069",
+      "tipo": "direta",
+      "query": "Quais são os casos de semelhança de triângulos?",
+      "topico_alvo": "ENEM_MAT_03_semelhanca-de-triangulos.pdf",
+      "relevantes": {
+        "ENEM_MAT_03_semelhanca-de-triangulos.pdf": 2,
+        "ENEM_MAT_03_geometria-plana.pdf": 1
+      }
+    },
+    {
+      "id": "Q070",
+      "tipo": "contextual",
+      "query": "Um poste projeta uma sombra de 6 m no mesmo momento em que uma pessoa de 1,80 m projeta uma sombra de 1,20 m. Qual é a altura do poste?",
+      "topico_alvo": "ENEM_MAT_03_semelhanca-de-triangulos.pdf",
+      "relevantes": {
+        "ENEM_MAT_03_semelhanca-de-triangulos.pdf": 2,
+        "ENEM_MAT_03_geometria-plana.pdf": 1
+      }
+    },
+    {
+      "id": "Q071",
+      "tipo": "direta",
+      "query": "O que diz o teorema de Pitágoras?",
+      "topico_alvo": "ENEM_MAT_03_teorema-de-pitagoras.pdf",
+      "relevantes": {
+        "ENEM_MAT_03_teorema-de-pitagoras.pdf": 2,
+        "ENEM_MAT_03_triangulo-retangulo.pdf": 1,
+        "ENEM_MAT_03_distancia-entre-dois-pontos.pdf": 1
+      }
+    },
+    {
+      "id": "Q072",
+      "tipo": "contextual",
+      "query": "Uma escada de 5 m está apoiada em uma parede, com o pé a 3 m da parede. A que altura ela toca a parede?",
+      "topico_alvo": "ENEM_MAT_03_teorema-de-pitagoras.pdf",
+      "relevantes": {
+        "ENEM_MAT_03_teorema-de-pitagoras.pdf": 2,
+        "ENEM_MAT_03_triangulo-retangulo.pdf": 1,
+        "ENEM_MAT_03_distancia-entre-dois-pontos.pdf": 1
+      }
+    },
+    {
+      "id": "Q073",
+      "tipo": "direta",
+      "query": "Quais são as propriedades de um triângulo retângulo?",
+      "topico_alvo": "ENEM_MAT_03_triangulo-retangulo.pdf",
+      "relevantes": {
+        "ENEM_MAT_03_triangulo-retangulo.pdf": 2,
+        "ENEM_MAT_03_teorema-de-pitagoras.pdf": 1,
+        "ENEM_MAT_03_trigonometria.pdf": 1
+      }
+    },
+    {
+      "id": "Q074",
+      "tipo": "contextual",
+      "query": "Num triângulo com um ângulo de 90 graus, como se chamam os lados e qual deles é o maior?",
+      "topico_alvo": "ENEM_MAT_03_triangulo-retangulo.pdf",
+      "relevantes": {
+        "ENEM_MAT_03_triangulo-retangulo.pdf": 2,
+        "ENEM_MAT_03_teorema-de-pitagoras.pdf": 1,
+        "ENEM_MAT_03_trigonometria.pdf": 1
+      }
+    },
+    {
+      "id": "Q075",
+      "tipo": "direta",
+      "query": "O que são seno, cosseno e tangente?",
+      "topico_alvo": "ENEM_MAT_03_trigonometria.pdf",
+      "relevantes": {
+        "ENEM_MAT_03_trigonometria.pdf": 2,
+        "ENEM_MAT_03_ciclo-trigonometrico.pdf": 1,
+        "ENEM_MAT_03_triangulo-retangulo.pdf": 1
+      }
+    },
+    {
+      "id": "Q076",
+      "tipo": "contextual",
+      "query": "Uma rampa forma um ângulo de 30 graus com o chão e tem 10 m de comprimento. Qual a altura que ela alcança?",
+      "topico_alvo": "ENEM_MAT_03_trigonometria.pdf",
+      "relevantes": {
+        "ENEM_MAT_03_trigonometria.pdf": 2,
+        "ENEM_MAT_03_ciclo-trigonometrico.pdf": 1,
+        "ENEM_MAT_03_triangulo-retangulo.pdf": 1
+      }
+    },
+    {
+      "id": "Q077",
+      "tipo": "direta",
+      "query": "O que é volume e quais são suas unidades de medida?",
+      "topico_alvo": "ENEM_MAT_03_volume.pdf",
+      "relevantes": {
+        "ENEM_MAT_03_volume.pdf": 2,
+        "ENEM_MAT_03_geometria-espacial.pdf": 1,
+        "ENEM_MAT_03_prisma-geometria.pdf": 1,
+        "ENEM_MAT_03_cilindro.pdf": 1
+      }
+    },
+    {
+      "id": "Q078",
+      "tipo": "contextual",
+      "query": "Quantos litros cabem em um recipiente de 1 metro cúbico?",
+      "topico_alvo": "ENEM_MAT_03_volume.pdf",
+      "relevantes": {
+        "ENEM_MAT_03_volume.pdf": 2,
+        "ENEM_MAT_03_geometria-espacial.pdf": 1,
+        "ENEM_MAT_03_prisma-geometria.pdf": 1,
+        "ENEM_MAT_03_cilindro.pdf": 1
+      }
+    },
+    {
+      "id": "Q079",
+      "tipo": "direta",
+      "query": "Como calcular a densidade demográfica de uma região?",
+      "topico_alvo": "ENEM_MAT_04_densidade-demografica.pdf",
+      "relevantes": {
+        "ENEM_MAT_04_densidade-demografica.pdf": 2
+      }
+    },
+    {
+      "id": "Q080",
+      "tipo": "contextual",
+      "query": "Uma cidade tem 500 mil habitantes e área de 250 km². Quantos habitantes há por quilômetro quadrado?",
+      "topico_alvo": "ENEM_MAT_04_densidade-demografica.pdf",
+      "relevantes": {
+        "ENEM_MAT_04_densidade-demografica.pdf": 2
+      }
+    },
+    {
+      "id": "Q081",
+      "tipo": "direta",
+      "query": "O que é escala cartográfica e como interpretá-la?",
+      "topico_alvo": "ENEM_MAT_04_escala-cartografia.pdf",
+      "relevantes": {
+        "ENEM_MAT_04_escala-cartografia.pdf": 2,
+        "ENEM_MAT_01_razao-e-proporcao.pdf": 1
+      }
+    },
+    {
+      "id": "Q082",
+      "tipo": "contextual",
+      "query": "Num mapa de 1:50.000, dois pontos estão a 4 cm de distância. Qual é a distância real entre eles?",
+      "topico_alvo": "ENEM_MAT_04_escala-cartografia.pdf",
+      "relevantes": {
+        "ENEM_MAT_04_escala-cartografia.pdf": 2,
+        "ENEM_MAT_01_razao-e-proporcao.pdf": 1
+      }
+    },
+    {
+      "id": "Q083",
+      "tipo": "direta",
+      "query": "Quais são as unidades básicas do Sistema Internacional de Unidades?",
+      "topico_alvo": "ENEM_MAT_04_sistema-internacional-de-unidades.pdf",
+      "relevantes": {
+        "ENEM_MAT_04_sistema-internacional-de-unidades.pdf": 2,
+        "ENEM_MAT_04_velocidade.pdf": 1
+      }
+    },
+    {
+      "id": "Q084",
+      "tipo": "contextual",
+      "query": "Qual é a unidade padrão de massa, de comprimento e de tempo adotada mundialmente na ciência?",
+      "topico_alvo": "ENEM_MAT_04_sistema-internacional-de-unidades.pdf",
+      "relevantes": {
+        "ENEM_MAT_04_sistema-internacional-de-unidades.pdf": 2,
+        "ENEM_MAT_04_velocidade.pdf": 1
+      }
+    },
+    {
+      "id": "Q085",
+      "tipo": "direta",
+      "query": "O que é vazão e como calculá-la?",
+      "topico_alvo": "ENEM_MAT_04_vazao.pdf",
+      "relevantes": {
+        "ENEM_MAT_04_vazao.pdf": 2,
+        "ENEM_MAT_03_volume.pdf": 1
+      }
+    },
+    {
+      "id": "Q086",
+      "tipo": "contextual",
+      "query": "Uma torneira despeja 12 litros por minuto. Em quanto tempo ela enche um tanque de 600 litros?",
+      "topico_alvo": "ENEM_MAT_04_vazao.pdf",
+      "relevantes": {
+        "ENEM_MAT_04_vazao.pdf": 2,
+        "ENEM_MAT_03_volume.pdf": 1
+      }
+    },
+    {
+      "id": "Q087",
+      "tipo": "direta",
+      "query": "Como calcular a velocidade média?",
+      "topico_alvo": "ENEM_MAT_04_velocidade.pdf",
+      "relevantes": {
+        "ENEM_MAT_04_velocidade.pdf": 2,
+        "ENEM_MAT_04_sistema-internacional-de-unidades.pdf": 1
+      }
+    },
+    {
+      "id": "Q088",
+      "tipo": "contextual",
+      "query": "Um carro percorre 180 km em 2 horas e meia. Qual foi sua rapidez média nesse trajeto?",
+      "topico_alvo": "ENEM_MAT_04_velocidade.pdf",
+      "relevantes": {
+        "ENEM_MAT_04_velocidade.pdf": 2,
+        "ENEM_MAT_04_sistema-internacional-de-unidades.pdf": 1
+      }
+    },
+    {
+      "id": "Q089",
+      "tipo": "direta",
+      "query": "O que estuda a análise combinatória e o princípio fundamental da contagem?",
+      "topico_alvo": "ENEM_MAT_05_analise-combinatoria.pdf",
+      "relevantes": {
+        "ENEM_MAT_05_analise-combinatoria.pdf": 2,
+        "ENEM_MAT_05_arranjo-combinatoria.pdf": 2,
+        "ENEM_MAT_05_permutacao.pdf": 1,
+        "ENEM_MAT_05_combinacao-matematica.pdf": 1
+      }
+    },
+    {
+      "id": "Q090",
+      "tipo": "contextual",
+      "query": "Tenho 3 camisas e 4 calças. De quantas maneiras diferentes posso me vestir?",
+      "topico_alvo": "ENEM_MAT_05_analise-combinatoria.pdf",
+      "relevantes": {
+        "ENEM_MAT_05_analise-combinatoria.pdf": 2,
+        "ENEM_MAT_05_arranjo-combinatoria.pdf": 2,
+        "ENEM_MAT_05_permutacao.pdf": 1,
+        "ENEM_MAT_05_combinacao-matematica.pdf": 1
+      }
+    },
+    {
+      "id": "Q091",
+      "tipo": "direta",
+      "query": "Qual é a fórmula do arranjo simples em combinatória?",
+      "topico_alvo": "ENEM_MAT_05_arranjo-combinatoria.pdf",
+      "relevantes": {
+        "ENEM_MAT_05_analise-combinatoria.pdf": 2,
+        "ENEM_MAT_05_arranjo-combinatoria.pdf": 2,
+        "ENEM_MAT_05_permutacao.pdf": 1,
+        "ENEM_MAT_05_combinacao-matematica.pdf": 1
+      }
+    },
+    {
+      "id": "Q092",
+      "tipo": "contextual",
+      "query": "De quantas formas podemos escolher presidente e vice-presidente entre 10 candidatos, sabendo que a ordem importa?",
+      "topico_alvo": "ENEM_MAT_05_arranjo-combinatoria.pdf",
+      "relevantes": {
+        "ENEM_MAT_05_analise-combinatoria.pdf": 2,
+        "ENEM_MAT_05_arranjo-combinatoria.pdf": 2,
+        "ENEM_MAT_05_permutacao.pdf": 1,
+        "ENEM_MAT_05_combinacao-matematica.pdf": 1
+      }
+    },
+    {
+      "id": "Q093",
+      "tipo": "direta",
+      "query": "Qual é a fórmula da combinação simples?",
+      "topico_alvo": "ENEM_MAT_05_combinacao-matematica.pdf",
+      "relevantes": {
+        "ENEM_MAT_05_combinacao-matematica.pdf": 2,
+        "ENEM_MAT_05_analise-combinatoria.pdf": 1,
+        "ENEM_MAT_05_arranjo-combinatoria.pdf": 1
+      }
+    },
+    {
+      "id": "Q094",
+      "tipo": "contextual",
+      "query": "De quantas maneiras podemos formar uma comissão de 3 pessoas escolhidas entre 8, sem que a ordem importe?",
+      "topico_alvo": "ENEM_MAT_05_combinacao-matematica.pdf",
+      "relevantes": {
+        "ENEM_MAT_05_combinacao-matematica.pdf": 2,
+        "ENEM_MAT_05_analise-combinatoria.pdf": 1,
+        "ENEM_MAT_05_arranjo-combinatoria.pdf": 1
+      }
+    },
+    {
+      "id": "Q095",
+      "tipo": "direta",
+      "query": "Como calcular o desvio padrão de um conjunto de dados?",
+      "topico_alvo": "ENEM_MAT_05_desvio-padrao.pdf",
+      "relevantes": {
+        "ENEM_MAT_05_desvio-padrao.pdf": 2,
+        "ENEM_MAT_05_variancia.pdf": 1,
+        "ENEM_MAT_05_estatistica.pdf": 1
+      }
+    },
+    {
+      "id": "Q096",
+      "tipo": "contextual",
+      "query": "Duas turmas têm a mesma média de notas, mas em uma delas as notas são muito mais espalhadas. Que medida quantifica esse espalhamento em torno da média?",
+      "topico_alvo": "ENEM_MAT_05_desvio-padrao.pdf",
+      "relevantes": {
+        "ENEM_MAT_05_desvio-padrao.pdf": 2,
+        "ENEM_MAT_05_variancia.pdf": 1,
+        "ENEM_MAT_05_estatistica.pdf": 1
+      }
+    },
+    {
+      "id": "Q097",
+      "tipo": "direta",
+      "query": "O que é estatística e quais são seus principais ramos?",
+      "topico_alvo": "ENEM_MAT_05_estatistica.pdf",
+      "relevantes": {
+        "ENEM_MAT_05_estatistica.pdf": 2,
+        "ENEM_MAT_05_media-aritmetica.pdf": 1,
+        "ENEM_MAT_05_mediana-estatistica.pdf": 1,
+        "ENEM_MAT_05_moda-estatistica.pdf": 1
+      }
+    },
+    {
+      "id": "Q098",
+      "tipo": "contextual",
+      "query": "Como coletar, organizar e interpretar dados de uma pesquisa de opinião?",
+      "topico_alvo": "ENEM_MAT_05_estatistica.pdf",
+      "relevantes": {
+        "ENEM_MAT_05_estatistica.pdf": 2,
+        "ENEM_MAT_05_media-aritmetica.pdf": 1,
+        "ENEM_MAT_05_mediana-estatistica.pdf": 1,
+        "ENEM_MAT_05_moda-estatistica.pdf": 1
+      }
+    },
+    {
+      "id": "Q099",
+      "tipo": "direta",
+      "query": "Como calcular a média aritmética?",
+      "topico_alvo": "ENEM_MAT_05_media-aritmetica.pdf",
+      "relevantes": {
+        "ENEM_MAT_05_media-aritmetica.pdf": 2,
+        "ENEM_MAT_05_estatistica.pdf": 1
+      }
+    },
+    {
+      "id": "Q100",
+      "tipo": "contextual",
+      "query": "Um aluno tirou 6, 8 e 7 nas provas. Qual é a nota que representa o desempenho dele somando tudo e dividindo pelo número de provas?",
+      "topico_alvo": "ENEM_MAT_05_media-aritmetica.pdf",
+      "relevantes": {
+        "ENEM_MAT_05_media-aritmetica.pdf": 2,
+        "ENEM_MAT_05_estatistica.pdf": 1
+      }
+    },
+    {
+      "id": "Q101",
+      "tipo": "direta",
+      "query": "Como encontrar a mediana de um conjunto de dados?",
+      "topico_alvo": "ENEM_MAT_05_mediana-estatistica.pdf",
+      "relevantes": {
+        "ENEM_MAT_05_mediana-estatistica.pdf": 2,
+        "ENEM_MAT_05_estatistica.pdf": 1,
+        "ENEM_MAT_05_media-aritmetica.pdf": 1
+      }
+    },
+    {
+      "id": "Q102",
+      "tipo": "contextual",
+      "query": "Ao colocar os salários de uma empresa em ordem crescente, qual valor fica exatamente no meio da lista?",
+      "topico_alvo": "ENEM_MAT_05_mediana-estatistica.pdf",
+      "relevantes": {
+        "ENEM_MAT_05_mediana-estatistica.pdf": 2,
+        "ENEM_MAT_05_estatistica.pdf": 1,
+        "ENEM_MAT_05_media-aritmetica.pdf": 1
+      }
+    },
+    {
+      "id": "Q103",
+      "tipo": "direta",
+      "query": "O que é moda em estatística?",
+      "topico_alvo": "ENEM_MAT_05_moda-estatistica.pdf",
+      "relevantes": {
+        "ENEM_MAT_05_moda-estatistica.pdf": 2,
+        "ENEM_MAT_05_estatistica.pdf": 1
+      }
+    },
+    {
+      "id": "Q104",
+      "tipo": "contextual",
+      "query": "Numa pesquisa sobre o número do calçado dos alunos, qual valor aparece com maior frequência?",
+      "topico_alvo": "ENEM_MAT_05_moda-estatistica.pdf",
+      "relevantes": {
+        "ENEM_MAT_05_moda-estatistica.pdf": 2,
+        "ENEM_MAT_05_estatistica.pdf": 1
+      }
+    },
+    {
+      "id": "Q105",
+      "tipo": "direta",
+      "query": "O que é permutação e como calcular com fatorial?",
+      "topico_alvo": "ENEM_MAT_05_permutacao.pdf",
+      "relevantes": {
+        "ENEM_MAT_05_permutacao.pdf": 2,
+        "ENEM_MAT_05_analise-combinatoria.pdf": 1,
+        "ENEM_MAT_05_arranjo-combinatoria.pdf": 1
+      }
+    },
+    {
+      "id": "Q106",
+      "tipo": "contextual",
+      "query": "De quantas maneiras diferentes 5 pessoas podem se sentar em uma fileira de 5 cadeiras?",
+      "topico_alvo": "ENEM_MAT_05_permutacao.pdf",
+      "relevantes": {
+        "ENEM_MAT_05_permutacao.pdf": 2,
+        "ENEM_MAT_05_analise-combinatoria.pdf": 1,
+        "ENEM_MAT_05_arranjo-combinatoria.pdf": 1
+      }
+    },
+    {
+      "id": "Q107",
+      "tipo": "direta",
+      "query": "Como calcular a probabilidade condicional?",
+      "topico_alvo": "ENEM_MAT_05_probabilidade-condicional.pdf",
+      "relevantes": {
+        "ENEM_MAT_05_probabilidade-condicional.pdf": 2,
+        "ENEM_MAT_05_probabilidade.pdf": 1
+      }
+    },
+    {
+      "id": "Q108",
+      "tipo": "contextual",
+      "query": "Sabendo que a carta retirada do baralho é vermelha, qual a chance de ela ser de copas?",
+      "topico_alvo": "ENEM_MAT_05_probabilidade-condicional.pdf",
+      "relevantes": {
+        "ENEM_MAT_05_probabilidade-condicional.pdf": 2,
+        "ENEM_MAT_05_probabilidade.pdf": 1
+      }
+    },
+    {
+      "id": "Q109",
+      "tipo": "direta",
+      "query": "O que é probabilidade e como calculá-la?",
+      "topico_alvo": "ENEM_MAT_05_probabilidade.pdf",
+      "relevantes": {
+        "ENEM_MAT_05_probabilidade.pdf": 2,
+        "ENEM_MAT_05_probabilidade-condicional.pdf": 1
+      }
+    },
+    {
+      "id": "Q110",
+      "tipo": "contextual",
+      "query": "Ao lançar um dado comum, qual é a chance de sair um número par?",
+      "topico_alvo": "ENEM_MAT_05_probabilidade.pdf",
+      "relevantes": {
+        "ENEM_MAT_05_probabilidade.pdf": 2,
+        "ENEM_MAT_05_probabilidade-condicional.pdf": 1
+      }
+    },
+    {
+      "id": "Q111",
+      "tipo": "direta",
+      "query": "Como calcular a variância de uma amostra?",
+      "topico_alvo": "ENEM_MAT_05_variancia.pdf",
+      "relevantes": {
+        "ENEM_MAT_05_variancia.pdf": 2,
+        "ENEM_MAT_05_desvio-padrao.pdf": 1,
+        "ENEM_MAT_05_estatistica.pdf": 1
+      }
+    },
+    {
+      "id": "Q112",
+      "tipo": "contextual",
+      "query": "Qual medida é obtida pela média dos quadrados das diferenças entre cada valor e a média dos dados?",
+      "topico_alvo": "ENEM_MAT_05_variancia.pdf",
+      "relevantes": {
+        "ENEM_MAT_05_variancia.pdf": 2,
+        "ENEM_MAT_05_desvio-padrao.pdf": 1,
+        "ENEM_MAT_05_estatistica.pdf": 1
+      }
+    },
+    {
+      "id": "Q113",
+      "tipo": "direta",
+      "query": "O que é amortização de uma dívida e como funcionam as tabelas SAC e Price?",
+      "topico_alvo": "ENEM_MAT_06_amortizacao.pdf",
+      "relevantes": {
+        "ENEM_MAT_06_amortizacao.pdf": 2,
+        "ENEM_MAT_06_juros-compostos.pdf": 1,
+        "ENEM_MAT_06_juros-simples.pdf": 1
+      }
+    },
+    {
+      "id": "Q114",
+      "tipo": "contextual",
+      "query": "Peguei um financiamento e pago parcelas mensais que reduzem o saldo devedor aos poucos. Como funciona esse processo?",
+      "topico_alvo": "ENEM_MAT_06_amortizacao.pdf",
+      "relevantes": {
+        "ENEM_MAT_06_amortizacao.pdf": 2,
+        "ENEM_MAT_06_juros-compostos.pdf": 1,
+        "ENEM_MAT_06_juros-simples.pdf": 1
+      }
+    },
+    {
+      "id": "Q115",
+      "tipo": "direta",
+      "query": "O que é inflação e como ela é medida?",
+      "topico_alvo": "ENEM_MAT_06_inflacao.pdf",
+      "relevantes": {
+        "ENEM_MAT_06_inflacao.pdf": 2,
+        "ENEM_MAT_01_porcentagem.pdf": 1
+      }
+    },
+    {
+      "id": "Q116",
+      "tipo": "contextual",
+      "query": "Por que, com o passar dos anos, a mesma quantia de dinheiro compra menos produtos no supermercado?",
+      "topico_alvo": "ENEM_MAT_06_inflacao.pdf",
+      "relevantes": {
+        "ENEM_MAT_06_inflacao.pdf": 2,
+        "ENEM_MAT_01_porcentagem.pdf": 1
+      }
+    },
+    {
+      "id": "Q117",
+      "tipo": "direta",
+      "query": "Qual é a fórmula do montante em juros compostos?",
+      "topico_alvo": "ENEM_MAT_06_juros-compostos.pdf",
+      "relevantes": {
+        "ENEM_MAT_06_juros-compostos.pdf": 2,
+        "ENEM_MAT_06_juros-simples.pdf": 2,
+        "ENEM_MAT_06_amortizacao.pdf": 1
+      }
+    },
+    {
+      "id": "Q118",
+      "tipo": "contextual",
+      "query": "Apliquei 1.000 reais a 2 por cento ao mês, com rendimento incidindo sobre o saldo acumulado. Quanto terei após 6 meses?",
+      "topico_alvo": "ENEM_MAT_06_juros-compostos.pdf",
+      "relevantes": {
+        "ENEM_MAT_06_juros-compostos.pdf": 2,
+        "ENEM_MAT_06_juros-simples.pdf": 2,
+        "ENEM_MAT_06_amortizacao.pdf": 1
+      }
+    },
+    {
+      "id": "Q119",
+      "tipo": "direta",
+      "query": "Como calcular juros simples?",
+      "topico_alvo": "ENEM_MAT_06_juros-simples.pdf",
+      "relevantes": {
+        "ENEM_MAT_06_juros-compostos.pdf": 2,
+        "ENEM_MAT_06_juros-simples.pdf": 2,
+        "ENEM_MAT_06_amortizacao.pdf": 1
+      }
+    },
+    {
+      "id": "Q120",
+      "tipo": "contextual",
+      "query": "Um empréstimo de 500 reais cobra 3 por cento ao mês sempre sobre o valor inicial. Quanto pagarei de acréscimo em 4 meses?",
+      "topico_alvo": "ENEM_MAT_06_juros-simples.pdf",
+      "relevantes": {
+        "ENEM_MAT_06_juros-compostos.pdf": 2,
+        "ENEM_MAT_06_juros-simples.pdf": 2,
+        "ENEM_MAT_06_amortizacao.pdf": 1
+      }
+    },
+    {
+      "id": "Q121",
+      "tipo": "direta",
+      "query": "O que é taxa de câmbio?",
+      "topico_alvo": "ENEM_MAT_06_taxa-de-cambio.pdf",
+      "relevantes": {
+        "ENEM_MAT_06_taxa-de-cambio.pdf": 2
+      }
+    },
+    {
+      "id": "Q122",
+      "tipo": "contextual",
+      "query": "Vou viajar para os Estados Unidos e o dólar está custando 5 reais. Quantos dólares compro com 2.000 reais?",
+      "topico_alvo": "ENEM_MAT_06_taxa-de-cambio.pdf",
+      "relevantes": {
+        "ENEM_MAT_06_taxa-de-cambio.pdf": 2
+      }
+    },
+    {
+      "id": "Q123",
+      "tipo": "direta",
+      "query": "O que é raciocínio dedutivo?",
+      "topico_alvo": "ENEM_MAT_07_deducao-logica.pdf",
+      "relevantes": {
+        "ENEM_MAT_07_deducao-logica.pdf": 2,
+        "ENEM_MAT_07_logica-proposicional.pdf": 1
+      }
+    },
+    {
+      "id": "Q124",
+      "tipo": "contextual",
+      "query": "Todo mamífero respira por pulmões e a baleia é um mamífero. Que tipo de argumento permite concluir que a baleia respira por pulmões?",
+      "topico_alvo": "ENEM_MAT_07_deducao-logica.pdf",
+      "relevantes": {
+        "ENEM_MAT_07_deducao-logica.pdf": 2,
+        "ENEM_MAT_07_logica-proposicional.pdf": 1
+      }
+    },
+    {
+      "id": "Q125",
+      "tipo": "direta",
+      "query": "O que são proposições e conectivos lógicos na lógica proposicional?",
+      "topico_alvo": "ENEM_MAT_07_logica-proposicional.pdf",
+      "relevantes": {
+        "ENEM_MAT_07_logica-proposicional.pdf": 2,
+        "ENEM_MAT_07_deducao-logica.pdf": 1
+      }
+    },
+    {
+      "id": "Q126",
+      "tipo": "contextual",
+      "query": "Qual é o valor verdade da frase 'se chove, então a rua fica molhada' quando não chove?",
+      "topico_alvo": "ENEM_MAT_07_logica-proposicional.pdf",
+      "relevantes": {
+        "ENEM_MAT_07_logica-proposicional.pdf": 2,
+        "ENEM_MAT_07_deducao-logica.pdf": 1
+      }
+    }
+  ]
+}

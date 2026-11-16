@@ -1,0 +1,630 @@
+{
+  "versao": "1.0",
+  "congelado": false,
+  "descricao": "Diálogos de 2 turnos para medir o efeito do Query Rewriting (RN-CHAT01). A mensagem de seguimento depende do histórico (anáfora ou elipse) e não cita o tópico.",
+  "condicoes": {
+    "sem_reescrita": "mensagem de seguimento enviada crua à busca",
+    "com_reescrita": "mensagem reescrita pelo LLM com ChatService.rewrite_query (produção)",
+    "oraculo": "consulta autocontida escrita à mão (limite superior)"
+  },
+  "dialogos": [
+    {
+      "id": "D01",
+      "topico_alvo": "ENEM_MAT_03_cilindro.pdf",
+      "historico": [
+        {
+          "role": "user",
+          "content": "Como calculo o volume de um cilindro?"
+        },
+        {
+          "role": "assistant",
+          "content": "O volume do cilindro é a área da base vezes a altura: V = πr²h."
+        }
+      ],
+      "mensagem": "E a área total dele, como faço?",
+      "consulta_oraculo": "Como calcular a área total da superfície de um cilindro?",
+      "relevantes": {
+        "ENEM_MAT_03_cilindro.pdf": 2,
+        "ENEM_MAT_03_geometria-espacial.pdf": 1,
+        "ENEM_MAT_03_volume.pdf": 1
+      }
+    },
+    {
+      "id": "D02",
+      "topico_alvo": "ENEM_MAT_03_cone.pdf",
+      "historico": [
+        {
+          "role": "user",
+          "content": "Qual a fórmula do volume do cone?"
+        },
+        {
+          "role": "assistant",
+          "content": "O volume do cone é um terço da área da base vezes a altura: V = πr²h/3."
+        }
+      ],
+      "mensagem": "E a geratriz, o que é e como encontro?",
+      "consulta_oraculo": "O que é a geratriz de um cone e como calculá-la?",
+      "relevantes": {
+        "ENEM_MAT_03_cone.pdf": 2,
+        "ENEM_MAT_03_geometria-espacial.pdf": 1,
+        "ENEM_MAT_03_volume.pdf": 1
+      }
+    },
+    {
+      "id": "D03",
+      "topico_alvo": "ENEM_MAT_03_esfera.pdf",
+      "historico": [
+        {
+          "role": "user",
+          "content": "Qual é o volume de uma esfera?"
+        },
+        {
+          "role": "assistant",
+          "content": "O volume da esfera é V = 4πr³/3."
+        }
+      ],
+      "mensagem": "E se o raio dobrar, o que acontece com ele?",
+      "consulta_oraculo": "O que acontece com o volume de uma esfera quando o raio dobra?",
+      "relevantes": {
+        "ENEM_MAT_03_esfera.pdf": 2,
+        "ENEM_MAT_03_geometria-espacial.pdf": 1,
+        "ENEM_MAT_03_volume.pdf": 1
+      }
+    },
+    {
+      "id": "D04",
+      "topico_alvo": "ENEM_MAT_03_piramide-geometria.pdf",
+      "historico": [
+        {
+          "role": "user",
+          "content": "O que é uma pirâmide em geometria?"
+        },
+        {
+          "role": "assistant",
+          "content": "É um sólido com uma base poligonal e faces laterais triangulares que se encontram no vértice."
+        }
+      ],
+      "mensagem": "Como calculo o volume dela?",
+      "consulta_oraculo": "Como calcular o volume de uma pirâmide?",
+      "relevantes": {
+        "ENEM_MAT_03_piramide-geometria.pdf": 2,
+        "ENEM_MAT_03_geometria-espacial.pdf": 1,
+        "ENEM_MAT_03_volume.pdf": 1
+      }
+    },
+    {
+      "id": "D05",
+      "topico_alvo": "ENEM_MAT_03_prisma-geometria.pdf",
+      "historico": [
+        {
+          "role": "user",
+          "content": "O que é um prisma?"
+        },
+        {
+          "role": "assistant",
+          "content": "É um sólido com duas bases poligonais congruentes e paralelas, ligadas por faces laterais."
+        }
+      ],
+      "mensagem": "E como acho a área lateral desse sólido?",
+      "consulta_oraculo": "Como calcular a área lateral de um prisma?",
+      "relevantes": {
+        "ENEM_MAT_03_prisma-geometria.pdf": 2,
+        "ENEM_MAT_03_geometria-espacial.pdf": 1,
+        "ENEM_MAT_03_volume.pdf": 1
+      }
+    },
+    {
+      "id": "D06",
+      "topico_alvo": "ENEM_MAT_03_teorema-de-pitagoras.pdf",
+      "historico": [
+        {
+          "role": "user",
+          "content": "Pode me explicar o teorema de Pitágoras?"
+        },
+        {
+          "role": "assistant",
+          "content": "Num triângulo retângulo, o quadrado da hipotenusa é igual à soma dos quadrados dos catetos."
+        }
+      ],
+      "mensagem": "Tem alguma demonstração disso?",
+      "consulta_oraculo": "Qual é uma demonstração do teorema de Pitágoras?",
+      "relevantes": {
+        "ENEM_MAT_03_teorema-de-pitagoras.pdf": 2,
+        "ENEM_MAT_03_triangulo-retangulo.pdf": 1,
+        "ENEM_MAT_03_distancia-entre-dois-pontos.pdf": 1
+      }
+    },
+    {
+      "id": "D07",
+      "topico_alvo": "ENEM_MAT_03_lei-dos-cossenos.pdf",
+      "historico": [
+        {
+          "role": "user",
+          "content": "O que é a lei dos cossenos?"
+        },
+        {
+          "role": "assistant",
+          "content": "Ela relaciona os três lados de um triângulo qualquer com o cosseno de um dos ângulos: a² = b² + c² − 2bc·cos A."
+        }
+      ],
+      "mensagem": "E quando o ângulo é de 90 graus, ela vira o quê?",
+      "consulta_oraculo": "O que acontece com a lei dos cossenos quando o ângulo é reto?",
+      "relevantes": {
+        "ENEM_MAT_03_lei-dos-cossenos.pdf": 2,
+        "ENEM_MAT_03_lei-dos-senos.pdf": 1,
+        "ENEM_MAT_03_trigonometria.pdf": 1
+      }
+    },
+    {
+      "id": "D08",
+      "topico_alvo": "ENEM_MAT_03_semelhanca-de-triangulos.pdf",
+      "historico": [
+        {
+          "role": "user",
+          "content": "Quando dois triângulos são semelhantes?"
+        },
+        {
+          "role": "assistant",
+          "content": "Quando têm ângulos correspondentes iguais e lados correspondentes proporcionais."
+        }
+      ],
+      "mensagem": "Quais são os casos que garantem isso?",
+      "consulta_oraculo": "Quais são os casos de semelhança de triângulos?",
+      "relevantes": {
+        "ENEM_MAT_03_semelhanca-de-triangulos.pdf": 2,
+        "ENEM_MAT_03_geometria-plana.pdf": 1
+      }
+    },
+    {
+      "id": "D09",
+      "topico_alvo": "ENEM_MAT_03_ciclo-trigonometrico.pdf",
+      "historico": [
+        {
+          "role": "user",
+          "content": "O que é o círculo trigonométrico?"
+        },
+        {
+          "role": "assistant",
+          "content": "É uma circunferência de raio 1 centrada na origem, usada para definir seno e cosseno de qualquer ângulo."
+        }
+      ],
+      "mensagem": "E em que quadrante o seno fica negativo nele?",
+      "consulta_oraculo": "Em quais quadrantes do ciclo trigonométrico o seno é negativo?",
+      "relevantes": {
+        "ENEM_MAT_03_ciclo-trigonometrico.pdf": 2,
+        "ENEM_MAT_03_trigonometria.pdf": 1
+      }
+    },
+    {
+      "id": "D10",
+      "topico_alvo": "ENEM_MAT_03_distancia-entre-dois-pontos.pdf",
+      "historico": [
+        {
+          "role": "user",
+          "content": "Como acho a distância entre dois pontos no plano?"
+        },
+        {
+          "role": "assistant",
+          "content": "Usa-se d = √((x₂−x₁)² + (y₂−y₁)²), que vem do teorema de Pitágoras."
+        }
+      ],
+      "mensagem": "E isso funciona em três dimensões também?",
+      "consulta_oraculo": "Como calcular a distância entre dois pontos no espaço tridimensional?",
+      "relevantes": {
+        "ENEM_MAT_03_distancia-entre-dois-pontos.pdf": 2,
+        "ENEM_MAT_03_geometria-analitica.pdf": 1,
+        "ENEM_MAT_03_plano-cartesiano.pdf": 1,
+        "ENEM_MAT_03_teorema-de-pitagoras.pdf": 1
+      }
+    },
+    {
+      "id": "D11",
+      "topico_alvo": "ENEM_MAT_03_poligono.pdf",
+      "historico": [
+        {
+          "role": "user",
+          "content": "O que é um polígono?"
+        },
+        {
+          "role": "assistant",
+          "content": "É uma figura plana fechada formada por segmentos de reta que não se cruzam."
+        }
+      ],
+      "mensagem": "Como calculo a soma dos ângulos internos dele?",
+      "consulta_oraculo": "Como calcular a soma dos ângulos internos de um polígono?",
+      "relevantes": {
+        "ENEM_MAT_03_poligono.pdf": 2,
+        "ENEM_MAT_03_geometria-plana.pdf": 1,
+        "ENEM_MAT_03_area-geometria.pdf": 1,
+        "ENEM_MAT_03_perimetro.pdf": 1
+      }
+    },
+    {
+      "id": "D12",
+      "topico_alvo": "ENEM_MAT_02_funcao-quadratica.pdf",
+      "historico": [
+        {
+          "role": "user",
+          "content": "O que é uma função quadrática?"
+        },
+        {
+          "role": "assistant",
+          "content": "É uma função do tipo f(x) = ax² + bx + c, com a ≠ 0, cujo gráfico é uma parábola."
+        }
+      ],
+      "mensagem": "Como encontro o ponto máximo ou mínimo dela?",
+      "consulta_oraculo": "Como encontrar o vértice de uma função quadrática?",
+      "relevantes": {
+        "ENEM_MAT_02_funcao-quadratica.pdf": 2,
+        "ENEM_MAT_02_equacao-do-segundo-grau.pdf": 1
+      }
+    },
+    {
+      "id": "D13",
+      "topico_alvo": "ENEM_MAT_02_funcao-afim.pdf",
+      "historico": [
+        {
+          "role": "user",
+          "content": "O que é uma função afim?"
+        },
+        {
+          "role": "assistant",
+          "content": "É uma função f(x) = ax + b, cujo gráfico é uma reta."
+        }
+      ],
+      "mensagem": "E o que o coeficiente a indica nesse gráfico?",
+      "consulta_oraculo": "O que o coeficiente angular indica no gráfico de uma função afim?",
+      "relevantes": {
+        "ENEM_MAT_02_funcao-afim.pdf": 2,
+        "ENEM_MAT_02_equacao-do-primeiro-grau.pdf": 1
+      }
+    },
+    {
+      "id": "D14",
+      "topico_alvo": "ENEM_MAT_02_funcao-exponencial.pdf",
+      "historico": [
+        {
+          "role": "user",
+          "content": "O que é uma função exponencial?"
+        },
+        {
+          "role": "assistant",
+          "content": "É uma função f(x) = aˣ, com a > 0 e a ≠ 1."
+        }
+      ],
+      "mensagem": "Quando ela é crescente e quando é decrescente?",
+      "consulta_oraculo": "Quando uma função exponencial é crescente ou decrescente?",
+      "relevantes": {
+        "ENEM_MAT_02_funcao-exponencial.pdf": 2,
+        "ENEM_MAT_02_funcao-logaritmica.pdf": 1,
+        "ENEM_MAT_01_progressao-geometrica.pdf": 1
+      }
+    },
+    {
+      "id": "D15",
+      "topico_alvo": "ENEM_MAT_02_funcao-logaritmica.pdf",
+      "historico": [
+        {
+          "role": "user",
+          "content": "O que é logaritmo?"
+        },
+        {
+          "role": "assistant",
+          "content": "O logaritmo de b na base a é o expoente x tal que aˣ = b."
+        }
+      ],
+      "mensagem": "Quais propriedades posso usar para simplificar contas com ele?",
+      "consulta_oraculo": "Quais são as propriedades operatórias dos logaritmos?",
+      "relevantes": {
+        "ENEM_MAT_02_funcao-logaritmica.pdf": 2,
+        "ENEM_MAT_02_funcao-exponencial.pdf": 1
+      }
+    },
+    {
+      "id": "D16",
+      "topico_alvo": "ENEM_MAT_02_equacao-do-segundo-grau.pdf",
+      "historico": [
+        {
+          "role": "user",
+          "content": "Como resolvo uma equação do segundo grau?"
+        },
+        {
+          "role": "assistant",
+          "content": "Pode-se usar a fórmula de Bhaskara: x = (−b ± √Δ)/2a, com Δ = b² − 4ac."
+        }
+      ],
+      "mensagem": "E se o delta der negativo?",
+      "consulta_oraculo": "O que acontece na equação do segundo grau quando o discriminante é negativo?",
+      "relevantes": {
+        "ENEM_MAT_02_equacao-do-segundo-grau.pdf": 2,
+        "ENEM_MAT_02_funcao-quadratica.pdf": 1
+      }
+    },
+    {
+      "id": "D17",
+      "topico_alvo": "ENEM_MAT_02_sistema-de-equacoes-lineares.pdf",
+      "historico": [
+        {
+          "role": "user",
+          "content": "Como resolvo um sistema com duas equações e duas incógnitas?"
+        },
+        {
+          "role": "assistant",
+          "content": "Pode-se usar substituição, adição ou escalonamento."
+        }
+      ],
+      "mensagem": "Quando ele não tem solução?",
+      "consulta_oraculo": "Quando um sistema de equações lineares é impossível?",
+      "relevantes": {
+        "ENEM_MAT_02_sistema-de-equacoes-lineares.pdf": 2,
+        "ENEM_MAT_02_equacao-do-primeiro-grau.pdf": 1
+      }
+    },
+    {
+      "id": "D18",
+      "topico_alvo": "ENEM_MAT_01_progressao-aritmetica.pdf",
+      "historico": [
+        {
+          "role": "user",
+          "content": "O que é uma PA?"
+        },
+        {
+          "role": "assistant",
+          "content": "É uma sequência em que cada termo é o anterior somado a uma razão constante."
+        }
+      ],
+      "mensagem": "E como somo os termos dela?",
+      "consulta_oraculo": "Como calcular a soma dos termos de uma progressão aritmética?",
+      "relevantes": {
+        "ENEM_MAT_01_progressao-aritmetica.pdf": 2,
+        "ENEM_MAT_02_sequencia-numerica.pdf": 1
+      }
+    },
+    {
+      "id": "D19",
+      "topico_alvo": "ENEM_MAT_01_progressao-geometrica.pdf",
+      "historico": [
+        {
+          "role": "user",
+          "content": "O que é uma PG?"
+        },
+        {
+          "role": "assistant",
+          "content": "É uma sequência em que cada termo é o anterior multiplicado por uma razão constante."
+        }
+      ],
+      "mensagem": "E quando a soma infinita dela converge?",
+      "consulta_oraculo": "Quando a soma infinita de uma progressão geométrica converge?",
+      "relevantes": {
+        "ENEM_MAT_01_progressao-geometrica.pdf": 2,
+        "ENEM_MAT_02_sequencia-numerica.pdf": 1
+      }
+    },
+    {
+      "id": "D20",
+      "topico_alvo": "ENEM_MAT_01_porcentagem.pdf",
+      "historico": [
+        {
+          "role": "user",
+          "content": "Como calculo 20% de um valor?"
+        },
+        {
+          "role": "assistant",
+          "content": "Multiplica-se o valor por 20/100, ou seja, por 0,2."
+        }
+      ],
+      "mensagem": "E para dar dois aumentos seguidos de 10%, somo tudo?",
+      "consulta_oraculo": "Como calcular aumentos percentuais sucessivos?",
+      "relevantes": {
+        "ENEM_MAT_01_porcentagem.pdf": 2,
+        "ENEM_MAT_01_razao-e-proporcao.pdf": 1,
+        "ENEM_MAT_06_inflacao.pdf": 1
+      }
+    },
+    {
+      "id": "D21",
+      "topico_alvo": "ENEM_MAT_01_numeros-irracionais.pdf",
+      "historico": [
+        {
+          "role": "user",
+          "content": "O que é um número irracional?"
+        },
+        {
+          "role": "assistant",
+          "content": "É um número real que não pode ser escrito como fração de dois inteiros, como √2 e π."
+        }
+      ],
+      "mensagem": "Como provo que a raiz de 2 é um deles?",
+      "consulta_oraculo": "Como demonstrar que a raiz quadrada de 2 é irracional?",
+      "relevantes": {
+        "ENEM_MAT_01_numeros-irracionais.pdf": 2,
+        "ENEM_MAT_01_conjuntos-numericos.pdf": 1
+      }
+    },
+    {
+      "id": "D22",
+      "topico_alvo": "ENEM_MAT_05_probabilidade.pdf",
+      "historico": [
+        {
+          "role": "user",
+          "content": "O que é probabilidade?"
+        },
+        {
+          "role": "assistant",
+          "content": "É a medida da chance de um evento ocorrer: casos favoráveis sobre casos possíveis."
+        }
+      ],
+      "mensagem": "E como calculo a chance de dois eventos acontecerem juntos?",
+      "consulta_oraculo": "Como calcular a probabilidade da interseção de dois eventos?",
+      "relevantes": {
+        "ENEM_MAT_05_probabilidade.pdf": 2,
+        "ENEM_MAT_05_probabilidade-condicional.pdf": 1
+      }
+    },
+    {
+      "id": "D23",
+      "topico_alvo": "ENEM_MAT_05_desvio-padrao.pdf",
+      "historico": [
+        {
+          "role": "user",
+          "content": "O que é desvio padrão?"
+        },
+        {
+          "role": "assistant",
+          "content": "É uma medida de dispersão que indica o quanto os dados se afastam da média."
+        }
+      ],
+      "mensagem": "Como calculo isso passo a passo?",
+      "consulta_oraculo": "Como calcular o desvio padrão passo a passo?",
+      "relevantes": {
+        "ENEM_MAT_05_desvio-padrao.pdf": 2,
+        "ENEM_MAT_05_variancia.pdf": 1,
+        "ENEM_MAT_05_estatistica.pdf": 1
+      }
+    },
+    {
+      "id": "D24",
+      "topico_alvo": "ENEM_MAT_05_mediana-estatistica.pdf",
+      "historico": [
+        {
+          "role": "user",
+          "content": "O que é mediana?"
+        },
+        {
+          "role": "assistant",
+          "content": "É o valor central de um conjunto de dados ordenado."
+        }
+      ],
+      "mensagem": "E quando a quantidade de dados é par?",
+      "consulta_oraculo": "Como calcular a mediana quando o número de dados é par?",
+      "relevantes": {
+        "ENEM_MAT_05_mediana-estatistica.pdf": 2,
+        "ENEM_MAT_05_estatistica.pdf": 1,
+        "ENEM_MAT_05_media-aritmetica.pdf": 1
+      }
+    },
+    {
+      "id": "D25",
+      "topico_alvo": "ENEM_MAT_05_permutacao.pdf",
+      "historico": [
+        {
+          "role": "user",
+          "content": "O que é permutação?"
+        },
+        {
+          "role": "assistant",
+          "content": "É cada ordenação possível de um conjunto de elementos; para n elementos distintos há n! permutações."
+        }
+      ],
+      "mensagem": "E quando há letras repetidas, como fica?",
+      "consulta_oraculo": "Como calcular permutação com elementos repetidos?",
+      "relevantes": {
+        "ENEM_MAT_05_permutacao.pdf": 2,
+        "ENEM_MAT_05_analise-combinatoria.pdf": 1,
+        "ENEM_MAT_05_arranjo-combinatoria.pdf": 1
+      }
+    },
+    {
+      "id": "D26",
+      "topico_alvo": "ENEM_MAT_05_combinacao-matematica.pdf",
+      "historico": [
+        {
+          "role": "user",
+          "content": "O que é combinação em análise combinatória?"
+        },
+        {
+          "role": "assistant",
+          "content": "É a escolha de p elementos entre n em que a ordem não importa: C(n,p) = n!/(p!(n−p)!)."
+        }
+      ],
+      "mensagem": "Qual a diferença disso para o arranjo?",
+      "consulta_oraculo": "Qual é a diferença entre combinação e arranjo?",
+      "relevantes": {
+        "ENEM_MAT_05_combinacao-matematica.pdf": 2,
+        "ENEM_MAT_05_analise-combinatoria.pdf": 1,
+        "ENEM_MAT_05_arranjo-combinatoria.pdf": 1
+      }
+    },
+    {
+      "id": "D27",
+      "topico_alvo": "ENEM_MAT_06_juros-compostos.pdf",
+      "historico": [
+        {
+          "role": "user",
+          "content": "Como funcionam os juros compostos?"
+        },
+        {
+          "role": "assistant",
+          "content": "Os juros incidem sobre o montante acumulado: M = C(1 + i)ⁿ."
+        }
+      ],
+      "mensagem": "E como comparo com os simples?",
+      "consulta_oraculo": "Qual é a diferença entre juros simples e juros compostos?",
+      "relevantes": {
+        "ENEM_MAT_06_juros-compostos.pdf": 2,
+        "ENEM_MAT_06_juros-simples.pdf": 2,
+        "ENEM_MAT_06_amortizacao.pdf": 1
+      }
+    },
+    {
+      "id": "D28",
+      "topico_alvo": "ENEM_MAT_06_inflacao.pdf",
+      "historico": [
+        {
+          "role": "user",
+          "content": "O que é inflação?"
+        },
+        {
+          "role": "assistant",
+          "content": "É o aumento generalizado e contínuo dos preços em uma economia."
+        }
+      ],
+      "mensagem": "Como ela é medida no Brasil?",
+      "consulta_oraculo": "Quais índices medem a inflação no Brasil?",
+      "relevantes": {
+        "ENEM_MAT_06_inflacao.pdf": 2,
+        "ENEM_MAT_01_porcentagem.pdf": 1
+      }
+    },
+    {
+      "id": "D29",
+      "topico_alvo": "ENEM_MAT_04_escala-cartografia.pdf",
+      "historico": [
+        {
+          "role": "user",
+          "content": "O que significa uma escala 1:100.000 em um mapa?"
+        },
+        {
+          "role": "assistant",
+          "content": "Significa que 1 unidade no mapa corresponde a 100.000 unidades na realidade."
+        }
+      ],
+      "mensagem": "E qual a diferença entre a numérica e a gráfica?",
+      "consulta_oraculo": "Qual é a diferença entre escala numérica e escala gráfica?",
+      "relevantes": {
+        "ENEM_MAT_04_escala-cartografia.pdf": 2,
+        "ENEM_MAT_01_razao-e-proporcao.pdf": 1
+      }
+    },
+    {
+      "id": "D30",
+      "topico_alvo": "ENEM_MAT_07_logica-proposicional.pdf",
+      "historico": [
+        {
+          "role": "user",
+          "content": "O que é uma proposição em lógica?"
+        },
+        {
+          "role": "assistant",
+          "content": "É uma sentença declarativa que pode ser verdadeira ou falsa."
+        }
+      ],
+      "mensagem": "E como monto a tabela verdade de uma condicional?",
+      "consulta_oraculo": "Como construir a tabela-verdade da condicional na lógica proposicional?",
+      "relevantes": {
+        "ENEM_MAT_07_logica-proposicional.pdf": 2,
+        "ENEM_MAT_07_deducao-logica.pdf": 1
+      }
+    }
+  ]
+}
