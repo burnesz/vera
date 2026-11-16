@@ -218,6 +218,47 @@ class FeedbackService:
 
         marcada = (resposta.alternativa_marcada or "X").strip().upper()
 
+        # 4 a 6. RAG, inferência e verificação contra o gabarito (RN-FB04)
+        gerado = self.gerar_feedback_verificado(
+            habilidade_codigo=hab_cod,
+            habilidade_descricao=hab_desc,
+            enunciado=enunciado,
+            alternativas=alternativas,
+            alternativa_marcada=marcada,
+            gabarito=gabarito,
+        )
+
+        # 7. Salva na tabela feedbacks do PostgreSQL
+        feedback = Feedback(
+            resposta_item_id=resposta.id,
+            feedback_content=gerado["conteudo"],
+            thought_scratchpad=gerado["pensamento"],
+            context_chunks=gerado["context_chunks"],
+            is_verified=True,
+        )
+        db.add(feedback)
+        db.commit()
+        db.refresh(feedback)
+
+        logger.info(f"Feedback '{feedback.id}' gerado e persistido com sucesso para resposta '{resposta.id}'.")
+        return feedback
+
+    def gerar_feedback_verificado(
+        self,
+        habilidade_codigo: str,
+        habilidade_descricao: str,
+        enunciado: str,
+        alternativas: Dict[str, str],
+        alternativa_marcada: str,
+        gabarito: str,
+    ) -> Dict[str, Any]:
+        """
+        Gera o feedback de um item sem acessar o banco: RAG no Pinecone, inferência com CoT e verificação
+        contra o gabarito com Stateless Retry (RN-FB04). Levanta FeedbackVerificationError se nenhuma
+        tentativa for aprovada. Retorna o conteúdo, o raciocínio, os trechos recuperados e as verificações.
+        """
+        hab_cod, hab_desc, marcada = habilidade_codigo, habilidade_descricao, alternativa_marcada
+
         # 4. Busca contexto RAG determinístico no Pinecone
         rag_query = self.build_rag_query(hab_cod, enunciado)
         context_chunks = self._retrieve_context(rag_query, top_k=3)
@@ -280,20 +321,12 @@ class FeedbackService:
                 verificacoes,
             )
 
-        # 7. Salva na tabela feedbacks do PostgreSQL
-        feedback = Feedback(
-            resposta_item_id=resposta.id,
-            feedback_content=clean_reply,
-            thought_scratchpad=thought,
-            context_chunks=context_chunks,
-            is_verified=True,
-        )
-        db.add(feedback)
-        db.commit()
-        db.refresh(feedback)
-
-        logger.info(f"Feedback '{feedback.id}' gerado e persistido com sucesso para resposta '{resposta.id}'.")
-        return feedback
+        return {
+            "conteudo": clean_reply,
+            "pensamento": thought,
+            "context_chunks": context_chunks,
+            "verificacoes": verificacoes,
+        }
 
 
 # Instância singleton padrão do serviço
