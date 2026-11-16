@@ -211,3 +211,35 @@ async def test_llm_client_ahealth_check_success(mock_async_client_cls):
         "http://localhost:11434/api/tags",
         headers=client.headers
     )
+
+
+def test_lista_de_mensagens_vira_system_e_prompt_no_api_generate():
+    """O /api/generate do Ollama só aceita texto em 'prompt' (uma lista dava HTTP 400 no feedback)."""
+    from app.services.llm_client import LLMClient
+
+    _, payload = LLMClient(model_name="m")._build_payload_and_url(
+        prompt=[{"role": "system", "content": "Você é VERA."}, {"role": "user", "content": "Explique o erro."}]
+    )
+    assert payload["system"] == "Você é VERA."
+    assert payload["prompt"] == "Explique o erro."
+    assert "think" not in payload
+
+
+def test_think_vai_no_payload_quando_definido():
+    from app.services.llm_client import LLMClient
+
+    _, payload = LLMClient(model_name="qwen3:8b-q4_K_M", think=False)._build_payload_and_url(prompt="oi")
+    assert payload["think"] is False and payload["prompt"] == "oi" and "system" not in payload
+
+
+def test_feedback_tutora_e_baseline_usam_o_modelo_da_tutoria():
+    """RN-INF07: feedback, tutora e baseline usam LLM_MODEL_TUTORIA com LLM_THINK_TUTORIA."""
+    from unittest.mock import MagicMock
+    from app.core.config import settings
+    from app.services.baseline_service import BaselineService
+    from app.services.chat_service import ChatService
+    from app.services.feedback_service import FeedbackService
+
+    for servico in (FeedbackService(vector_store=MagicMock()), ChatService(vector_store=MagicMock()), BaselineService()):
+        assert servico.llm_client.model_name == settings.LLM_MODEL_TUTORIA
+        assert servico.llm_client.think == settings.LLM_THINK_TUTORIA
