@@ -39,7 +39,7 @@ A plataforma integra:
 2. **Tutoria com RAG (*Retrieval-Augmented Generation*)**: recuperação semântica de materiais didáticos para ancorar as explicações do LLM e erradicar alucinações conceituais.
 3. **Chain-of-Thought (CoT) com auto-validação**: mecanismo de raciocínio passo a passo onde o modelo resolve a questão internamente antes de emitir a explicação didática.
 4. **Geração de Questões Inéditas**: produção de novos itens no padrão rigoroso do ENEM (enunciado contextualizado, 5 alternativas e distratores plausíveis) com validação estrutural automática.
-5. **Inferência 100% Local e Privada**: acionamento do modelo **Qwen 2.5 7B Instruct** quantizado via daemon do **Ollama**, assegurando soberania de dados, custo zero por token e reprodutibilidade científica.
+5. **Inferência 100% Local e Privada**: modelos quantizados via daemon do **Ollama**: **Qwen 2.5 7B Instruct** e, no feedback e na tutora, **Qwen3 8B** sem raciocínio, escolhido por experimento (`DSR-08`), assegurando soberania de dados, custo zero por token e reprodutibilidade científica.
 
 ---
 
@@ -156,7 +156,7 @@ Durante o desenvolvimento do protótipo e os ciclos de avaliação da DSR, adoto
 - **Linguagem**: Python 3.10+
 - **Framework Web**: [FastAPI](https://fastapi.tiangolo.com/) com rotas assíncronas e esquemas Pydantic v2
 - **Orquestração LLM**: Orquestração nativa em Python + Pydantic v2 (sem LangChain — `DSR-01`), prompts versionados em `app/core/prompts.py`
-- **Modelo de Linguagem (LLM)**: `qwen2.5:7b-instruct-q4_K_M` executado localmente via [Ollama](https://ollama.com/)
+- **Modelos de Linguagem (LLM)**, executados localmente via [Ollama](https://ollama.com/): `qwen2.5:7b-instruct-q4_K_M` e, no feedback e na tutora, `qwen3:8b-q4_K_M` sem raciocínio (`RN-INF07`, `DSR-08`)
 - **Embeddings Vetoriais**: `intfloat/multilingual-e5-large` (1024 dimensões)
 - **Banco Vetorial**: [Pinecone](https://www.pinecone.io/) (Namespaces `materiais_didaticos` e `questoes_enem`)
 - **Banco Relacional & ORM**: PostgreSQL 15 + SQLAlchemy 2.0
@@ -258,6 +258,8 @@ ACCESS_TOKEN_EXPIRE_MINUTES=1440
 # LLM Local (Ollama)
 LLM_ENDPOINT_URL=http://localhost:11434
 LLM_MODEL=qwen2.5:7b-instruct-q4_K_M
+LLM_MODEL_TUTORIA=qwen3:8b-q4_K_M   # feedback e tutora (RN-INF07)
+LLM_THINK_TUTORIA=false
 LLM_TIMEOUT_SECONDS=300.0
 LLM_NUM_CTX=4096
 
@@ -288,9 +290,9 @@ FRONTEND_PORT=3000
 
 ## 🚀 Como Executar o Projeto
 
-### Pré-requisito: Modelo Qwen 2.5 no Ollama
+### Pré-requisito: Modelos no Ollama
 
-Certifique-se de que o **Ollama** está instalado e o modelo de 7B baixado:
+Certifique-se de que o **Ollama** está instalado e os dois modelos baixados:
 
 ```bash
 # Iniciar o daemon do Ollama
@@ -298,6 +300,9 @@ ollama serve
 
 # Baixar o modelo Qwen 2.5 7B quantizado
 ollama pull qwen2.5:7b-instruct-q4_K_M
+
+# Baixar o Qwen3 8B, usado no feedback e na tutora (DSR-08)
+ollama pull qwen3:8b-q4_K_M
 ```
 
 ---
@@ -405,9 +410,9 @@ Execute a suíte com o Pytest:
 
 Para atender ao rigor acadêmico da pesquisa de TCC baseada em DSR:
 
-> Status: planejado (Fase 4) — `app/services/baseline_service.py` e `evaluation/` ainda não foram implementados.
+> Status: em andamento (Fase 4). A baseline e a avaliação da recuperação estão implementadas; a rubrica do especialista ainda não. Detalhes em `docs/03-avaliacao-cientifica/baseline-e-metricas-tcc.md`.
 
-- **Baseline Comparativa**: O sistema contará com serviço desacoplado que opera o mesmo modelo `Qwen2.5-7B` em **zero-shot** (sem injeção de contexto RAG e sem exemplos *few-shot* históricos).
+- **Baseline Comparativa** (`app/services/baseline_service.py`): o mesmo modelo e os mesmos prompts de cada fluxo em **zero-shot**, sem contexto RAG, sem exemplos *few-shot* e sem as verificações.
 - **Métricas Quantitativas**:
   - Precisão e recall da recuperação semântica no namespace `materiais_didaticos`.
   - Latência e tempo de inferência local.
