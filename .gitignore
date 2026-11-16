@@ -57,3 +57,6 @@ dist/
 postgres_data
 
 AGENTS.md
+# Avaliação: cache de corpus e rodadas de fumaça (rodadas piloto/oficiais são versionadas)
+evaluation/results/cache/
+evaluation/results/*fumaca-*/
