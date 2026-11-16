@@ -14,6 +14,7 @@ Funções puras, usadas por scripts/montar_caderno_especialista.py e scripts/ana
 import html
 import json
 import random
+import re
 from typing import Dict, List, Optional, Tuple
 
 CRITERIOS = [
@@ -45,12 +46,36 @@ function renderiza(el, markdown) {
     const m = formulas[+i];
     const bloco = m.startsWith('$$') || m.startsWith('\\[');
     const corpo = m.startsWith('$$') || m.startsWith('\\') ? m.slice(2, -2) : m.slice(1, -1);
-    try { return katex.renderToString(corpo.trim(), { displayMode: bloco, throwOnError: false }); }
+    // conectivo dentro da fórmula ("$\\frac{1}{50} e \\frac{1}{60}$") sairia em itálico, como a constante e
+    const tex = corpo.trim().replace(/([\d}])\s+(e|ou)\s+(?=[\\\d])/g, '$1\\text{ $2 }');
+    try {
+      const html = katex.renderToString(tex, { displayMode: bloco, throwOnError: false });
+      return bloco ? `<span class="fbloco" data-tex="${encodeURIComponent(tex)}">${html}</span>` : html;
+    }
     catch (e) { return m; }
   });
 }
 document.querySelectorAll('.md').forEach(el => renderiza(el, true));
 document.querySelectorAll('.mt').forEach(el => renderiza(el, false));
+// Fórmula em bloco mais larga que a coluna: no papel, a rolagem horizontal vira corte. Se falta pouco, a fonte é
+// reduzida (até 80%); se falta muito, a fórmula é refeita em modo de linha, que quebra no "=" e no "×".
+function ajustaFormulas() {
+  document.querySelectorAll('.fbloco').forEach(f => {
+    const tex = decodeURIComponent(f.dataset.tex);
+    f.style.fontSize = ''; f.classList.remove('quebra');
+    f.innerHTML = katex.renderToString(tex, { displayMode: true, throwOnError: false });
+    const d = f.querySelector('.katex-display');
+    if (!d || d.scrollWidth <= d.clientWidth + 1) return;
+    const r = d.clientWidth / d.scrollWidth;
+    if (r >= 0.8) { f.style.fontSize = Math.floor(98 * r) + '%'; return; }
+    f.innerHTML = katex.renderToString('\\displaystyle ' + tex, { displayMode: false, throwOnError: false });
+    f.classList.add('quebra');
+    if (f.scrollWidth > f.clientWidth + 1) f.style.fontSize = Math.floor(98 * f.clientWidth / f.scrollWidth) + '%';
+  });
+}
+window.ajustaFormulas = ajustaFormulas;
+ajustaFormulas();
+window.addEventListener('beforeprint', ajustaFormulas);
 </script>
 """
 
@@ -71,6 +96,7 @@ _ESTILO = """
   .box, .resp { white-space: nowrap; text-align: center; }
   .obs { min-height: 60px; border-bottom: 1px dotted #999; } .par { margin-bottom: 32px; }
   .katex-display { overflow-x: auto; overflow-y: hidden; }
+  .fbloco { display: block; } .fbloco.quebra { text-align: center; margin: .7em 0; line-height: 2.2; }
   @media (max-width: 700px) { .respostas { grid-template-columns: 1fr; } }
   @media print {
     body { margin: 0; max-width: none; font-size: 10pt; line-height: 1.35; }
@@ -132,16 +158,39 @@ def respostas_suspeitas(pares: Dict[str, List[dict]]) -> List[Tuple[str, str]]:
     return suspeitas
 
 
-_COMANDOS_SOLTOS = {"\\times": "×", "\\cdot": "·", "\\div": "÷", "\\%": "%"}
+_COMANDOS_SOLTOS = {"\\times": "×", "\\cdot": "·", "\\div": "÷", "\\%": "%", "\\bullet": "•"}
+
+# As falas da tutora no histórico dos diálogos (evaluation/data/rewriting_dialogs.json, congelado) trazem fórmulas em
+# texto Unicode, como "V = 4πr³/3", que o especialista leu como erro. No caderno, essas falas são exibidas com as
+# mesmas fórmulas em LaTeX; o modelo recebeu o texto original, matematicamente idêntico.
+_FALAS_FORMATADAS = {
+    "É uma função f(x) = ax + b, cujo gráfico é uma reta.": "É uma função $f(x) = ax + b$, cujo gráfico é uma reta.",
+    "Ela relaciona os três lados de um triângulo qualquer com o cosseno de um dos ângulos: a² = b² + c² − 2bc·cos A.":
+        "Ela relaciona os três lados de um triângulo qualquer com o cosseno de um dos ângulos: "
+        "$a^2 = b^2 + c^2 - 2bc \\cdot \\cos A$.",
+    "O volume da esfera é V = 4πr³/3.": "O volume da esfera é $V = \\dfrac{4}{3}\\pi r^3$.",
+    "Os juros incidem sobre o montante acumulado: M = C(1 + i)ⁿ.":
+        "Os juros incidem sobre o montante acumulado: $M = C(1 + i)^n$.",
+}
 
 
 def _limpa_enunciado(texto: str) -> str:
-    """Enunciados do dataset histórico trazem comandos LaTeX soltos, fora de $...$ (ex.: 110 m \\times 75 m)."""
-    if "$" in texto:
-        return texto
-    for comando, simbolo in _COMANDOS_SOLTOS.items():
-        texto = texto.replace(comando, simbolo)
-    return texto
+    """Ajusta o enunciado do dataset histórico para o marked.
+
+    - Comandos LaTeX soltos, fora de $...$ (ex.: 110 m \\times 75 m, ou no cabeçalho de uma tabela), viram o símbolo.
+    - As tabelas Markdown do CSV vêm coladas ao texto, sem linha em branco. Para o marked, uma linha de texto logo
+      depois da tabela vira mais uma linha dela; por isso a tabela é separada do texto por linhas em branco.
+    """
+    partes = re.split(r"(\$\$.*?\$\$|\$[^$]*\$)", texto, flags=re.S)
+    for i in range(0, len(partes), 2):  # só os trechos fora das fórmulas
+        for comando, simbolo in _COMANDOS_SOLTOS.items():
+            partes[i] = partes[i].replace(comando, simbolo)
+    linhas, saida = "".join(partes).split("\n"), []
+    for linha in linhas:
+        if saida and saida[-1].strip() and saida[-1].lstrip().startswith("|") != linha.lstrip().startswith("|"):
+            saida.append("")
+        saida.append(linha)
+    return "\n".join(saida)
 
 
 def _insumo_html(item: dict) -> str:
@@ -156,7 +205,8 @@ def _insumo_html(item: dict) -> str:
                 f"<b>Alternativa marcada pelo estudante:</b> {html.escape(ins['alternativa_marcada'])}</p>"
                 "<p class='pedido'>O estudante errou a questão e pediu uma explicação. Explicações recebidas:</p>")
     falas = "".join(f"<p class='fala'><b>{'Estudante' if m['role'] == 'user' else 'Tutora'}:</b> "
-                    f"{html.escape(m['content'])}</p>" for m in ins.get("historico", []))
+                    f"<span class='mt'>{html.escape(_FALAS_FORMATADAS.get(m['content'], m['content']))}</span></p>"
+                    for m in ins.get("historico", []))
     return (f"<div class='conversa'>{falas}<p class='fala nova'><b>Estudante:</b> {html.escape(ins['mensagem'])}</p>"
             "</div><p class='pedido'>Respostas da tutora à última mensagem do estudante:</p>")
 

@@ -49,15 +49,27 @@ Para fundamentar a monografia de TCC sob a ótica da metodologia **Design Scienc
 - Os tempos de cada condição são gravados, o que dá a latência de cada fluxo (Seção 2, item 2).
 - A rodada é retomável (`--retomar <pasta>`), e o `manifest.json` registra o commit, o modelo, a versão do Ollama e a semente.
 - **A rodada `pares-especialista-20261115-232941` não deve ir ao especialista.** Ela foi gerada com o teto de 1024 tokens. No feedback, 5 respostas da VERA (F03, F04, F05, F07 e F10) e 5 da baseline (F04, F05, F06, F07 e F10) saíram cortadas, várias delas no meio de uma fórmula. Na tutora, 1 resposta da VERA saiu cortada (T05). Os pares foram regerados em `pares-especialista-20261116-084939`, com `LLM_MAX_TOKENS_TUTORIA=3072` e `LLM_NUM_CTX=8192` nas duas condições (o `manifest.json` registra os dois valores).
-- **Rodada válida: `pares-especialista-20261116-084939`.**
+- **A rodada `pares-especialista-20261116-084939` também não deve ir ao especialista.** Os itens do feedback foram sorteados do CSV antigo (`itens_prova_2009_2024_enriquecido.csv`, 401 itens). Dois deles (81743 e 111554) dependem de imagem e foram retirados do CSV novo, e o item 15460 tinha a tabela achatada em texto corrido.
+  - **Decisão de 2026-11-16:** a plataforma passou a usar o CSV do serviço de questões, `data/itens_prova_2009_2024_llm_texto.csv`, com 506 itens, tabelas em Markdown e a identificação de imagens corrigida. Os 10 pares de feedback foram sorteados de novo nesse CSV, pela mesma regra e semente.
+  - Os pares da tutora não dependem do CSV e foram copiados sem alteração, inclusive a regeneração do T01 descrita abaixo.
+- **Rodada válida: `pares-especialista-20261116-173606`.**
   - 20 pares, sem recusas, e a VERA passou na verificação contra o gabarito (`RN-FB04`) na primeira tentativa nos 10 feedbacks.
   - Nenhuma resposta saiu cortada.
-  - **Exceção, o par T01:** a resposta da baseline entrou em loop (`<p` repetido) até o teto de 3072 tokens (`done_reason=length`). Na rodada anterior, o mesmo insumo tinha dado uma resposta normal, então foi tratado como falha técnica de decodificação, e a resposta foi regerada uma vez. A escolha é conservadora, porque favorece a baseline. A resposta original fica em `baseline_descartada`, no próprio registro, e em `regeracoes`, no `manifest.json`.
+  - **Par F06 regerado (item 73134).** As alternativas A, B, D e E estavam cortadas no CSV, por um defeito de extração.
+    - O texto foi corrigido pela prova original, e o par foi gerado de novo nas duas condições.
+    - O registro guarda as alternativas cortadas e os tempos originais em `descartado`, e o `manifest.json` registra a regeração em `regeracoes`.
+    - A VERA passou de novo na primeira tentativa.
+  - **Caderno (`evaluation/likert_rubric.py`), ajustes de exibição feitos depois da revisão visual do PDF.** Nenhum deles muda o texto das respostas.
+    - `\bullet` solto no enunciado vira "•".
+    - O "e" entre frações dentro de uma fórmula (`$\frac{1}{50} e \frac{1}{60}$`) sai como texto, e não como a constante *e*.
+    - As falas da tutora no histórico com fórmula Unicode, como `4πr³/3`, aparecem em LaTeX equivalente.
+    - Uma fórmula em bloco mais larga que a coluna é reduzida, até 80%, ou quebra a linha no "=" e no "×". Antes ela era cortada no PDF.
+  - **Exceção, o par T01** (copiado da rodada `20261116-084939`): a resposta da baseline entrou em loop (`<p` repetido) até o teto de 3072 tokens (`done_reason=length`). Na rodada anterior, o mesmo insumo tinha dado uma resposta normal, então foi tratado como falha técnica de decodificação, e a resposta foi regerada uma vez. A escolha é conservadora, porque favorece a baseline. A resposta original fica em `baseline_descartada`, no próprio registro, e em `regeracoes`, no `manifest.json`.
   - **Tempo médio por resposta:**
 
     | Fluxo | VERA | Baseline |
     |---|---|---|
-    | Feedback | 4,7 min | 3,3 min |
+    | Feedback | 5,3 min | 3,9 min |
     | Tutora | 3,3 min | 2,3 min |
 
     As medições foram feitas no notebook com RTX 3050 de 4 GB.

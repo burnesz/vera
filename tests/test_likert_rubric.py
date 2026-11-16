@@ -58,3 +58,14 @@ def test_desmascarar_converte_resposta_1_e_2_em_condicoes():
 def test_ficha_rejeita_nota_fora_da_escala():
     with pytest.raises(ValueError):
         lr.ler_ficha([{"id_par": "FB01", "r1_correcao": "7"}])
+
+
+def test_limpa_enunciado_tabela_e_latex_solto():
+    from evaluation.likert_rubric import _limpa_enunciado
+    texto = ("Veja a tabela.\n| Modelo | Dimensões (a \\times b) |\n|---|---|\n| A | $2 \\times 3$ |\n"
+             "Qual é o modelo?")
+    saida = _limpa_enunciado(texto)
+    assert "Dimensões (a × b)" in saida  # comando solto vira símbolo
+    assert "$2 \\times 3$" in saida  # dentro da fórmula fica intacto
+    assert "Veja a tabela.\n\n| Modelo" in saida
+    assert "| A | $2 \\times 3$ |\n\nQual é o modelo?" in saida

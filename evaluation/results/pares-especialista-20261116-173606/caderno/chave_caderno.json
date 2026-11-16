@@ -1,0 +1,142 @@
+[
+  {
+    "id_par": "FB01",
+    "fluxo": "feedback",
+    "par_original": "F01",
+    "resposta_1": "vera",
+    "resposta_2": "baseline"
+  },
+  {
+    "id_par": "FB02",
+    "fluxo": "feedback",
+    "par_original": "F07",
+    "resposta_1": "baseline",
+    "resposta_2": "vera"
+  },
+  {
+    "id_par": "FB03",
+    "fluxo": "feedback",
+    "par_original": "F03",
+    "resposta_1": "baseline",
+    "resposta_2": "vera"
+  },
+  {
+    "id_par": "FB04",
+    "fluxo": "feedback",
+    "par_original": "F04",
+    "resposta_1": "baseline",
+    "resposta_2": "vera"
+  },
+  {
+    "id_par": "FB05",
+    "fluxo": "feedback",
+    "par_original": "F09",
+    "resposta_1": "baseline",
+    "resposta_2": "vera"
+  },
+  {
+    "id_par": "FB06",
+    "fluxo": "feedback",
+    "par_original": "F05",
+    "resposta_1": "vera",
+    "resposta_2": "baseline"
+  },
+  {
+    "id_par": "FB07",
+    "fluxo": "feedback",
+    "par_original": "F08",
+    "resposta_1": "baseline",
+    "resposta_2": "vera"
+  },
+  {
+    "id_par": "FB08",
+    "fluxo": "feedback",
+    "par_original": "F10",
+    "resposta_1": "vera",
+    "resposta_2": "baseline"
+  },
+  {
+    "id_par": "FB09",
+    "fluxo": "feedback",
+    "par_original": "F06",
+    "resposta_1": "baseline",
+    "resposta_2": "vera"
+  },
+  {
+    "id_par": "FB10",
+    "fluxo": "feedback",
+    "par_original": "F02",
+    "resposta_1": "vera",
+    "resposta_2": "baseline"
+  },
+  {
+    "id_par": "TU01",
+    "fluxo": "tutoria",
+    "par_original": "T02",
+    "resposta_1": "vera",
+    "resposta_2": "baseline"
+  },
+  {
+    "id_par": "TU02",
+    "fluxo": "tutoria",
+    "par_original": "T01",
+    "resposta_1": "baseline",
+    "resposta_2": "vera"
+  },
+  {
+    "id_par": "TU03",
+    "fluxo": "tutoria",
+    "par_original": "T05",
+    "resposta_1": "vera",
+    "resposta_2": "baseline"
+  },
+  {
+    "id_par": "TU04",
+    "fluxo": "tutoria",
+    "par_original": "T09",
+    "resposta_1": "vera",
+    "resposta_2": "baseline"
+  },
+  {
+    "id_par": "TU05",
+    "fluxo": "tutoria",
+    "par_original": "T10",
+    "resposta_1": "vera",
+    "resposta_2": "baseline"
+  },
+  {
+    "id_par": "TU06",
+    "fluxo": "tutoria",
+    "par_original": "T08",
+    "resposta_1": "baseline",
+    "resposta_2": "vera"
+  },
+  {
+    "id_par": "TU07",
+    "fluxo": "tutoria",
+    "par_original": "T03",
+    "resposta_1": "vera",
+    "resposta_2": "baseline"
+  },
+  {
+    "id_par": "TU08",
+    "fluxo": "tutoria",
+    "par_original": "T07",
+    "resposta_1": "baseline",
+    "resposta_2": "vera"
+  },
+  {
+    "id_par": "TU09",
+    "fluxo": "tutoria",
+    "par_original": "T04",
+    "resposta_1": "vera",
+    "resposta_2": "baseline"
+  },
+  {
+    "id_par": "TU10",
+    "fluxo": "tutoria",
+    "par_original": "T06",
+    "resposta_1": "vera",
+    "resposta_2": "baseline"
+  }
+]

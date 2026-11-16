@@ -1,0 +1,32 @@
+{
+  "criado_em": "2026-11-16T17:36:09",
+  "commit_vera": "5d471d516a5172a89e5f957df5a8ea8ccfc69960",
+  "modelo": "qwen3:8b-q4_K_M (think=False)",
+  "ollama_versao": "0.34.1",
+  "endpoint": "http://localhost:11434",
+  "n_pares_por_fluxo": 10,
+  "semente": 2026,
+  "top_k_contexto": 3,
+  "max_tokens": 3072,
+  "num_ctx": 8192,
+  "timeout_s": 1200.0,
+  "condicoes": {
+    "vera": "FeedbackService.gerar_feedback_verificado (RAG + verificação RN-FB04) e ChatService.send_message (reescrita + RAG)",
+    "baseline": "BaselineService: mesmos prompts, sem RAG, sem reescrita e sem verificação"
+  },
+  "csv_itens": "data/itens_prova_2009_2024_llm_texto.csv (506 itens)",
+  "observacao": "Refaz os pares de feedback da rodada 20261116-084939 com o CSV novo (itens_prova_2009_2024_llm_texto.csv): dois dos dez itens sorteados no CSV antigo (81743 e 111554) foram retirados por dependerem de imagem, e o item 15460 tinha a tabela achatada. Os dez itens foram sorteados de novo, pela mesma regra e semente. Os pares de tutoria não dependem do CSV e foram copiados sem alteração da rodada 20261116-084939.",
+  "tutoria_copiada_de": "pares-especialista-20261116-084939",
+  "regeracoes": [
+    {
+      "par": "T01",
+      "condicao": "baseline",
+      "motivo": "loop degenerado ('<p' repetido) até o teto de 3072 tokens (done_reason=length); falha técnica de decodificação, regerada uma vez por decisão do autor (escolha conservadora: favorece a baseline)"
+    },
+    {
+      "par": "F06",
+      "condicao": "vera e baseline",
+      "motivo": "alternativas A, B, D e E truncadas no CSV (quebra de linha do PDF); corrigidas pela prova original (ENEM_2010_PROVA_GAB_DIA_2_AZUL_7.pdf, questão 150) e o par foi gerado de novo nas duas condições"
+    }
+  ]
+}

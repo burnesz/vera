@@ -1,0 +1,1081 @@
+<!doctype html>
+<html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Avaliação de explicações de Matemática</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Color+Emoji&display=swap">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/marked@12.0.2/marked.min.js"></script>
+
+<style>
+  body { font-family: Georgia, serif, 'Noto Color Emoji'; max-width: 980px; margin: 24px auto; padding: 0 16px; color: #111; background: #fff; line-height: 1.5; }
+  h1 { font-size: 1.5em; } h1.parte { margin-top: 40px; border-bottom: 2px solid #333; }
+  h2 { font-size: 1.15em; border-bottom: 1px solid #999; padding-bottom: 4px; } h3 { font-size: 1em; margin: 0 0 6px; }
+  .instrucoes { border: 1px solid #999; padding: 12px 16px; background: #f6f6f6; }
+  .hab, .pedido { font-size: .92em; color: #333; } .pedido { font-style: italic; }
+  .alts { list-style: none; padding-left: 0; } .alts p { display: inline; margin: 0; }
+  .conversa { border-left: 3px solid #bbb; padding-left: 12px; } .fala.nova { font-weight: 600; }
+  .respostas { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .resposta { border: 1px solid #999; padding: 10px 12px; overflow-x: auto; font-size: .93em; min-width: 0; }
+  .md.raw { white-space: pre-wrap; }
+  table { border-collapse: collapse; margin: 8px 0; } th, td { border: 1px solid #999; padding: 4px 8px; text-align: left; vertical-align: top; }
+  .crit { width: 100%; font-size: .9em; } .crit th { font-weight: normal; background: #f0f0f0; }
+  .box, .resp { white-space: nowrap; text-align: center; }
+  .obs { min-height: 60px; border-bottom: 1px dotted #999; } .par { margin-bottom: 32px; }
+  .katex-display { overflow-x: auto; overflow-y: hidden; }
+  .fbloco { display: block; } .fbloco.quebra { text-align: center; margin: .7em 0; line-height: 2.2; }
+  @media (max-width: 700px) { .respostas { grid-template-columns: 1fr; } }
+  @media print {
+    body { margin: 0; max-width: none; font-size: 10pt; line-height: 1.35; }
+    .par, .instrucoes { page-break-after: always; } .par { margin: 0; } h1.parte { margin-top: 0; }
+    p { margin: 4px 0; } th, td { padding: 2px 6px; } .crit { font-size: 8.5pt; margin: 4px 0; }
+    .resposta { font-size: 9pt; padding: 6px 8px; } .obs { min-height: 50px; }
+    .avaliacao { break-inside: avoid; }
+  }
+</style>
+</head><body>
+<h1>Avaliação de explicações de Matemática</h1>
+<div class="instrucoes">
+  <p>Este caderno tem 20 situações: na Parte A, 10 explicações para uma questão do ENEM que o
+  estudante errou; na Parte B, 10 respostas de uma tutora virtual a perguntas de estudantes. Em cada situação há
+  duas respostas, <b>Resposta 1</b> e <b>Resposta 2</b>, produzidas por processos diferentes.</p>
+  <p><b>Para cada situação:</b></p>
+  <ol>
+    <li>Leia a questão (ou a conversa) e as duas respostas.</li>
+    <li>Dê, para cada resposta, uma nota de <b>1</b> (discordo totalmente) a <b>5</b> (concordo totalmente) em cada
+      afirmação: <ul><li>Correção conceitual e matemática: não há erros de cálculo nem definições incorretas.</li><li>Clareza e didática: a explicação passo a passo é fácil de acompanhar por um estudante do Ensino Médio.</li><li>Linguagem adequada ao contexto do ENEM: tom acolhedor, termos corretos e exemplos adequados.</li><li>Ausência de informações incorretas ou inventadas (regras, fórmulas ou fatos falsos).</li></ul></li>
+    <li>Indique qual resposta é melhor no conjunto, ou se há empate.</li>
+    <li>Se quiser, escreva uma observação, principalmente quando der nota 1 ou 2.</li>
+  </ol>
+  <p>As respostas também podem ser registradas na planilha <code>ficha_respostas_explicacoes.csv</code>: uma linha
+  por situação, notas de 1 a 5 nas colunas <code>r1_*</code> (Resposta 1) e <code>r2_*</code> (Resposta 2) e
+  <b>1</b>, <b>2</b> ou <b>E</b> (empate) na coluna <code>preferencia</code>.</p>
+</div>
+<h1 class='parte'>Parte A — Explicação de questão errada</h1><section class='par'><h2>FB01</h2><p class='hab'><b>Habilidade H10:</b> Identificar relações entre grandezas e unidades de medida. (ENEM 2016)</p><div class='md enunciado'>Para que o pouso de um avião seja autorizado em um aeroporto, a aeronave deve satisfazer, necessariamente, as seguintes condições de segurança: I. a envergadura da aeronave (maior distância entre as pontas das asas do avião) deve ser, no máximo, igual à medida da largura da pista; II. o comprimento da aeronave deve ser inferior a 60 m; III. a carga máxima (soma das massas da aeronave e sua carga) não pode exceder 110 t. Suponha que a maior pista desse aeroporto tenha 0,045 km de largura, e que os modelos de aviões utilizados pelas empresas aéreas, que utilizam esse aeroporto, sejam dados pela tabela.
+
+| Modelo | Dimensões (comprimento × envergadura) | Carga máxima |
+|---|---|---|
+| A | $44,57 m \times 34,10 m$ | 110 000 kg |
+| B | $44,00 m \times 34,00 m$ | 95 000 kg |
+| C | $44,50 m \times 39,50 m$ | 121 000 kg |
+| D | $61,50 m \times 34,33 m$ | 79 010 kg |
+| E | $44,00 m \times 34,00 m$ | 120 000 kg |
+
+Os únicos aviões aptos a pousar nesse aeroporto, de acordo com as regras de segurança, são os de modelos</div><ol class='alts'><li><b>A)</b> <span class='mt'>e C.</span></li><li><b>B)</b> <span class='mt'>A e B.</span></li><li><b>C)</b> <span class='mt'>B e D.</span></li><li><b>D)</b> <span class='mt'>B e E.</span></li><li><b>E)</b> <span class='mt'>C e E.</span></li></ol><p><b>Gabarito:</b> B &nbsp;·&nbsp; <b>Alternativa marcada pelo estudante:</b> C</p><p class='pedido'>O estudante errou a questão e pediu uma explicação. Explicações recebidas:</p><div class='respostas'><div class='resposta'><h3>Resposta 1</h3><div class='md'>A resposta correta é a alternativa **B (A e B)**, conforme a habilidade H10 do ENEM, que exige a identificação de relações entre grandezas e unidades de medida.
+
+**Diagnóstico Acolhedor do Erro:**
+A armadilha da questão está na interpretação da largura da pista, que está em quilômetros, mas as dimensões dos aviões estão em metros. O estudante provavelmente não converteu corretamente a largura da pista para metros, ou não verificou se a envergadura dos aviões estava dentro desse limite. Além disso, o modelo D tem comprimento maior que 60 m, o que o torna inapto, e o modelo C tem carga máxima acima de 110 t, o que também o torna inapto.
+
+**Resolução Passo a Passo:**
+1. **Converter a largura da pista para metros:**
+   $$
+   0,045 \, \text{km} = 0,045 \times 1000 = 45 \, \text{m}
+   $$
+
+2. **Verificar a envergadura dos aviões:**
+   - Modelo A: 34,10 m (OK)
+   - Modelo B: 34,00 m (OK)
+   - Modelo C: 39,50 m (NÃO OK)
+   - Modelo D: 34,33 m (OK)
+   - Modelo E: 34,00 m (OK)
+
+3. **Verificar o comprimento dos aviões:**
+   - Modelo A: 44,57 m (OK)
+   - Modelo B: 44,00 m (OK)
+   - Modelo C: 44,50 m (OK)
+   - Modelo D: 61,50 m (NÃO OK)
+   - Modelo E: 44,00 m (OK)
+
+4. **Verificar a carga máxima:**
+   - Modelo A: 110 000 kg (OK)
+   - Modelo B: 95 000 kg (OK)
+   - Modelo C: 121 000 kg (NÃO OK)
+   - Modelo D: 79 010 kg (OK)
+   - Modelo E: 120 000 kg (NÃO OK)
+
+**O que Estudar:**
+Revisar a habilidade H10, que envolve a identificação de relações entre grandezas e unidades de medida. É essencial converter unidades corretamente e comparar grandezas com base em condições específicas, como as de segurança de um aeroporto.</div></div><div class='resposta'><h3>Resposta 2</h3><div class='md'>A resposta correta é a alternativa **B (A e B)**, conforme a habilidade H10: Identificar relações entre grandezas e unidades de medida.
+
+O erro cometido provavelmente ocorreu devido à confusão entre as condições de segurança ou à leitura incorreta da tabela. O modelo D, por exemplo, foi descartado por ter comprimento maior que 60 m, o que viola a condição II. Além disso, o modelo C e E excedem a carga máxima permitida.
+
+Vamos resolver passo a passo:
+
+1. **Condição I:** Envergadura ≤ 45 m (0,045 km = 45 m)
+2. **Condição II:** Comprimento &lt; 60 m
+3. **Condição III:** Carga ≤ 110 000 kg
+
+$$
+\text{Modelo A: } 44,57 \times 34,10 \text{ m, carga } 110\,000 \text{ kg} \Rightarrow \text{Apto}
+$$
+$$
+\text{Modelo B: } 44,00 \times 34,00 \text{ m, carga } 95\,000 \text{ kg} \Rightarrow \text{Apto}
+$$
+$$
+\text{Modelo C: } 44,50 \times 39,50 \text{ m, carga } 121\,000 \text{ kg} \Rightarrow \text{Inapto}
+$$
+$$
+\text{Modelo D: } 61,50 \times 34,33 \text{ m, carga } 79\,010 \text{ kg} \Rightarrow \text{Inapto}
+$$
+$$
+\text{Modelo E: } 44,00 \times 34,00 \text{ m, carga } 120\,000 \text{ kg} \Rightarrow \text{Inapto}
+$$
+
+**O que estudar:** Revisar a habilidade H10 com foco em comparações de grandezas, conversão de unidades e análise de tabelas com múltiplas condições. Pratique exercícios que envolvam leitura crítica de dados e aplicação de limites estabelecidos.</div></div></div><div class='avaliacao'><table class='crit'><thead><tr><th>Critério (1 = discordo totalmente, 5 = concordo totalmente)</th><th></th><th class='box'>1</th><th class='box'>2</th><th class='box'>3</th><th class='box'>4</th><th class='box'>5</th></tr></thead><tbody><tr><td rowspan='2'>1. Correção conceitual e matemática: não há erros de cálculo nem definições incorretas.</td><td class='resp'>Resposta 1</td><td class='box'>☐ 1</td><td class='box'>☐ 2</td><td class='box'>☐ 3</td><td class='box'>☐ 4</td><td class='box'>☐ 5</td></tr><tr><td class='resp'>Resposta 2</td><td class='box'>☐ 1</td><td class='box'>☐ 2</td><td class='box'>☐ 3</td><td class='box'>☐ 4</td><td class='box'>☐ 5</td></tr><tr><td rowspan='2'>2. Clareza e didática: a explicação passo a passo é fácil de acompanhar por um estudante do Ensino Médio.</td><td class='resp'>Resposta 1</td><td class='box'>☐ 1</td><td class='box'>☐ 2</td><td class='box'>☐ 3</td><td class='box'>☐ 4</td><td class='box'>☐ 5</td></tr><tr><td class='resp'>Resposta 2</td><td class='box'>☐ 1</td><td class='box'>☐ 2</td><td class='box'>☐ 3</td><td class='box'>☐ 4</td><td class='box'>☐ 5</td></tr><tr><td rowspan='2'>3. Linguagem adequada ao contexto do ENEM: tom acolhedor, termos corretos e exemplos adequados.</td><td class='resp'>Resposta 1</td><td class='box'>☐ 1</td><td class='box'>☐ 2</td><td class='box'>☐ 3</td><td class='box'>☐ 4</td><td class='box'>☐ 5</td></tr><tr><td class='resp'>Resposta 2</td><td class='box'>☐ 1</td><td class='box'>☐ 2</td><td class='box'>☐ 3</td><td class='box'>☐ 4</td><td class='box'>☐ 5</td></tr><tr><td rowspan='2'>4. Ausência de informações incorretas ou inventadas (regras, fórmulas ou fatos falsos).</td><td class='resp'>Resposta 1</td><td class='box'>☐ 1</td><td class='box'>☐ 2</td><td class='box'>☐ 3</td><td class='box'>☐ 4</td><td class='box'>☐ 5</td></tr><tr><td class='resp'>Resposta 2</td><td class='box'>☐ 1</td><td class='box'>☐ 2</td><td class='box'>☐ 3</td><td class='box'>☐ 4</td><td class='box'>☐ 5</td></tr></tbody></table><table class='crit'><tbody><tr><td>Qual resposta é melhor no conjunto?</td><td class='box'>☐ Resposta 1</td><td class='box'>☐ Resposta 2</td><td class='box'>☐ Empate</td></tr></tbody></table><p class='obs'><b>Observações:</b></p></div></section><section class='par'><h2>FB02</h2><p class='hab'><b>Habilidade H03:</b> Resolver situação-problema envolvendo conhecimentos numéricos. (ENEM 2024)</p><div class='md enunciado'>Num dia de promoção, um supermercado propõe dar desconto em um produto e, mantendo fixo o preço da unidade, apresenta ao consumidor as seguintes propostas: • opção 1: pague 8 e leve 9 unidades; • opção 2: leve 8 e pague 7 unidades. Um consumidor quer escolher a opção que lhe oferecerá o maior desconto percentual. A opção que oferece o maior desconto, e o percentual desse desconto é</div><ol class='alts'><li><b>A)</b> <span class='mt'>opção 1, com 8,88% de desconto.</span></li><li><b>B)</b> <span class='mt'>opção 1, com 11,11% de desconto.</span></li><li><b>C)</b> <span class='mt'>opção 1, com 12,50% de desconto.</span></li><li><b>D)</b> <span class='mt'>opção 2, com 12,50% de desconto.</span></li><li><b>E)</b> <span class='mt'>opção 2, com 14,28% de desconto.</span></li></ol><p><b>Gabarito:</b> D &nbsp;·&nbsp; <b>Alternativa marcada pelo estudante:</b> A</p><p class='pedido'>O estudante errou a questão e pediu uma explicação. Explicações recebidas:</p><div class='respostas'><div class='resposta'><h3>Resposta 1</h3><div class='md'>A resposta correta é a alternativa D: opção 2, com 12,50% de desconto.
+
+O erro cometido pode ter sido a interpretação incorreta do que representa o desconto percentual em cada opção. Para evitar esse tipo de confusão, é essencial entender que o desconto percentual é calculado com base no preço normal da unidade, e que o desconto é o que o consumidor ganha em relação ao preço total.
+
+Vamos resolver passo a passo:
+
+**Opção 1:** Pague 8, leve 9 unidades.  
+Isso significa que o consumidor paga 8 por 9 unidades, ou seja, paga 8/9 do preço normal.  
+O desconto percentual é:  
+$$ \text{Desconto} = \left(1 - \frac{8}{9}\right) \times 100\% = \left(\frac{1}{9}\right) \times 100\% = 11,11\% $$
+
+**Opção 2:** Leve 8 e pague 7 unidades.  
+Isso significa que o consumidor paga 7 por 8 unidades, ou seja, paga 7/8 do preço normal.  
+O desconto percentual é:  
+$$ \text{Desconto} = \left(1 - \frac{7}{8}\right) \times 100\% = \left(\frac{1}{8}\right) \times 100\% = 12,50\% $$
+
+Portanto, a opção 2 oferece um desconto maior (12,50%) do que a opção 1 (11,11%).
+
+Para não cair mais nessa pegadinha, revise os conceitos de **desconto percentual** e **interpretação de promoções**, que são pontos-chave da habilidade H03. Pratique cálculos de porcentagem em contextos reais, como promoções e descontos, para consolidar o entendimento.</div></div><div class='resposta'><h3>Resposta 2</h3><div class='md'>A resposta correta é a **alternativa D**, que indica que a **opção 2** oferece um desconto de **12,50%**, o que é maior que o desconto da opção 1. A habilidade envolvida é a **H03 - Resolver situação-problema envolvendo conhecimentos numéricos**.
+
+O erro cometido pelo estudante foi não considerar o valor total da compra, apenas a quantidade de unidades pagas, o que levou a uma comparação equivocada entre as opções. Para resolver corretamente, devemos calcular o desconto percentual de cada opção com base no valor total da compra.
+
+**Resolução passo a passo:**
+
+**Opção 1:**  
+- Paga 8 unidades, leva 9 unidades.  
+- Total pago: $ 8p $  
+- Total comprado: $ 9p $  
+- Desconto em reais: $ 9p - 8p = p $  
+- Desconto percentual:  
+$$
+\frac{p}{9p} \times 100 = \frac{1}{9} \times 100 \approx 11,11\%
+$$
+
+**Opção 2:**  
+- Paga 7 unidades, leva 8 unidades.  
+- Total pago: $ 7p $  
+- Total comprado: $ 8p $  
+- Desconto em reais: $ 8p - 7p = p $  
+- Desconto percentual:  
+$$
+\frac{p}{8p} \times 100 = \frac{1}{8} \times 100 = 12,50\%
+$$
+
+Portanto, a **opção 2** oferece o maior desconto percentual, que é de **12,50%**.
+
+**O que estudar:**  
+Revisar a relação entre desconto e porcentagem, com ênfase em situações reais, como promoções e cálculos financeiros. Praticar exercícios que envolvam comparações de descontos e porcentagens para melhorar a compreensão e a aplicação desses conceitos.</div></div></div><div class='avaliacao'><table class='crit'><thead><tr><th>Critério (1 = discordo totalmente, 5 = concordo totalmente)</th><th></th><th class='box'>1</th><th class='box'>2</th><th class='box'>3</th><th class='box'>4</th><th class='box'>5</th></tr></thead><tbody><tr><td rowspan='2'>1. Correção conceitual e matemática: não há erros de cálculo nem definições incorretas.</td><td class='resp'>Resposta 1</td><td class='box'>☐ 1</td><td class='box'>☐ 2</td><td class='box'>☐ 3</td><td class='box'>☐ 4</td><td class='box'>☐ 5</td></tr><tr><td class='resp'>Resposta 2</td><td class='box'>☐ 1</td><td class='box'>☐ 2</td><td class='box'>☐ 3</td><td class='box'>☐ 4</td><td class='box'>☐ 5</td></tr><tr><td rowspan='2'>2. Clareza e didática: a explicação passo a passo é fácil de acompanhar por um estudante do Ensino Médio.</td><td class='resp'>Resposta 1</td><td class='box'>☐ 1</td><td class='box'>☐ 2</td><td class='box'>☐ 3</td><td class='box'>☐ 4</td><td class='box'>☐ 5</td></tr><tr><td class='resp'>Resposta 2</td><td class='box'>☐ 1</td><td class='box'>☐ 2</td><td class='box'>☐ 3</td><td class='box'>☐ 4</td><td class='box'>☐ 5</td></tr><tr><td rowspan='2'>3. Linguagem adequada ao contexto do ENEM: tom acolhedor, termos corretos e exemplos adequados.</td><td class='resp'>Resposta 1</td><td class='box'>☐ 1</td><td class='box'>☐ 2</td><td class='box'>☐ 3</td><td class='box'>☐ 4</td><td class='box'>☐ 5</td></tr><tr><td class='resp'>Resposta 2</td><td class='box'>☐ 1</td><td class='box'>☐ 2</td><td class='box'>☐ 3</td><td class='box'>☐ 4</td><td class='box'>☐ 5</td></tr><tr><td rowspan='2'>4. Ausência de informações incorretas ou inventadas (regras, fórmulas ou fatos falsos).</td><td class='resp'>Resposta 1</td><td class='box'>☐ 1</td><td class='box'>☐ 2</td><td class='box'>☐ 3</td><td class='box'>☐ 4</td><td class='box'>☐ 5</td></tr><tr><td class='resp'>Resposta 2</td><td class='box'>☐ 1</td><td class='box'>☐ 2</td><td class='box'>☐ 3</td><td class='box'>☐ 4</td><td class='box'>☐ 5</td></tr></tbody></table><table class='crit'><tbody><tr><td>Qual resposta é melhor no conjunto?</td><td class='box'>☐ Resposta 1</td><td class='box'>☐ Resposta 2</td><td class='box'>☐ Empate</td></tr></tbody></table><p class='obs'><b>Observações:</b></p></div></section><section class='par'><h2>FB03</h2><p class='hab'><b>Habilidade H15:</b> Identificar a relação de dependência entre grandezas. (ENEM 2024)</p><div class='md enunciado'>Na primeira edição de uma Feira do Livro, a organização contou com a participação de dez voluntários, de mesma habilidade e experiência, que montaram cinco estandes de livros em uma semana, trabalhando todos os dias. Na segunda edição da Feira do Livro, a organização dispôs de duas semanas para montar os estandes. Considere que todos os novos voluntários escolhidos tenham a mesma experiência, habilidade e produtividade dos voluntários da primeira edição da feira e que trabalharão todos os dias nessas duas semanas. Considere duas situações para a segunda edição: • I: o número de voluntários permanecerá o mesmo; • II: o número de estandes a serem montados permanecerá o mesmo. Observe que o aumento no tempo de organização para montar os estandes, junto a uma das duas situações citadas, pode fazer o valor das outras variáveis (número de voluntários e de estandes) aumentar, diminuir ou permanecer igual. O número de estandes na situação I e o número de voluntários na situação II, na segunda edição da feira, comparados aos números da primeira edição, serão, respectivamente,</div><ol class='alts'><li><b>A)</b> <span class='mt'>maior e maior.</span></li><li><b>B)</b> <span class='mt'>maior e menor.</span></li><li><b>C)</b> <span class='mt'>igual e igual.</span></li><li><b>D)</b> <span class='mt'>igual e menor.</span></li><li><b>E)</b> <span class='mt'>menor e menor.</span></li></ol><p><b>Gabarito:</b> B &nbsp;·&nbsp; <b>Alternativa marcada pelo estudante:</b> A</p><p class='pedido'>O estudante errou a questão e pediu uma explicação. Explicações recebidas:</p><div class='respostas'><div class='resposta'><h3>Resposta 1</h3><div class='md'>A resposta correta é a alternativa **B (maior e menor)**, conforme a habilidade H15: Identificar a relação de dependência entre grandezas.
+
+**Diagnóstico Acolhedor do Erro**:  
+Você provavelmente interpretou de forma equivocada a relação entre tempo, número de voluntários e número de estandes. A armadilha está em não considerar que, ao aumentar o tempo, o número de voluntários pode diminuir se o número de estandes for fixo.
+
+**Resolução Passo a Passo**:  
+Vamos analisar as duas situações:
+
+- **Situação I**: Número de voluntários = 10 (mesmo da primeira edição).  
+  Tempo = 14 dias (dobro da primeira edição).  
+  Como o tempo aumenta e o número de voluntários é fixo, o número de estandes montados aumenta.  
+  $$ \text{Estandes} \propto \text{Tempo} \Rightarrow \text{Estandes} = \text{maior} $$
+
+- **Situação II**: Número de estandes = 5 (mesmo da primeira edição).  
+  Tempo = 14 dias (dobro da primeira edição).  
+  Como o tempo aumenta e o número de estandes é fixo, o número de voluntários necessário diminui.  
+  $$ \text{Voluntários} \propto \frac{1}{\text{Tempo}} \Rightarrow \text{Voluntários} = \text{menor} $$
+
+**O que Estudar**:  
+Revisite a habilidade H15: Identificar a relação de dependência entre grandezas. Foque em como o tempo, o número de trabalhadores e a quantidade de trabalho se relacionam, especialmente em situações de proporcionalidade direta e inversa.</div></div><div class='resposta'><h3>Resposta 2</h3><div class='md'>A resposta correta é a alternativa **B (maior e menor)**. A habilidade envolvida é a **H15** – Identificar a relação de dependência entre grandezas.
+
+**Diagnóstico do Erro:**
+O estudante escolheu a alternativa A, o que indica que ele interpretou de forma equivocada a relação entre o número de voluntários e o tempo de trabalho. Ele parece ter acreditado que, com mais tempo, tanto o número de estandes quanto o número de voluntários aumentariam, o que não é verdade. Na realidade, o número de voluntários na situação II deve diminuir para manter a produtividade constante, mesmo com mais tempo.
+
+**Resolução Passo a Passo:**
+
+1. **Situação I:** Número de voluntários permanece o mesmo (10), mas o tempo de trabalho aumenta (2 semanas = 14 dias em vez de 7 dias).
+   - Como o tempo aumenta, e o número de voluntários é constante, o número de estandes montados **aumenta** (relação diretamente proporcional entre tempo e quantidade de trabalho).
+   - **Conclusão:** Número de estandes na situação I é **maior**.
+
+2. **Situação II:** Número de estandes permanece o mesmo (5), mas o tempo de trabalho aumenta (14 dias).
+   - Como o tempo aumenta e o número de estandes é constante, o número de voluntários deve **diminuir** para manter a produtividade (relação inversamente proporcional entre número de voluntários e tempo).
+   - **Conclusão:** Número de voluntários na situação II é **menor**.
+
+**O que Estudar:**
+Revisite a habilidade **H15** – Identificar a relação de dependência entre grandezas. Foque em:
+- Grandezas diretamente proporcionais (quanto mais tempo, mais estandes).
+- Grandezas inversamente proporcionais (quanto mais voluntários, menos tempo; quanto mais tempo, menos voluntários são necessários).
+- Como aplicar essas relações em contextos reais de produtividade e tempo de trabalho.
+
+Com essa revisão, você estará mais preparado para identificar e resolver questões que envolvem variações de grandezas de forma precisa e intuitiva.</div></div></div><div class='avaliacao'><table class='crit'><thead><tr><th>Critério (1 = discordo totalmente, 5 = concordo totalmente)</th><th></th><th class='box'>1</th><th class='box'>2</th><th class='box'>3</th><th class='box'>4</th><th class='box'>5</th></tr></thead><tbody><tr><td rowspan='2'>1. Correção conceitual e matemática: não há erros de cálculo nem definições incorretas.</td><td class='resp'>Resposta 1</td><td class='box'>☐ 1</td><td class='box'>☐ 2</td><td class='box'>☐ 3</td><td class='box'>☐ 4</td><td class='box'>☐ 5</td></tr><tr><td class='resp'>Resposta 2</td><td class='box'>☐ 1</td><td class='box'>☐ 2</td><td class='box'>☐ 3</td><td class='box'>☐ 4</td><td class='box'>☐ 5</td></tr><tr><td rowspan='2'>2. Clareza e didática: a explicação passo a passo é fácil de acompanhar por um estudante do Ensino Médio.</td><td class='resp'>Resposta 1</td><td class='box'>☐ 1</td><td class='box'>☐ 2</td><td class='box'>☐ 3</td><td class='box'>☐ 4</td><td class='box'>☐ 5</td></tr><tr><td class='resp'>Resposta 2</td><td class='box'>☐ 1</td><td class='box'>☐ 2</td><td class='box'>☐ 3</td><td class='box'>☐ 4</td><td class='box'>☐ 5</td></tr><tr><td rowspan='2'>3. Linguagem adequada ao contexto do ENEM: tom acolhedor, termos corretos e exemplos adequados.</td><td class='resp'>Resposta 1</td><td class='box'>☐ 1</td><td class='box'>☐ 2</td><td class='box'>☐ 3</td><td class='box'>☐ 4</td><td class='box'>☐ 5</td></tr><tr><td class='resp'>Resposta 2</td><td class='box'>☐ 1</td><td class='box'>☐ 2</td><td class='box'>☐ 3</td><td class='box'>☐ 4</td><td class='box'>☐ 5</td></tr><tr><td rowspan='2'>4. Ausência de informações incorretas ou inventadas (regras, fórmulas ou fatos falsos).</td><td class='resp'>Resposta 1</td><td class='box'>☐ 1</td><td class='box'>☐ 2</td><td class='box'>☐ 3</td><td class='box'>☐ 4</td><td class='box'>☐ 5</td></tr><tr><td class='resp'>Resposta 2</td><td class='box'>☐ 1</td><td class='box'>☐ 2</td><td class='box'>☐ 3</td><td class='box'>☐ 4</td><td class='box'>☐ 5</td></tr></tbody></table><table class='crit'><tbody><tr><td>Qual resposta é melhor no conjunto?</td><td class='box'>☐ Resposta 1</td><td class='box'>☐ Resposta 2</td><td class='box'>☐ Empate</td></tr></tbody></table><p class='obs'><b>Observações:</b></p></div></section><section class='par'><h2>FB04</h2><p class='hab'><b>Habilidade H14:</b> Avaliar proposta de intervenção na realidade utilizando conhecimentos geométricos relacionados a grandezas e medidas. (ENEM 2017)</p><div class='md enunciado'>Uma empresa especializada em conservação de piscinas utiliza um produto para tratamento da água cujas especificações técnicas sugerem que seja adicionado 1,5 mL desse produto para cada 1 000 L de água da piscina. Essa empresa foi contratada para cuidar de uma piscina de base retangular, de profundidade constante igual a 1,7 m, com largura e comprimento iguais a 3 m e 5 m, respectivamente. O nível da lâmina d’água dessa piscina é mantido a 50 cm da borda da piscina. A quantidade desse produto, em mililitro, que deve ser adicionada a essa piscina de modo a atender às suas especificações técnicas é</div><ol class='alts'><li><b>A)</b> <span class='mt'>11,25.</span></li><li><b>B)</b> <span class='mt'>27,00.</span></li><li><b>C)</b> <span class='mt'>28,80.</span></li><li><b>D)</b> <span class='mt'>32,25.</span></li><li><b>E)</b> <span class='mt'>49,50.</span></li></ol><p><b>Gabarito:</b> B &nbsp;·&nbsp; <b>Alternativa marcada pelo estudante:</b> A</p><p class='pedido'>O estudante errou a questão e pediu uma explicação. Explicações recebidas:</p><div class='respostas'><div class='resposta'><h3>Resposta 1</h3><div class='md'>A resposta correta é a alternativa **B (27,00)**, relacionada à habilidade **H14**. O erro cometido pode estar relacionado à confusão entre o volume total da piscina e o volume de água efetivamente presente, já que o nível da lâmina d’água é mantido a 50 cm da borda, o que significa que a altura da água é 1,2 m, não 1,7 m.
+
+Vamos resolver passo a passo:
+
+1. **Calcular o volume da piscina:**
+   $$
+   V_{\text{piscina}} = \text{comprimento} \times \text{largura} \times \text{profundidade} = 5 \times 3 \times 1,7 = 25,5 \, \text{m}^3
+   $$
+
+2. **Calcular o volume de água:**
+   $$
+   V_{\text{água}} = \text{comprimento} \times \text{largura} \times \text{altura da água} = 5 \times 3 \times 1,2 = 18 \, \text{m}^3
+   $$
+
+3. **Converter para litros:**
+   $$
+   18 \, \text{m}^3 = 18 \, 000 \, \text{L}
+   $$
+
+4. **Calcular a quantidade de produto:**
+   $$
+   \text{Quantidade} = \left( \frac{18 \, 000}{1 \, 000} \right) \times 1,5 = 18 \times 1,5 = 27 \, \text{mL}
+   $$
+
+Para não cair mais nessa pegadinha, revise:
+- Cálculo de volume de sólidos geométricos (paralelepípedo).
+- Interpretação de medidas reais em contextos práticos.
+- Aplicação de proporções em situações reais.
+
+A habilidade H14 exige que você analise uma situação real e aplique conhecimentos geométricos para calcular grandezas e medidas. Pratique com questões que envolvam interpretação de textos e cálculo de volumes em contextos práticos.</div></div><div class='resposta'><h3>Resposta 2</h3><div class='md'>A resposta correta é a **alternativa B**, que corresponde a **27,00 mL**. O erro cometido pelo estudante foi a utilização da **altura total da piscina (1,7 m)** em vez da **altura da lâmina d’água (1,2 m)**, o que resultou em um volume maior do que o real e, consequentemente, em uma quantidade de produto menor do que a correta.
+
+Vamos resolver passo a passo:
+
+1. **Calcular a altura da lâmina d’água**:
+   $$
+   h = 1,7 - 0,5 = 1,2 \text{ m}
+   $$
+
+2. **Calcular o volume da água na piscina**:
+   $$
+   V = 5 \times 3 \times 1,2 = 18 \text{ m}^3
+   $$
+
+3. **Converter o volume para litros**:
+   $$
+   18 \text{ m}^3 = 18000 \text{ L}
+   $$
+
+4. **Calcular a quantidade de produto**:
+   $$
+   \frac{18000 \times 1,5}{1000} = 27 \text{ mL}
+   $$
+
+Para não cair mais nessa pegadinha, é essencial revisar a **Habilidade 14**, que envolve a **interpretação de situações reais com conhecimentos geométricos e de medidas**. Pratique a **interpretação de limites de volume** e a **aplicação de proporções** em contextos práticos.</div></div></div><div class='avaliacao'><table class='crit'><thead><tr><th>Critério (1 = discordo totalmente, 5 = concordo totalmente)</th><th></th><th class='box'>1</th><th class='box'>2</th><th class='box'>3</th><th class='box'>4</th><th class='box'>5</th></tr></thead><tbody><tr><td rowspan='2'>1. Correção conceitual e matemática: não há erros de cálculo nem definições incorretas.</td><td class='resp'>Resposta 1</td><td class='box'>☐ 1</td><td class='box'>☐ 2</td><td class='box'>☐ 3</td><td class='box'>☐ 4</td><td class='box'>☐ 5</td></tr><tr><td class='resp'>Resposta 2</td><td class='box'>☐ 1</td><td class='box'>☐ 2</td><td class='box'>☐ 3</td><td class='box'>☐ 4</td><td class='box'>☐ 5</td></tr><tr><td rowspan='2'>2. Clareza e didática: a explicação passo a passo é fácil de acompanhar por um estudante do Ensino Médio.</td><td class='resp'>Resposta 1</td><td class='box'>☐ 1</td><td class='box'>☐ 2</td><td class='box'>☐ 3</td><td class='box'>☐ 4</td><td class='box'>☐ 5</td></tr><tr><td class='resp'>Resposta 2</td><td class='box'>☐ 1</td><td class='box'>☐ 2</td><td class='box'>☐ 3</td><td class='box'>☐ 4</td><td class='box'>☐ 5</td></tr><tr><td rowspan='2'>3. Linguagem adequada ao contexto do ENEM: tom acolhedor, termos corretos e exemplos adequados.</td><td class='resp'>Resposta 1</td><td class='box'>☐ 1</td><td class='box'>☐ 2</td><td class='box'>☐ 3</td><td class='box'>☐ 4</td><td class='box'>☐ 5</td></tr><tr><td class='resp'>Resposta 2</td><td class='box'>☐ 1</td><td class='box'>☐ 2</td><td class='box'>☐ 3</td><td class='box'>☐ 4</td><td class='box'>☐ 5</td></tr><tr><td rowspan='2'>4. Ausência de informações incorretas ou inventadas (regras, fórmulas ou fatos falsos).</td><td class='resp'>Resposta 1</td><td class='box'>☐ 1</td><td class='box'>☐ 2</td><td class='box'>☐ 3</td><td class='box'>☐ 4</td><td class='box'>☐ 5</td></tr><tr><td class='resp'>Resposta 2</td><td class='box'>☐ 1</td><td class='box'>☐ 2</td><td class='box'>☐ 3</td><td class='box'>☐ 4</td><td class='box'>☐ 5</td></tr></tbody></table><table class='crit'><tbody><tr><td>Qual resposta é melhor no conjunto?</td><td class='box'>☐ Resposta 1</td><td class='box'>☐ Resposta 2</td><td class='box'>☐ Empate</td></tr></tbody></table><p class='obs'><b>Observações:</b></p></div></section><section class='par'><h2>FB05</h2><p class='hab'><b>Habilidade H09:</b> Utilizar conhecimentos geométricos de espaço e forma na seleção de argumentos propostos como solução de problemas do cotidiano. (ENEM 2019)</p><div class='md enunciado'>Uma empresa de transporte disponibiliza, para embalagem de encomendas, caixas de papelão no formato de paralelepípedo retoretângulo, conforme dimensões no quadro.
+
+| Modelo da caixa | Comprimento (cm) | Largura (cm) | Altura (cm) |
+|---|---|---|---|
+| 1 | 12 | 12 | 13 |
+| 2 | 23 | 20 | 25 |
+| 3 | 25 | 25 | 25 |
+| 4 | 26 | 25 | 24 |
+| 5 | 23 | 26 | 26 |
+
+Para embalar uma encomenda, contendo um objeto esférico com 11 cm de raio, essa empresa adota como critério a utilização da caixa, dentre os modelos disponíveis, que comporte, quando fechada e sem deformá-la, a encomenda e que possua a menor área de superfície total. Desconsidere a espessura da caixa. Nessas condições, qual dos modelos apresentados deverá ser o escolhido pela empresa?</div><ol class='alts'><li><b>A)</b> <span class='mt'>1</span></li><li><b>B)</b> <span class='mt'>2</span></li><li><b>C)</b> <span class='mt'>3</span></li><li><b>D)</b> <span class='mt'>4</span></li><li><b>E)</b> <span class='mt'>5</span></li></ol><p><b>Gabarito:</b> E &nbsp;·&nbsp; <b>Alternativa marcada pelo estudante:</b> C</p><p class='pedido'>O estudante errou a questão e pediu uma explicação. Explicações recebidas:</p><div class='respostas'><div class='resposta'><h3>Resposta 1</h3><div class='md'>Olá! Vamos analisar juntos essa questão, que envolve a habilidade H09: utilizar conhecimentos geométricos de espaço e forma na seleção de argumentos propostos como solução de problemas do cotidiano.
+
+A empresa precisa escolher a caixa que possa acomodar uma esfera de 11 cm de raio, ou seja, com diâmetro de 22 cm. Isso significa que a caixa precisa ter dimensões internas ≥ 22 cm em todas as direções. Vamos analisar quais caixas atendem a esse critério:
+
+- Modelo 1: 12 x 12 x 13 → Não atende (dimensões menores que 22 cm)
+- Modelo 2: 23 x 20 x 25 → Não atende (largura = 20 cm &lt; 22 cm)
+- Modelo 3: 25 x 25 x 25 → Atende
+- Modelo 4: 26 x 25 x 24 → Não atende (altura = 24 cm &lt; 22 cm)
+- Modelo 5: 23 x 26 x 26 → Atende
+
+Agora, entre as caixas que atendem ao critério (modelos 3 e 5), precisamos escolher a que possui a menor área de superfície total. A área total de um paralelepípedo é dada por:
+
+$$
+A = 2(ab + bc + ac)
+$$
+
+Vamos calcular:
+
+- Modelo 3: $ A = 2(25 \cdot 25 + 25 \cdot 25 + 25 \cdot 25) = 2(1875) = 3750 \, \text{cm}^2 $
+- Modelo 5: $ A = 2(23 \cdot 26 + 26 \cdot 26 + 23 \cdot 26) = 2(598 + 676 + 598) = 2(1872) = 3744 \, \text{cm}^2 $
+
+Portanto, a caixa 5 possui a menor área de superfície total, e é a que atende ao critério de acomodação da esfera.
+
+A resposta correta é a alternativa **E**.
+
+Para não cair nessa pegadinha, revise com atenção a diferença entre volume e área de superfície, e pratique problemas que envolvam seleção de figuras com base em critérios geométricos. Isso é essencial para a habilidade H09.</div></div><div class='resposta'><h3>Resposta 2</h3><div class='md'>A resposta correta é a alternativa **E (5)**, que é o modelo de caixa com menor área de superfície total e que satisfaz a condição de conter a esfera de 11 cm de raio (diâmetro = 22 cm). A habilidade H09 exige que o aluno utilize conhecimentos geométricos de espaço e forma para selecionar a solução correta.
+
+**Resolução Passo a Passo:**
+
+1. **Identificar a condição mínima para a caixa conter a esfera:**
+   - Raio da esfera = 11 cm → Diâmetro = 22 cm
+   - A caixa precisa ter dimensões internas **≥ 22 cm em todas as direções**.
+
+2. **Verificar quais caixas atendem a essa condição:**
+   - Modelo 1 (12x12x13): Não atende (menor que 22 cm em algumas direções)
+   - Modelo 2 (23x20x25): Atende (23 ≥ 22, 20 &lt; 22 → Não atende)
+   - Modelo 3 (25x25x25): Atende (25 ≥ 22)
+   - Modelo 4 (26x25x24): Atende (26 ≥ 22, 25 ≥ 22, 24 &lt; 22 → Não atende)
+   - Modelo 5 (23x26x26): Atende (23 ≥ 22, 26 ≥ 22, 26 ≥ 22)
+
+3. **Calcular a área de superfície total de cada caixa que atende:**
+   - **Modelo 3 (25x25x25):**  
+     $ A = 6 \cdot 25^2 = 6 \cdot 625 = 3750 \, \text{cm}^2 $
+   - **Modelo 5 (23x26x26):**  
+     $ A = 2(23 \cdot 26 + 23 \cdot 26 + 26 \cdot 26) = 2(598 + 598 + 676) = 2(1872) = 3744 \, \text{cm}^2 $
+
+4. **Comparar as áreas e escolher a menor:**
+   - Modelo 5 tem área de superfície total menor que o Modelo 3 → **Modelo 5 é a resposta correta**.
+
+**O que Estudar:**
+Revisar a relação entre **área de superfície** e **volume** em figuras espaciais, bem como como aplicar esses conceitos em situações práticas, como embalagens e objetos tridimensionais. A habilidade H09 exige que o aluno compreenda e utilize esses conhecimentos para resolver problemas do cotidiano.</div></div></div><div class='avaliacao'><table class='crit'><thead><tr><th>Critério (1 = discordo totalmente, 5 = concordo totalmente)</th><th></th><th class='box'>1</th><th class='box'>2</th><th class='box'>3</th><th class='box'>4</th><th class='box'>5</th></tr></thead><tbody><tr><td rowspan='2'>1. Correção conceitual e matemática: não há erros de cálculo nem definições incorretas.</td><td class='resp'>Resposta 1</td><td class='box'>☐ 1</td><td class='box'>☐ 2</td><td class='box'>☐ 3</td><td class='box'>☐ 4</td><td class='box'>☐ 5</td></tr><tr><td class='resp'>Resposta 2</td><td class='box'>☐ 1</td><td class='box'>☐ 2</td><td class='box'>☐ 3</td><td class='box'>☐ 4</td><td class='box'>☐ 5</td></tr><tr><td rowspan='2'>2. Clareza e didática: a explicação passo a passo é fácil de acompanhar por um estudante do Ensino Médio.</td><td class='resp'>Resposta 1</td><td class='box'>☐ 1</td><td class='box'>☐ 2</td><td class='box'>☐ 3</td><td class='box'>☐ 4</td><td class='box'>☐ 5</td></tr><tr><td class='resp'>Resposta 2</td><td class='box'>☐ 1</td><td class='box'>☐ 2</td><td class='box'>☐ 3</td><td class='box'>☐ 4</td><td class='box'>☐ 5</td></tr><tr><td rowspan='2'>3. Linguagem adequada ao contexto do ENEM: tom acolhedor, termos corretos e exemplos adequados.</td><td class='resp'>Resposta 1</td><td class='box'>☐ 1</td><td class='box'>☐ 2</td><td class='box'>☐ 3</td><td class='box'>☐ 4</td><td class='box'>☐ 5</td></tr><tr><td class='resp'>Resposta 2</td><td class='box'>☐ 1</td><td class='box'>☐ 2</td><td class='box'>☐ 3</td><td class='box'>☐ 4</td><td class='box'>☐ 5</td></tr><tr><td rowspan='2'>4. Ausência de informações incorretas ou inventadas (regras, fórmulas ou fatos falsos).</td><td class='resp'>Resposta 1</td><td class='box'>☐ 1</td><td class='box'>☐ 2</td><td class='box'>☐ 3</td><td class='box'>☐ 4</td><td class='box'>☐ 5</td></tr><tr><td class='resp'>Resposta 2</td><td class='box'>☐ 1</td><td class='box'>☐ 2</td><td class='box'>☐ 3</td><td class='box'>☐ 4</td><td class='box'>☐ 5</td></tr></tbody></table><table class='crit'><tbody><tr><td>Qual resposta é melhor no conjunto?</td><td class='box'>☐ Resposta 1</td><td class='box'>☐ Resposta 2</td><td class='box'>☐ Empate</td></tr></tbody></table><p class='obs'><b>Observações:</b></p></div></section><section class='par'><h2>FB06</h2><p class='hab'><b>Habilidade H29:</b> Utilizar conhecimentos de estatística e probabilidade como recurso para a construção de argumentação. (ENEM 2015)</p><div class='md enunciado'>Um concurso é composto por cinco etapas. Cada etapa vale 100 pontos. A pontuação final de cada candidato é a média de suas notas nas cinco etapas. A classificação obedece à ordem decrescente das pontuações finais. O critério de desempate baseia-se na maior pontuação na quinta etapa.
+
+| Candidato | Média nas quatro primeiras etapas | Pontuação na quinta etapa |
+|---|---|---|
+| A | 90 | 60 |
+| B | 85 | 85 |
+| C | 80 | 95 |
+| D | 60 | 90 |
+| E | 60 | 100 |
+
+A ordem de classificação final desse concurso é</div><ol class='alts'><li><b>A)</b> <span class='mt'>A, B, C, E, D.</span></li><li><b>B)</b> <span class='mt'>B, A, C, E, D.</span></li><li><b>C)</b> <span class='mt'>C, B, E, A, D.</span></li><li><b>D)</b> <span class='mt'>C, B, E, D, A.</span></li><li><b>E)</b> <span class='mt'>E, C, D, B, A.</span></li></ol><p><b>Gabarito:</b> B &nbsp;·&nbsp; <b>Alternativa marcada pelo estudante:</b> A</p><p class='pedido'>O estudante errou a questão e pediu uma explicação. Explicações recebidas:</p><div class='respostas'><div class='resposta'><h3>Resposta 1</h3><div class='md'>Olá! Primeiro, quero te dizer que é muito normal cometer erros em questões de classificação, especialmente quando há mais de um critério para ordenar os candidatos. Vamos entender juntos onde pode ter passado um pouco despercebido.
+
+A questão pede a ordem de classificação final de um concurso, com base na média final (que é a média das cinco etapas) e, em caso de empate, na pontuação da quinta etapa. A resposta correta é a **alternativa B (B, A, C, E, D)**, e a habilidade envolvida é **H29**.
+
+Vamos resolver passo a passo:
+
+1. **Candidato A**: (90 × 4 + 60) / 5 = (360 + 60) / 5 = **84**
+2. **Candidato B**: (85 × 4 + 85) / 5 = (340 + 85) / 5 = **85**
+3. **Candidato C**: (80 × 4 + 95) / 5 = (320 + 95) / 5 = **83**
+4. **Candidato D**: (60 × 4 + 90) / 5 = (240 + 90) / 5 = **66**
+5. **Candidato E**: (60 × 4 + 100) / 5 = (240 + 100) / 5 = **68**
+
+Agora, ordenamos por pontuação final:
+
+- **B (85)**
+- **A (84)**
+- **C (83)**
+- **E (68)**
+- **D (66)**
+
+Portanto, a ordem correta é: **B, A, C, E, D**.
+
+Para não cair nessa pegadinha novamente, é importante revisar:
+- Como calcular médias e interpretar dados estatísticos;
+- Como aplicar critérios de classificação com base em múltiplas variáveis;
+- Como priorizar informações em situações de desempate.
+
+Você está no caminho certo! Continue revisando esses conceitos com atenção e confiança. 😊</div></div><div class='resposta'><h3>Resposta 2</h3><div class='md'>A resposta correta é a alternativa **B**. A classificação final é determinada pela média de todas as cinco etapas, e em caso de empate, pela pontuação na quinta etapa. Vamos calcular a média final de cada candidato:
+
+- **Candidato A:**  
+  $$ \text{Média} = \frac{90 + 60}{2} = 75 $$
+
+- **Candidato B:**  
+  $$ \text{Média} = \frac{85 + 85}{2} = 85 $$
+
+- **Candidato C:**  
+  $$ \text{Média} = \frac{80 + 95}{2} = 87.5 $$
+
+- **Candidato D:**  
+  $$ \text{Média} = \frac{60 + 90}{2} = 75 $$
+
+- **Candidato E:**  
+  $$ \text{Média} = \frac{60 + 100}{2} = 80 $$
+
+Ordenando por média final (decrescente):  
+- C (87.5)  
+- B (85)  
+- E (80)  
+- A (75)  
+- D (75)
+
+Para desempate entre A e D, usamos a pontuação na quinta etapa:  
+- A: 60  
+- D: 90  
+Portanto, D vem antes de A.
+
+**O que estudar:**  
+Revisar o cálculo de médias e a aplicação de critérios de desempate em classificações, conforme descrito na habilidade H29.</div></div></div><div class='avaliacao'><table class='crit'><thead><tr><th>Critério (1 = discordo totalmente, 5 = concordo totalmente)</th><th></th><th class='box'>1</th><th class='box'>2</th><th class='box'>3</th><th class='box'>4</th><th class='box'>5</th></tr></thead><tbody><tr><td rowspan='2'>1. Correção conceitual e matemática: não há erros de cálculo nem definições incorretas.</td><td class='resp'>Resposta 1</td><td class='box'>☐ 1</td><td class='box'>☐ 2</td><td class='box'>☐ 3</td><td class='box'>☐ 4</td><td class='box'>☐ 5</td></tr><tr><td class='resp'>Resposta 2</td><td class='box'>☐ 1</td><td class='box'>☐ 2</td><td class='box'>☐ 3</td><td class='box'>☐ 4</td><td class='box'>☐ 5</td></tr><tr><td rowspan='2'>2. Clareza e didática: a explicação passo a passo é fácil de acompanhar por um estudante do Ensino Médio.</td><td class='resp'>Resposta 1</td><td class='box'>☐ 1</td><td class='box'>☐ 2</td><td class='box'>☐ 3</td><td class='box'>☐ 4</td><td class='box'>☐ 5</td></tr><tr><td class='resp'>Resposta 2</td><td class='box'>☐ 1</td><td class='box'>☐ 2</td><td class='box'>☐ 3</td><td class='box'>☐ 4</td><td class='box'>☐ 5</td></tr><tr><td rowspan='2'>3. Linguagem adequada ao contexto do ENEM: tom acolhedor, termos corretos e exemplos adequados.</td><td class='resp'>Resposta 1</td><td class='box'>☐ 1</td><td class='box'>☐ 2</td><td class='box'>☐ 3</td><td class='box'>☐ 4</td><td class='box'>☐ 5</td></tr><tr><td class='resp'>Resposta 2</td><td class='box'>☐ 1</td><td class='box'>☐ 2</td><td class='box'>☐ 3</td><td class='box'>☐ 4</td><td class='box'>☐ 5</td></tr><tr><td rowspan='2'>4. Ausência de informações incorretas ou inventadas (regras, fórmulas ou fatos falsos).</td><td class='resp'>Resposta 1</td><td class='box'>☐ 1</td><td class='box'>☐ 2</td><td class='box'>☐ 3</td><td class='box'>☐ 4</td><td class='box'>☐ 5</td></tr><tr><td class='resp'>Resposta 2</td><td class='box'>☐ 1</td><td class='box'>☐ 2</td><td class='box'>☐ 3</td><td class='box'>☐ 4</td><td class='box'>☐ 5</td></tr></tbody></table><table class='crit'><tbody><tr><td>Qual resposta é melhor no conjunto?</td><td class='box'>☐ Resposta 1</td><td class='box'>☐ Resposta 2</td><td class='box'>☐ Empate</td></tr></tbody></table><p class='obs'><b>Observações:</b></p></div></section><section class='par'><h2>FB07</h2><p class='hab'><b>Habilidade H16:</b> Resolver situação-problema envolvendo a variação de grandezas, direta ou inversamente proporcionais. (ENEM 2021)</p><div class='md enunciado'>Em uma corrida automobilística, os carros podem fazer paradas nos boxes para efetuar trocas de pneus. Nessas trocas, o trabalho é feito por um grupo de três pessoas em cada pneu. Considere que os grupos iniciam o trabalho no mesmo instante, trabalham à mesma velocidade e cada grupo trabalha em um único pneu. Com os quatro grupos completos, são necessários 4 segundos para que a troca seja efetuada. O tempo gasto por um grupo para trocar um pneu é inversamente proporcional ao número de pessoas trabalhando nele. Em uma dessas paradas, um dos trabalhadores passou mal, não pôde participar da troca e nem foi substituído, de forma que um dos quatro grupos de troca ficou reduzido. Nessa parada específica, com um dos grupos reduzido, qual foi o tempo gasto, em segundo, para trocar os quatro pneus?</div><ol class='alts'><li><b>A)</b> <span class='mt'>6,0</span></li><li><b>B)</b> <span class='mt'>5,7</span></li><li><b>C)</b> <span class='mt'>5,0</span></li><li><b>D)</b> <span class='mt'>4,5</span></li><li><b>E)</b> <span class='mt'>4,4</span></li></ol><p><b>Gabarito:</b> A &nbsp;·&nbsp; <b>Alternativa marcada pelo estudante:</b> D</p><p class='pedido'>O estudante errou a questão e pediu uma explicação. Explicações recebidas:</p><div class='respostas'><div class='resposta'><h3>Resposta 1</h3><div class='md'>Você cometeu um pequeno deslize ao interpretar a relação de tempo e número de pessoas. A questão exige uma análise de proporcionalidade inversa, ou seja, quanto menos pessoas trabalham em um pneu, mais tempo leva para trocá-lo. 
+
+Vamos resolver passo a passo:
+
+1. **Dado inicial**: 4 grupos de 3 pessoas cada, totalizando 12 pessoas. Cada grupo trabalha em um pneu, e o tempo total para trocar os 4 pneus é de 4 segundos. Isso significa que cada grupo leva 4 segundos para trocar um pneu, pois trabalham simultaneamente.
+
+2. **Situação alterada**: Um grupo reduz de 3 para 2 pessoas. Como o tempo é inversamente proporcional ao número de pessoas, o tempo para trocar o pneu desse grupo será:
+
+$$
+\text{Tempo} = \frac{3}{2} \times 4 = 6 \text{ segundos}
+$$
+
+3. **Conclusão**: Como todos os grupos trabalham simultaneamente, o tempo total para trocar os 4 pneus será o tempo que o grupo reduzido leva para trocar seu pneu, que é 6 segundos.
+
+A resposta correta é a alternativa A (6,0), que está alinhada com a habilidade H16: Resolver situação-problema envolvendo a variação de grandezas, direta ou inversamente proporcionais.
+
+Recomenda-se revisar a relação de proporcionalidade inversa e como ela se aplica a situações em que diferentes grupos trabalham simultaneamente. Isso ajuda a evitar confusões com a soma de tempos ou a interpretação equivocada da relação entre grandezas.</div></div><div class='resposta'><h3>Resposta 2</h3><div class='md'>A resposta correta é a alternativa A (6,0). O erro cometido provavelmente se deve à interpretação equivocada da relação de proporcionalidade inversa. O tempo gasto para trocar os pneus é inversamente proporcional ao número de pessoas trabalhando em cada grupo. Com 4 grupos e 3 pessoas em cada grupo, o tempo total é de 4 segundos. Com um grupo reduzido (2 pessoas), o tempo aumenta para 6 segundos, conforme calculado.
+
+$$
+\text{Tempo} = \frac{k}{n} \Rightarrow k = 3 \times 4 = 12
+$$
+$$
+\text{Novo tempo} = \frac{12}{2} = 6 \text{ segundos}
+$$
+
+Para não cair mais nessa pegadinha, revise a habilidade H16, que envolve a variação de grandezas diretamente ou inversamente proporcionais. Pratique exercícios que envolvam proporcionalidade inversa em contextos reais, como divisão de tarefas, velocidade e tempo, etc.</div></div></div><div class='avaliacao'><table class='crit'><thead><tr><th>Critério (1 = discordo totalmente, 5 = concordo totalmente)</th><th></th><th class='box'>1</th><th class='box'>2</th><th class='box'>3</th><th class='box'>4</th><th class='box'>5</th></tr></thead><tbody><tr><td rowspan='2'>1. Correção conceitual e matemática: não há erros de cálculo nem definições incorretas.</td><td class='resp'>Resposta 1</td><td class='box'>☐ 1</td><td class='box'>☐ 2</td><td class='box'>☐ 3</td><td class='box'>☐ 4</td><td class='box'>☐ 5</td></tr><tr><td class='resp'>Resposta 2</td><td class='box'>☐ 1</td><td class='box'>☐ 2</td><td class='box'>☐ 3</td><td class='box'>☐ 4</td><td class='box'>☐ 5</td></tr><tr><td rowspan='2'>2. Clareza e didática: a explicação passo a passo é fácil de acompanhar por um estudante do Ensino Médio.</td><td class='resp'>Resposta 1</td><td class='box'>☐ 1</td><td class='box'>☐ 2</td><td class='box'>☐ 3</td><td class='box'>☐ 4</td><td class='box'>☐ 5</td></tr><tr><td class='resp'>Resposta 2</td><td class='box'>☐ 1</td><td class='box'>☐ 2</td><td class='box'>☐ 3</td><td class='box'>☐ 4</td><td class='box'>☐ 5</td></tr><tr><td rowspan='2'>3. Linguagem adequada ao contexto do ENEM: tom acolhedor, termos corretos e exemplos adequados.</td><td class='resp'>Resposta 1</td><td class='box'>☐ 1</td><td class='box'>☐ 2</td><td class='box'>☐ 3</td><td class='box'>☐ 4</td><td class='box'>☐ 5</td></tr><tr><td class='resp'>Resposta 2</td><td class='box'>☐ 1</td><td class='box'>☐ 2</td><td class='box'>☐ 3</td><td class='box'>☐ 4</td><td class='box'>☐ 5</td></tr><tr><td rowspan='2'>4. Ausência de informações incorretas ou inventadas (regras, fórmulas ou fatos falsos).</td><td class='resp'>Resposta 1</td><td class='box'>☐ 1</td><td class='box'>☐ 2</td><td class='box'>☐ 3</td><td class='box'>☐ 4</td><td class='box'>☐ 5</td></tr><tr><td class='resp'>Resposta 2</td><td class='box'>☐ 1</td><td class='box'>☐ 2</td><td class='box'>☐ 3</td><td class='box'>☐ 4</td><td class='box'>☐ 5</td></tr></tbody></table><table class='crit'><tbody><tr><td>Qual resposta é melhor no conjunto?</td><td class='box'>☐ Resposta 1</td><td class='box'>☐ Resposta 2</td><td class='box'>☐ Empate</td></tr></tbody></table><p class='obs'><b>Observações:</b></p></div></section><section class='par'><h2>FB08</h2><p class='hab'><b>Habilidade H27:</b> Calcular medidas de tendência central ou de dispersão de um conjunto de dados expressos em uma tabela de frequências de dados agrupados (não em classes) ou em gráficos. (ENEM 2018)</p><div class='md enunciado'>A Comissão Interna de Prevenção de Acidentes (CIPA) de uma empresa, observando os altos custos com os frequentes acidentes de trabalho ocorridos, fez, a pedido da diretoria, uma pesquisa do número de acidentes sofridos por funcionários. Essa pesquisa, realizada com uma amostra de 100 funcionários, norteará as ações da empresa na política de segurança no trabalho. Os resultados obtidos estão no quadro.
+
+| Número de acidentes sofridos | Número de trabalhadores |
+|---|---|
+| 0 | 50 |
+| 1 | 17 |
+| 2 | 15 |
+| 3 | 10 |
+| 4 | 6 |
+| 5 | 2 |
+
+A média do número de acidentes por funcionário na amostra que a CIPA apresentará à diretoria da empresa é</div><ol class='alts'><li><b>A)</b> <span class='mt'>0,15.</span></li><li><b>B)</b> <span class='mt'>0,30.</span></li><li><b>C)</b> <span class='mt'>0,50.</span></li><li><b>D)</b> <span class='mt'>1,11.</span></li><li><b>E)</b> <span class='mt'>2,22.</span></li></ol><p><b>Gabarito:</b> D &nbsp;·&nbsp; <b>Alternativa marcada pelo estudante:</b> B</p><p class='pedido'>O estudante errou a questão e pediu uma explicação. Explicações recebidas:</p><div class='respostas'><div class='resposta'><h3>Resposta 1</h3><div class='md'>A resposta correta é a alternativa **D (1,11)**, conforme a habilidade H27. A confusão pode ter surgido ao não multiplicar corretamente os valores de acidentes pelos respectivos números de funcionários, resultando em um valor muito baixo. Vamos resolver a questão passo a passo:
+
+Para calcular a média aritmética de dados agrupados, utilizamos a fórmula:
+
+$$
+MA = \frac{\sum (x_i \cdot f_i)}{\sum f_i}
+$$
+
+Aplicando os dados da tabela:
+
+$$
+MA = \frac{(0 \cdot 50) + (1 \cdot 17) + (2 \cdot 15) + (3 \cdot 10) + (4 \cdot 6) + (5 \cdot 2)}{50 + 17 + 15 + 10 + 6 + 2}
+$$
+
+Calculando o numerador:
+
+$$
+0 + 17 + 30 + 30 + 24 + 10 = 111
+$$
+
+Calculando o denominador:
+
+$$
+50 + 17 + 15 + 10 + 6 + 2 = 100
+$$
+
+Portanto:
+
+$$
+MA = \frac{111}{100} = 1,11
+$$
+
+Para não cair mais nessa pegadinha, revise a habilidade H27 com foco na fórmula da média aritmética e na multiplicação dos valores pela frequência. Pratique com exercícios que envolvam tabelas de frequências e reforce a importância de aplicar a fórmula corretamente.</div></div><div class='resposta'><h3>Resposta 2</h3><div class='md'>A resposta correta é a alternativa D (1,11), que está alinhada com a habilidade H27 do ENEM.
+
+O erro cometido provavelmente se deve à confusão entre a média simples e a média ponderada. A média ponderada é calculada multiplicando cada valor pelo número de vezes que ele ocorre (frequência), e depois dividindo pela soma total das frequências. Vamos resolver passo a passo:
+
+$$
+\text{Média} = \frac{(0 \cdot 50) + (1 \cdot 17) + (2 \cdot 15) + (3 \cdot 10) + (4 \cdot 6) + (5 \cdot 2)}{100}
+$$
+
+$$
+= \frac{0 + 17 + 30 + 30 + 24 + 10}{100} = \frac{111}{100} = 1,11
+$$
+
+Para não cair mais nessa pegadinha, revise a diferença entre médias simples e ponderadas, e pratique exercícios com tabelas de frequências. A habilidade H27 exige que você saiba interpretar e calcular medidas de tendência central com dados agrupados.</div></div></div><div class='avaliacao'><table class='crit'><thead><tr><th>Critério (1 = discordo totalmente, 5 = concordo totalmente)</th><th></th><th class='box'>1</th><th class='box'>2</th><th class='box'>3</th><th class='box'>4</th><th class='box'>5</th></tr></thead><tbody><tr><td rowspan='2'>1. Correção conceitual e matemática: não há erros de cálculo nem definições incorretas.</td><td class='resp'>Resposta 1</td><td class='box'>☐ 1</td><td class='box'>☐ 2</td><td class='box'>☐ 3</td><td class='box'>☐ 4</td><td class='box'>☐ 5</td></tr><tr><td class='resp'>Resposta 2</td><td class='box'>☐ 1</td><td class='box'>☐ 2</td><td class='box'>☐ 3</td><td class='box'>☐ 4</td><td class='box'>☐ 5</td></tr><tr><td rowspan='2'>2. Clareza e didática: a explicação passo a passo é fácil de acompanhar por um estudante do Ensino Médio.</td><td class='resp'>Resposta 1</td><td class='box'>☐ 1</td><td class='box'>☐ 2</td><td class='box'>☐ 3</td><td class='box'>☐ 4</td><td class='box'>☐ 5</td></tr><tr><td class='resp'>Resposta 2</td><td class='box'>☐ 1</td><td class='box'>☐ 2</td><td class='box'>☐ 3</td><td class='box'>☐ 4</td><td class='box'>☐ 5</td></tr><tr><td rowspan='2'>3. Linguagem adequada ao contexto do ENEM: tom acolhedor, termos corretos e exemplos adequados.</td><td class='resp'>Resposta 1</td><td class='box'>☐ 1</td><td class='box'>☐ 2</td><td class='box'>☐ 3</td><td class='box'>☐ 4</td><td class='box'>☐ 5</td></tr><tr><td class='resp'>Resposta 2</td><td class='box'>☐ 1</td><td class='box'>☐ 2</td><td class='box'>☐ 3</td><td class='box'>☐ 4</td><td class='box'>☐ 5</td></tr><tr><td rowspan='2'>4. Ausência de informações incorretas ou inventadas (regras, fórmulas ou fatos falsos).</td><td class='resp'>Resposta 1</td><td class='box'>☐ 1</td><td class='box'>☐ 2</td><td class='box'>☐ 3</td><td class='box'>☐ 4</td><td class='box'>☐ 5</td></tr><tr><td class='resp'>Resposta 2</td><td class='box'>☐ 1</td><td class='box'>☐ 2</td><td class='box'>☐ 3</td><td class='box'>☐ 4</td><td class='box'>☐ 5</td></tr></tbody></table><table class='crit'><tbody><tr><td>Qual resposta é melhor no conjunto?</td><td class='box'>☐ Resposta 1</td><td class='box'>☐ Resposta 2</td><td class='box'>☐ Empate</td></tr></tbody></table><p class='obs'><b>Observações:</b></p></div></section><section class='par'><h2>FB09</h2><p class='hab'><b>Habilidade H17:</b> Analisar informações envolvendo a variação de grandezas como recurso para a construção de argumentação. (ENEM 2010)</p><div class='md enunciado'>A loja Telas &amp; Molduras cobra 20 reais por metro quadrado de tela, 15 reais por metro linear de moldura, mais uma taxa fixa de entrega de 10 reais. Uma artista plástica precisa encomendar telas e molduras a essa loja, suficientes para 8 quadros retangulares (25 cm × 50 cm). Em seguida, fez uma segunda encomenda, mas agora para 8 quadros retangulares (50 cm × 100 cm). O valor da segunda encomenda será</div><ol class='alts'><li><b>A)</b> <span class='mt'>o dobro do valor da primeira encomenda, porque a altura e a largura dos quadros dobraram.</span></li><li><b>B)</b> <span class='mt'>maior do que o valor da primeira encomenda, mas não o dobro.</span></li><li><b>C)</b> <span class='mt'>a metade do valor da primeira encomenda, porque a altura e a largura dos quadros dobraram.</span></li><li><b>D)</b> <span class='mt'>menor do que o valor da primeira encomenda, mas não a metade.</span></li><li><b>E)</b> <span class='mt'>igual ao valor da primeira encomenda, porque o custo de entrega será o mesmo.</span></li></ol><p><b>Gabarito:</b> B &nbsp;·&nbsp; <b>Alternativa marcada pelo estudante:</b> D</p><p class='pedido'>O estudante errou a questão e pediu uma explicação. Explicações recebidas:</p><div class='respostas'><div class='resposta'><h3>Resposta 1</h3><div class='md'>A resposta correta é a alternativa B. A variação das dimensões dos quadros resulta em um aumento no custo total da encomenda, mas não no dobro do valor da primeira. Isso acontece porque, embora as dimensões dos quadros dobrem, a área e o perímetro crescem de forma diferente, e a taxa fixa de entrega permanece a mesma.
+
+Para resolver a questão, é essencial analisar como a variação das dimensões afeta o custo da tela e da moldura, conforme a habilidade H17. A área cresce com o quadrado das dimensões, enquanto o perímetro cresce linearmente. Por isso, o custo da segunda encomenda é maior do que o da primeira, mas não o dobro.
+
+Para não cair em erros semelhantes, revise:
+- Como calcular área e perímetro de figuras retangulares.
+- A relação entre variação de dimensões e custo total.
+- A importância de considerar todas as partes da fatura (área, perímetro e taxa fixa).
+- A habilidade de comparar grandezas e construir argumentos com base nisso, conforme a H17.</div></div><div class='resposta'><h3>Resposta 2</h3><div class='md'>Olá! A questão envolvia a comparação entre o valor de duas encomendas de quadros, onde cada um tinha dimensões diferentes. A confusão pode ter surgido por achar que, como as dimensões dobraram, o custo também dobraria, mas é importante lembrar que a área cresce em um fator de 4 e o perímetro em um fator de 2, o que afeta o custo de forma diferente.
+
+Vamos resolver passo a passo:
+
+**Primeira encomenda (25 cm × 50 cm):**
+- Área de um quadro: $ 25 \times 50 = 1250 \, \text{cm}^2 = 0,125 \, \text{m}^2 $
+- Custo da tela: $ 8 \times 0,125 \times 20 = 20 \, \text{reais} $
+- Perímetro de um quadro: $ 2 \times (25 + 50) = 150 \, \text{cm} = 1,5 \, \text{m} $
+- Custo da moldura: $ 8 \times 1,5 \times 15 = 180 \, \text{reais} $
+- Taxa fixa: 10 reais
+- Total: $ 20 + 180 + 10 = 210 \, \text{reais} $
+
+**Segunda encomenda (50 cm × 100 cm):**
+- Área de um quadro: $ 50 \times 100 = 5000 \, \text{cm}^2 = 0,5 \, \text{m}^2 $
+- Custo da tela: $ 8 \times 0,5 \times 20 = 80 \, \text{reais} $
+- Perímetro de um quadro: $ 2 \times (50 + 100) = 300 \, \text{cm} = 3 \, \text{m} $
+- Custo da moldura: $ 8 \times 3 \times 15 = 360 \, \text{reais} $
+- Taxa fixa: 10 reais
+- Total: $ 80 + 360 + 10 = 450 \, \text{reais} $
+
+Portanto, a segunda encomenda é **maior do que a primeira**, mas **não o dobro**. A resposta correta é a **alternativa B**.
+
+**O que estudar:**  
+A habilidade H17 envolve a análise de variação de grandezas, como área e perímetro, e como elas afetam o custo total. É essencial compreender que a área cresce em um fator quadrático, enquanto o perímetro cresce linearmente. Revise como calcular área e perímetro de figuras geométricas e como elas influenciam em contextos práticos, como custos de materiais.
+
+Boa sorte na sua preparação! 🚀</div></div></div><div class='avaliacao'><table class='crit'><thead><tr><th>Critério (1 = discordo totalmente, 5 = concordo totalmente)</th><th></th><th class='box'>1</th><th class='box'>2</th><th class='box'>3</th><th class='box'>4</th><th class='box'>5</th></tr></thead><tbody><tr><td rowspan='2'>1. Correção conceitual e matemática: não há erros de cálculo nem definições incorretas.</td><td class='resp'>Resposta 1</td><td class='box'>☐ 1</td><td class='box'>☐ 2</td><td class='box'>☐ 3</td><td class='box'>☐ 4</td><td class='box'>☐ 5</td></tr><tr><td class='resp'>Resposta 2</td><td class='box'>☐ 1</td><td class='box'>☐ 2</td><td class='box'>☐ 3</td><td class='box'>☐ 4</td><td class='box'>☐ 5</td></tr><tr><td rowspan='2'>2. Clareza e didática: a explicação passo a passo é fácil de acompanhar por um estudante do Ensino Médio.</td><td class='resp'>Resposta 1</td><td class='box'>☐ 1</td><td class='box'>☐ 2</td><td class='box'>☐ 3</td><td class='box'>☐ 4</td><td class='box'>☐ 5</td></tr><tr><td class='resp'>Resposta 2</td><td class='box'>☐ 1</td><td class='box'>☐ 2</td><td class='box'>☐ 3</td><td class='box'>☐ 4</td><td class='box'>☐ 5</td></tr><tr><td rowspan='2'>3. Linguagem adequada ao contexto do ENEM: tom acolhedor, termos corretos e exemplos adequados.</td><td class='resp'>Resposta 1</td><td class='box'>☐ 1</td><td class='box'>☐ 2</td><td class='box'>☐ 3</td><td class='box'>☐ 4</td><td class='box'>☐ 5</td></tr><tr><td class='resp'>Resposta 2</td><td class='box'>☐ 1</td><td class='box'>☐ 2</td><td class='box'>☐ 3</td><td class='box'>☐ 4</td><td class='box'>☐ 5</td></tr><tr><td rowspan='2'>4. Ausência de informações incorretas ou inventadas (regras, fórmulas ou fatos falsos).</td><td class='resp'>Resposta 1</td><td class='box'>☐ 1</td><td class='box'>☐ 2</td><td class='box'>☐ 3</td><td class='box'>☐ 4</td><td class='box'>☐ 5</td></tr><tr><td class='resp'>Resposta 2</td><td class='box'>☐ 1</td><td class='box'>☐ 2</td><td class='box'>☐ 3</td><td class='box'>☐ 4</td><td class='box'>☐ 5</td></tr></tbody></table><table class='crit'><tbody><tr><td>Qual resposta é melhor no conjunto?</td><td class='box'>☐ Resposta 1</td><td class='box'>☐ Resposta 2</td><td class='box'>☐ Empate</td></tr></tbody></table><p class='obs'><b>Observações:</b></p></div></section><section class='par'><h2>FB10</h2><p class='hab'><b>Habilidade H28:</b> Resolver situação-problema que envolva conhecimentos de estatística e probabilidade. (ENEM 2023)</p><div class='md enunciado'>Em um colégio público, a admissão no primeiro ano se dá por sorteio. Neste ano há 55 candidatos, cujas inscrições são numeradas de 01 a 55. O sorteio de cada número de inscrição será realizado em etapas, utilizando-se duas urnas. Da primeira urna será sorteada uma bola, dentre bolas numeradas de 0 a 9, que representará o algarismo das unidades do número de inscrição a ser sorteado e, em seguida, da segunda urna, será sorteada uma bola para representar o algarismo das dezenas desse número. Depois do primeiro sorteio, e antes de se sortear o algarismo das dezenas, as bolas que estarão presentes na segunda urna serão apenas aquelas cujos números formam, com o algarismo já sorteado, um número de 01 a 55. As probabilidades de os candidatos de inscrição número 50 e 02 serem sorteados são, respectivamente,</div><ol class='alts'><li><b>A)</b> <span class='mt'>$\frac{1}{50} e \frac{1}{60}$</span></li><li><b>B)</b> <span class='mt'>$\frac{1}{50} e \frac{1}{50}$</span></li><li><b>C)</b> <span class='mt'>$\frac{1}{50} e \frac{1}{10}$</span></li><li><b>D)</b> <span class='mt'>$\frac{1}{55} e \frac{1}{54}$</span></li><li><b>E)</b> <span class='mt'>$\frac{1}{100} e \frac{1}{100}$</span></li></ol><p><b>Gabarito:</b> A &nbsp;·&nbsp; <b>Alternativa marcada pelo estudante:</b> C</p><p class='pedido'>O estudante errou a questão e pediu uma explicação. Explicações recebidas:</p><div class='respostas'><div class='resposta'><h3>Resposta 1</h3><div class='md'>Caro estudante,  
+
+Primeiro, quero dizer que sua tentativa de resolver a questão foi valiosa e mostra que você está engajado no processo de aprendizagem. No entanto, a resposta correta é a **alternativa A ($\frac{1}{50} e \frac{1}{60}$)**, e vamos entender por que.
+
+A questão envolve um sorteio com restrições, e a chave para resolver corretamente é entender que, após o sorteio do algarismo das unidades, a urna da dezena é limitada a números que, combinados com o algarismo já sorteado, formam um número entre 01 e 55.
+
+### Resolução Passo a Passo
+
+**Candidato 50:**
+- Algarismo das unidades: 0 (sorteado da primeira urna).
+- Algarismo das dezenas: pode ser 0, 1, 2, 3, 4 ou 5 (pois 00 não é válido, mas 01 a 50 são válidos).
+- Total de possibilidades para a dezena: 6.
+- Probabilidade de sortear 50: $\frac{1}{10} \cdot \frac{1}{6} = \frac{1}{60}$.
+
+**Candidato 02:**
+- Algarismo das unidades: 2 (sorteado da primeira urna).
+- Algarismo das dezenas: pode ser 0, 1, 2, 3, 4 ou 5 (pois 02, 12, 22, 32, 42, 52 são válidos).
+- Total de possibilidades para a dezena: 6.
+- Probabilidade de sortear 02: $\frac{1}{10} \cdot \frac{1}{6} = \frac{1}{60}$.
+
+### O que Estudar
+Para não cair nessa pegadinha no ENEM, é essencial revisar os conceitos de **probabilidade condicional** e **combinações com restrições**, que são parte da habilidade H28. Pratique problemas que envolvam urnas, sorteios com limitações e eventos dependentes.
+
+Boa sorte na sua preparação!</div></div><div class='resposta'><h3>Resposta 2</h3><div class='md'>A resposta correta é a alternativa A. A questão envolve a aplicação da habilidade H28: Resolver situação-problema que envolva conhecimentos de estatística e probabilidade.
+
+**Diagnóstico Acolhedor do Erro:**
+Você provavelmente não considerou corretamente a restrição da segunda urna após o algarismo das unidades ser sorteado. Isso reduz o número de possibilidades para o algarismo das dezenas, o que afeta a probabilidade de sortear o número 02.
+
+**Resolução Passo a Passo:**
+Vamos calcular a probabilidade de cada candidato ser sorteado.
+
+1. **Candidato 50:**
+   - O número 50 tem algarismo das unidades = 0.
+   - Após o &quot;0&quot; ser sorteado, a segunda urna só terá bolas com números que formam números de 01 a 55 com o algarismo das unidades = 0.
+   - Esses números são: 10, 20, 30, 40, 50 → 5 números.
+   - A probabilidade de sortear o &quot;5&quot; (algarismo das dezenas) é 1/5.
+   - A probabilidade de sortear o &quot;0&quot; (algarismo das unidades) é 1/10.
+   - A probabilidade total de sortear o número 50 é:  
+     $$
+     P(50) = \frac{1}{10} \times \frac{1}{5} = \frac{1}{50}
+     $$
+
+2. **Candidato 02:**
+   - O número 02 tem algarismo das unidades = 2.
+   - Após o &quot;2&quot; ser sorteado, a segunda urna só terá bolas com números que formam números de 01 a 55 com o algarismo das unidades = 2.
+   - Esses números são: 12, 22, 32, 42, 52 → 5 números.
+   - A probabilidade de sortear o &quot;0&quot; (algarismo das dezenas) é 1/5.
+   - A probabilidade de sortear o &quot;2&quot; (algarismo das unidades) é 1/10.
+   - A probabilidade total de sortear o número 02 é:  
+     $$
+     P(02) = \frac{1}{10} \times \frac{1}{5} = \frac{1}{50}
+     $$
+
+No entanto, a alternativa A afirma que a probabilidade de 02 é $\frac{1}{60}$, o que sugere que, em vez de 5 números, a urna teria 6 números válidos. Isso pode ocorrer se considerarmos que o número 02 também pode ser formado com o algarismo das dezenas = 0 e algarismo das unidades = 2, mas o número 02 não está entre 01 a 55. Portanto, a urna teria 6 números válidos: 12, 22, 32, 42, 52 e 02.
+
+**O que Estudar:**
+Revisar a aplicação de probabilidade condicional e a regra de multiplicação em contextos de sorteio com restrições. Focar em H28: Resolver situação-problema que envolva conhecimentos de estatística e probabilidade.</div></div></div><div class='avaliacao'><table class='crit'><thead><tr><th>Critério (1 = discordo totalmente, 5 = concordo totalmente)</th><th></th><th class='box'>1</th><th class='box'>2</th><th class='box'>3</th><th class='box'>4</th><th class='box'>5</th></tr></thead><tbody><tr><td rowspan='2'>1. Correção conceitual e matemática: não há erros de cálculo nem definições incorretas.</td><td class='resp'>Resposta 1</td><td class='box'>☐ 1</td><td class='box'>☐ 2</td><td class='box'>☐ 3</td><td class='box'>☐ 4</td><td class='box'>☐ 5</td></tr><tr><td class='resp'>Resposta 2</td><td class='box'>☐ 1</td><td class='box'>☐ 2</td><td class='box'>☐ 3</td><td class='box'>☐ 4</td><td class='box'>☐ 5</td></tr><tr><td rowspan='2'>2. Clareza e didática: a explicação passo a passo é fácil de acompanhar por um estudante do Ensino Médio.</td><td class='resp'>Resposta 1</td><td class='box'>☐ 1</td><td class='box'>☐ 2</td><td class='box'>☐ 3</td><td class='box'>☐ 4</td><td class='box'>☐ 5</td></tr><tr><td class='resp'>Resposta 2</td><td class='box'>☐ 1</td><td class='box'>☐ 2</td><td class='box'>☐ 3</td><td class='box'>☐ 4</td><td class='box'>☐ 5</td></tr><tr><td rowspan='2'>3. Linguagem adequada ao contexto do ENEM: tom acolhedor, termos corretos e exemplos adequados.</td><td class='resp'>Resposta 1</td><td class='box'>☐ 1</td><td class='box'>☐ 2</td><td class='box'>☐ 3</td><td class='box'>☐ 4</td><td class='box'>☐ 5</td></tr><tr><td class='resp'>Resposta 2</td><td class='box'>☐ 1</td><td class='box'>☐ 2</td><td class='box'>☐ 3</td><td class='box'>☐ 4</td><td class='box'>☐ 5</td></tr><tr><td rowspan='2'>4. Ausência de informações incorretas ou inventadas (regras, fórmulas ou fatos falsos).</td><td class='resp'>Resposta 1</td><td class='box'>☐ 1</td><td class='box'>☐ 2</td><td class='box'>☐ 3</td><td class='box'>☐ 4</td><td class='box'>☐ 5</td></tr><tr><td class='resp'>Resposta 2</td><td class='box'>☐ 1</td><td class='box'>☐ 2</td><td class='box'>☐ 3</td><td class='box'>☐ 4</td><td class='box'>☐ 5</td></tr></tbody></table><table class='crit'><tbody><tr><td>Qual resposta é melhor no conjunto?</td><td class='box'>☐ Resposta 1</td><td class='box'>☐ Resposta 2</td><td class='box'>☐ Empate</td></tr></tbody></table><p class='obs'><b>Observações:</b></p></div></section><h1 class='parte'>Parte B — Tutora virtual</h1><section class='par'><h2>TU01</h2><div class='conversa'><p class='fala'><b>Estudante:</b> <span class='mt'>O que é o círculo trigonométrico?</span></p><p class='fala'><b>Tutora:</b> <span class='mt'>É uma circunferência de raio 1 centrada na origem, usada para definir seno e cosseno de qualquer ângulo.</span></p><p class='fala nova'><b>Estudante:</b> E em que quadrante o seno fica negativo nele?</p></div><p class='pedido'>Respostas da tutora à última mensagem do estudante:</p><div class='respostas'><div class='resposta'><h3>Resposta 1</h3><div class='md'>Oi! 😊  
+O seno é negativo nos **terceiro e quarto quadrantes** do círculo trigonométrico. Vamos entender por quê:
+
+No círculo unitário, o seno de um ângulo corresponde à **coordenada y** do ponto que está na circunferência. Isso significa que:
+
+- **1º Quadrante (0 a π/2):** O ponto está acima do eixo x → **seno positivo**.
+- **2º Quadrante (π/2 a π):** O ponto ainda está acima do eixo x → **seno positivo**.
+- **3º Quadrante (π a 3π/2):** O ponto está abaixo do eixo x → **seno negativo**.
+- **4º Quadrante (3π/2 a 2π):** O ponto também está abaixo do eixo x → **seno negativo**.
+
+Podemos usar a analogia de um relógio:  
+- Se o ângulo está entre **12h e 6h**, o seno é positivo (acima do eixo x).  
+- Se está entre **6h e 12h**, o seno é negativo (abaixo do eixo x).
+
+Isso é importante para resolver problemas envolvendo identidades trigonométricas e gráficos de funções. Se quiser, posso te mostrar como isso se aplica em um exemplo prático! 😊  
+Quer ver um exemplo?</div></div><div class='resposta'><h3>Resposta 2</h3><div class='md'>Oi! 😊
+
+No círculo trigonométrico, o **seno** é negativo nos **quadrantes III e IV**. Vamos entender por quê:
+
+- **Quadrante I (0° a 90°):** O seno é **positivo**, pois a coordenada y do ponto está acima do eixo x.
+- **Quadrante II (90° a 180°):** O seno também é **positivo**, pois a coordenada y ainda está acima do eixo x.
+- **Quadrante III (180° a 270°):** O seno é **negativo**, pois a coordenada y está abaixo do eixo x.
+- **Quadrante IV (270° a 360°):** O seno é **negativo**, pois a coordenada y está abaixo do eixo x.
+
+👉 **Resumindo:**  
+$ \text{seno negativo} \Rightarrow \text{Quadrante III e IV} $
+
+Pense nele como um relógio: o seno é positivo no topo (quadrantes I e II) e negativo na parte inferior (quadrantes III e IV). Isso ajuda a visualizar o comportamento do seno em diferentes posições no círculo unitário.
+
+Se quiser, posso te mostrar um desenho ou explicar como isso se relaciona com o gráfico do seno! 😊</div></div></div><div class='avaliacao'><table class='crit'><thead><tr><th>Critério (1 = discordo totalmente, 5 = concordo totalmente)</th><th></th><th class='box'>1</th><th class='box'>2</th><th class='box'>3</th><th class='box'>4</th><th class='box'>5</th></tr></thead><tbody><tr><td rowspan='2'>1. Correção conceitual e matemática: não há erros de cálculo nem definições incorretas.</td><td class='resp'>Resposta 1</td><td class='box'>☐ 1</td><td class='box'>☐ 2</td><td class='box'>☐ 3</td><td class='box'>☐ 4</td><td class='box'>☐ 5</td></tr><tr><td class='resp'>Resposta 2</td><td class='box'>☐ 1</td><td class='box'>☐ 2</td><td class='box'>☐ 3</td><td class='box'>☐ 4</td><td class='box'>☐ 5</td></tr><tr><td rowspan='2'>2. Clareza e didática: a explicação passo a passo é fácil de acompanhar por um estudante do Ensino Médio.</td><td class='resp'>Resposta 1</td><td class='box'>☐ 1</td><td class='box'>☐ 2</td><td class='box'>☐ 3</td><td class='box'>☐ 4</td><td class='box'>☐ 5</td></tr><tr><td class='resp'>Resposta 2</td><td class='box'>☐ 1</td><td class='box'>☐ 2</td><td class='box'>☐ 3</td><td class='box'>☐ 4</td><td class='box'>☐ 5</td></tr><tr><td rowspan='2'>3. Linguagem adequada ao contexto do ENEM: tom acolhedor, termos corretos e exemplos adequados.</td><td class='resp'>Resposta 1</td><td class='box'>☐ 1</td><td class='box'>☐ 2</td><td class='box'>☐ 3</td><td class='box'>☐ 4</td><td class='box'>☐ 5</td></tr><tr><td class='resp'>Resposta 2</td><td class='box'>☐ 1</td><td class='box'>☐ 2</td><td class='box'>☐ 3</td><td class='box'>☐ 4</td><td class='box'>☐ 5</td></tr><tr><td rowspan='2'>4. Ausência de informações incorretas ou inventadas (regras, fórmulas ou fatos falsos).</td><td class='resp'>Resposta 1</td><td class='box'>☐ 1</td><td class='box'>☐ 2</td><td class='box'>☐ 3</td><td class='box'>☐ 4</td><td class='box'>☐ 5</td></tr><tr><td class='resp'>Resposta 2</td><td class='box'>☐ 1</td><td class='box'>☐ 2</td><td class='box'>☐ 3</td><td class='box'>☐ 4</td><td class='box'>☐ 5</td></tr></tbody></table><table class='crit'><tbody><tr><td>Qual resposta é melhor no conjunto?</td><td class='box'>☐ Resposta 1</td><td class='box'>☐ Resposta 2</td><td class='box'>☐ Empate</td></tr></tbody></table><p class='obs'><b>Observações:</b></p></div></section><section class='par'><h2>TU02</h2><div class='conversa'><p class='fala'><b>Estudante:</b> <span class='mt'>O que é uma função afim?</span></p><p class='fala'><b>Tutora:</b> <span class='mt'>É uma função $f(x) = ax + b$, cujo gráfico é uma reta.</span></p><p class='fala nova'><b>Estudante:</b> E o que o coeficiente a indica nesse gráfico?</p></div><p class='pedido'>Respostas da tutora à última mensagem do estudante:</p><div class='respostas'><div class='resposta'><h3>Resposta 1</h3><div class='md'>Oi! 😊
+
+O coeficiente $ a $ na função afim $ f(x) = ax + b $ é chamado de **coeficiente angular** e ele tem um papel super importante no gráfico da função. Vamos entender melhor:
+
+- **O que ele indica?**  
+  O coeficiente $ a $ mostra **como a função cresce ou decresce** à medida que $ x $ aumenta.  
+  - Se $ a &gt; 0 $, a função é **crescente** (a reta vai subindo da esquerda para a direita).  
+  - Se $ a &lt; 0 $, a função é **decrescente** (a reta vai descendo da esquerda para a direita).
+
+- **Como ele afeta a inclinação da reta?**  
+  O valor de $ a $ também define a **inclinação** da reta.  
+  - Quanto maior o valor absoluto de $ a $, mais inclinada a reta (mais &quot;aguda&quot; a subida ou descida).  
+  - Quanto menor o valor absoluto de $ a $, mais &quot;suave&quot; a inclinação da reta.
+
+👉 **Exemplo intuitivo:**  
+Se $ a = 2 $, a cada unidade que $ x $ aumenta, $ f(x) $ aumenta 2 unidades.  
+Se $ a = -1 $, a cada unidade que $ x $ aumenta, $ f(x) $ diminui 1 unidade.
+
+Entendeu? 😊 Se quiser, posso te mostrar como desenhar a reta com diferentes valores de $ a $ para fixar melhor o conceito!</div></div><div class='resposta'><h3>Resposta 2</h3><div class='md'>Oi! 😊
+
+O coeficiente &quot;a&quot; na função afim $ f(x) = ax + b $ é chamado de **coeficiente angular** da reta. Ele indica **como a reta se inclina** em relação ao eixo x. Vamos entender melhor:
+
+1. **Se $ a &gt; 0 $:**  
+   A reta **sobe da esquerda para a direita**, o que significa que a função é **crescente**.  
+   Exemplo: $ f(x) = 2x + 3 $ — quanto maior o x, maior o valor de f(x).
+
+2. **Se $ a &lt; 0 $:**  
+   A reta **desce da esquerda para a direita**, o que significa que a função é **decrescente**.  
+   Exemplo: $ f(x) = -3x + 5 $ — quanto maior o x, menor o valor de f(x).
+
+3. **Se $ a = 0 $:**  
+   A reta é **horizontal**, o que significa que a função é **constante**.  
+   Exemplo: $ f(x) = 7 $ — o valor de f(x) não muda, independente do x.
+
+💡 **Intuição geométrica:**  
+Pense em uma escada. Se o coeficiente &quot;a&quot; for 2, a escada sube 2 degraus a cada passo para a frente. Se for -1, a escada desce 1 degrau a cada passo. Se for 0, a escada não tem degraus — é uma linha reta horizontal.
+
+Agora, você consegue visualizar como o coeficiente &quot;a&quot; influencia o gráfico da função afim? 😊  
+Precisa de mais explicações ou exemplos? Estou aqui para te ajudar!</div></div></div><div class='avaliacao'><table class='crit'><thead><tr><th>Critério (1 = discordo totalmente, 5 = concordo totalmente)</th><th></th><th class='box'>1</th><th class='box'>2</th><th class='box'>3</th><th class='box'>4</th><th class='box'>5</th></tr></thead><tbody><tr><td rowspan='2'>1. Correção conceitual e matemática: não há erros de cálculo nem definições incorretas.</td><td class='resp'>Resposta 1</td><td class='box'>☐ 1</td><td class='box'>☐ 2</td><td class='box'>☐ 3</td><td class='box'>☐ 4</td><td class='box'>☐ 5</td></tr><tr><td class='resp'>Resposta 2</td><td class='box'>☐ 1</td><td class='box'>☐ 2</td><td class='box'>☐ 3</td><td class='box'>☐ 4</td><td class='box'>☐ 5</td></tr><tr><td rowspan='2'>2. Clareza e didática: a explicação passo a passo é fácil de acompanhar por um estudante do Ensino Médio.</td><td class='resp'>Resposta 1</td><td class='box'>☐ 1</td><td class='box'>☐ 2</td><td class='box'>☐ 3</td><td class='box'>☐ 4</td><td class='box'>☐ 5</td></tr><tr><td class='resp'>Resposta 2</td><td class='box'>☐ 1</td><td class='box'>☐ 2</td><td class='box'>☐ 3</td><td class='box'>☐ 4</td><td class='box'>☐ 5</td></tr><tr><td rowspan='2'>3. Linguagem adequada ao contexto do ENEM: tom acolhedor, termos corretos e exemplos adequados.</td><td class='resp'>Resposta 1</td><td class='box'>☐ 1</td><td class='box'>☐ 2</td><td class='box'>☐ 3</td><td class='box'>☐ 4</td><td class='box'>☐ 5</td></tr><tr><td class='resp'>Resposta 2</td><td class='box'>☐ 1</td><td class='box'>☐ 2</td><td class='box'>☐ 3</td><td class='box'>☐ 4</td><td class='box'>☐ 5</td></tr><tr><td rowspan='2'>4. Ausência de informações incorretas ou inventadas (regras, fórmulas ou fatos falsos).</td><td class='resp'>Resposta 1</td><td class='box'>☐ 1</td><td class='box'>☐ 2</td><td class='box'>☐ 3</td><td class='box'>☐ 4</td><td class='box'>☐ 5</td></tr><tr><td class='resp'>Resposta 2</td><td class='box'>☐ 1</td><td class='box'>☐ 2</td><td class='box'>☐ 3</td><td class='box'>☐ 4</td><td class='box'>☐ 5</td></tr></tbody></table><table class='crit'><tbody><tr><td>Qual resposta é melhor no conjunto?</td><td class='box'>☐ Resposta 1</td><td class='box'>☐ Resposta 2</td><td class='box'>☐ Empate</td></tr></tbody></table><p class='obs'><b>Observações:</b></p></div></section><section class='par'><h2>TU03</h2><div class='conversa'><p class='fala'><b>Estudante:</b> <span class='mt'>Como funcionam os juros compostos?</span></p><p class='fala'><b>Tutora:</b> <span class='mt'>Os juros incidem sobre o montante acumulado: $M = C(1 + i)^n$.</span></p><p class='fala nova'><b>Estudante:</b> E como comparo com os simples?</p></div><p class='pedido'>Respostas da tutora à última mensagem do estudante:</p><div class='respostas'><div class='resposta'><h3>Resposta 1</h3><div class='md'>Oi! 😊  
+Comparar juros simples com juros compostos é uma das partes mais importantes da matemática financeira, e é essencial para o ENEM. Vamos entender isso passo a passo:
+
+### 📌 **Juros Simples vs. Juros Compostos**
+
+#### 1. **Juros Simples**  
+- **Fórmula do Montante:** $ M = C(1 + i \cdot t) $  
+- **Fórmula dos Juros:** $ J = C \cdot i \cdot t $  
+- **Característica:** Os juros são calculados **apenas sobre o capital inicial**, ou seja, **não se acumulam**.  
+- **Exemplo:** Se você investe R$ 100,00 a 10% ao mês, após 2 meses, terá:  
+  $ M = 100(1 + 0,10 \cdot 2) = 100(1 + 0,20) = 120 $  
+  Juros = 120 - 100 = **R$ 20,00**
+
+#### 2. **Juros Compostos**  
+- **Fórmula do Montante:** $ M = C(1 + i)^t $  
+- **Característica:** Os juros são calculados **sobre o montante acumulado**, ou seja, **se acumulam**.  
+- **Exemplo:** Se você investe R$ 100,00 a 10% ao mês, após 2 meses, terá:  
+  $ M = 100(1 + 0,10)^2 = 100(1,10)^2 = 100 \cdot 1,21 = 121 $  
+  Juros = 121 - 100 = **R$ 21,00**
+
+#### 📌 **Comparação:**
+| Período | Juros Simples | Juros Compostos |
+|--------|---------------|------------------|
+| 1 mês  | R$ 10,00      | R$ 10,00         |
+| 2 meses| R$ 20,00      | R$ 21,00         |
+| 3 meses| R$ 30,00      | R$ 33,10         |
+
+&gt; **Conclusão:**  
+- Para **menos de 1 período**, o juros simples é maior.  
+- Para **1 período**, são iguais.  
+- Para **mais de 1 período**, o juros composto é **mais alto**.
+
+### 🌱 **Intuição:**
+Imagine que você tem um jardim.  
+- No **juros simples**, você planta uma árvore e ela cresce sempre da mesma forma.  
+- No **juros composto**, a árvore cresce sobre o que já cresceu, ou seja, ela **acumula crescimento**.
+
+Se quiser, posso te mostrar como isso funciona em um gráfico ou com um exemplo prático do ENEM! 😊  
+O que você acha?</div></div><div class='resposta'><h3>Resposta 2</h3><div class='md'>Olá! 😊
+
+Vamos comparar juros simples e compostos de forma clara e intuitiva, para que você entenda bem a diferença!
+
+### 📌 Juros Simples
+- **Fórmula:** $ M = C(1 + i \cdot t) $
+- **Como funciona:** O juro é calculado apenas sobre o capital inicial (C), e não sobre os juros acumulados.
+- **Exemplo:** Se você investe R$ 1.000,00 a 10% ao mês por 2 meses, o juro será:
+  $$
+  J = 1000 \cdot 0,10 \cdot 2 = 200
+  $$
+  $$
+  M = 1000 + 200 = 1200
+  $$
+
+### 📌 Juros Compostos
+- **Fórmula:** $ M = C(1 + i)^t $
+- **Como funciona:** O juro é calculado sobre o montante acumulado, ou seja, os juros &quot;geram juros&quot;.
+- **Exemplo:** Se você investe R$ 1.000,00 a 10% ao mês por 2 meses, o montante será:
+  $$
+  M = 1000 \cdot (1 + 0,10)^2 = 1000 \cdot 1,21 = 1210
+  $$
+
+### 🧠 Comparação
+- **Juros Simples:** Crescimento **linear** (como uma reta).
+- **Juros Compostos:** Crescimento **exponencial** (como uma curva crescente).
+- **Conclusão:** Para o mesmo tempo e taxa, o juros composto sempre resulta em um montante **maior** que o simples.
+
+### 🌱 Analogia
+Imagine que você planta uma árvore:
+- No **juro simples**, a árvore cresce sempre na mesma taxa (ex: 10 cm por mês).
+- No **juro composto**, a árvore não só cresce 10 cm por mês, mas também produz frutos que também crescem (ex: 10 cm por mês, mas os frutos também geram mais frutos).
+
+Se quiser, posso te mostrar um gráfico ou fazer um exemplo com números reais! 😊  
+Como posso te ajudar mais?</div></div></div><div class='avaliacao'><table class='crit'><thead><tr><th>Critério (1 = discordo totalmente, 5 = concordo totalmente)</th><th></th><th class='box'>1</th><th class='box'>2</th><th class='box'>3</th><th class='box'>4</th><th class='box'>5</th></tr></thead><tbody><tr><td rowspan='2'>1. Correção conceitual e matemática: não há erros de cálculo nem definições incorretas.</td><td class='resp'>Resposta 1</td><td class='box'>☐ 1</td><td class='box'>☐ 2</td><td class='box'>☐ 3</td><td class='box'>☐ 4</td><td class='box'>☐ 5</td></tr><tr><td class='resp'>Resposta 2</td><td class='box'>☐ 1</td><td class='box'>☐ 2</td><td class='box'>☐ 3</td><td class='box'>☐ 4</td><td class='box'>☐ 5</td></tr><tr><td rowspan='2'>2. Clareza e didática: a explicação passo a passo é fácil de acompanhar por um estudante do Ensino Médio.</td><td class='resp'>Resposta 1</td><td class='box'>☐ 1</td><td class='box'>☐ 2</td><td class='box'>☐ 3</td><td class='box'>☐ 4</td><td class='box'>☐ 5</td></tr><tr><td class='resp'>Resposta 2</td><td class='box'>☐ 1</td><td class='box'>☐ 2</td><td class='box'>☐ 3</td><td class='box'>☐ 4</td><td class='box'>☐ 5</td></tr><tr><td rowspan='2'>3. Linguagem adequada ao contexto do ENEM: tom acolhedor, termos corretos e exemplos adequados.</td><td class='resp'>Resposta 1</td><td class='box'>☐ 1</td><td class='box'>☐ 2</td><td class='box'>☐ 3</td><td class='box'>☐ 4</td><td class='box'>☐ 5</td></tr><tr><td class='resp'>Resposta 2</td><td class='box'>☐ 1</td><td class='box'>☐ 2</td><td class='box'>☐ 3</td><td class='box'>☐ 4</td><td class='box'>☐ 5</td></tr><tr><td rowspan='2'>4. Ausência de informações incorretas ou inventadas (regras, fórmulas ou fatos falsos).</td><td class='resp'>Resposta 1</td><td class='box'>☐ 1</td><td class='box'>☐ 2</td><td class='box'>☐ 3</td><td class='box'>☐ 4</td><td class='box'>☐ 5</td></tr><tr><td class='resp'>Resposta 2</td><td class='box'>☐ 1</td><td class='box'>☐ 2</td><td class='box'>☐ 3</td><td class='box'>☐ 4</td><td class='box'>☐ 5</td></tr></tbody></table><table class='crit'><tbody><tr><td>Qual resposta é melhor no conjunto?</td><td class='box'>☐ Resposta 1</td><td class='box'>☐ Resposta 2</td><td class='box'>☐ Empate</td></tr></tbody></table><p class='obs'><b>Observações:</b></p></div></section><section class='par'><h2>TU04</h2><div class='conversa'><p class='fala'><b>Estudante:</b> <span class='mt'>O que significa uma escala 1:100.000 em um mapa?</span></p><p class='fala'><b>Tutora:</b> <span class='mt'>Significa que 1 unidade no mapa corresponde a 100.000 unidades na realidade.</span></p><p class='fala nova'><b>Estudante:</b> E qual a diferença entre a numérica e a gráfica?</p></div><p class='pedido'>Respostas da tutora à última mensagem do estudante:</p><div class='respostas'><div class='resposta'><h3>Resposta 1</h3><div class='md'>Oi! 😊
+
+A diferença entre escala numérica e escala gráfica está no **formato de representação** da relação entre o mapa e a realidade. Vamos entender com exemplos claros:
+
+### 📐 **Escala Numérica**
+- **Definição:** Representa a escala por meio de números, como **1:100.000**.
+- **Significado:**  
+  - **1 unidade no mapa = 100.000 unidades na realidade.**  
+  - Pode ser em quilômetros, metros, centímetros, etc.  
+  - É a forma mais comum em mapas oficiais e é **universal**.
+
+**Exemplo:**  
+Se no mapa a distância entre duas cidades é 2 cm, e a escala é 1:100.000, então:  
+$$
+\text{Distância real} = 2 \, \text{cm} \times 100.000 = 200.000 \, \text{cm} = 2 \, \text{km}
+$$
+
+---
+
+### 📏 **Escala Gráfica**
+- **Definição:** Representa a escala por meio de **segmentos desenhados**, como uma régua.
+- **Significado:**  
+  - Mostra diretamente a relação entre o mapa e a realidade por meio de **distâncias visíveis**.  
+  - É útil para leituras rápidas e práticas, especialmente em mapas de grandes áreas.
+
+**Exemplo:**  
+Se a escala gráfica mostra que **1 cm = 5 km**, então:  
+- 1 cm no mapa = 5 km na realidade  
+- 2 cm no mapa = 10 km na realidade  
+- E assim por diante.
+
+---
+
+### 🧠 **Intuição Geométrica**
+Pense em uma régua:  
+- A **escala gráfica** é como uma régua que você pode usar para medir diretamente no mapa.  
+- A **escala numérica** é como uma fórmula que você usa para calcular a distância real a partir de uma medida no mapa.
+
+---
+
+### 📌 **Resumo**
+| Tipo de Escala | Formato | Exemplo | Utilidade |
+|----------------|--------|--------|----------|
+| Numérica       | Números | 1:100.000 | Calculos precisos |
+| Gráfica        | Segmentos | 0____50____100 km | Leituras rápidas |
+
+Se quiser, posso te mostrar como converter uma escala numérica para gráfica ou vice-versa! 😊  
+Como posso te ajudar mais?</div></div><div class='resposta'><h3>Resposta 2</h3><div class='md'>Oi! 😊  
+A diferença entre a **escala numérica** e a **escala gráfica** está na forma como elas representam a relação entre o mapa e a realidade:
+
+### 🔢 Escala Numérica  
+- É expressa por uma **razão matemática**, como **1:100.000**.  
+- Isso significa que **1 unidade no mapa corresponde a 100.000 unidades na realidade**.  
+- É útil para cálculos precisos, como distâncias em quilômetros ou metros.  
+- Exemplo: Se o mapa tem escala 1:100.000, então 2 cm no mapa = 200.000 cm = 2 km na realidade.
+
+### 📏 Escala Gráfica  
+- É representada por uma **régua ou linha graduada** no mapa.  
+- Cada segmento da régua corresponde a uma distância específica no terreno.  
+- É prática para leituras rápidas, como medir distâncias diretamente com o compasso ou régua.  
+- Exemplo: Se a régua indica **1 cm = 1 km**, então 5 cm no mapa = 5 km na realidade.
+
+### 🧠 Intuição para Lembrar  
+- **Escala numérica** é como uma fórmula: você calcula a distância com base em uma proporção.  
+- **Escala gráfica** é como uma régua de medida: você &quot;mede&quot; diretamente no mapa.
+
+Se quiser, posso te mostrar exemplos práticos de como usar cada uma delas em um mapa ou plano! 😊  
+O que você acha?</div></div></div><div class='avaliacao'><table class='crit'><thead><tr><th>Critério (1 = discordo totalmente, 5 = concordo totalmente)</th><th></th><th class='box'>1</th><th class='box'>2</th><th class='box'>3</th><th class='box'>4</th><th class='box'>5</th></tr></thead><tbody><tr><td rowspan='2'>1. Correção conceitual e matemática: não há erros de cálculo nem definições incorretas.</td><td class='resp'>Resposta 1</td><td class='box'>☐ 1</td><td class='box'>☐ 2</td><td class='box'>☐ 3</td><td class='box'>☐ 4</td><td class='box'>☐ 5</td></tr><tr><td class='resp'>Resposta 2</td><td class='box'>☐ 1</td><td class='box'>☐ 2</td><td class='box'>☐ 3</td><td class='box'>☐ 4</td><td class='box'>☐ 5</td></tr><tr><td rowspan='2'>2. Clareza e didática: a explicação passo a passo é fácil de acompanhar por um estudante do Ensino Médio.</td><td class='resp'>Resposta 1</td><td class='box'>☐ 1</td><td class='box'>☐ 2</td><td class='box'>☐ 3</td><td class='box'>☐ 4</td><td class='box'>☐ 5</td></tr><tr><td class='resp'>Resposta 2</td><td class='box'>☐ 1</td><td class='box'>☐ 2</td><td class='box'>☐ 3</td><td class='box'>☐ 4</td><td class='box'>☐ 5</td></tr><tr><td rowspan='2'>3. Linguagem adequada ao contexto do ENEM: tom acolhedor, termos corretos e exemplos adequados.</td><td class='resp'>Resposta 1</td><td class='box'>☐ 1</td><td class='box'>☐ 2</td><td class='box'>☐ 3</td><td class='box'>☐ 4</td><td class='box'>☐ 5</td></tr><tr><td class='resp'>Resposta 2</td><td class='box'>☐ 1</td><td class='box'>☐ 2</td><td class='box'>☐ 3</td><td class='box'>☐ 4</td><td class='box'>☐ 5</td></tr><tr><td rowspan='2'>4. Ausência de informações incorretas ou inventadas (regras, fórmulas ou fatos falsos).</td><td class='resp'>Resposta 1</td><td class='box'>☐ 1</td><td class='box'>☐ 2</td><td class='box'>☐ 3</td><td class='box'>☐ 4</td><td class='box'>☐ 5</td></tr><tr><td class='resp'>Resposta 2</td><td class='box'>☐ 1</td><td class='box'>☐ 2</td><td class='box'>☐ 3</td><td class='box'>☐ 4</td><td class='box'>☐ 5</td></tr></tbody></table><table class='crit'><tbody><tr><td>Qual resposta é melhor no conjunto?</td><td class='box'>☐ Resposta 1</td><td class='box'>☐ Resposta 2</td><td class='box'>☐ Empate</td></tr></tbody></table><p class='obs'><b>Observações:</b></p></div></section><section class='par'><h2>TU05</h2><div class='conversa'><p class='fala'><b>Estudante:</b> <span class='mt'>O que é um prisma?</span></p><p class='fala'><b>Tutora:</b> <span class='mt'>É um sólido com duas bases poligonais congruentes e paralelas, ligadas por faces laterais.</span></p><p class='fala nova'><b>Estudante:</b> E como acho a área lateral desse sólido?</p></div><p class='pedido'>Respostas da tutora à última mensagem do estudante:</p><div class='respostas'><div class='resposta'><h3>Resposta 1</h3><div class='md'>A **área lateral** de um prisma é a soma das áreas das faces laterais, que são paralelogramos. Para calculá-la, usamos a fórmula:
+
+$$
+A_{l} = \text{Perímetro da base} \times \text{Altura do prisma}
+$$
+
+### Passo a passo:
+1. **Calcule o perímetro da base**:  
+   - Se a base for um polígono regular (como um hexágono), basta multiplicar o comprimento de um lado pelo número de lados.  
+   - Exemplo: Se a base é um hexágono com lado 3 cm, o perímetro é $ 6 \times 3 = 18 \, \text{cm} $.
+
+2. **Multiplique pelo comprimento da aresta lateral (altura do prisma)**:  
+   - Se a aresta lateral (altura) for 6 cm, a área lateral será:  
+     $$
+     A_{l} = 18 \times 6 = 108 \, \text{cm}^2
+     $$
+
+### Intuição Geométrica:
+Imagine que você &quot;desmonta&quot; o prisma e coloca todas as faces laterais em um plano. Cada face lateral é um paralelogramo, e a área total delas é a área lateral. É como se você estivesse &quot;envolvendo&quot; a base com um &quot;túnel&quot; de altura igual à aresta lateral.
+
+Se quiser, posso te mostrar como isso funciona com outros tipos de prismas, como o triangular ou o pentagonal. 😊  
+Quer ver um exemplo com um prisma triangular?</div></div><div class='resposta'><h3>Resposta 2</h3><div class='md'>Oi! 😊
+
+A **área lateral** de um prisma é a soma das áreas das faces laterais, ou seja, as faces que **não são as bases**. Para calculá-la, usamos a fórmula:
+
+$$
+A_{\text{lateral}} = \text{Perímetro da base} \times \text{Altura do prisma}
+$$
+
+### Passo a Passo:
+1. **Calcule o perímetro da base**:  
+   Soma os comprimentos de todos os lados da base (que é um polígono).  
+   Exemplo: Se a base é um triângulo equilátero de lado 5 cm, o perímetro é $5 + 5 + 5 = 15$ cm.
+
+2. **Multiplique pelo comprimento da altura do prisma**:  
+   A altura é a distância entre as duas bases.  
+   Exemplo: Se a altura do prisma é 10 cm, multiplicamos $15 \, \text{cm} \times 10 \, \text{cm} = 150 \, \text{cm}^2$.
+
+### Intuição:
+Imagine um prisma como um &quot;sándwich&quot; de papelão. A base é como o pão de cima e de baixo, e as faces laterais são como as laterais do sanduíche. A área lateral é como a área da &quot;capa&quot; do sanduíche — ela cobre todas as laterais, e é calculada multiplicando o perímetro da base pela altura.
+
+Se quiser, posso te ajudar a resolver um exemplo prático! 😊</div></div></div><div class='avaliacao'><table class='crit'><thead><tr><th>Critério (1 = discordo totalmente, 5 = concordo totalmente)</th><th></th><th class='box'>1</th><th class='box'>2</th><th class='box'>3</th><th class='box'>4</th><th class='box'>5</th></tr></thead><tbody><tr><td rowspan='2'>1. Correção conceitual e matemática: não há erros de cálculo nem definições incorretas.</td><td class='resp'>Resposta 1</td><td class='box'>☐ 1</td><td class='box'>☐ 2</td><td class='box'>☐ 3</td><td class='box'>☐ 4</td><td class='box'>☐ 5</td></tr><tr><td class='resp'>Resposta 2</td><td class='box'>☐ 1</td><td class='box'>☐ 2</td><td class='box'>☐ 3</td><td class='box'>☐ 4</td><td class='box'>☐ 5</td></tr><tr><td rowspan='2'>2. Clareza e didática: a explicação passo a passo é fácil de acompanhar por um estudante do Ensino Médio.</td><td class='resp'>Resposta 1</td><td class='box'>☐ 1</td><td class='box'>☐ 2</td><td class='box'>☐ 3</td><td class='box'>☐ 4</td><td class='box'>☐ 5</td></tr><tr><td class='resp'>Resposta 2</td><td class='box'>☐ 1</td><td class='box'>☐ 2</td><td class='box'>☐ 3</td><td class='box'>☐ 4</td><td class='box'>☐ 5</td></tr><tr><td rowspan='2'>3. Linguagem adequada ao contexto do ENEM: tom acolhedor, termos corretos e exemplos adequados.</td><td class='resp'>Resposta 1</td><td class='box'>☐ 1</td><td class='box'>☐ 2</td><td class='box'>☐ 3</td><td class='box'>☐ 4</td><td class='box'>☐ 5</td></tr><tr><td class='resp'>Resposta 2</td><td class='box'>☐ 1</td><td class='box'>☐ 2</td><td class='box'>☐ 3</td><td class='box'>☐ 4</td><td class='box'>☐ 5</td></tr><tr><td rowspan='2'>4. Ausência de informações incorretas ou inventadas (regras, fórmulas ou fatos falsos).</td><td class='resp'>Resposta 1</td><td class='box'>☐ 1</td><td class='box'>☐ 2</td><td class='box'>☐ 3</td><td class='box'>☐ 4</td><td class='box'>☐ 5</td></tr><tr><td class='resp'>Resposta 2</td><td class='box'>☐ 1</td><td class='box'>☐ 2</td><td class='box'>☐ 3</td><td class='box'>☐ 4</td><td class='box'>☐ 5</td></tr></tbody></table><table class='crit'><tbody><tr><td>Qual resposta é melhor no conjunto?</td><td class='box'>☐ Resposta 1</td><td class='box'>☐ Resposta 2</td><td class='box'>☐ Empate</td></tr></tbody></table><p class='obs'><b>Observações:</b></p></div></section><section class='par'><h2>TU06</h2><div class='conversa'><p class='fala'><b>Estudante:</b> <span class='mt'>O que é mediana?</span></p><p class='fala'><b>Tutora:</b> <span class='mt'>É o valor central de um conjunto de dados ordenado.</span></p><p class='fala nova'><b>Estudante:</b> E quando a quantidade de dados é par?</p></div><p class='pedido'>Respostas da tutora à última mensagem do estudante:</p><div class='respostas'><div class='resposta'><h3>Resposta 1</h3><div class='md'>Oi! 😊  
+Quando a quantidade de dados é par, a mediana não é um único valor, mas sim a **média aritmética dos dois valores centrais** após ordenar os dados.  
+
+Vamos entender com um exemplo:  
+Se temos os dados: $ 2, 4, 6, 8 $  
+- Primeiro, ordenamos (já estão ordenados).  
+- Depois, identificamos os dois valores centrais: $ 4 $ e $ 6 $.  
+- A mediana será:  
+$$
+\text{Mediana} = \frac{4 + 6}{2} = \frac{10}{2} = 5
+$$
+
+Isso é importante para interpretar dados estatísticos em provas como o ENEM, onde a mediana ajuda a entender a tendência central de um conjunto.  
+
+Se quiser, posso te mostrar mais exemplos ou explicar como isso se aplica a tabelas e gráficos! 😊</div></div><div class='resposta'><h3>Resposta 2</h3><div class='md'>Excelente pergunta! 😊  
+Quando a quantidade de dados é par, a **mediana** não é um único valor, mas sim a **média aritmética dos dois valores centrais** após ordenar os dados em ordem crescente.
+
+Vamos entender com um exemplo:  
+Se temos os dados:  
+**1, 2, 3, 4, 5, 6**  
+Ordenados, temos 6 números (par).  
+O valor central está entre o 3º e o 4º número:  
+- 3º número = 3  
+- 4º número = 4  
+A mediana será:  
+$$
+\text{Mediana} = \frac{3 + 4}{2} = \frac{7}{2} = 3,5
+$$
+
+Isso é muito comum no ENEM, onde muitas questões envolvem dados pares e exigem esse cálculo. A ideia é sempre encontrar o &quot;ponto médio&quot; entre os dois valores centrais.
+
+Se quiser, posso te mostrar mais exemplos ou até como representar isso em um diagrama de ramo-e-folha! 😊  
+Quer continuar?</div></div></div><div class='avaliacao'><table class='crit'><thead><tr><th>Critério (1 = discordo totalmente, 5 = concordo totalmente)</th><th></th><th class='box'>1</th><th class='box'>2</th><th class='box'>3</th><th class='box'>4</th><th class='box'>5</th></tr></thead><tbody><tr><td rowspan='2'>1. Correção conceitual e matemática: não há erros de cálculo nem definições incorretas.</td><td class='resp'>Resposta 1</td><td class='box'>☐ 1</td><td class='box'>☐ 2</td><td class='box'>☐ 3</td><td class='box'>☐ 4</td><td class='box'>☐ 5</td></tr><tr><td class='resp'>Resposta 2</td><td class='box'>☐ 1</td><td class='box'>☐ 2</td><td class='box'>☐ 3</td><td class='box'>☐ 4</td><td class='box'>☐ 5</td></tr><tr><td rowspan='2'>2. Clareza e didática: a explicação passo a passo é fácil de acompanhar por um estudante do Ensino Médio.</td><td class='resp'>Resposta 1</td><td class='box'>☐ 1</td><td class='box'>☐ 2</td><td class='box'>☐ 3</td><td class='box'>☐ 4</td><td class='box'>☐ 5</td></tr><tr><td class='resp'>Resposta 2</td><td class='box'>☐ 1</td><td class='box'>☐ 2</td><td class='box'>☐ 3</td><td class='box'>☐ 4</td><td class='box'>☐ 5</td></tr><tr><td rowspan='2'>3. Linguagem adequada ao contexto do ENEM: tom acolhedor, termos corretos e exemplos adequados.</td><td class='resp'>Resposta 1</td><td class='box'>☐ 1</td><td class='box'>☐ 2</td><td class='box'>☐ 3</td><td class='box'>☐ 4</td><td class='box'>☐ 5</td></tr><tr><td class='resp'>Resposta 2</td><td class='box'>☐ 1</td><td class='box'>☐ 2</td><td class='box'>☐ 3</td><td class='box'>☐ 4</td><td class='box'>☐ 5</td></tr><tr><td rowspan='2'>4. Ausência de informações incorretas ou inventadas (regras, fórmulas ou fatos falsos).</td><td class='resp'>Resposta 1</td><td class='box'>☐ 1</td><td class='box'>☐ 2</td><td class='box'>☐ 3</td><td class='box'>☐ 4</td><td class='box'>☐ 5</td></tr><tr><td class='resp'>Resposta 2</td><td class='box'>☐ 1</td><td class='box'>☐ 2</td><td class='box'>☐ 3</td><td class='box'>☐ 4</td><td class='box'>☐ 5</td></tr></tbody></table><table class='crit'><tbody><tr><td>Qual resposta é melhor no conjunto?</td><td class='box'>☐ Resposta 1</td><td class='box'>☐ Resposta 2</td><td class='box'>☐ Empate</td></tr></tbody></table><p class='obs'><b>Observações:</b></p></div></section><section class='par'><h2>TU07</h2><div class='conversa'><p class='fala'><b>Estudante:</b> <span class='mt'>O que é a lei dos cossenos?</span></p><p class='fala'><b>Tutora:</b> <span class='mt'>Ela relaciona os três lados de um triângulo qualquer com o cosseno de um dos ângulos: $a^2 = b^2 + c^2 - 2bc \cdot \cos A$.</span></p><p class='fala nova'><b>Estudante:</b> E quando o ângulo é de 90 graus, ela vira o quê?</p></div><p class='pedido'>Respostas da tutora à última mensagem do estudante:</p><div class='respostas'><div class='resposta'><h3>Resposta 1</h3><div class='md'>Excelente pergunta! Quando o ângulo $ A $ é de 90°, a **lei dos cossenos** se transforma no **teorema de Pitágoras**. Vamos ver como isso acontece:
+
+A lei dos cossenos é dada por:  
+$$ a^2 = b^2 + c^2 - 2bc \cdot \cos A $$
+
+Agora, se $ A = 90^\circ $, sabemos que:  
+$$ \cos 90^\circ = 0 $$
+
+Substituindo na fórmula:  
+$$ a^2 = b^2 + c^2 - 2bc \cdot 0 $$  
+$$ a^2 = b^2 + c^2 $$
+
+Eis o **teorema de Pitágoras**! Isso significa que a lei dos cossenos é uma generalização do teorema de Pitágoras — ela funciona para qualquer triângulo, enquanto o teorema de Pitágoras é apenas um caso especial, quando o ângulo é reto.
+
+💡 **Intuição:**  
+Pense em um triângulo retângulo: a lei dos cossenos &quot;desliga&quot; o cosseno do ângulo reto (que é zero), deixando apenas a soma dos quadrados dos catetos, que é exatamente o que o teorema de Pitágoras diz.
+
+Se quiser, posso te mostrar como essa relação se aplica em exercícios do ENEM! 😊</div></div><div class='resposta'><h3>Resposta 2</h3><div class='md'>A lei dos cossenos, quando aplicada a um ângulo de 90°, simplifica-se para o teorema de Pitágoras! 😊
+
+Vamos ver como isso acontece:
+
+A lei dos cossenos é dada por:  
+$$ a^2 = b^2 + c^2 - 2bc \cdot \cos A $$
+
+Agora, se o ângulo $ A $ for de 90°, sabemos que:  
+$$ \cos 90^\circ = 0 $$
+
+Substituindo na fórmula:  
+$$ a^2 = b^2 + c^2 - 2bc \cdot 0 $$  
+$$ a^2 = b^2 + c^2 $$
+
+Eis o teorema de Pitágoras! 📐
+
+Isso significa que a lei dos cossenos é uma generalização do teorema de Pitágoras — ela funciona para qualquer triângulo, mas quando o ângulo é reto, ela se reduz ao teorema de Pitágoras.
+
+Se quiser, posso te mostrar como isso se aplica em um exemplo prático! 😊</div></div></div><div class='avaliacao'><table class='crit'><thead><tr><th>Critério (1 = discordo totalmente, 5 = concordo totalmente)</th><th></th><th class='box'>1</th><th class='box'>2</th><th class='box'>3</th><th class='box'>4</th><th class='box'>5</th></tr></thead><tbody><tr><td rowspan='2'>1. Correção conceitual e matemática: não há erros de cálculo nem definições incorretas.</td><td class='resp'>Resposta 1</td><td class='box'>☐ 1</td><td class='box'>☐ 2</td><td class='box'>☐ 3</td><td class='box'>☐ 4</td><td class='box'>☐ 5</td></tr><tr><td class='resp'>Resposta 2</td><td class='box'>☐ 1</td><td class='box'>☐ 2</td><td class='box'>☐ 3</td><td class='box'>☐ 4</td><td class='box'>☐ 5</td></tr><tr><td rowspan='2'>2. Clareza e didática: a explicação passo a passo é fácil de acompanhar por um estudante do Ensino Médio.</td><td class='resp'>Resposta 1</td><td class='box'>☐ 1</td><td class='box'>☐ 2</td><td class='box'>☐ 3</td><td class='box'>☐ 4</td><td class='box'>☐ 5</td></tr><tr><td class='resp'>Resposta 2</td><td class='box'>☐ 1</td><td class='box'>☐ 2</td><td class='box'>☐ 3</td><td class='box'>☐ 4</td><td class='box'>☐ 5</td></tr><tr><td rowspan='2'>3. Linguagem adequada ao contexto do ENEM: tom acolhedor, termos corretos e exemplos adequados.</td><td class='resp'>Resposta 1</td><td class='box'>☐ 1</td><td class='box'>☐ 2</td><td class='box'>☐ 3</td><td class='box'>☐ 4</td><td class='box'>☐ 5</td></tr><tr><td class='resp'>Resposta 2</td><td class='box'>☐ 1</td><td class='box'>☐ 2</td><td class='box'>☐ 3</td><td class='box'>☐ 4</td><td class='box'>☐ 5</td></tr><tr><td rowspan='2'>4. Ausência de informações incorretas ou inventadas (regras, fórmulas ou fatos falsos).</td><td class='resp'>Resposta 1</td><td class='box'>☐ 1</td><td class='box'>☐ 2</td><td class='box'>☐ 3</td><td class='box'>☐ 4</td><td class='box'>☐ 5</td></tr><tr><td class='resp'>Resposta 2</td><td class='box'>☐ 1</td><td class='box'>☐ 2</td><td class='box'>☐ 3</td><td class='box'>☐ 4</td><td class='box'>☐ 5</td></tr></tbody></table><table class='crit'><tbody><tr><td>Qual resposta é melhor no conjunto?</td><td class='box'>☐ Resposta 1</td><td class='box'>☐ Resposta 2</td><td class='box'>☐ Empate</td></tr></tbody></table><p class='obs'><b>Observações:</b></p></div></section><section class='par'><h2>TU08</h2><div class='conversa'><p class='fala'><b>Estudante:</b> <span class='mt'>O que é probabilidade?</span></p><p class='fala'><b>Tutora:</b> <span class='mt'>É a medida da chance de um evento ocorrer: casos favoráveis sobre casos possíveis.</span></p><p class='fala nova'><b>Estudante:</b> E como calculo a chance de dois eventos acontecerem juntos?</p></div><p class='pedido'>Respostas da tutora à última mensagem do estudante:</p><div class='respostas'><div class='resposta'><h3>Resposta 1</h3><div class='md'>Oi! 😊  
+A probabilidade de **dois eventos acontecerem juntos** (ou simultaneamente) é chamada de **probabilidade conjunta**. Para calcular isso, precisamos saber se os eventos são **independentes** ou **dependentes**. Vamos entender com um exemplo prático:
+
+---
+
+### 📌 Caso 1: Eventos **Independentes**
+Se os eventos **não se influenciam** um ao outro, a probabilidade de ambos ocorrerem é dada por:
+
+$$
+P(A \cap B) = P(A) \cdot P(B)
+$$
+
+**Exemplo:**  
+- A chance de sair o número 6 no primeiro dado é $P(A) = \frac{1}{6}$.  
+- A chance de sair o número 6 no segundo dado é $P(B) = \frac{1}{6}$.  
+- A chance de sair 6 em ambos os dados é:  
+  $$
+  P(A \cap B) = \frac{1}{6} \cdot \frac{1}{6} = \frac{1}{36}
+  $$
+
+---
+
+### 📌 Caso 2: Eventos **Dependentes**
+Se o resultado de um evento **afeta** o outro, usamos a fórmula:
+
+$$
+P(A \cap B) = P(A) \cdot P(B|A)
+$$
+
+**Exemplo:**  
+- Você pega uma carta de um baralho e, sem reposições, pega outra.  
+- A chance de pegar um **ás** na primeira carta é $P(A) = \frac{4}{52}$.  
+- A chance de pegar um **ás** na segunda carta, **dado que a primeira foi um ás**, é $P(B|A) = \frac{3}{51}$.  
+- A chance de pegar dois ás é:  
+  $$
+  P(A \cap B) = \frac{4}{52} \cdot \frac{3}{51} = \frac{12}{2652} = \frac{1}{221}
+  $$
+
+---
+
+### 🧠 Dica para o ENEM:
+- Em questões do ENEM, sempre **leia com atenção** se os eventos são independentes ou dependentes.
+- Em caso de dúvidas, **faça um diagrama de árvore** ou use a fórmula da probabilidade condicional.
+- Lembre-se: **probabilidade é sobre razão de casos favoráveis sobre casos possíveis**.
+
+Se quiser, posso te ajudar a resolver uma questão específica do ENEM sobre esse tema! 😊</div></div><div class='resposta'><h3>Resposta 2</h3><div class='md'>Oi! 😊  
+A probabilidade de dois eventos acontecerem juntos, ou seja, a probabilidade de **A e B ocorrerem simultaneamente**, é chamada de **probabilidade da interseção** dos eventos. Isso pode ser calculado de duas formas, dependendo da relação entre os eventos:
+
+1. **Se os eventos forem independentes** (o ocorrer de um não afeta o outro), usamos a fórmula:  
+   $$
+   P(A \cap B) = P(A) \cdot P(B)
+   $$  
+   Exemplo: Se lançarmos uma moeda e um dado, a probabilidade de sair cara **e** número par é:  
+   $$
+   P(\text{cara}) = \frac{1}{2}, \quad P(\text{número par}) = \frac{1}{2} \Rightarrow P(\text{cara e par}) = \frac{1}{2} \cdot \frac{1}{2} = \frac{1}{4}
+   $$
+
+2. **Se os eventos forem dependentes**, ou seja, o ocorrer de um afeta o outro, usamos a **probabilidade condicional**:  
+   $$
+   P(A \cap B) = P(A) \cdot P(B|A)
+   $$  
+   Onde $P(B|A)$ é a probabilidade de B ocorrer **dado que A já ocorreu**.  
+   Exemplo: Se tirarmos uma carta de um baralho e depois tirarmos outra **sem reposição**, a probabilidade de sair um rei **e** depois um ás é:  
+   $$
+   P(\text{rei}) = \frac{4}{52}, \quad P(\text{ás | rei}) = \frac{4}{51} \Rightarrow P(\text{rei e ás}) = \frac{4}{52} \cdot \frac{4}{51}
+   $$
+
+A ideia central é: **quando queremos saber a chance de dois eventos ocorrerem juntos, multiplicamos as probabilidades individuais**, mas só se eles forem independentes. Se houver dependência, precisamos considerar como o primeiro evento afeta o segundo.
+
+Quer ver um exemplo prático? 😊</div></div></div><div class='avaliacao'><table class='crit'><thead><tr><th>Critério (1 = discordo totalmente, 5 = concordo totalmente)</th><th></th><th class='box'>1</th><th class='box'>2</th><th class='box'>3</th><th class='box'>4</th><th class='box'>5</th></tr></thead><tbody><tr><td rowspan='2'>1. Correção conceitual e matemática: não há erros de cálculo nem definições incorretas.</td><td class='resp'>Resposta 1</td><td class='box'>☐ 1</td><td class='box'>☐ 2</td><td class='box'>☐ 3</td><td class='box'>☐ 4</td><td class='box'>☐ 5</td></tr><tr><td class='resp'>Resposta 2</td><td class='box'>☐ 1</td><td class='box'>☐ 2</td><td class='box'>☐ 3</td><td class='box'>☐ 4</td><td class='box'>☐ 5</td></tr><tr><td rowspan='2'>2. Clareza e didática: a explicação passo a passo é fácil de acompanhar por um estudante do Ensino Médio.</td><td class='resp'>Resposta 1</td><td class='box'>☐ 1</td><td class='box'>☐ 2</td><td class='box'>☐ 3</td><td class='box'>☐ 4</td><td class='box'>☐ 5</td></tr><tr><td class='resp'>Resposta 2</td><td class='box'>☐ 1</td><td class='box'>☐ 2</td><td class='box'>☐ 3</td><td class='box'>☐ 4</td><td class='box'>☐ 5</td></tr><tr><td rowspan='2'>3. Linguagem adequada ao contexto do ENEM: tom acolhedor, termos corretos e exemplos adequados.</td><td class='resp'>Resposta 1</td><td class='box'>☐ 1</td><td class='box'>☐ 2</td><td class='box'>☐ 3</td><td class='box'>☐ 4</td><td class='box'>☐ 5</td></tr><tr><td class='resp'>Resposta 2</td><td class='box'>☐ 1</td><td class='box'>☐ 2</td><td class='box'>☐ 3</td><td class='box'>☐ 4</td><td class='box'>☐ 5</td></tr><tr><td rowspan='2'>4. Ausência de informações incorretas ou inventadas (regras, fórmulas ou fatos falsos).</td><td class='resp'>Resposta 1</td><td class='box'>☐ 1</td><td class='box'>☐ 2</td><td class='box'>☐ 3</td><td class='box'>☐ 4</td><td class='box'>☐ 5</td></tr><tr><td class='resp'>Resposta 2</td><td class='box'>☐ 1</td><td class='box'>☐ 2</td><td class='box'>☐ 3</td><td class='box'>☐ 4</td><td class='box'>☐ 5</td></tr></tbody></table><table class='crit'><tbody><tr><td>Qual resposta é melhor no conjunto?</td><td class='box'>☐ Resposta 1</td><td class='box'>☐ Resposta 2</td><td class='box'>☐ Empate</td></tr></tbody></table><p class='obs'><b>Observações:</b></p></div></section><section class='par'><h2>TU09</h2><div class='conversa'><p class='fala'><b>Estudante:</b> <span class='mt'>Qual é o volume de uma esfera?</span></p><p class='fala'><b>Tutora:</b> <span class='mt'>O volume da esfera é $V = \dfrac{4}{3}\pi r^3$.</span></p><p class='fala nova'><b>Estudante:</b> E se o raio dobrar, o que acontece com ele?</p></div><p class='pedido'>Respostas da tutora à última mensagem do estudante:</p><div class='respostas'><div class='resposta'><h3>Resposta 1</h3><div class='md'>Oi! 😊  
+A pergunta é muito interessante e comum em questões de geometria. Vamos entender juntos o que acontece com o volume da esfera quando o raio dobra.
+
+Sabemos que o volume de uma esfera é dado pela fórmula:  
+$$ V = \frac{4}{3} \pi r^3 $$  
+Agora, se o raio dobra, ou seja, $ r&#x27; = 2r $, substituímos na fórmula:  
+$$ V&#x27; = \frac{4}{3} \pi (2r)^3 = \frac{4}{3} \pi (8r^3) = 8 \cdot \frac{4}{3} \pi r^3 $$  
+Portanto, o novo volume é **8 vezes maior** que o volume original.
+
+Isso acontece porque o volume depende do **cubo do raio**, então dobrar o raio resulta em um aumento de volume de $ 2^3 = 8 $ vezes.
+
+Para entender melhor, imagine uma bola de futebol: se você dobrar o raio, a bola fica muito maior, e o volume aumenta muito mais do que o dobro. 😄
+
+Se quiser, posso te mostrar como isso se aplica em um exemplo numérico também!  
+Como posso ajudar mais? 🌟</div></div><div class='resposta'><h3>Resposta 2</h3><div class='md'>Oi! 😊  
+A pergunta é muito interessante! Vamos entender juntos.  
+
+Sabemos que o volume de uma esfera é dado pela fórmula:  
+$$
+V = \frac{4}{3} \pi r^3
+$$  
+Agora, se o raio **dobrar**, ou seja, passa a ser $ 2r $, o novo volume será:  
+$$
+V&#x27; = \frac{4}{3} \pi (2r)^3 = \frac{4}{3} \pi \cdot 8r^3 = 8 \cdot \left( \frac{4}{3} \pi r^3 \right) = 8 \cdot V
+$$  
+Então, **o volume aumenta 8 vezes** quando o raio dobra!  
+
+Isso acontece porque a relação entre o raio e o volume é **cúbica**. Ou seja, se o raio aumenta em um fator $ k $, o volume aumenta em $ k^3 $. Nesse caso, $ k = 2 $, então $ k^3 = 8 $.  
+
+Para entender melhor, imagine um cubo: se o lado dobra, o volume aumenta 8 vezes também. A esfera, embora tenha forma diferente, segue a mesma lógica de proporcionalidade cúbica.  
+
+Se quiser, posso te mostrar mais exemplos ou ajudar com exercícios sobre volume de sólidos! 😊</div></div></div><div class='avaliacao'><table class='crit'><thead><tr><th>Critério (1 = discordo totalmente, 5 = concordo totalmente)</th><th></th><th class='box'>1</th><th class='box'>2</th><th class='box'>3</th><th class='box'>4</th><th class='box'>5</th></tr></thead><tbody><tr><td rowspan='2'>1. Correção conceitual e matemática: não há erros de cálculo nem definições incorretas.</td><td class='resp'>Resposta 1</td><td class='box'>☐ 1</td><td class='box'>☐ 2</td><td class='box'>☐ 3</td><td class='box'>☐ 4</td><td class='box'>☐ 5</td></tr><tr><td class='resp'>Resposta 2</td><td class='box'>☐ 1</td><td class='box'>☐ 2</td><td class='box'>☐ 3</td><td class='box'>☐ 4</td><td class='box'>☐ 5</td></tr><tr><td rowspan='2'>2. Clareza e didática: a explicação passo a passo é fácil de acompanhar por um estudante do Ensino Médio.</td><td class='resp'>Resposta 1</td><td class='box'>☐ 1</td><td class='box'>☐ 2</td><td class='box'>☐ 3</td><td class='box'>☐ 4</td><td class='box'>☐ 5</td></tr><tr><td class='resp'>Resposta 2</td><td class='box'>☐ 1</td><td class='box'>☐ 2</td><td class='box'>☐ 3</td><td class='box'>☐ 4</td><td class='box'>☐ 5</td></tr><tr><td rowspan='2'>3. Linguagem adequada ao contexto do ENEM: tom acolhedor, termos corretos e exemplos adequados.</td><td class='resp'>Resposta 1</td><td class='box'>☐ 1</td><td class='box'>☐ 2</td><td class='box'>☐ 3</td><td class='box'>☐ 4</td><td class='box'>☐ 5</td></tr><tr><td class='resp'>Resposta 2</td><td class='box'>☐ 1</td><td class='box'>☐ 2</td><td class='box'>☐ 3</td><td class='box'>☐ 4</td><td class='box'>☐ 5</td></tr><tr><td rowspan='2'>4. Ausência de informações incorretas ou inventadas (regras, fórmulas ou fatos falsos).</td><td class='resp'>Resposta 1</td><td class='box'>☐ 1</td><td class='box'>☐ 2</td><td class='box'>☐ 3</td><td class='box'>☐ 4</td><td class='box'>☐ 5</td></tr><tr><td class='resp'>Resposta 2</td><td class='box'>☐ 1</td><td class='box'>☐ 2</td><td class='box'>☐ 3</td><td class='box'>☐ 4</td><td class='box'>☐ 5</td></tr></tbody></table><table class='crit'><tbody><tr><td>Qual resposta é melhor no conjunto?</td><td class='box'>☐ Resposta 1</td><td class='box'>☐ Resposta 2</td><td class='box'>☐ Empate</td></tr></tbody></table><p class='obs'><b>Observações:</b></p></div></section><section class='par'><h2>TU10</h2><div class='conversa'><p class='fala'><b>Estudante:</b> <span class='mt'>Pode me explicar o teorema de Pitágoras?</span></p><p class='fala'><b>Tutora:</b> <span class='mt'>Num triângulo retângulo, o quadrado da hipotenusa é igual à soma dos quadrados dos catetos.</span></p><p class='fala nova'><b>Estudante:</b> Tem alguma demonstração disso?</p></div><p class='pedido'>Respostas da tutora à última mensagem do estudante:</p><div class='respostas'><div class='resposta'><h3>Resposta 1</h3><div class='md'>Claro! Vamos explorar uma demonstração clássica do teorema de Pitágoras, que é uma das mais intuitivas e didáticas. Vamos considerar um triângulo retângulo com catetos de medidas $ a $ e $ b $, e hipotenusa $ c $.
+
+### Demonstração do Teorema de Pitágoras
+
+1. **Construção de Quadrados**  
+   Vamos construir três quadrados:  
+   - Um quadrado com lado $ a $, área $ a^2 $.  
+   - Um quadrado com lado $ b $, área $ b^2 $.  
+   - Um quadrado com lado $ c $, área $ c^2 $.
+
+2. **Relação entre Áreas**  
+   O teorema afirma que a soma das áreas dos quadrados construídos sobre os catetos é igual à área do quadrado construído sobre a hipotenusa.  
+   Matematicamente, isso se expressa como:  
+   $$
+   a^2 + b^2 = c^2
+   $$
+
+3. **Visualização Geométrica**  
+   Imagine um triângulo retângulo e os quadrados construídos sobre cada um dos seus lados. A área do quadrado maior (sobre a hipotenusa) é exatamente igual à soma das áreas dos dois quadrados menores (sobre os catetos). Isso pode ser visualizado com desenhos ou até mesmo com materiais concretos, como palitos ou blocos.
+
+4. **Exemplo Prático**  
+   Se os catetos de um triângulo retângulo têm medidas $ a = 3 $ e $ b = 4 $, a hipotenusa $ c $ pode ser calculada assim:  
+   $$
+   c^2 = a^2 + b^2 = 3^2 + 4^2 = 9 + 16 = 25
+   $$
+   $$
+   c = \sqrt{25} = 5
+   $$
+
+### Conclusão
+O teorema de Pitágoras é uma relação fundamental na geometria, e sua demonstração através do cálculo de áreas é uma forma poderosa de compreendê-lo. Com essa lógica, você pode resolver problemas envolvendo triângulos retângulos, como encontrar a medida de um lado desconhecido, o que é comum em questões do ENEM.
+
+Se quiser, posso te mostrar outras demonstrações, como a que usa semelhança de triângulos ou até mesmo uma demonstração visual com desenhos. Estou aqui para te ajudar! 😊</div></div><div class='resposta'><h3>Resposta 2</h3><div class='md'>Claro! Vamos explorar uma demonstração clássica do teorema de Pitágoras, que é uma das mais intuitivas e geométricas. Vamos supor que temos um triângulo retângulo com catetos $a$ e $b$, e hipotenusa $c$.
+
+### Passo a Passo da Demonstração:
+
+1. **Construa quadrados sobre cada lado do triângulo:**
+   - Construa um quadrado com lado $a$.
+   - Construa um quadrado com lado $b$.
+   - Construa um quadrado com lado $c$.
+
+2. **Calcule as áreas dos quadrados:**
+   - Área do quadrado sobre $a$: $a^2$
+   - Área do quadrado sobre $b$: $b^2$
+   - Área do quadrado sobre $c$: $c^2$
+
+3. **Compare as áreas:**
+   - A área do quadrado sobre $c$ (hipotenusa) é igual à soma das áreas dos quadrados sobre $a$ e $b$.
+
+4. **Conclusão:**
+   - Isso nos leva à fórmula do teorema de Pitágoras:  
+     $$
+     c^2 = a^2 + b^2
+     $$
+
+### Intuição Geométrica:
+Imagine que você tem um triângulo retângulo e constrói quadrados sobre cada um dos seus lados. A área do maior quadrado (sobre a hipotenusa) é exatamente igual à soma das áreas dos dois menores (sobre os catetos). Isso é uma forma visual de entender por que o teorema é verdadeiro.
+
+Se quiser, posso mostrar outra demonstração, como a que usa semelhança de triângulos ou álgebra. O que você prefere? 😊</div></div></div><div class='avaliacao'><table class='crit'><thead><tr><th>Critério (1 = discordo totalmente, 5 = concordo totalmente)</th><th></th><th class='box'>1</th><th class='box'>2</th><th class='box'>3</th><th class='box'>4</th><th class='box'>5</th></tr></thead><tbody><tr><td rowspan='2'>1. Correção conceitual e matemática: não há erros de cálculo nem definições incorretas.</td><td class='resp'>Resposta 1</td><td class='box'>☐ 1</td><td class='box'>☐ 2</td><td class='box'>☐ 3</td><td class='box'>☐ 4</td><td class='box'>☐ 5</td></tr><tr><td class='resp'>Resposta 2</td><td class='box'>☐ 1</td><td class='box'>☐ 2</td><td class='box'>☐ 3</td><td class='box'>☐ 4</td><td class='box'>☐ 5</td></tr><tr><td rowspan='2'>2. Clareza e didática: a explicação passo a passo é fácil de acompanhar por um estudante do Ensino Médio.</td><td class='resp'>Resposta 1</td><td class='box'>☐ 1</td><td class='box'>☐ 2</td><td class='box'>☐ 3</td><td class='box'>☐ 4</td><td class='box'>☐ 5</td></tr><tr><td class='resp'>Resposta 2</td><td class='box'>☐ 1</td><td class='box'>☐ 2</td><td class='box'>☐ 3</td><td class='box'>☐ 4</td><td class='box'>☐ 5</td></tr><tr><td rowspan='2'>3. Linguagem adequada ao contexto do ENEM: tom acolhedor, termos corretos e exemplos adequados.</td><td class='resp'>Resposta 1</td><td class='box'>☐ 1</td><td class='box'>☐ 2</td><td class='box'>☐ 3</td><td class='box'>☐ 4</td><td class='box'>☐ 5</td></tr><tr><td class='resp'>Resposta 2</td><td class='box'>☐ 1</td><td class='box'>☐ 2</td><td class='box'>☐ 3</td><td class='box'>☐ 4</td><td class='box'>☐ 5</td></tr><tr><td rowspan='2'>4. Ausência de informações incorretas ou inventadas (regras, fórmulas ou fatos falsos).</td><td class='resp'>Resposta 1</td><td class='box'>☐ 1</td><td class='box'>☐ 2</td><td class='box'>☐ 3</td><td class='box'>☐ 4</td><td class='box'>☐ 5</td></tr><tr><td class='resp'>Resposta 2</td><td class='box'>☐ 1</td><td class='box'>☐ 2</td><td class='box'>☐ 3</td><td class='box'>☐ 4</td><td class='box'>☐ 5</td></tr></tbody></table><table class='crit'><tbody><tr><td>Qual resposta é melhor no conjunto?</td><td class='box'>☐ Resposta 1</td><td class='box'>☐ Resposta 2</td><td class='box'>☐ Empate</td></tr></tbody></table><p class='obs'><b>Observações:</b></p></div></section>
+
+<script>
+const NO_WORD = String.raw`(?:(?![A-Za-zÀ-ÿ]{2})[^\n$])`;
+const INLINE_DOLLAR_SOURCE =
+  String.raw`(?<![a-zA-Z\\])\$(?:(?!\s)[^\n$]+?(?<!\s)|\s[^\n$]*?[\\^_={][^\n$]*?|\s${NO_WORD}*?[^\s$]${NO_WORD}*?)\$(?!\d)`;
+const MATH = new RegExp(String.raw`\$\$[\s\S]+?\$\$|\\\[[\s\S]+?\\\]|\\\([\s\S]+?\\\)|` + INLINE_DOLLAR_SOURCE, 'g');
+const ABRE = String.fromCharCode(0xE000), FECHA = String.fromCharCode(0xE001);  // marcadores das fórmulas protegidas
+const ESC = s => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+// markdown = true: texto das respostas (Markdown + fórmulas); false: alternativas (só fórmulas: "64." não vira lista)
+function renderiza(el, markdown) {
+  if (!window.katex || (markdown && !window.marked)) { el.classList.add('raw'); return; }
+  const formulas = [];
+  const protegido = el.textContent.replace(MATH, m => { formulas.push(m); return ABRE + (formulas.length - 1) + FECHA; });
+  const base = markdown ? marked.parse(protegido, { breaks: true }) : ESC(protegido);
+  el.innerHTML = base.replace(new RegExp(ABRE + '(\\d+)' + FECHA, 'g'), (_, i) => {
+    const m = formulas[+i];
+    const bloco = m.startsWith('$$') || m.startsWith('\\[');
+    const corpo = m.startsWith('$$') || m.startsWith('\\') ? m.slice(2, -2) : m.slice(1, -1);
+    // conectivo dentro da fórmula ("$\\frac{1}{50} e \\frac{1}{60}$") sairia em itálico, como a constante e
+    const tex = corpo.trim().replace(/([\d}])\s+(e|ou)\s+(?=[\\\d])/g, '$1\\text{ $2 }');
+    try {
+      const html = katex.renderToString(tex, { displayMode: bloco, throwOnError: false });
+      return bloco ? `<span class="fbloco" data-tex="${encodeURIComponent(tex)}">${html}</span>` : html;
+    }
+    catch (e) { return m; }
+  });
+}
+document.querySelectorAll('.md').forEach(el => renderiza(el, true));
+document.querySelectorAll('.mt').forEach(el => renderiza(el, false));
+// Fórmula em bloco mais larga que a coluna: no papel, a rolagem horizontal vira corte. Se falta pouco, a fonte é
+// reduzida (até 80%); se falta muito, a fórmula é refeita em modo de linha, que quebra no "=" e no "×".
+function ajustaFormulas() {
+  document.querySelectorAll('.fbloco').forEach(f => {
+    const tex = decodeURIComponent(f.dataset.tex);
+    f.style.fontSize = ''; f.classList.remove('quebra');
+    f.innerHTML = katex.renderToString(tex, { displayMode: true, throwOnError: false });
+    const d = f.querySelector('.katex-display');
+    if (!d || d.scrollWidth <= d.clientWidth + 1) return;
+    const r = d.clientWidth / d.scrollWidth;
+    if (r >= 0.8) { f.style.fontSize = Math.floor(98 * r) + '%'; return; }
+    f.innerHTML = katex.renderToString('\\displaystyle ' + tex, { displayMode: false, throwOnError: false });
+    f.classList.add('quebra');
+    if (f.scrollWidth > f.clientWidth + 1) f.style.fontSize = Math.floor(98 * f.clientWidth / f.scrollWidth) + '%';
+  });
+}
+window.ajustaFormulas = ajustaFormulas;
+ajustaFormulas();
+window.addEventListener('beforeprint', ajustaFormulas);
+</script>
+
+</body></html>

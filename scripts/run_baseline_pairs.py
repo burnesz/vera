@@ -40,7 +40,7 @@ from app.services.feedback_service import FeedbackService, FeedbackVerificationE
 from app.services.llm_client import cliente_tutoria  # noqa: E402
 from app.services.vectorstore import PineconeVectorStore  # noqa: E402
 
-CSV_ITENS = os.path.join(ROOT, "data", "itens_prova_2009_2024_enriquecido.csv")
+CSV_ITENS = os.path.join(ROOT, "data", "itens_prova_2009_2024_llm_texto.csv")
 HABILIDADES = os.path.join(ROOT, "data", "habilidades_queries.json")
 DIALOGOS = os.path.join(ROOT, "evaluation", "data", "rewriting_dialogs.json")
 DIR_RESULTADOS = os.path.join(ROOT, "evaluation", "results")
