@@ -25,6 +25,15 @@ interface ChatPageProps {
   onNavigate: (page: string) => void;
 }
 
+// Nome exibido de uma fonte: o título do PDF, salvo quando ele não identifica o material (as apostilas trazem só o
+// ano, "2024"); nesse caso, o nome do arquivo sem a extensão.
+function nomeDaFonte(title?: string | null, documentName?: string | null, idx = 0): string {
+  const titulo = (title || '').trim();
+  if (titulo && !/^\d+$/.test(titulo)) return titulo;
+  if (documentName) return documentName.replace(/\.pdf$/i, '').replace(/[_-]+/g, ' ');
+  return titulo || `Doc ${idx + 1}`;
+}
+
 const WELCOME_MESSAGE: ChatMessage = {
   id: 'welcome-default',
   sender: 'vera',
@@ -759,7 +768,7 @@ export const ChatPage: React.FC<ChatPageProps> = ({ onNavigate }) => {
                                 padding: '0.15rem 0.4rem',
                               }}
                             >
-                              {chunk.title || chunk.document_name || `Doc ${idx + 1}`}
+                              {nomeDaFonte(chunk.title, chunk.document_name, idx)}
                             </span>
                           ))}
                         </div>

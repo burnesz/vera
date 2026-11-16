@@ -244,6 +244,30 @@ function renderKaTeX(math: string, displayMode: boolean, key: string) {
   }
 }
 
+// Linha com marcação Markdown de bloco que o Qwen3 usa no feedback e na tutora:
+// títulos (`### Título`) viram negrito, itens (`- item` / `* item`) ganham marcador e separadores (`---`) somem.
+function renderMarkdownLine(line: string): React.ReactNode {
+  const heading = line.match(/^\s*#{1,6}\s+(.*)$/);
+  if (heading) {
+    return (
+      <strong style={{ display: 'inline-block', fontSize: '1.05em', marginTop: '0.25rem', color: 'var(--ocean-900)' }}>
+        {renderInlineTokens(heading[1].replace(/^\*\*(.*)\*\*$/, '$1'))}
+      </strong>
+    );
+  }
+  if (/^\s*(-{3,}|\*{3,}|_{3,})\s*$/.test(line)) return null;
+  const item = line.match(/^(\s*)[-*]\s+(.*)$/);
+  if (item) {
+    return (
+      <span style={{ paddingLeft: `${0.6 + item[1].length * 0.5}rem` }}>
+        {'• '}
+        {renderInlineTokens(item[2])}
+      </span>
+    );
+  }
+  return renderInlineTokens(line);
+}
+
 // Renderiza parágrafos de texto comum
 function renderParagraphs(text: string, keyPrefix: string | number) {
   const paragraphs = text.split(/\n\s*\n/);
@@ -258,7 +282,7 @@ function renderParagraphs(text: string, keyPrefix: string | number) {
           <p key={`p-${keyPrefix}-${pIdx}`} style={{ marginBottom: '0.75rem', color: 'var(--text-primary)' }}>
             {lines.map((line, lIdx) => (
               <React.Fragment key={`l-${lIdx}`}>
-                {renderInlineTokens(line)}
+                {renderMarkdownLine(line)}
                 {lIdx < lines.length - 1 && <br />}
               </React.Fragment>
             ))}

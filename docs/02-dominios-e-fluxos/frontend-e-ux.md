@@ -71,6 +71,9 @@ O frontend da plataforma VERA (`frontend/`) é uma Single Page Application (SPA)
      - **com espaços**: `$ 150 \times 480 = 72\,000 $`, `$ V $`, `$ f(x) $`, válida apenas se o conteúdo tiver marca de LaTeX (`\`, `^`, `_`, `=` ou `{`) ou não tiver nenhuma palavra de 2 ou mais letras. Assim, um texto como "paguei $ 5 e depois $ 10" continua como texto.
    - Decisão de 2026-11-16: o Qwen3 do feedback e da tutora (`RN-INF07`) costuma escrever as fórmulas inline com espaços, e elas apareciam como texto cru no card de feedback e no chat.
    - Uma fórmula cortada pelo teto de tokens (um `$$` sem fechamento) também aparece crua. Isso se corrige na geração, pelo `LLM_MAX_TOKENS_TUTORIA`, e não no `MathText`.
+   - **Markdown de bloco (`renderMarkdownLine`)**, decisão de 2026-11-16: o Qwen3 escreve títulos (`### Diagnóstico`), listas (`- item`) e separadores (`---`), que apareciam como texto cru no feedback e na tutora. Agora os títulos viram negrito, os itens ganham marcador e os separadores somem.
+   - **Nome das fontes na tutora (`nomeDaFonte` em `ChatPage.tsx`)**: as apostilas TEO têm como título do PDF apenas o ano ("2024"). Quando o título é só um número, a fonte é exibida pelo nome do arquivo, sem a extensão.
+   - **Capturas de tela**: as telas da demonstração da monografia estão em [`docs/assets/capturas-tela/`](../assets/capturas-tela/README.md), geradas por `scripts/capturar_telas.py`.
 
 ---
 
