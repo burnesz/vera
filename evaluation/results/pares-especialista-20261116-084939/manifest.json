@@ -1,0 +1,25 @@
+{
+  "criado_em": "2026-11-16T08:49:39",
+  "commit_vera": "0a8150523f6049e574e7c17847bdd346063b72e4",
+  "modelo": "qwen3:8b-q4_K_M (think=False)",
+  "ollama_versao": "0.34.1",
+  "endpoint": "http://localhost:11434",
+  "n_pares_por_fluxo": 10,
+  "semente": 2026,
+  "top_k_contexto": 3,
+  "condicoes": {
+    "vera": "FeedbackService.gerar_feedback_verificado (RAG + verificação RN-FB04) e ChatService.send_message (reescrita + RAG)",
+    "baseline": "BaselineService: mesmos prompts, sem RAG, sem reescrita e sem verificação"
+  },
+  "max_tokens": 3072,
+  "num_ctx": 8192,
+  "timeout_s": 1200.0,
+  "observacao": "Refaz a rodada 20261115-232941, em que o teto de 1024 tokens cortou 11 das 40 respostas (6 pares de feedback e 1 de tutoria).",
+  "regeracoes": [
+    {
+      "par": "T01",
+      "condicao": "baseline",
+      "motivo": "loop degenerado ('<p' repetido) até o teto de 3072 tokens (done_reason=length); falha técnica de decodificação, regerada uma vez por decisão do autor (escolha conservadora: favorece a baseline)"
+    }
+  ]
+}

@@ -24,7 +24,7 @@ related_notes:
 
 Para fundamentar a monografia de TCC sob a ótica da metodologia **Design Science Research (DSR)**, a plataforma VERA foi projetada para permitir a avaliação empírica rigorosa dos artefatos construídos frente a uma condição de controle científica (**Baseline Zero-Shot**).
 
-> **Status (2026-11-15)**: a avaliação da recuperação (Seção 2.1) está implementada em `evaluation/quantitative.py`, `evaluation/bm25.py` e `evaluation/retrieval_experiment.py`. A baseline zero-shot está implementada em `app/services/baseline_service.py`, e os pares para o especialista são gerados por `scripts/run_baseline_pairs.py` (Seção 1.1). `evaluation/likert_rubric.py` ainda é um arquivo vazio (Fase 4 do [roadmap](../04-operacoes-e-roadmap/roadmap-e-status.md)).
+> **Status (2026-11-15)**: a avaliação da recuperação (Seção 2.1) está implementada em `evaluation/quantitative.py`, `evaluation/bm25.py` e `evaluation/retrieval_experiment.py`. A baseline zero-shot está implementada em `app/services/baseline_service.py`, e os pares para o especialista são gerados por `scripts/run_baseline_pairs.py` (Seção 1.1). A rubrica Likert de feedback e tutoria e o caderno cego estão em `evaluation/likert_rubric.py` (Seção 3.3).
 
 ---
 
@@ -48,6 +48,19 @@ Para fundamentar a monografia de TCC sob a ótica da metodologia **Design Scienc
 - Se a VERA recusar um feedback (`RN-FB04`), o insumo é registrado como recusado e o próximo candidato entra no lugar. A taxa de recusas é um resultado.
 - Os tempos de cada condição são gravados, o que dá a latência de cada fluxo (Seção 2, item 2).
 - A rodada é retomável (`--retomar <pasta>`), e o `manifest.json` registra o commit, o modelo, a versão do Ollama e a semente.
+- **A rodada `pares-especialista-20261115-232941` não deve ir ao especialista.** Ela foi gerada com o teto de 1024 tokens. No feedback, 5 respostas da VERA (F03, F04, F05, F07 e F10) e 5 da baseline (F04, F05, F06, F07 e F10) saíram cortadas, várias delas no meio de uma fórmula. Na tutora, 1 resposta da VERA saiu cortada (T05). Os pares foram regerados em `pares-especialista-20261116-084939`, com `LLM_MAX_TOKENS_TUTORIA=3072` e `LLM_NUM_CTX=8192` nas duas condições (o `manifest.json` registra os dois valores).
+- **Rodada válida: `pares-especialista-20261116-084939`.**
+  - 20 pares, sem recusas, e a VERA passou na verificação contra o gabarito (`RN-FB04`) na primeira tentativa nos 10 feedbacks.
+  - Nenhuma resposta saiu cortada.
+  - **Exceção, o par T01:** a resposta da baseline entrou em loop (`<p` repetido) até o teto de 3072 tokens (`done_reason=length`). Na rodada anterior, o mesmo insumo tinha dado uma resposta normal, então foi tratado como falha técnica de decodificação, e a resposta foi regerada uma vez. A escolha é conservadora, porque favorece a baseline. A resposta original fica em `baseline_descartada`, no próprio registro, e em `regeracoes`, no `manifest.json`.
+  - **Tempo médio por resposta:**
+
+    | Fluxo | VERA | Baseline |
+    |---|---|---|
+    | Feedback | 4,7 min | 3,3 min |
+    | Tutora | 3,3 min | 2,3 min |
+
+    As medições foram feitas no notebook com RTX 3050 de 4 GB.
 
 ---
 
@@ -202,6 +215,25 @@ Aplicação de questionário **duplo-cego** com especialista humano em Matemáti
 3. **Qualidade Pedagógica dos Distratores**: plausibilidade das alternativas incorretas frente a erros cognitivos comuns.
 4. **Adequação do Grau de Dificuldade**: compatibilidade com o nível exigido na prova de Matemática do ENEM.
 5. **Alinhamento à Habilidade da Matriz (`H01`–`H30`)**: aderência estrita ao descritor oficial do INEP.
+
+---
+
+### 3.3 Caderno cego e análise
+
+As questões inéditas (Seção 3.2) são avaliadas no caderno do repositório `questoes-ineditas-enem` (`scripts/avaliacao_especialista/montar_caderno.py`): 40 itens, que somam a validação humana do Experimento 2 de seleção do gerador e os 10 pares VERA × baseline, avaliados um a um, misturados e sem indicação de origem.
+
+O feedback e a tutora (Seção 3.1) têm um caderno próprio, montado a partir de uma rodada de pares:
+
+```bash
+./.venv/bin/python scripts/montar_caderno_especialista.py evaluation/results/pares-especialista-<data>
+./.venv/bin/python scripts/analisar_caderno_especialista.py evaluation/results/pares-especialista-<data> ficha.csv
+```
+
+- **Formato:** para cada insumo (a questão errada ou a conversa), as duas respostas aparecem lado a lado como "Resposta 1" e "Resposta 2", numa ordem sorteada por par (semente 2026). Cada resposta recebe uma nota de 1 a 5 nos 4 critérios. No fim, o especialista diz qual é melhor no conjunto, ou se há empate.
+- **Cegamento:** só o texto final (`conteudo`) é mostrado. O raciocínio interno e as fontes ficam de fora, porque só a VERA tem fontes. A chave (`caderno/chave_caderno.json`) não vai para o especialista.
+- **Renderização:** o Markdown e as fórmulas são renderizados no navegador com KaTeX, pela mesma regra de `$` inline do `MathText.tsx`. As alternativas recebem só as fórmulas, sem Markdown, para "64." não virar lista numerada. Os emojis usam a fonte Noto Color Emoji, do Google Fonts. Sem internet, o texto aparece cru. A versão em PDF é gerada a partir do HTML já renderizado.
+- **Barreira contra respostas cortadas:** o script recusa a rodada se alguma resposta estiver vazia, tiver um `$$` sem fechar ou terminar no meio de uma palavra ou conta. Na rodada de 1024 tokens, essa verificação apontou as 11 respostas cortadas.
+- **Análise:** por fluxo, a média da VERA e da baseline em cada critério, o teste de Wilcoxon pareado, a contagem de preferências e a regra `RN-AVAL01`. Com mais de um avaliador, cada par usa a média das notas.
 
 ---
 
