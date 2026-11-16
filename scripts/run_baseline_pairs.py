@@ -105,6 +105,8 @@ def manifest(pasta, args, modelo):
         "criado_em": datetime.datetime.now().isoformat(timespec="seconds"), "commit_vera": commit,
         "modelo": modelo, "ollama_versao": ollama, "endpoint": settings.LLM_ENDPOINT_URL,
         "n_pares_por_fluxo": args.n, "semente": args.semente, "top_k_contexto": 3,
+        "max_tokens": settings.LLM_MAX_TOKENS_TUTORIA, "num_ctx": settings.LLM_NUM_CTX,
+        "timeout_s": settings.LLM_TIMEOUT_SECONDS,
         "condicoes": {
             "vera": "FeedbackService.gerar_feedback_verificado (RAG + verificação RN-FB04) e ChatService.send_message "
                     "(reescrita + RAG)",
