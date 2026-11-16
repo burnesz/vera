@@ -1,0 +1,757 @@
+cenario,sistema,id,tipo,eixo,tamanho,topico_alvo,hit@1,hit@3,hit@5,hit@10,mrr@10,ndcg@10,cp@3,latency_ms,top1_document
+fechado,e5_denso,Q001,direta,Números e operações,grande (>20 chunks),ENEM_MAT_01_conjuntos-numericos.pdf,1.0,1.0,1.0,1.0,1.0,0.7842289772937577,0.6666666666666666,420.16,ENEM_MAT_01_conjuntos-numericos.pdf
+fechado,e5_denso,Q002,contextual,Números e operações,grande (>20 chunks),ENEM_MAT_01_conjuntos-numericos.pdf,1.0,1.0,1.0,1.0,1.0,0.876484703276324,1.0,1071.6,ENEM_MAT_01_conjuntos-numericos.pdf
+fechado,e5_denso,Q003,direta,Números e operações,medio (8-20 chunks),ENEM_MAT_01_numeros-irracionais.pdf,1.0,1.0,1.0,1.0,1.0,0.4215828880095359,0.3333333333333333,484.29,ENEM_MAT_01_numeros-irracionais.pdf
+fechado,e5_denso,Q004,contextual,Números e operações,medio (8-20 chunks),ENEM_MAT_01_numeros-irracionais.pdf,0.0,0.0,1.0,1.0,0.2,0.18479623443668,0.0,605.14,ENEM_MAT_03_teorema-de-pitagoras.pdf
+fechado,e5_denso,Q005,direta,Números e operações,grande (>20 chunks),ENEM_MAT_01_numeros-racionais.pdf,1.0,1.0,1.0,1.0,1.0,0.9321572773044168,1.0,470.03,ENEM_MAT_01_numeros-racionais.pdf
+fechado,e5_denso,Q006,contextual,Números e operações,grande (>20 chunks),ENEM_MAT_01_numeros-racionais.pdf,1.0,1.0,1.0,1.0,1.0,0.8630152897016882,1.0,584.72,ENEM_MAT_01_numeros-racionais.pdf
+fechado,e5_denso,Q007,direta,Números e operações,pequeno (<=7 chunks),ENEM_MAT_01_porcentagem.pdf,1.0,1.0,1.0,1.0,1.0,0.9278750145771438,1.0,449.83,ENEM_MAT_01_porcentagem.pdf
+fechado,e5_denso,Q008,contextual,Números e operações,pequeno (<=7 chunks),ENEM_MAT_01_porcentagem.pdf,0.0,0.0,1.0,1.0,0.25,0.3276645008081572,0.0,564.86,ENEM_MAT_06_juros-simples.pdf
+fechado,e5_denso,Q009,direta,Números e operações,medio (8-20 chunks),ENEM_MAT_01_progressao-aritmetica.pdf,1.0,1.0,1.0,1.0,1.0,0.8611375561264454,0.6666666666666666,534.07,ENEM_MAT_01_progressao-aritmetica.pdf
+fechado,e5_denso,Q010,contextual,Números e operações,medio (8-20 chunks),ENEM_MAT_01_progressao-aritmetica.pdf,0.0,0.0,0.0,0.0,0.0,0.0,0.0,475.06,ENEM_MAT_06_juros-compostos.pdf
+fechado,e5_denso,Q011,direta,Números e operações,medio (8-20 chunks),ENEM_MAT_01_progressao-geometrica.pdf,1.0,1.0,1.0,1.0,1.0,0.6995255576233451,1.0,363.52,ENEM_MAT_01_progressao-geometrica.pdf
+fechado,e5_denso,Q012,contextual,Números e operações,medio (8-20 chunks),ENEM_MAT_01_progressao-geometrica.pdf,0.0,0.0,0.0,0.0,0.0,0.0,0.0,281.48,ENEM_MAT_01_conjuntos-numericos.pdf
+fechado,e5_denso,Q013,direta,Números e operações,pequeno (<=7 chunks),ENEM_MAT_01_razao-e-proporcao.pdf,1.0,1.0,1.0,1.0,1.0,0.7385267279697285,1.0,322.64,ENEM_MAT_01_razao-e-proporcao.pdf
+fechado,e5_denso,Q014,contextual,Números e operações,pequeno (<=7 chunks),ENEM_MAT_01_razao-e-proporcao.pdf,0.0,0.0,0.0,0.0,0.0,0.0,0.0,424.54,ENEM_MAT_05_arranjo-combinatoria.pdf
+fechado,e5_denso,Q015,direta,Números e operações,pequeno (<=7 chunks),ENEM_MAT_01_regra-de-tres.pdf,1.0,1.0,1.0,1.0,1.0,0.5361025868094468,0.6666666666666666,342.5,ENEM_MAT_01_regra-de-tres.pdf
+fechado,e5_denso,Q016,contextual,Números e operações,pequeno (<=7 chunks),ENEM_MAT_01_regra-de-tres.pdf,1.0,1.0,1.0,1.0,1.0,0.32870979613651274,0.3333333333333333,301.71,ENEM_MAT_01_regra-de-tres.pdf
+fechado,e5_denso,Q017,direta,Números e operações,grande (>20 chunks),ENEM_MAT_01_sistema-de-numeracao.pdf,1.0,1.0,1.0,1.0,1.0,1.0,1.0,297.27,ENEM_MAT_01_sistema-de-numeracao.pdf
+fechado,e5_denso,Q018,contextual,Números e operações,grande (>20 chunks),ENEM_MAT_01_sistema-de-numeracao.pdf,1.0,1.0,1.0,1.0,1.0,0.42838543210841196,0.6666666666666666,240.22,ENEM_MAT_01_sistema-de-numeracao.pdf
+fechado,e5_denso,Q019,direta,Álgebra e funções,medio (8-20 chunks),ENEM_MAT_02_equacao-do-primeiro-grau.pdf,0.0,1.0,1.0,1.0,0.3333333333333333,0.19518900079066107,0.3333333333333333,267.06,ENEM_MAT_02_equacao-do-segundo-grau.pdf
+fechado,e5_denso,Q020,contextual,Álgebra e funções,medio (8-20 chunks),ENEM_MAT_02_equacao-do-primeiro-grau.pdf,0.0,0.0,0.0,0.0,0.0,0.0,0.0,307.42,ENEM_MAT_01_conjuntos-numericos.pdf
+fechado,e5_denso,Q021,direta,Álgebra e funções,grande (>20 chunks),ENEM_MAT_02_equacao-do-segundo-grau.pdf,1.0,1.0,1.0,1.0,1.0,0.8006937664098819,1.0,281.76,ENEM_MAT_02_equacao-do-segundo-grau.pdf
+fechado,e5_denso,Q022,contextual,Álgebra e funções,grande (>20 chunks),ENEM_MAT_02_equacao-do-segundo-grau.pdf,1.0,1.0,1.0,1.0,1.0,0.6622227440300444,1.0,267.0,ENEM_MAT_02_equacao-do-segundo-grau.pdf
+fechado,e5_denso,Q023,direta,Álgebra e funções,medio (8-20 chunks),ENEM_MAT_02_funcao-afim.pdf,1.0,1.0,1.0,1.0,1.0,0.9363792118010481,1.0,295.59,ENEM_MAT_02_funcao-afim.pdf
+fechado,e5_denso,Q024,contextual,Álgebra e funções,medio (8-20 chunks),ENEM_MAT_02_funcao-afim.pdf,0.0,0.0,0.0,0.0,0.0,0.0,0.0,432.63,ENEM_MAT_02_sistema-de-equacoes-lineares.pdf
+fechado,e5_denso,Q025,direta,Álgebra e funções,medio (8-20 chunks),ENEM_MAT_02_funcao-exponencial.pdf,1.0,1.0,1.0,1.0,1.0,0.8701249883466592,1.0,246.38,ENEM_MAT_02_funcao-exponencial.pdf
+fechado,e5_denso,Q026,contextual,Álgebra e funções,medio (8-20 chunks),ENEM_MAT_02_funcao-exponencial.pdf,0.0,0.0,0.0,0.0,0.0,0.07588109553901769,0.0,275.44,ENEM_MAT_04_vazao.pdf
+fechado,e5_denso,Q027,direta,Álgebra e funções,grande (>20 chunks),ENEM_MAT_02_funcao-logaritmica.pdf,0.0,1.0,1.0,1.0,0.3333333333333333,0.8205228949141826,1.0,485.2,ENEM_MAT_02_funcao-exponencial.pdf
+fechado,e5_denso,Q028,contextual,Álgebra e funções,grande (>20 chunks),ENEM_MAT_02_funcao-logaritmica.pdf,1.0,1.0,1.0,1.0,1.0,0.7421246259355072,0.6666666666666666,329.72,ENEM_MAT_02_funcao-logaritmica.pdf
+fechado,e5_denso,Q029,direta,Álgebra e funções,medio (8-20 chunks),ENEM_MAT_02_funcao-quadratica.pdf,1.0,1.0,1.0,1.0,1.0,0.8841134626660687,1.0,259.65,ENEM_MAT_02_funcao-quadratica.pdf
+fechado,e5_denso,Q030,contextual,Álgebra e funções,medio (8-20 chunks),ENEM_MAT_02_funcao-quadratica.pdf,1.0,1.0,1.0,1.0,1.0,0.6580398322784209,1.0,374.93,ENEM_MAT_02_funcao-quadratica.pdf
+fechado,e5_denso,Q031,direta,Álgebra e funções,pequeno (<=7 chunks),ENEM_MAT_02_inequacao.pdf,1.0,1.0,1.0,1.0,1.0,0.6719118380144739,1.0,340.35,ENEM_MAT_02_inequacao.pdf
+fechado,e5_denso,Q032,contextual,Álgebra e funções,pequeno (<=7 chunks),ENEM_MAT_02_inequacao.pdf,0.0,0.0,0.0,0.0,0.0,0.0,0.0,271.24,ENEM_MAT_01_numeros-irracionais.pdf
+fechado,e5_denso,Q033,direta,Álgebra e funções,medio (8-20 chunks),ENEM_MAT_02_sequencia-numerica.pdf,1.0,1.0,1.0,1.0,1.0,0.9207464801295094,1.0,329.12,ENEM_MAT_02_sequencia-numerica.pdf
+fechado,e5_denso,Q034,contextual,Álgebra e funções,medio (8-20 chunks),ENEM_MAT_02_sequencia-numerica.pdf,0.0,1.0,1.0,1.0,0.5,0.46290842549663,0.6666666666666666,273.34,ENEM_MAT_01_sistema-de-numeracao.pdf
+fechado,e5_denso,Q035,direta,Álgebra e funções,grande (>20 chunks),ENEM_MAT_02_sistema-de-equacoes-lineares.pdf,1.0,1.0,1.0,1.0,1.0,0.9526058178152246,1.0,299.87,ENEM_MAT_02_sistema-de-equacoes-lineares.pdf
+fechado,e5_denso,Q036,contextual,Álgebra e funções,grande (>20 chunks),ENEM_MAT_02_sistema-de-equacoes-lineares.pdf,0.0,0.0,0.0,0.0,0.0,0.0,0.0,583.53,ENEM_MAT_05_moda-estatistica.pdf
+fechado,e5_denso,Q037,direta,Geometria e trigonometria,grande (>20 chunks),ENEM_MAT_03_area-geometria.pdf,1.0,1.0,1.0,1.0,1.0,0.7791714369672127,1.0,1212.55,ENEM_MAT_03_area-geometria.pdf
+fechado,e5_denso,Q038,contextual,Geometria e trigonometria,grande (>20 chunks),ENEM_MAT_03_area-geometria.pdf,0.0,1.0,1.0,1.0,0.5,0.32422914673050235,0.3333333333333333,568.26,ENEM_MAT_03_teorema-de-pitagoras.pdf
+fechado,e5_denso,Q039,direta,Geometria e trigonometria,medio (8-20 chunks),ENEM_MAT_03_ciclo-trigonometrico.pdf,0.0,0.0,1.0,1.0,0.25,0.5209225624980638,1.0,432.82,ENEM_MAT_03_trigonometria.pdf
+fechado,e5_denso,Q040,contextual,Geometria e trigonometria,medio (8-20 chunks),ENEM_MAT_03_ciclo-trigonometrico.pdf,0.0,0.0,1.0,1.0,0.25,0.5200673116062485,1.0,275.92,ENEM_MAT_03_trigonometria.pdf
+fechado,e5_denso,Q041,direta,Geometria e trigonometria,pequeno (<=7 chunks),ENEM_MAT_03_cilindro.pdf,0.0,1.0,1.0,1.0,0.5,0.5978922550880486,1.0,245.43,ENEM_MAT_03_volume.pdf
+fechado,e5_denso,Q042,contextual,Geometria e trigonometria,pequeno (<=7 chunks),ENEM_MAT_03_cilindro.pdf,0.0,0.0,0.0,1.0,0.125,0.30190255404928124,0.6666666666666666,249.85,ENEM_MAT_03_volume.pdf
+fechado,e5_denso,Q043,direta,Geometria e trigonometria,pequeno (<=7 chunks),ENEM_MAT_03_cone.pdf,1.0,1.0,1.0,1.0,1.0,0.683433324456648,1.0,247.72,ENEM_MAT_03_cone.pdf
+fechado,e5_denso,Q044,contextual,Geometria e trigonometria,pequeno (<=7 chunks),ENEM_MAT_03_cone.pdf,0.0,1.0,1.0,1.0,0.3333333333333333,0.21304741543213196,0.3333333333333333,271.45,ENEM_MAT_03_esfera.pdf
+fechado,e5_denso,Q045,direta,Geometria e trigonometria,medio (8-20 chunks),ENEM_MAT_03_distancia-entre-dois-pontos.pdf,0.0,1.0,1.0,1.0,0.5,0.7676656650562158,1.0,348.17,ENEM_MAT_03_geometria-analitica.pdf
+fechado,e5_denso,Q046,contextual,Geometria e trigonometria,medio (8-20 chunks),ENEM_MAT_03_distancia-entre-dois-pontos.pdf,0.0,0.0,0.0,1.0,0.14285714285714285,0.2762645812142643,0.3333333333333333,343.76,ENEM_MAT_04_escala-cartografia.pdf
+fechado,e5_denso,Q047,direta,Geometria e trigonometria,pequeno (<=7 chunks),ENEM_MAT_03_esfera.pdf,1.0,1.0,1.0,1.0,1.0,0.6405178000304558,0.6666666666666666,478.2,ENEM_MAT_03_esfera.pdf
+fechado,e5_denso,Q048,contextual,Geometria e trigonometria,pequeno (<=7 chunks),ENEM_MAT_03_esfera.pdf,0.0,0.0,0.0,1.0,0.125,0.07711607962658214,0.0,293.52,ENEM_MAT_03_perimetro.pdf
+fechado,e5_denso,Q049,direta,Geometria e trigonometria,grande (>20 chunks),ENEM_MAT_03_geometria-analitica.pdf,1.0,1.0,1.0,1.0,1.0,0.8643145546088337,1.0,260.02,ENEM_MAT_03_geometria-analitica.pdf
+fechado,e5_denso,Q050,contextual,Geometria e trigonometria,grande (>20 chunks),ENEM_MAT_03_geometria-analitica.pdf,1.0,1.0,1.0,1.0,1.0,0.7171323334847591,1.0,245.87,ENEM_MAT_03_geometria-analitica.pdf
+fechado,e5_denso,Q051,direta,Geometria e trigonometria,pequeno (<=7 chunks),ENEM_MAT_03_geometria-espacial.pdf,1.0,1.0,1.0,1.0,1.0,0.8011188530084603,0.6666666666666666,293.75,ENEM_MAT_03_geometria-espacial.pdf
+fechado,e5_denso,Q052,contextual,Geometria e trigonometria,pequeno (<=7 chunks),ENEM_MAT_03_geometria-espacial.pdf,1.0,1.0,1.0,1.0,1.0,0.6706638228646794,0.6666666666666666,240.29,ENEM_MAT_03_geometria-espacial.pdf
+fechado,e5_denso,Q053,direta,Geometria e trigonometria,grande (>20 chunks),ENEM_MAT_03_geometria-plana.pdf,1.0,1.0,1.0,1.0,1.0,0.8389574121760601,1.0,264.39,ENEM_MAT_03_geometria-plana.pdf
+fechado,e5_denso,Q054,contextual,Geometria e trigonometria,grande (>20 chunks),ENEM_MAT_03_geometria-plana.pdf,1.0,1.0,1.0,1.0,1.0,0.716485063693381,0.6666666666666666,263.09,ENEM_MAT_03_geometria-plana.pdf
+fechado,e5_denso,Q055,direta,Geometria e trigonometria,pequeno (<=7 chunks),ENEM_MAT_03_lei-dos-cossenos.pdf,1.0,1.0,1.0,1.0,1.0,0.5707432535862581,0.6666666666666666,290.73,ENEM_MAT_03_lei-dos-cossenos.pdf
+fechado,e5_denso,Q056,contextual,Geometria e trigonometria,pequeno (<=7 chunks),ENEM_MAT_03_lei-dos-cossenos.pdf,0.0,0.0,0.0,1.0,0.1,0.16684025643355546,0.0,283.48,ENEM_MAT_03_triangulo-retangulo.pdf
+fechado,e5_denso,Q057,direta,Geometria e trigonometria,pequeno (<=7 chunks),ENEM_MAT_03_lei-dos-senos.pdf,1.0,1.0,1.0,1.0,1.0,0.9434117755526638,1.0,261.88,ENEM_MAT_03_lei-dos-senos.pdf
+fechado,e5_denso,Q058,contextual,Geometria e trigonometria,pequeno (<=7 chunks),ENEM_MAT_03_lei-dos-senos.pdf,0.0,1.0,1.0,1.0,0.5,0.5126724666421851,1.0,296.38,ENEM_MAT_03_trigonometria.pdf
+fechado,e5_denso,Q059,direta,Geometria e trigonometria,pequeno (<=7 chunks),ENEM_MAT_03_perimetro.pdf,1.0,1.0,1.0,1.0,1.0,0.8887555926434666,1.0,246.18,ENEM_MAT_03_perimetro.pdf
+fechado,e5_denso,Q060,contextual,Geometria e trigonometria,pequeno (<=7 chunks),ENEM_MAT_03_perimetro.pdf,1.0,1.0,1.0,1.0,1.0,0.4235300224138704,0.3333333333333333,262.08,ENEM_MAT_03_perimetro.pdf
+fechado,e5_denso,Q061,direta,Geometria e trigonometria,pequeno (<=7 chunks),ENEM_MAT_03_piramide-geometria.pdf,1.0,1.0,1.0,1.0,1.0,0.8287260787063294,0.6666666666666666,231.51,ENEM_MAT_03_piramide-geometria.pdf
+fechado,e5_denso,Q062,contextual,Geometria e trigonometria,pequeno (<=7 chunks),ENEM_MAT_03_piramide-geometria.pdf,0.0,0.0,0.0,1.0,0.16666666666666666,0.3111567996489046,0.6666666666666666,380.28,ENEM_MAT_03_geometria-espacial.pdf
+fechado,e5_denso,Q063,direta,Geometria e trigonometria,medio (8-20 chunks),ENEM_MAT_03_plano-cartesiano.pdf,1.0,1.0,1.0,1.0,1.0,0.7955504178462023,1.0,265.33,ENEM_MAT_03_plano-cartesiano.pdf
+fechado,e5_denso,Q064,contextual,Geometria e trigonometria,medio (8-20 chunks),ENEM_MAT_03_plano-cartesiano.pdf,1.0,1.0,1.0,1.0,1.0,0.651140854108995,1.0,291.59,ENEM_MAT_03_plano-cartesiano.pdf
+fechado,e5_denso,Q065,direta,Geometria e trigonometria,medio (8-20 chunks),ENEM_MAT_03_poligono.pdf,1.0,1.0,1.0,1.0,1.0,0.931507644850844,1.0,275.28,ENEM_MAT_03_poligono.pdf
+fechado,e5_denso,Q066,contextual,Geometria e trigonometria,medio (8-20 chunks),ENEM_MAT_03_poligono.pdf,1.0,1.0,1.0,1.0,1.0,0.6335975304671001,1.0,263.18,ENEM_MAT_03_poligono.pdf
+fechado,e5_denso,Q067,direta,Geometria e trigonometria,pequeno (<=7 chunks),ENEM_MAT_03_prisma-geometria.pdf,1.0,1.0,1.0,1.0,1.0,0.8771479682971015,1.0,278.55,ENEM_MAT_03_prisma-geometria.pdf
+fechado,e5_denso,Q068,contextual,Geometria e trigonometria,pequeno (<=7 chunks),ENEM_MAT_03_prisma-geometria.pdf,0.0,0.0,0.0,0.0,0.0,0.12741733550370724,0.3333333333333333,286.29,ENEM_MAT_03_volume.pdf
+fechado,e5_denso,Q069,direta,Geometria e trigonometria,medio (8-20 chunks),ENEM_MAT_03_semelhanca-de-triangulos.pdf,1.0,1.0,1.0,1.0,1.0,0.6332196796270029,1.0,249.41,ENEM_MAT_03_semelhanca-de-triangulos.pdf
+fechado,e5_denso,Q070,contextual,Geometria e trigonometria,medio (8-20 chunks),ENEM_MAT_03_semelhanca-de-triangulos.pdf,0.0,0.0,0.0,0.0,0.0,0.03181039409947586,0.0,275.15,ENEM_MAT_05_moda-estatistica.pdf
+fechado,e5_denso,Q071,direta,Geometria e trigonometria,grande (>20 chunks),ENEM_MAT_03_teorema-de-pitagoras.pdf,1.0,1.0,1.0,1.0,1.0,0.7491347753688576,0.6666666666666666,259.03,ENEM_MAT_03_teorema-de-pitagoras.pdf
+fechado,e5_denso,Q072,contextual,Geometria e trigonometria,grande (>20 chunks),ENEM_MAT_03_teorema-de-pitagoras.pdf,0.0,0.0,0.0,0.0,0.0,0.0,0.0,243.7,ENEM_MAT_05_moda-estatistica.pdf
+fechado,e5_denso,Q073,direta,Geometria e trigonometria,pequeno (<=7 chunks),ENEM_MAT_03_triangulo-retangulo.pdf,1.0,1.0,1.0,1.0,1.0,0.6210894299920906,0.6666666666666666,255.36,ENEM_MAT_03_triangulo-retangulo.pdf
+fechado,e5_denso,Q074,contextual,Geometria e trigonometria,pequeno (<=7 chunks),ENEM_MAT_03_triangulo-retangulo.pdf,1.0,1.0,1.0,1.0,1.0,0.49309775586072385,0.6666666666666666,242.29,ENEM_MAT_03_triangulo-retangulo.pdf
+fechado,e5_denso,Q075,direta,Geometria e trigonometria,medio (8-20 chunks),ENEM_MAT_03_trigonometria.pdf,1.0,1.0,1.0,1.0,1.0,0.9633180389503199,1.0,262.31,ENEM_MAT_03_trigonometria.pdf
+fechado,e5_denso,Q076,contextual,Geometria e trigonometria,medio (8-20 chunks),ENEM_MAT_03_trigonometria.pdf,0.0,0.0,0.0,0.0,0.0,0.0,0.0,426.71,ENEM_MAT_03_piramide-geometria.pdf
+fechado,e5_denso,Q077,direta,Geometria e trigonometria,pequeno (<=7 chunks),ENEM_MAT_03_volume.pdf,1.0,1.0,1.0,1.0,1.0,0.37456050428247883,0.6666666666666666,321.25,ENEM_MAT_03_volume.pdf
+fechado,e5_denso,Q078,contextual,Geometria e trigonometria,pequeno (<=7 chunks),ENEM_MAT_03_volume.pdf,1.0,1.0,1.0,1.0,1.0,0.5965401751138464,0.6666666666666666,273.53,ENEM_MAT_03_volume.pdf
+fechado,e5_denso,Q079,direta,Grandezas e medidas,pequeno (<=7 chunks),ENEM_MAT_04_densidade-demografica.pdf,1.0,1.0,1.0,1.0,1.0,0.6984152163370878,0.6666666666666666,255.6,ENEM_MAT_04_densidade-demografica.pdf
+fechado,e5_denso,Q080,contextual,Grandezas e medidas,pequeno (<=7 chunks),ENEM_MAT_04_densidade-demografica.pdf,1.0,1.0,1.0,1.0,1.0,0.6366824387328317,0.6666666666666666,283.71,ENEM_MAT_04_densidade-demografica.pdf
+fechado,e5_denso,Q081,direta,Grandezas e medidas,medio (8-20 chunks),ENEM_MAT_04_escala-cartografia.pdf,1.0,1.0,1.0,1.0,1.0,0.9305527638726646,1.0,290.51,ENEM_MAT_04_escala-cartografia.pdf
+fechado,e5_denso,Q082,contextual,Grandezas e medidas,medio (8-20 chunks),ENEM_MAT_04_escala-cartografia.pdf,1.0,1.0,1.0,1.0,1.0,0.6984012429122731,0.6666666666666666,244.26,ENEM_MAT_04_escala-cartografia.pdf
+fechado,e5_denso,Q083,direta,Grandezas e medidas,grande (>20 chunks),ENEM_MAT_04_sistema-internacional-de-unidades.pdf,1.0,1.0,1.0,1.0,1.0,1.0,1.0,231.33,ENEM_MAT_04_sistema-internacional-de-unidades.pdf
+fechado,e5_denso,Q084,contextual,Grandezas e medidas,grande (>20 chunks),ENEM_MAT_04_sistema-internacional-de-unidades.pdf,1.0,1.0,1.0,1.0,1.0,0.9266360779006398,1.0,250.84,ENEM_MAT_04_sistema-internacional-de-unidades.pdf
+fechado,e5_denso,Q085,direta,Grandezas e medidas,pequeno (<=7 chunks),ENEM_MAT_04_vazao.pdf,1.0,1.0,1.0,1.0,1.0,0.8821011945566801,1.0,279.33,ENEM_MAT_04_vazao.pdf
+fechado,e5_denso,Q086,contextual,Grandezas e medidas,pequeno (<=7 chunks),ENEM_MAT_04_vazao.pdf,1.0,1.0,1.0,1.0,1.0,0.6133057925246209,1.0,261.0,ENEM_MAT_04_vazao.pdf
+fechado,e5_denso,Q087,direta,Grandezas e medidas,grande (>20 chunks),ENEM_MAT_04_velocidade.pdf,1.0,1.0,1.0,1.0,1.0,0.6203974344166847,1.0,251.92,ENEM_MAT_04_velocidade.pdf
+fechado,e5_denso,Q088,contextual,Grandezas e medidas,grande (>20 chunks),ENEM_MAT_04_velocidade.pdf,1.0,1.0,1.0,1.0,1.0,0.6161823144447492,0.6666666666666666,268.55,ENEM_MAT_04_velocidade.pdf
+fechado,e5_denso,Q089,direta,"Combinatória, estatística e probabilidade",medio (8-20 chunks),ENEM_MAT_05_analise-combinatoria.pdf,1.0,1.0,1.0,1.0,1.0,0.8115558478722845,0.6666666666666666,248.9,ENEM_MAT_05_arranjo-combinatoria.pdf
+fechado,e5_denso,Q090,contextual,"Combinatória, estatística e probabilidade",medio (8-20 chunks),ENEM_MAT_05_analise-combinatoria.pdf,0.0,1.0,1.0,1.0,0.5,0.6482261847673386,1.0,269.34,ENEM_MAT_05_permutacao.pdf
+fechado,e5_denso,Q091,direta,"Combinatória, estatística e probabilidade",medio (8-20 chunks),ENEM_MAT_05_arranjo-combinatoria.pdf,1.0,1.0,1.0,1.0,1.0,0.7694428460914032,1.0,259.91,ENEM_MAT_05_arranjo-combinatoria.pdf
+fechado,e5_denso,Q092,contextual,"Combinatória, estatística e probabilidade",medio (8-20 chunks),ENEM_MAT_05_arranjo-combinatoria.pdf,0.0,1.0,1.0,1.0,0.3333333333333333,0.5696482178102966,0.3333333333333333,258.82,ENEM_MAT_05_moda-estatistica.pdf
+fechado,e5_denso,Q093,direta,"Combinatória, estatística e probabilidade",pequeno (<=7 chunks),ENEM_MAT_05_combinacao-matematica.pdf,1.0,1.0,1.0,1.0,1.0,0.8560295214715162,1.0,314.28,ENEM_MAT_05_combinacao-matematica.pdf
+fechado,e5_denso,Q094,contextual,"Combinatória, estatística e probabilidade",pequeno (<=7 chunks),ENEM_MAT_05_combinacao-matematica.pdf,0.0,0.0,0.0,1.0,0.1111111111111111,0.6172846645164018,1.0,353.42,ENEM_MAT_05_arranjo-combinatoria.pdf
+fechado,e5_denso,Q095,direta,"Combinatória, estatística e probabilidade",grande (>20 chunks),ENEM_MAT_05_desvio-padrao.pdf,1.0,1.0,1.0,1.0,1.0,1.0,1.0,237.22,ENEM_MAT_05_desvio-padrao.pdf
+fechado,e5_denso,Q096,contextual,"Combinatória, estatística e probabilidade",grande (>20 chunks),ENEM_MAT_05_desvio-padrao.pdf,0.0,1.0,1.0,1.0,0.5,0.13886244387355454,0.3333333333333333,261.91,ENEM_MAT_05_moda-estatistica.pdf
+fechado,e5_denso,Q097,direta,"Combinatória, estatística e probabilidade",medio (8-20 chunks),ENEM_MAT_05_estatistica.pdf,1.0,1.0,1.0,1.0,1.0,0.9668728882728055,1.0,308.16,ENEM_MAT_05_estatistica.pdf
+fechado,e5_denso,Q098,contextual,"Combinatória, estatística e probabilidade",medio (8-20 chunks),ENEM_MAT_05_estatistica.pdf,0.0,1.0,1.0,1.0,0.5,0.46955091667904103,1.0,265.1,ENEM_MAT_05_moda-estatistica.pdf
+fechado,e5_denso,Q099,direta,"Combinatória, estatística e probabilidade",pequeno (<=7 chunks),ENEM_MAT_05_media-aritmetica.pdf,1.0,1.0,1.0,1.0,1.0,0.6898064474265084,0.6666666666666666,274.85,ENEM_MAT_05_media-aritmetica.pdf
+fechado,e5_denso,Q100,contextual,"Combinatória, estatística e probabilidade",pequeno (<=7 chunks),ENEM_MAT_05_media-aritmetica.pdf,1.0,1.0,1.0,1.0,1.0,0.35341817886732363,0.3333333333333333,276.97,ENEM_MAT_05_media-aritmetica.pdf
+fechado,e5_denso,Q101,direta,"Combinatória, estatística e probabilidade",grande (>20 chunks),ENEM_MAT_05_mediana-estatistica.pdf,1.0,1.0,1.0,1.0,1.0,0.9363792118010481,1.0,251.63,ENEM_MAT_05_mediana-estatistica.pdf
+fechado,e5_denso,Q102,contextual,"Combinatória, estatística e probabilidade",grande (>20 chunks),ENEM_MAT_05_mediana-estatistica.pdf,1.0,1.0,1.0,1.0,1.0,0.6494462856411791,1.0,267.7,ENEM_MAT_05_mediana-estatistica.pdf
+fechado,e5_denso,Q103,direta,"Combinatória, estatística e probabilidade",grande (>20 chunks),ENEM_MAT_05_moda-estatistica.pdf,1.0,1.0,1.0,1.0,1.0,0.9608008655106622,1.0,261.12,ENEM_MAT_05_moda-estatistica.pdf
+fechado,e5_denso,Q104,contextual,"Combinatória, estatística e probabilidade",grande (>20 chunks),ENEM_MAT_05_moda-estatistica.pdf,1.0,1.0,1.0,1.0,1.0,0.7065836017263628,1.0,254.23,ENEM_MAT_05_moda-estatistica.pdf
+fechado,e5_denso,Q105,direta,"Combinatória, estatística e probabilidade",medio (8-20 chunks),ENEM_MAT_05_permutacao.pdf,1.0,1.0,1.0,1.0,1.0,1.0,1.0,237.04,ENEM_MAT_05_permutacao.pdf
+fechado,e5_denso,Q106,contextual,"Combinatória, estatística e probabilidade",medio (8-20 chunks),ENEM_MAT_05_permutacao.pdf,0.0,1.0,1.0,1.0,0.3333333333333333,0.44442623506711365,1.0,246.45,ENEM_MAT_05_analise-combinatoria.pdf
+fechado,e5_denso,Q107,direta,"Combinatória, estatística e probabilidade",pequeno (<=7 chunks),ENEM_MAT_05_probabilidade-condicional.pdf,1.0,1.0,1.0,1.0,1.0,0.7812497329071066,1.0,232.82,ENEM_MAT_05_probabilidade-condicional.pdf
+fechado,e5_denso,Q108,contextual,"Combinatória, estatística e probabilidade",pequeno (<=7 chunks),ENEM_MAT_05_probabilidade-condicional.pdf,0.0,0.0,1.0,1.0,0.2,0.41028356866482707,0.0,250.59,ENEM_MAT_07_deducao-logica.pdf
+fechado,e5_denso,Q109,direta,"Combinatória, estatística e probabilidade",grande (>20 chunks),ENEM_MAT_05_probabilidade.pdf,1.0,1.0,1.0,1.0,1.0,0.7443121520048928,0.6666666666666666,482.63,ENEM_MAT_05_probabilidade.pdf
+fechado,e5_denso,Q110,contextual,"Combinatória, estatística e probabilidade",grande (>20 chunks),ENEM_MAT_05_probabilidade.pdf,1.0,1.0,1.0,1.0,1.0,0.5971848869416406,1.0,254.05,ENEM_MAT_05_probabilidade.pdf
+fechado,e5_denso,Q111,direta,"Combinatória, estatística e probabilidade",medio (8-20 chunks),ENEM_MAT_05_variancia.pdf,1.0,1.0,1.0,1.0,1.0,0.7127866418040245,1.0,291.93,ENEM_MAT_05_variancia.pdf
+fechado,e5_denso,Q112,contextual,"Combinatória, estatística e probabilidade",medio (8-20 chunks),ENEM_MAT_05_variancia.pdf,0.0,0.0,0.0,0.0,0.0,0.26527276487698537,0.6666666666666666,268.29,ENEM_MAT_05_mediana-estatistica.pdf
+fechado,e5_denso,Q113,direta,Matemática financeira,pequeno (<=7 chunks),ENEM_MAT_06_amortizacao.pdf,1.0,1.0,1.0,1.0,1.0,0.9426047576647255,1.0,312.8,ENEM_MAT_06_amortizacao.pdf
+fechado,e5_denso,Q114,contextual,Matemática financeira,pequeno (<=7 chunks),ENEM_MAT_06_amortizacao.pdf,1.0,1.0,1.0,1.0,1.0,0.8831976904101257,1.0,268.01,ENEM_MAT_06_amortizacao.pdf
+fechado,e5_denso,Q115,direta,Matemática financeira,grande (>20 chunks),ENEM_MAT_06_inflacao.pdf,1.0,1.0,1.0,1.0,1.0,1.0,1.0,253.36,ENEM_MAT_06_inflacao.pdf
+fechado,e5_denso,Q116,contextual,Matemática financeira,grande (>20 chunks),ENEM_MAT_06_inflacao.pdf,1.0,1.0,1.0,1.0,1.0,0.5423640154200348,1.0,234.93,ENEM_MAT_06_inflacao.pdf
+fechado,e5_denso,Q117,direta,Matemática financeira,grande (>20 chunks),ENEM_MAT_06_juros-compostos.pdf,1.0,1.0,1.0,1.0,1.0,1.0,1.0,259.37,ENEM_MAT_06_juros-compostos.pdf
+fechado,e5_denso,Q118,contextual,Matemática financeira,grande (>20 chunks),ENEM_MAT_06_juros-compostos.pdf,1.0,1.0,1.0,1.0,1.0,1.0,1.0,242.48,ENEM_MAT_06_juros-compostos.pdf
+fechado,e5_denso,Q119,direta,Matemática financeira,grande (>20 chunks),ENEM_MAT_06_juros-simples.pdf,1.0,1.0,1.0,1.0,1.0,1.0,1.0,248.92,ENEM_MAT_06_juros-compostos.pdf
+fechado,e5_denso,Q120,contextual,Matemática financeira,grande (>20 chunks),ENEM_MAT_06_juros-simples.pdf,1.0,1.0,1.0,1.0,1.0,0.9633180389503199,1.0,276.18,ENEM_MAT_06_juros-compostos.pdf
+fechado,e5_denso,Q121,direta,Matemática financeira,medio (8-20 chunks),ENEM_MAT_06_taxa-de-cambio.pdf,1.0,1.0,1.0,1.0,1.0,0.7084409501232899,1.0,252.87,ENEM_MAT_06_taxa-de-cambio.pdf
+fechado,e5_denso,Q122,contextual,Matemática financeira,medio (8-20 chunks),ENEM_MAT_06_taxa-de-cambio.pdf,1.0,1.0,1.0,1.0,1.0,0.5017289690294563,0.3333333333333333,267.74,ENEM_MAT_06_taxa-de-cambio.pdf
+fechado,e5_denso,Q123,direta,Lógica,grande (>20 chunks),ENEM_MAT_07_deducao-logica.pdf,1.0,1.0,1.0,1.0,1.0,1.0,1.0,261.14,ENEM_MAT_07_deducao-logica.pdf
+fechado,e5_denso,Q124,contextual,Lógica,grande (>20 chunks),ENEM_MAT_07_deducao-logica.pdf,1.0,1.0,1.0,1.0,1.0,0.8911742177248004,1.0,277.66,ENEM_MAT_07_deducao-logica.pdf
+fechado,e5_denso,Q125,direta,Lógica,grande (>20 chunks),ENEM_MAT_07_logica-proposicional.pdf,1.0,1.0,1.0,1.0,1.0,0.9608008655106622,1.0,269.18,ENEM_MAT_07_logica-proposicional.pdf
+fechado,e5_denso,Q126,contextual,Lógica,grande (>20 chunks),ENEM_MAT_07_logica-proposicional.pdf,0.0,1.0,1.0,1.0,0.5,0.7323512715880333,1.0,273.22,ENEM_MAT_07_deducao-logica.pdf
+fechado,e5_rerank,Q001,direta,Números e operações,grande (>20 chunks),ENEM_MAT_01_conjuntos-numericos.pdf,0.0,1.0,1.0,1.0,0.5,0.7021509467541862,1.0,4339.44,ENEM_MAT_01_numeros-racionais.pdf
+fechado,e5_rerank,Q002,contextual,Números e operações,grande (>20 chunks),ENEM_MAT_01_conjuntos-numericos.pdf,1.0,1.0,1.0,1.0,1.0,0.788433459069816,1.0,2531.87,ENEM_MAT_01_conjuntos-numericos.pdf
+fechado,e5_rerank,Q003,direta,Números e operações,medio (8-20 chunks),ENEM_MAT_01_numeros-irracionais.pdf,1.0,1.0,1.0,1.0,1.0,0.4992925017896305,0.6666666666666666,1891.09,ENEM_MAT_01_numeros-irracionais.pdf
+fechado,e5_rerank,Q004,contextual,Números e operações,medio (8-20 chunks),ENEM_MAT_01_numeros-irracionais.pdf,0.0,1.0,1.0,1.0,0.3333333333333333,0.2887469013763472,0.3333333333333333,1943.05,ENEM_MAT_01_numeros-racionais.pdf
+fechado,e5_rerank,Q005,direta,Números e operações,grande (>20 chunks),ENEM_MAT_01_numeros-racionais.pdf,1.0,1.0,1.0,1.0,1.0,0.8987583839637467,1.0,1722.35,ENEM_MAT_01_numeros-racionais.pdf
+fechado,e5_rerank,Q006,contextual,Números e operações,grande (>20 chunks),ENEM_MAT_01_numeros-racionais.pdf,1.0,1.0,1.0,1.0,1.0,0.9668728882728055,1.0,1718.13,ENEM_MAT_01_numeros-racionais.pdf
+fechado,e5_rerank,Q007,direta,Números e operações,pequeno (<=7 chunks),ENEM_MAT_01_porcentagem.pdf,1.0,1.0,1.0,1.0,1.0,0.8485749432935996,1.0,1498.76,ENEM_MAT_01_porcentagem.pdf
+fechado,e5_rerank,Q008,contextual,Números e operações,pequeno (<=7 chunks),ENEM_MAT_01_porcentagem.pdf,1.0,1.0,1.0,1.0,1.0,0.4836744078292573,0.3333333333333333,2290.35,ENEM_MAT_01_porcentagem.pdf
+fechado,e5_rerank,Q009,direta,Números e operações,medio (8-20 chunks),ENEM_MAT_01_progressao-aritmetica.pdf,1.0,1.0,1.0,1.0,1.0,0.8899541168509599,0.6666666666666666,1700.07,ENEM_MAT_01_progressao-aritmetica.pdf
+fechado,e5_rerank,Q010,contextual,Números e operações,medio (8-20 chunks),ENEM_MAT_01_progressao-aritmetica.pdf,0.0,1.0,1.0,1.0,0.3333333333333333,0.11004588314904008,0.3333333333333333,2123.14,ENEM_MAT_06_juros-compostos.pdf
+fechado,e5_rerank,Q011,direta,Números e operações,medio (8-20 chunks),ENEM_MAT_01_progressao-geometrica.pdf,1.0,1.0,1.0,1.0,1.0,0.5960398901945195,1.0,1514.43,ENEM_MAT_01_progressao-geometrica.pdf
+fechado,e5_rerank,Q012,contextual,Números e operações,medio (8-20 chunks),ENEM_MAT_01_progressao-geometrica.pdf,0.0,0.0,0.0,0.0,0.0,0.0,0.0,2455.59,ENEM_MAT_04_sistema-internacional-de-unidades.pdf
+fechado,e5_rerank,Q013,direta,Números e operações,pequeno (<=7 chunks),ENEM_MAT_01_razao-e-proporcao.pdf,1.0,1.0,1.0,1.0,1.0,0.6721239610573589,1.0,1439.5,ENEM_MAT_01_razao-e-proporcao.pdf
+fechado,e5_rerank,Q014,contextual,Números e operações,pequeno (<=7 chunks),ENEM_MAT_01_razao-e-proporcao.pdf,0.0,0.0,0.0,0.0,0.0,0.0,0.0,2151.89,ENEM_MAT_05_mediana-estatistica.pdf
+fechado,e5_rerank,Q015,direta,Números e operações,pequeno (<=7 chunks),ENEM_MAT_01_regra-de-tres.pdf,1.0,1.0,1.0,1.0,1.0,0.5361025868094468,0.6666666666666666,1652.6,ENEM_MAT_01_regra-de-tres.pdf
+fechado,e5_rerank,Q016,contextual,Números e operações,pequeno (<=7 chunks),ENEM_MAT_01_regra-de-tres.pdf,1.0,1.0,1.0,1.0,1.0,0.32870979613651274,0.3333333333333333,1711.17,ENEM_MAT_01_regra-de-tres.pdf
+fechado,e5_rerank,Q017,direta,Números e operações,grande (>20 chunks),ENEM_MAT_01_sistema-de-numeracao.pdf,1.0,1.0,1.0,1.0,1.0,0.8603818544462508,1.0,1581.13,ENEM_MAT_01_sistema-de-numeracao.pdf
+fechado,e5_rerank,Q018,contextual,Números e operações,grande (>20 chunks),ENEM_MAT_01_sistema-de-numeracao.pdf,1.0,1.0,1.0,1.0,1.0,0.5103515512676446,0.6666666666666666,2423.88,ENEM_MAT_01_sistema-de-numeracao.pdf
+fechado,e5_rerank,Q019,direta,Álgebra e funções,medio (8-20 chunks),ENEM_MAT_02_equacao-do-primeiro-grau.pdf,0.0,1.0,1.0,1.0,0.5,0.23365080824310533,0.3333333333333333,3484.83,ENEM_MAT_02_equacao-do-segundo-grau.pdf
+fechado,e5_rerank,Q020,contextual,Álgebra e funções,medio (8-20 chunks),ENEM_MAT_02_equacao-do-primeiro-grau.pdf,0.0,0.0,0.0,0.0,0.0,0.0,0.0,2084.24,ENEM_MAT_01_sistema-de-numeracao.pdf
+fechado,e5_rerank,Q021,direta,Álgebra e funções,grande (>20 chunks),ENEM_MAT_02_equacao-do-segundo-grau.pdf,1.0,1.0,1.0,1.0,1.0,0.8669479898642709,1.0,1828.03,ENEM_MAT_02_equacao-do-segundo-grau.pdf
+fechado,e5_rerank,Q022,contextual,Álgebra e funções,grande (>20 chunks),ENEM_MAT_02_equacao-do-segundo-grau.pdf,1.0,1.0,1.0,1.0,1.0,0.6434198284008134,0.6666666666666666,2291.05,ENEM_MAT_02_equacao-do-segundo-grau.pdf
+fechado,e5_rerank,Q023,direta,Álgebra e funções,medio (8-20 chunks),ENEM_MAT_02_funcao-afim.pdf,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1629.52,ENEM_MAT_02_funcao-afim.pdf
+fechado,e5_rerank,Q024,contextual,Álgebra e funções,medio (8-20 chunks),ENEM_MAT_02_funcao-afim.pdf,0.0,0.0,0.0,0.0,0.0,0.0,0.0,2319.65,ENEM_MAT_01_regra-de-tres.pdf
+fechado,e5_rerank,Q025,direta,Álgebra e funções,medio (8-20 chunks),ENEM_MAT_02_funcao-exponencial.pdf,1.0,1.0,1.0,1.0,1.0,0.9321572773044168,1.0,1786.92,ENEM_MAT_02_funcao-exponencial.pdf
+fechado,e5_rerank,Q026,contextual,Álgebra e funções,medio (8-20 chunks),ENEM_MAT_02_funcao-exponencial.pdf,1.0,1.0,1.0,1.0,1.0,0.2567737273477602,0.3333333333333333,2409.78,ENEM_MAT_02_funcao-exponencial.pdf
+fechado,e5_rerank,Q027,direta,Álgebra e funções,grande (>20 chunks),ENEM_MAT_02_funcao-logaritmica.pdf,1.0,1.0,1.0,1.0,1.0,0.9102614474570914,1.0,1711.67,ENEM_MAT_02_funcao-logaritmica.pdf
+fechado,e5_rerank,Q028,contextual,Álgebra e funções,grande (>20 chunks),ENEM_MAT_02_funcao-logaritmica.pdf,1.0,1.0,1.0,1.0,1.0,0.8454256604216017,1.0,4054.68,ENEM_MAT_02_funcao-logaritmica.pdf
+fechado,e5_rerank,Q029,direta,Álgebra e funções,medio (8-20 chunks),ENEM_MAT_02_funcao-quadratica.pdf,1.0,1.0,1.0,1.0,1.0,0.8895857184836063,1.0,1911.84,ENEM_MAT_02_funcao-quadratica.pdf
+fechado,e5_rerank,Q030,contextual,Álgebra e funções,medio (8-20 chunks),ENEM_MAT_02_funcao-quadratica.pdf,1.0,1.0,1.0,1.0,1.0,0.5975652018709928,1.0,2017.92,ENEM_MAT_02_funcao-quadratica.pdf
+fechado,e5_rerank,Q031,direta,Álgebra e funções,pequeno (<=7 chunks),ENEM_MAT_02_inequacao.pdf,1.0,1.0,1.0,1.0,1.0,0.6888411258554403,0.6666666666666666,1615.11,ENEM_MAT_02_inequacao.pdf
+fechado,e5_rerank,Q032,contextual,Álgebra e funções,pequeno (<=7 chunks),ENEM_MAT_02_inequacao.pdf,0.0,0.0,0.0,0.0,0.0,0.0,0.0,2203.43,ENEM_MAT_02_funcao-logaritmica.pdf
+fechado,e5_rerank,Q033,direta,Álgebra e funções,medio (8-20 chunks),ENEM_MAT_02_sequencia-numerica.pdf,1.0,1.0,1.0,1.0,1.0,0.8513152581927321,1.0,1851.92,ENEM_MAT_02_sequencia-numerica.pdf
+fechado,e5_rerank,Q034,contextual,Álgebra e funções,medio (8-20 chunks),ENEM_MAT_02_sequencia-numerica.pdf,0.0,1.0,1.0,1.0,0.3333333333333333,0.2366446416180667,0.3333333333333333,1723.54,ENEM_MAT_01_sistema-de-numeracao.pdf
+fechado,e5_rerank,Q035,direta,Álgebra e funções,grande (>20 chunks),ENEM_MAT_02_sistema-de-equacoes-lineares.pdf,1.0,1.0,1.0,1.0,1.0,1.0,1.0,2141.72,ENEM_MAT_02_sistema-de-equacoes-lineares.pdf
+fechado,e5_rerank,Q036,contextual,Álgebra e funções,grande (>20 chunks),ENEM_MAT_02_sistema-de-equacoes-lineares.pdf,0.0,0.0,0.0,1.0,0.1,0.06362078819895171,0.0,3335.4,ENEM_MAT_05_moda-estatistica.pdf
+fechado,e5_rerank,Q037,direta,Geometria e trigonometria,grande (>20 chunks),ENEM_MAT_03_area-geometria.pdf,1.0,1.0,1.0,1.0,1.0,0.8512360941594272,1.0,1516.56,ENEM_MAT_03_area-geometria.pdf
+fechado,e5_rerank,Q038,contextual,Geometria e trigonometria,grande (>20 chunks),ENEM_MAT_03_area-geometria.pdf,1.0,1.0,1.0,1.0,1.0,0.6004704187399056,1.0,1720.58,ENEM_MAT_03_area-geometria.pdf
+fechado,e5_rerank,Q039,direta,Geometria e trigonometria,medio (8-20 chunks),ENEM_MAT_03_ciclo-trigonometrico.pdf,0.0,0.0,1.0,1.0,0.25,0.5899657410055859,1.0,1578.88,ENEM_MAT_03_trigonometria.pdf
+fechado,e5_rerank,Q040,contextual,Geometria e trigonometria,medio (8-20 chunks),ENEM_MAT_03_ciclo-trigonometrico.pdf,1.0,1.0,1.0,1.0,1.0,0.691767632872949,1.0,2209.27,ENEM_MAT_03_ciclo-trigonometrico.pdf
+fechado,e5_rerank,Q041,direta,Geometria e trigonometria,pequeno (<=7 chunks),ENEM_MAT_03_cilindro.pdf,1.0,1.0,1.0,1.0,1.0,0.5994734187483105,0.6666666666666666,1566.31,ENEM_MAT_03_cilindro.pdf
+fechado,e5_rerank,Q042,contextual,Geometria e trigonometria,pequeno (<=7 chunks),ENEM_MAT_03_cilindro.pdf,0.0,0.0,1.0,1.0,0.2,0.3171062136916564,0.3333333333333333,1838.19,ENEM_MAT_03_volume.pdf
+fechado,e5_rerank,Q043,direta,Geometria e trigonometria,pequeno (<=7 chunks),ENEM_MAT_03_cone.pdf,1.0,1.0,1.0,1.0,1.0,0.7079094904356507,1.0,2594.28,ENEM_MAT_03_cone.pdf
+fechado,e5_rerank,Q044,contextual,Geometria e trigonometria,pequeno (<=7 chunks),ENEM_MAT_03_cone.pdf,0.0,0.0,0.0,0.0,0.0,0.17486600805833885,0.3333333333333333,1765.91,ENEM_MAT_03_volume.pdf
+fechado,e5_rerank,Q045,direta,Geometria e trigonometria,medio (8-20 chunks),ENEM_MAT_03_distancia-entre-dois-pontos.pdf,0.0,1.0,1.0,1.0,0.5,0.731809453879378,1.0,1650.07,ENEM_MAT_03_geometria-analitica.pdf
+fechado,e5_rerank,Q046,contextual,Geometria e trigonometria,medio (8-20 chunks),ENEM_MAT_03_distancia-entre-dois-pontos.pdf,1.0,1.0,1.0,1.0,1.0,0.44270468349550873,1.0,1719.32,ENEM_MAT_03_distancia-entre-dois-pontos.pdf
+fechado,e5_rerank,Q047,direta,Geometria e trigonometria,pequeno (<=7 chunks),ENEM_MAT_03_esfera.pdf,1.0,1.0,1.0,1.0,1.0,0.7069210678421117,0.6666666666666666,1654.5,ENEM_MAT_03_esfera.pdf
+fechado,e5_rerank,Q048,contextual,Geometria e trigonometria,pequeno (<=7 chunks),ENEM_MAT_03_esfera.pdf,1.0,1.0,1.0,1.0,1.0,0.4758004277012652,0.6666666666666666,2306.89,ENEM_MAT_03_esfera.pdf
+fechado,e5_rerank,Q049,direta,Geometria e trigonometria,grande (>20 chunks),ENEM_MAT_03_geometria-analitica.pdf,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1461.47,ENEM_MAT_03_geometria-analitica.pdf
+fechado,e5_rerank,Q050,contextual,Geometria e trigonometria,grande (>20 chunks),ENEM_MAT_03_geometria-analitica.pdf,1.0,1.0,1.0,1.0,1.0,0.7702043899253146,1.0,1710.08,ENEM_MAT_03_geometria-analitica.pdf
+fechado,e5_rerank,Q051,direta,Geometria e trigonometria,pequeno (<=7 chunks),ENEM_MAT_03_geometria-espacial.pdf,1.0,1.0,1.0,1.0,1.0,0.905471453334182,1.0,1516.19,ENEM_MAT_03_geometria-espacial.pdf
+fechado,e5_rerank,Q052,contextual,Geometria e trigonometria,pequeno (<=7 chunks),ENEM_MAT_03_geometria-espacial.pdf,1.0,1.0,1.0,1.0,1.0,0.6730316397579825,1.0,1622.98,ENEM_MAT_03_geometria-espacial.pdf
+fechado,e5_rerank,Q053,direta,Geometria e trigonometria,grande (>20 chunks),ENEM_MAT_03_geometria-plana.pdf,1.0,1.0,1.0,1.0,1.0,0.8643145546088337,1.0,1604.07,ENEM_MAT_03_geometria-plana.pdf
+fechado,e5_rerank,Q054,contextual,Geometria e trigonometria,grande (>20 chunks),ENEM_MAT_03_geometria-plana.pdf,1.0,1.0,1.0,1.0,1.0,0.8572048559638626,1.0,1661.43,ENEM_MAT_03_geometria-plana.pdf
+fechado,e5_rerank,Q055,direta,Geometria e trigonometria,pequeno (<=7 chunks),ENEM_MAT_03_lei-dos-cossenos.pdf,1.0,1.0,1.0,1.0,1.0,0.5614738150747927,0.6666666666666666,1663.24,ENEM_MAT_03_lei-dos-cossenos.pdf
+fechado,e5_rerank,Q056,contextual,Geometria e trigonometria,pequeno (<=7 chunks),ENEM_MAT_03_lei-dos-cossenos.pdf,0.0,0.0,0.0,0.0,0.0,0.17179607244152695,0.3333333333333333,1819.68,ENEM_MAT_03_teorema-de-pitagoras.pdf
+fechado,e5_rerank,Q057,direta,Geometria e trigonometria,pequeno (<=7 chunks),ENEM_MAT_03_lei-dos-senos.pdf,1.0,1.0,1.0,1.0,1.0,0.9542781950617818,1.0,2066.78,ENEM_MAT_03_lei-dos-senos.pdf
+fechado,e5_rerank,Q058,contextual,Geometria e trigonometria,pequeno (<=7 chunks),ENEM_MAT_03_lei-dos-senos.pdf,1.0,1.0,1.0,1.0,1.0,0.7372181983160764,1.0,1795.89,ENEM_MAT_03_lei-dos-senos.pdf
+fechado,e5_rerank,Q059,direta,Geometria e trigonometria,pequeno (<=7 chunks),ENEM_MAT_03_perimetro.pdf,1.0,1.0,1.0,1.0,1.0,0.8725491081546279,1.0,1547.33,ENEM_MAT_03_perimetro.pdf
+fechado,e5_rerank,Q060,contextual,Geometria e trigonometria,pequeno (<=7 chunks),ENEM_MAT_03_perimetro.pdf,1.0,1.0,1.0,1.0,1.0,0.5297447211250393,0.6666666666666666,1654.92,ENEM_MAT_03_perimetro.pdf
+fechado,e5_rerank,Q061,direta,Geometria e trigonometria,pequeno (<=7 chunks),ENEM_MAT_03_piramide-geometria.pdf,1.0,1.0,1.0,1.0,1.0,0.6396928948344952,0.6666666666666666,1545.75,ENEM_MAT_03_piramide-geometria.pdf
+fechado,e5_rerank,Q062,contextual,Geometria e trigonometria,pequeno (<=7 chunks),ENEM_MAT_03_piramide-geometria.pdf,0.0,0.0,0.0,1.0,0.14285714285714285,0.36344100947032415,0.6666666666666666,1765.46,ENEM_MAT_03_volume.pdf
+fechado,e5_rerank,Q063,direta,Geometria e trigonometria,medio (8-20 chunks),ENEM_MAT_03_plano-cartesiano.pdf,1.0,1.0,1.0,1.0,1.0,0.7144293569896268,1.0,1576.98,ENEM_MAT_03_plano-cartesiano.pdf
+fechado,e5_rerank,Q064,contextual,Geometria e trigonometria,medio (8-20 chunks),ENEM_MAT_03_plano-cartesiano.pdf,1.0,1.0,1.0,1.0,1.0,0.6544806325204944,0.6666666666666666,1655.8,ENEM_MAT_03_plano-cartesiano.pdf
+fechado,e5_rerank,Q065,direta,Geometria e trigonometria,medio (8-20 chunks),ENEM_MAT_03_poligono.pdf,1.0,1.0,1.0,1.0,1.0,0.9668728882728055,1.0,1584.61,ENEM_MAT_03_poligono.pdf
+fechado,e5_rerank,Q066,contextual,Geometria e trigonometria,medio (8-20 chunks),ENEM_MAT_03_poligono.pdf,1.0,1.0,1.0,1.0,1.0,0.7588684567965223,1.0,1820.47,ENEM_MAT_03_poligono.pdf
+fechado,e5_rerank,Q067,direta,Geometria e trigonometria,pequeno (<=7 chunks),ENEM_MAT_03_prisma-geometria.pdf,1.0,1.0,1.0,1.0,1.0,0.9055324973537962,1.0,1549.09,ENEM_MAT_03_prisma-geometria.pdf
+fechado,e5_rerank,Q068,contextual,Geometria e trigonometria,pequeno (<=7 chunks),ENEM_MAT_03_prisma-geometria.pdf,0.0,0.0,0.0,0.0,0.0,0.12741733550370724,0.3333333333333333,1798.74,ENEM_MAT_03_volume.pdf
+fechado,e5_rerank,Q069,direta,Geometria e trigonometria,medio (8-20 chunks),ENEM_MAT_03_semelhanca-de-triangulos.pdf,1.0,1.0,1.0,1.0,1.0,0.680450372435079,1.0,1568.63,ENEM_MAT_03_semelhanca-de-triangulos.pdf
+fechado,e5_rerank,Q070,contextual,Geometria e trigonometria,medio (8-20 chunks),ENEM_MAT_03_semelhanca-de-triangulos.pdf,0.0,0.0,0.0,0.0,0.0,0.0,0.0,1981.94,ENEM_MAT_03_piramide-geometria.pdf
+fechado,e5_rerank,Q071,direta,Geometria e trigonometria,grande (>20 chunks),ENEM_MAT_03_teorema-de-pitagoras.pdf,1.0,1.0,1.0,1.0,1.0,0.8061146145519253,0.6666666666666666,1840.71,ENEM_MAT_03_teorema-de-pitagoras.pdf
+fechado,e5_rerank,Q072,contextual,Geometria e trigonometria,grande (>20 chunks),ENEM_MAT_03_teorema-de-pitagoras.pdf,0.0,0.0,0.0,1.0,0.16666666666666666,0.07839826897867533,0.0,1704.68,ENEM_MAT_03_piramide-geometria.pdf
+fechado,e5_rerank,Q073,direta,Geometria e trigonometria,pequeno (<=7 chunks),ENEM_MAT_03_triangulo-retangulo.pdf,1.0,1.0,1.0,1.0,1.0,0.6833378295317422,1.0,1754.62,ENEM_MAT_03_triangulo-retangulo.pdf
+fechado,e5_rerank,Q074,contextual,Geometria e trigonometria,pequeno (<=7 chunks),ENEM_MAT_03_triangulo-retangulo.pdf,0.0,1.0,1.0,1.0,0.5,0.502281926456327,1.0,1862.66,ENEM_MAT_03_trigonometria.pdf
+fechado,e5_rerank,Q075,direta,Geometria e trigonometria,medio (8-20 chunks),ENEM_MAT_03_trigonometria.pdf,1.0,1.0,1.0,1.0,1.0,0.9526058178152246,1.0,2111.6,ENEM_MAT_03_trigonometria.pdf
+fechado,e5_rerank,Q076,contextual,Geometria e trigonometria,medio (8-20 chunks),ENEM_MAT_03_trigonometria.pdf,0.0,0.0,0.0,0.0,0.0,0.0,0.0,1926.15,ENEM_MAT_03_piramide-geometria.pdf
+fechado,e5_rerank,Q077,direta,Geometria e trigonometria,pequeno (<=7 chunks),ENEM_MAT_03_volume.pdf,1.0,1.0,1.0,1.0,1.0,0.36417417493582804,0.3333333333333333,1661.46,ENEM_MAT_03_volume.pdf
+fechado,e5_rerank,Q078,contextual,Geometria e trigonometria,pequeno (<=7 chunks),ENEM_MAT_03_volume.pdf,1.0,1.0,1.0,1.0,1.0,0.40638531833176234,0.3333333333333333,1755.45,ENEM_MAT_03_volume.pdf
+fechado,e5_rerank,Q079,direta,Grandezas e medidas,pequeno (<=7 chunks),ENEM_MAT_04_densidade-demografica.pdf,1.0,1.0,1.0,1.0,1.0,0.7541985434892589,0.6666666666666666,1548.78,ENEM_MAT_04_densidade-demografica.pdf
+fechado,e5_rerank,Q080,contextual,Grandezas e medidas,pequeno (<=7 chunks),ENEM_MAT_04_densidade-demografica.pdf,1.0,1.0,1.0,1.0,1.0,0.8048099750039491,0.6666666666666666,1767.17,ENEM_MAT_04_densidade-demografica.pdf
+fechado,e5_rerank,Q081,direta,Grandezas e medidas,medio (8-20 chunks),ENEM_MAT_04_escala-cartografia.pdf,1.0,1.0,1.0,1.0,1.0,0.9229493163071021,1.0,1517.37,ENEM_MAT_04_escala-cartografia.pdf
+fechado,e5_rerank,Q082,contextual,Grandezas e medidas,medio (8-20 chunks),ENEM_MAT_04_escala-cartografia.pdf,0.0,1.0,1.0,1.0,0.3333333333333333,0.4419013893701215,0.3333333333333333,1553.82,ENEM_MAT_03_distancia-entre-dois-pontos.pdf
+fechado,e5_rerank,Q083,direta,Grandezas e medidas,grande (>20 chunks),ENEM_MAT_04_sistema-internacional-de-unidades.pdf,1.0,1.0,1.0,1.0,1.0,0.9305687780632227,1.0,2059.84,ENEM_MAT_04_sistema-internacional-de-unidades.pdf
+fechado,e5_rerank,Q084,contextual,Grandezas e medidas,grande (>20 chunks),ENEM_MAT_04_sistema-internacional-de-unidades.pdf,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1766.79,ENEM_MAT_04_sistema-internacional-de-unidades.pdf
+fechado,e5_rerank,Q085,direta,Grandezas e medidas,pequeno (<=7 chunks),ENEM_MAT_04_vazao.pdf,1.0,1.0,1.0,1.0,1.0,0.7983376406243772,1.0,1571.04,ENEM_MAT_04_vazao.pdf
+fechado,e5_rerank,Q086,contextual,Grandezas e medidas,pequeno (<=7 chunks),ENEM_MAT_04_vazao.pdf,1.0,1.0,1.0,1.0,1.0,0.7922024596886922,0.6666666666666666,2135.08,ENEM_MAT_04_vazao.pdf
+fechado,e5_rerank,Q087,direta,Grandezas e medidas,grande (>20 chunks),ENEM_MAT_04_velocidade.pdf,1.0,1.0,1.0,1.0,1.0,0.8603818544462508,1.0,1751.27,ENEM_MAT_04_velocidade.pdf
+fechado,e5_rerank,Q088,contextual,Grandezas e medidas,grande (>20 chunks),ENEM_MAT_04_velocidade.pdf,1.0,1.0,1.0,1.0,1.0,0.7885497208855956,1.0,2475.67,ENEM_MAT_04_velocidade.pdf
+fechado,e5_rerank,Q089,direta,"Combinatória, estatística e probabilidade",medio (8-20 chunks),ENEM_MAT_05_analise-combinatoria.pdf,1.0,1.0,1.0,1.0,1.0,0.6405914129030108,0.6666666666666666,1460.17,ENEM_MAT_05_arranjo-combinatoria.pdf
+fechado,e5_rerank,Q090,contextual,"Combinatória, estatística e probabilidade",medio (8-20 chunks),ENEM_MAT_05_analise-combinatoria.pdf,0.0,0.0,0.0,0.0,0.0,0.2615868982389814,0.6666666666666666,1723.65,ENEM_MAT_05_permutacao.pdf
+fechado,e5_rerank,Q091,direta,"Combinatória, estatística e probabilidade",medio (8-20 chunks),ENEM_MAT_05_arranjo-combinatoria.pdf,1.0,1.0,1.0,1.0,1.0,0.8232009233204182,1.0,1671.84,ENEM_MAT_05_arranjo-combinatoria.pdf
+fechado,e5_rerank,Q092,contextual,"Combinatória, estatística e probabilidade",medio (8-20 chunks),ENEM_MAT_05_arranjo-combinatoria.pdf,0.0,1.0,1.0,1.0,0.5,0.7215901068666986,1.0,1721.23,ENEM_MAT_05_combinacao-matematica.pdf
+fechado,e5_rerank,Q093,direta,"Combinatória, estatística e probabilidade",pequeno (<=7 chunks),ENEM_MAT_05_combinacao-matematica.pdf,1.0,1.0,1.0,1.0,1.0,0.8269208406459508,1.0,1602.76,ENEM_MAT_05_combinacao-matematica.pdf
+fechado,e5_rerank,Q094,contextual,"Combinatória, estatística e probabilidade",pequeno (<=7 chunks),ENEM_MAT_05_combinacao-matematica.pdf,0.0,0.0,0.0,0.0,0.0,0.46034389731673175,0.6666666666666666,1789.44,ENEM_MAT_05_arranjo-combinatoria.pdf
+fechado,e5_rerank,Q095,direta,"Combinatória, estatística e probabilidade",grande (>20 chunks),ENEM_MAT_05_desvio-padrao.pdf,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1540.28,ENEM_MAT_05_desvio-padrao.pdf
+fechado,e5_rerank,Q096,contextual,"Combinatória, estatística e probabilidade",grande (>20 chunks),ENEM_MAT_05_desvio-padrao.pdf,1.0,1.0,1.0,1.0,1.0,0.5677211578528083,1.0,1665.88,ENEM_MAT_05_desvio-padrao.pdf
+fechado,e5_rerank,Q097,direta,"Combinatória, estatística e probabilidade",medio (8-20 chunks),ENEM_MAT_05_estatistica.pdf,1.0,1.0,1.0,1.0,1.0,0.9032521000738536,1.0,1527.92,ENEM_MAT_05_estatistica.pdf
+fechado,e5_rerank,Q098,contextual,"Combinatória, estatística e probabilidade",medio (8-20 chunks),ENEM_MAT_05_estatistica.pdf,1.0,1.0,1.0,1.0,1.0,0.5316691841947995,0.3333333333333333,1684.57,ENEM_MAT_05_estatistica.pdf
+fechado,e5_rerank,Q099,direta,"Combinatória, estatística e probabilidade",pequeno (<=7 chunks),ENEM_MAT_05_media-aritmetica.pdf,1.0,1.0,1.0,1.0,1.0,0.5063913885247353,0.6666666666666666,1522.74,ENEM_MAT_05_media-aritmetica.pdf
+fechado,e5_rerank,Q100,contextual,"Combinatória, estatística e probabilidade",pequeno (<=7 chunks),ENEM_MAT_05_media-aritmetica.pdf,1.0,1.0,1.0,1.0,1.0,0.415617447187586,0.6666666666666666,1782.12,ENEM_MAT_05_media-aritmetica.pdf
+fechado,e5_rerank,Q101,direta,"Combinatória, estatística e probabilidade",grande (>20 chunks),ENEM_MAT_05_mediana-estatistica.pdf,1.0,1.0,1.0,1.0,1.0,0.9266360779006398,1.0,1493.14,ENEM_MAT_05_mediana-estatistica.pdf
+fechado,e5_rerank,Q102,contextual,"Combinatória, estatística e probabilidade",grande (>20 chunks),ENEM_MAT_05_mediana-estatistica.pdf,1.0,1.0,1.0,1.0,1.0,0.6136525857537392,1.0,2104.54,ENEM_MAT_05_mediana-estatistica.pdf
+fechado,e5_rerank,Q103,direta,"Combinatória, estatística e probabilidade",grande (>20 chunks),ENEM_MAT_05_moda-estatistica.pdf,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1559.61,ENEM_MAT_05_moda-estatistica.pdf
+fechado,e5_rerank,Q104,contextual,"Combinatória, estatística e probabilidade",grande (>20 chunks),ENEM_MAT_05_moda-estatistica.pdf,1.0,1.0,1.0,1.0,1.0,0.7917267193679838,1.0,2104.06,ENEM_MAT_05_moda-estatistica.pdf
+fechado,e5_rerank,Q105,direta,"Combinatória, estatística e probabilidade",medio (8-20 chunks),ENEM_MAT_05_permutacao.pdf,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1590.11,ENEM_MAT_05_permutacao.pdf
+fechado,e5_rerank,Q106,contextual,"Combinatória, estatística e probabilidade",medio (8-20 chunks),ENEM_MAT_05_permutacao.pdf,0.0,0.0,1.0,1.0,0.25,0.3392029752820385,0.6666666666666666,1756.68,ENEM_MAT_05_analise-combinatoria.pdf
+fechado,e5_rerank,Q107,direta,"Combinatória, estatística e probabilidade",pequeno (<=7 chunks),ENEM_MAT_05_probabilidade-condicional.pdf,1.0,1.0,1.0,1.0,1.0,0.8768195546724313,1.0,1549.16,ENEM_MAT_05_probabilidade-condicional.pdf
+fechado,e5_rerank,Q108,contextual,"Combinatória, estatística e probabilidade",pequeno (<=7 chunks),ENEM_MAT_05_probabilidade-condicional.pdf,1.0,1.0,1.0,1.0,1.0,0.6910474439307814,0.6666666666666666,2183.52,ENEM_MAT_05_probabilidade-condicional.pdf
+fechado,e5_rerank,Q109,direta,"Combinatória, estatística e probabilidade",grande (>20 chunks),ENEM_MAT_05_probabilidade.pdf,1.0,1.0,1.0,1.0,1.0,0.8521705090845474,1.0,1482.04,ENEM_MAT_05_probabilidade.pdf
+fechado,e5_rerank,Q110,contextual,"Combinatória, estatística e probabilidade",grande (>20 chunks),ENEM_MAT_05_probabilidade.pdf,1.0,1.0,1.0,1.0,1.0,0.5670647108745397,1.0,1712.16,ENEM_MAT_05_probabilidade.pdf
+fechado,e5_rerank,Q111,direta,"Combinatória, estatística e probabilidade",medio (8-20 chunks),ENEM_MAT_05_variancia.pdf,1.0,1.0,1.0,1.0,1.0,0.8041584570597918,1.0,1616.37,ENEM_MAT_05_variancia.pdf
+fechado,e5_rerank,Q112,contextual,"Combinatória, estatística e probabilidade",medio (8-20 chunks),ENEM_MAT_05_variancia.pdf,0.0,0.0,0.0,1.0,0.1,0.21034863239767182,0.3333333333333333,1532.66,ENEM_MAT_05_desvio-padrao.pdf
+fechado,e5_rerank,Q113,direta,Matemática financeira,pequeno (<=7 chunks),ENEM_MAT_06_amortizacao.pdf,1.0,1.0,1.0,1.0,1.0,0.9086864061862617,1.0,1648.97,ENEM_MAT_06_amortizacao.pdf
+fechado,e5_rerank,Q114,contextual,Matemática financeira,pequeno (<=7 chunks),ENEM_MAT_06_amortizacao.pdf,1.0,1.0,1.0,1.0,1.0,0.9393854303608579,1.0,2175.76,ENEM_MAT_06_amortizacao.pdf
+fechado,e5_rerank,Q115,direta,Matemática financeira,grande (>20 chunks),ENEM_MAT_06_inflacao.pdf,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1415.3,ENEM_MAT_06_inflacao.pdf
+fechado,e5_rerank,Q116,contextual,Matemática financeira,grande (>20 chunks),ENEM_MAT_06_inflacao.pdf,1.0,1.0,1.0,1.0,1.0,0.8200685179888282,1.0,2133.26,ENEM_MAT_06_inflacao.pdf
+fechado,e5_rerank,Q117,direta,Matemática financeira,grande (>20 chunks),ENEM_MAT_06_juros-compostos.pdf,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1500.43,ENEM_MAT_06_juros-compostos.pdf
+fechado,e5_rerank,Q118,contextual,Matemática financeira,grande (>20 chunks),ENEM_MAT_06_juros-compostos.pdf,1.0,1.0,1.0,1.0,1.0,1.0,1.0,2171.37,ENEM_MAT_06_juros-compostos.pdf
+fechado,e5_rerank,Q119,direta,Matemática financeira,grande (>20 chunks),ENEM_MAT_06_juros-simples.pdf,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1436.89,ENEM_MAT_06_juros-compostos.pdf
+fechado,e5_rerank,Q120,contextual,Matemática financeira,grande (>20 chunks),ENEM_MAT_06_juros-simples.pdf,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1621.21,ENEM_MAT_06_juros-compostos.pdf
+fechado,e5_rerank,Q121,direta,Matemática financeira,medio (8-20 chunks),ENEM_MAT_06_taxa-de-cambio.pdf,1.0,1.0,1.0,1.0,1.0,0.7273298443105218,1.0,1413.47,ENEM_MAT_06_taxa-de-cambio.pdf
+fechado,e5_rerank,Q122,contextual,Matemática financeira,medio (8-20 chunks),ENEM_MAT_06_taxa-de-cambio.pdf,1.0,1.0,1.0,1.0,1.0,0.43231813227099475,0.6666666666666666,2165.4,ENEM_MAT_06_taxa-de-cambio.pdf
+fechado,e5_rerank,Q123,direta,Lógica,grande (>20 chunks),ENEM_MAT_07_deducao-logica.pdf,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1434.25,ENEM_MAT_07_deducao-logica.pdf
+fechado,e5_rerank,Q124,contextual,Lógica,grande (>20 chunks),ENEM_MAT_07_deducao-logica.pdf,1.0,1.0,1.0,1.0,1.0,0.94497705842548,1.0,1739.6,ENEM_MAT_07_deducao-logica.pdf
+fechado,e5_rerank,Q125,direta,Lógica,grande (>20 chunks),ENEM_MAT_07_logica-proposicional.pdf,1.0,1.0,1.0,1.0,1.0,0.9668728882728055,1.0,1984.98,ENEM_MAT_07_logica-proposicional.pdf
+fechado,e5_rerank,Q126,contextual,Lógica,grande (>20 chunks),ENEM_MAT_07_logica-proposicional.pdf,0.0,1.0,1.0,1.0,0.5,0.6792457365085653,1.0,1632.77,ENEM_MAT_07_deducao-logica.pdf
+fechado,bm25,Q001,direta,Números e operações,grande (>20 chunks),ENEM_MAT_01_conjuntos-numericos.pdf,1.0,1.0,1.0,1.0,1.0,0.39497343648260985,0.6666666666666666,0.86,ENEM_MAT_01_conjuntos-numericos.pdf
+fechado,bm25,Q002,contextual,Números e operações,grande (>20 chunks),ENEM_MAT_01_conjuntos-numericos.pdf,1.0,1.0,1.0,1.0,1.0,0.45730441224715973,0.6666666666666666,1.4,ENEM_MAT_01_conjuntos-numericos.pdf
+fechado,bm25,Q003,direta,Números e operações,medio (8-20 chunks),ENEM_MAT_01_numeros-irracionais.pdf,0.0,0.0,1.0,1.0,0.25,0.5067889734452562,1.0,0.66,ENEM_MAT_01_conjuntos-numericos.pdf
+fechado,bm25,Q004,contextual,Números e operações,medio (8-20 chunks),ENEM_MAT_01_numeros-irracionais.pdf,0.0,1.0,1.0,1.0,0.5,0.3739580773639227,0.3333333333333333,1.14,ENEM_MAT_01_numeros-racionais.pdf
+fechado,bm25,Q005,direta,Números e operações,grande (>20 chunks),ENEM_MAT_01_numeros-racionais.pdf,1.0,1.0,1.0,1.0,1.0,0.8190433973573528,1.0,0.72,ENEM_MAT_01_numeros-racionais.pdf
+fechado,bm25,Q006,contextual,Números e operações,grande (>20 chunks),ENEM_MAT_01_numeros-racionais.pdf,1.0,1.0,1.0,1.0,1.0,0.9652843890316114,1.0,1.03,ENEM_MAT_01_numeros-racionais.pdf
+fechado,bm25,Q007,direta,Números e operações,pequeno (<=7 chunks),ENEM_MAT_01_porcentagem.pdf,1.0,1.0,1.0,1.0,1.0,0.503964175369842,0.6666666666666666,0.72,ENEM_MAT_01_porcentagem.pdf
+fechado,bm25,Q008,contextual,Números e operações,pequeno (<=7 chunks),ENEM_MAT_01_porcentagem.pdf,1.0,1.0,1.0,1.0,1.0,0.40593603934761124,0.3333333333333333,1.15,ENEM_MAT_01_porcentagem.pdf
+fechado,bm25,Q009,direta,Números e operações,medio (8-20 chunks),ENEM_MAT_01_progressao-aritmetica.pdf,1.0,1.0,1.0,1.0,1.0,0.933745776545611,1.0,0.89,ENEM_MAT_01_progressao-aritmetica.pdf
+fechado,bm25,Q010,contextual,Números e operações,medio (8-20 chunks),ENEM_MAT_01_progressao-aritmetica.pdf,0.0,0.0,0.0,0.0,0.0,0.03668196104968002,0.0,1.53,ENEM_MAT_07_logica-proposicional.pdf
+fechado,bm25,Q011,direta,Números e operações,medio (8-20 chunks),ENEM_MAT_01_progressao-geometrica.pdf,1.0,1.0,1.0,1.0,1.0,0.7225878138303585,1.0,0.88,ENEM_MAT_01_progressao-geometrica.pdf
+fechado,bm25,Q012,contextual,Números e operações,medio (8-20 chunks),ENEM_MAT_01_progressao-geometrica.pdf,0.0,0.0,0.0,0.0,0.0,0.0,0.0,1.38,ENEM_MAT_04_sistema-internacional-de-unidades.pdf
+fechado,bm25,Q013,direta,Números e operações,pequeno (<=7 chunks),ENEM_MAT_01_razao-e-proporcao.pdf,1.0,1.0,1.0,1.0,1.0,0.6588463115289287,0.6666666666666666,0.77,ENEM_MAT_01_razao-e-proporcao.pdf
+fechado,bm25,Q014,contextual,Números e operações,pequeno (<=7 chunks),ENEM_MAT_01_razao-e-proporcao.pdf,0.0,0.0,0.0,0.0,0.0,0.0,0.0,1.2,ENEM_MAT_01_numeros-racionais.pdf
+fechado,bm25,Q015,direta,Números e operações,pequeno (<=7 chunks),ENEM_MAT_01_regra-de-tres.pdf,0.0,1.0,1.0,1.0,0.5,0.32448158252957265,0.3333333333333333,0.83,ENEM_MAT_02_sistema-de-equacoes-lineares.pdf
+fechado,bm25,Q016,contextual,Números e operações,pequeno (<=7 chunks),ENEM_MAT_01_regra-de-tres.pdf,0.0,0.0,0.0,0.0,0.0,0.0,0.0,1.0,ENEM_MAT_05_desvio-padrao.pdf
+fechado,bm25,Q017,direta,Números e operações,grande (>20 chunks),ENEM_MAT_01_sistema-de-numeracao.pdf,1.0,1.0,1.0,1.0,1.0,0.538431315257452,1.0,0.89,ENEM_MAT_01_sistema-de-numeracao.pdf
+fechado,bm25,Q018,contextual,Números e operações,grande (>20 chunks),ENEM_MAT_01_sistema-de-numeracao.pdf,0.0,1.0,1.0,1.0,0.5,0.13886244387355454,0.3333333333333333,1.29,ENEM_MAT_01_conjuntos-numericos.pdf
+fechado,bm25,Q019,direta,Álgebra e funções,medio (8-20 chunks),ENEM_MAT_02_equacao-do-primeiro-grau.pdf,0.0,1.0,1.0,1.0,0.3333333333333333,0.19518900079066107,0.3333333333333333,0.81,ENEM_MAT_02_equacao-do-segundo-grau.pdf
+fechado,bm25,Q020,contextual,Álgebra e funções,medio (8-20 chunks),ENEM_MAT_02_equacao-do-primeiro-grau.pdf,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.89,ENEM_MAT_03_teorema-de-pitagoras.pdf
+fechado,bm25,Q021,direta,Álgebra e funções,grande (>20 chunks),ENEM_MAT_02_equacao-do-segundo-grau.pdf,1.0,1.0,1.0,1.0,1.0,0.8831745958784473,1.0,1.06,ENEM_MAT_02_equacao-do-segundo-grau.pdf
+fechado,bm25,Q022,contextual,Álgebra e funções,grande (>20 chunks),ENEM_MAT_02_equacao-do-segundo-grau.pdf,1.0,1.0,1.0,1.0,1.0,0.8276325935591535,1.0,1.11,ENEM_MAT_02_equacao-do-segundo-grau.pdf
+fechado,bm25,Q023,direta,Álgebra e funções,medio (8-20 chunks),ENEM_MAT_02_funcao-afim.pdf,1.0,1.0,1.0,1.0,1.0,0.933745776545611,1.0,0.86,ENEM_MAT_02_funcao-afim.pdf
+fechado,bm25,Q024,contextual,Álgebra e funções,medio (8-20 chunks),ENEM_MAT_02_funcao-afim.pdf,0.0,1.0,1.0,1.0,0.5,0.23365080824310533,0.3333333333333333,1.35,ENEM_MAT_06_taxa-de-cambio.pdf
+fechado,bm25,Q025,direta,Álgebra e funções,medio (8-20 chunks),ENEM_MAT_02_funcao-exponencial.pdf,1.0,1.0,1.0,1.0,1.0,0.9668728882728055,1.0,0.81,ENEM_MAT_02_funcao-exponencial.pdf
+fechado,bm25,Q026,contextual,Álgebra e funções,medio (8-20 chunks),ENEM_MAT_02_funcao-exponencial.pdf,0.0,0.0,0.0,0.0,0.0,0.034715610968388634,0.0,1.17,ENEM_MAT_05_probabilidade.pdf
+fechado,bm25,Q027,direta,Álgebra e funções,grande (>20 chunks),ENEM_MAT_02_funcao-logaritmica.pdf,0.0,1.0,1.0,1.0,0.5,0.6698623505528797,0.3333333333333333,0.74,ENEM_MAT_02_equacao-do-segundo-grau.pdf
+fechado,bm25,Q028,contextual,Álgebra e funções,grande (>20 chunks),ENEM_MAT_02_funcao-logaritmica.pdf,1.0,1.0,1.0,1.0,1.0,0.42838543210841196,0.6666666666666666,1.76,ENEM_MAT_02_funcao-logaritmica.pdf
+fechado,bm25,Q029,direta,Álgebra e funções,medio (8-20 chunks),ENEM_MAT_02_funcao-quadratica.pdf,0.0,1.0,1.0,1.0,0.5,0.8201450440740853,1.0,0.79,ENEM_MAT_02_equacao-do-segundo-grau.pdf
+fechado,bm25,Q030,contextual,Álgebra e funções,medio (8-20 chunks),ENEM_MAT_02_funcao-quadratica.pdf,1.0,1.0,1.0,1.0,1.0,0.5540453237898172,0.6666666666666666,1.17,ENEM_MAT_02_funcao-quadratica.pdf
+fechado,bm25,Q031,direta,Álgebra e funções,pequeno (<=7 chunks),ENEM_MAT_02_inequacao.pdf,1.0,1.0,1.0,1.0,1.0,0.5282800663700055,0.6666666666666666,0.62,ENEM_MAT_02_inequacao.pdf
+fechado,bm25,Q032,contextual,Álgebra e funções,pequeno (<=7 chunks),ENEM_MAT_02_inequacao.pdf,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.99,ENEM_MAT_05_moda-estatistica.pdf
+fechado,bm25,Q033,direta,Álgebra e funções,medio (8-20 chunks),ENEM_MAT_02_sequencia-numerica.pdf,1.0,1.0,1.0,1.0,1.0,0.6851361363298086,1.0,0.73,ENEM_MAT_02_sequencia-numerica.pdf
+fechado,bm25,Q034,contextual,Álgebra e funções,medio (8-20 chunks),ENEM_MAT_02_sequencia-numerica.pdf,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.92,ENEM_MAT_05_probabilidade.pdf
+fechado,bm25,Q035,direta,Álgebra e funções,grande (>20 chunks),ENEM_MAT_02_sistema-de-equacoes-lineares.pdf,1.0,1.0,1.0,1.0,1.0,1.0,1.0,0.79,ENEM_MAT_02_sistema-de-equacoes-lineares.pdf
+fechado,bm25,Q036,contextual,Álgebra e funções,grande (>20 chunks),ENEM_MAT_02_sistema-de-equacoes-lineares.pdf,0.0,0.0,0.0,0.0,0.0,0.0,0.0,1.12,ENEM_MAT_04_velocidade.pdf
+fechado,bm25,Q037,direta,Geometria e trigonometria,grande (>20 chunks),ENEM_MAT_03_area-geometria.pdf,1.0,1.0,1.0,1.0,1.0,0.6296648303045173,0.6666666666666666,0.77,ENEM_MAT_03_area-geometria.pdf
+fechado,bm25,Q038,contextual,Geometria e trigonometria,grande (>20 chunks),ENEM_MAT_03_area-geometria.pdf,0.0,1.0,1.0,1.0,0.5,0.6051399156371955,1.0,1.01,ENEM_MAT_03_geometria-plana.pdf
+fechado,bm25,Q039,direta,Geometria e trigonometria,medio (8-20 chunks),ENEM_MAT_03_ciclo-trigonometrico.pdf,0.0,0.0,0.0,0.0,0.0,0.24000160100221274,0.3333333333333333,0.53,ENEM_MAT_05_permutacao.pdf
+fechado,bm25,Q040,contextual,Geometria e trigonometria,medio (8-20 chunks),ENEM_MAT_03_ciclo-trigonometrico.pdf,0.0,1.0,1.0,1.0,0.3333333333333333,0.5341071936011522,1.0,1.34,ENEM_MAT_03_trigonometria.pdf
+fechado,bm25,Q041,direta,Geometria e trigonometria,pequeno (<=7 chunks),ENEM_MAT_03_cilindro.pdf,1.0,1.0,1.0,1.0,1.0,0.6156592741460616,0.6666666666666666,0.65,ENEM_MAT_03_cilindro.pdf
+fechado,bm25,Q042,contextual,Geometria e trigonometria,pequeno (<=7 chunks),ENEM_MAT_03_cilindro.pdf,0.0,0.0,1.0,1.0,0.25,0.2870278490124032,0.3333333333333333,1.15,ENEM_MAT_03_volume.pdf
+fechado,bm25,Q043,direta,Geometria e trigonometria,pequeno (<=7 chunks),ENEM_MAT_03_cone.pdf,1.0,1.0,1.0,1.0,1.0,0.6744065135140929,1.0,0.71,ENEM_MAT_03_cone.pdf
+fechado,bm25,Q044,contextual,Geometria e trigonometria,pequeno (<=7 chunks),ENEM_MAT_03_cone.pdf,0.0,1.0,1.0,1.0,0.5,0.28835613584125,0.3333333333333333,1.27,ENEM_MAT_03_cilindro.pdf
+fechado,bm25,Q045,direta,Geometria e trigonometria,medio (8-20 chunks),ENEM_MAT_03_distancia-entre-dois-pontos.pdf,0.0,1.0,1.0,1.0,0.5,0.702853172312057,1.0,1.05,ENEM_MAT_03_geometria-analitica.pdf
+fechado,bm25,Q046,contextual,Geometria e trigonometria,medio (8-20 chunks),ENEM_MAT_03_distancia-entre-dois-pontos.pdf,0.0,0.0,0.0,0.0,0.0,0.20309988727905914,0.3333333333333333,1.32,ENEM_MAT_03_plano-cartesiano.pdf
+fechado,bm25,Q047,direta,Geometria e trigonometria,pequeno (<=7 chunks),ENEM_MAT_03_esfera.pdf,1.0,1.0,1.0,1.0,1.0,0.6673519737650218,0.6666666666666666,0.86,ENEM_MAT_03_esfera.pdf
+fechado,bm25,Q048,contextual,Geometria e trigonometria,pequeno (<=7 chunks),ENEM_MAT_03_esfera.pdf,1.0,1.0,1.0,1.0,1.0,0.39868434807468306,0.6666666666666666,1.04,ENEM_MAT_03_esfera.pdf
+fechado,bm25,Q049,direta,Geometria e trigonometria,grande (>20 chunks),ENEM_MAT_03_geometria-analitica.pdf,1.0,1.0,1.0,1.0,1.0,0.933745776545611,1.0,0.7,ENEM_MAT_03_geometria-analitica.pdf
+fechado,bm25,Q050,contextual,Geometria e trigonometria,grande (>20 chunks),ENEM_MAT_03_geometria-analitica.pdf,1.0,1.0,1.0,1.0,1.0,0.8068752364631088,1.0,0.91,ENEM_MAT_03_geometria-analitica.pdf
+fechado,bm25,Q051,direta,Geometria e trigonometria,pequeno (<=7 chunks),ENEM_MAT_03_geometria-espacial.pdf,1.0,1.0,1.0,1.0,1.0,0.3941769500918012,0.6666666666666666,0.82,ENEM_MAT_03_geometria-espacial.pdf
+fechado,bm25,Q052,contextual,Geometria e trigonometria,pequeno (<=7 chunks),ENEM_MAT_03_geometria-espacial.pdf,1.0,1.0,1.0,1.0,1.0,0.2996484034259831,0.3333333333333333,1.01,ENEM_MAT_03_geometria-espacial.pdf
+fechado,bm25,Q053,direta,Geometria e trigonometria,grande (>20 chunks),ENEM_MAT_03_geometria-plana.pdf,1.0,1.0,1.0,1.0,1.0,0.615890717448506,1.0,0.86,ENEM_MAT_03_geometria-plana.pdf
+fechado,bm25,Q054,contextual,Geometria e trigonometria,grande (>20 chunks),ENEM_MAT_03_geometria-plana.pdf,1.0,1.0,1.0,1.0,1.0,0.7591402384099978,1.0,1.23,ENEM_MAT_03_geometria-plana.pdf
+fechado,bm25,Q055,direta,Geometria e trigonometria,pequeno (<=7 chunks),ENEM_MAT_03_lei-dos-cossenos.pdf,0.0,1.0,1.0,1.0,0.5,0.5710703912334671,0.6666666666666666,0.97,ENEM_MAT_03_teorema-de-pitagoras.pdf
+fechado,bm25,Q056,contextual,Geometria e trigonometria,pequeno (<=7 chunks),ENEM_MAT_03_lei-dos-cossenos.pdf,0.0,0.0,0.0,0.0,0.0,0.04353781328125616,0.0,1.48,ENEM_MAT_03_triangulo-retangulo.pdf
+fechado,bm25,Q057,direta,Geometria e trigonometria,pequeno (<=7 chunks),ENEM_MAT_03_lei-dos-senos.pdf,0.0,1.0,1.0,1.0,0.5,0.8777739055892406,1.0,0.74,ENEM_MAT_03_trigonometria.pdf
+fechado,bm25,Q058,contextual,Geometria e trigonometria,pequeno (<=7 chunks),ENEM_MAT_03_lei-dos-senos.pdf,0.0,0.0,0.0,0.0,0.0,0.4149283941291497,0.6666666666666666,1.45,ENEM_MAT_03_trigonometria.pdf
+fechado,bm25,Q059,direta,Geometria e trigonometria,pequeno (<=7 chunks),ENEM_MAT_03_perimetro.pdf,1.0,1.0,1.0,1.0,1.0,0.8128889504805838,0.6666666666666666,0.7,ENEM_MAT_03_perimetro.pdf
+fechado,bm25,Q060,contextual,Geometria e trigonometria,pequeno (<=7 chunks),ENEM_MAT_03_perimetro.pdf,0.0,0.0,0.0,0.0,0.0,0.13893229086313383,0.3333333333333333,1.2,ENEM_MAT_03_geometria-plana.pdf
+fechado,bm25,Q061,direta,Geometria e trigonometria,pequeno (<=7 chunks),ENEM_MAT_03_piramide-geometria.pdf,1.0,1.0,1.0,1.0,1.0,0.8060610239036469,0.6666666666666666,0.76,ENEM_MAT_03_piramide-geometria.pdf
+fechado,bm25,Q062,contextual,Geometria e trigonometria,pequeno (<=7 chunks),ENEM_MAT_03_piramide-geometria.pdf,1.0,1.0,1.0,1.0,1.0,0.7113132115193012,1.0,1.55,ENEM_MAT_03_piramide-geometria.pdf
+fechado,bm25,Q063,direta,Geometria e trigonometria,medio (8-20 chunks),ENEM_MAT_03_plano-cartesiano.pdf,0.0,1.0,1.0,1.0,0.5,0.5435104256084319,1.0,0.93,ENEM_MAT_03_geometria-analitica.pdf
+fechado,bm25,Q064,contextual,Geometria e trigonometria,medio (8-20 chunks),ENEM_MAT_03_plano-cartesiano.pdf,1.0,1.0,1.0,1.0,1.0,0.4983596474765923,0.3333333333333333,1.17,ENEM_MAT_03_plano-cartesiano.pdf
+fechado,bm25,Q065,direta,Geometria e trigonometria,medio (8-20 chunks),ENEM_MAT_03_poligono.pdf,1.0,1.0,1.0,1.0,1.0,0.7426950943557751,1.0,0.89,ENEM_MAT_03_poligono.pdf
+fechado,bm25,Q066,contextual,Geometria e trigonometria,medio (8-20 chunks),ENEM_MAT_03_poligono.pdf,1.0,1.0,1.0,1.0,1.0,0.7134018736959569,1.0,0.97,ENEM_MAT_03_poligono.pdf
+fechado,bm25,Q067,direta,Geometria e trigonometria,pequeno (<=7 chunks),ENEM_MAT_03_prisma-geometria.pdf,1.0,1.0,1.0,1.0,1.0,0.7528405642535602,0.6666666666666666,0.67,ENEM_MAT_03_prisma-geometria.pdf
+fechado,bm25,Q068,contextual,Geometria e trigonometria,pequeno (<=7 chunks),ENEM_MAT_03_prisma-geometria.pdf,1.0,1.0,1.0,1.0,1.0,0.5612269024611166,1.0,1.14,ENEM_MAT_03_prisma-geometria.pdf
+fechado,bm25,Q069,direta,Geometria e trigonometria,medio (8-20 chunks),ENEM_MAT_03_semelhanca-de-triangulos.pdf,1.0,1.0,1.0,1.0,1.0,0.7059054020403311,1.0,0.82,ENEM_MAT_03_semelhanca-de-triangulos.pdf
+fechado,bm25,Q070,contextual,Geometria e trigonometria,medio (8-20 chunks),ENEM_MAT_03_semelhanca-de-triangulos.pdf,0.0,0.0,0.0,0.0,0.0,0.0,0.0,1.27,ENEM_MAT_06_juros-compostos.pdf
+fechado,bm25,Q071,direta,Geometria e trigonometria,grande (>20 chunks),ENEM_MAT_03_teorema-de-pitagoras.pdf,1.0,1.0,1.0,1.0,1.0,0.8611375561264454,0.6666666666666666,0.7,ENEM_MAT_03_teorema-de-pitagoras.pdf
+fechado,bm25,Q072,contextual,Geometria e trigonometria,grande (>20 chunks),ENEM_MAT_03_teorema-de-pitagoras.pdf,0.0,0.0,0.0,0.0,0.0,0.0,0.0,1.05,ENEM_MAT_05_permutacao.pdf
+fechado,bm25,Q073,direta,Geometria e trigonometria,pequeno (<=7 chunks),ENEM_MAT_03_triangulo-retangulo.pdf,1.0,1.0,1.0,1.0,1.0,0.7761528705688655,1.0,0.91,ENEM_MAT_03_triangulo-retangulo.pdf
+fechado,bm25,Q074,contextual,Geometria e trigonometria,pequeno (<=7 chunks),ENEM_MAT_03_triangulo-retangulo.pdf,0.0,1.0,1.0,1.0,0.5,0.5867357873064376,1.0,1.05,ENEM_MAT_03_trigonometria.pdf
+fechado,bm25,Q075,direta,Geometria e trigonometria,medio (8-20 chunks),ENEM_MAT_03_trigonometria.pdf,1.0,1.0,1.0,1.0,1.0,0.9289904714111863,1.0,0.65,ENEM_MAT_03_trigonometria.pdf
+fechado,bm25,Q076,contextual,Geometria e trigonometria,medio (8-20 chunks),ENEM_MAT_03_trigonometria.pdf,0.0,0.0,0.0,1.0,0.16666666666666666,0.17646288653254022,0.0,1.34,ENEM_MAT_03_area-geometria.pdf
+fechado,bm25,Q077,direta,Geometria e trigonometria,pequeno (<=7 chunks),ENEM_MAT_03_volume.pdf,1.0,1.0,1.0,1.0,1.0,0.5438487877840585,0.6666666666666666,0.96,ENEM_MAT_03_volume.pdf
+fechado,bm25,Q078,contextual,Geometria e trigonometria,pequeno (<=7 chunks),ENEM_MAT_03_volume.pdf,0.0,1.0,1.0,1.0,0.3333333333333333,0.14982420171299154,0.3333333333333333,0.88,ENEM_MAT_04_sistema-internacional-de-unidades.pdf
+fechado,bm25,Q079,direta,Grandezas e medidas,pequeno (<=7 chunks),ENEM_MAT_04_densidade-demografica.pdf,1.0,1.0,1.0,1.0,1.0,0.9709286432396581,1.0,0.81,ENEM_MAT_04_densidade-demografica.pdf
+fechado,bm25,Q080,contextual,Grandezas e medidas,pequeno (<=7 chunks),ENEM_MAT_04_densidade-demografica.pdf,1.0,1.0,1.0,1.0,1.0,0.8318724637288826,1.0,1.22,ENEM_MAT_04_densidade-demografica.pdf
+fechado,bm25,Q081,direta,Grandezas e medidas,medio (8-20 chunks),ENEM_MAT_04_escala-cartografia.pdf,1.0,1.0,1.0,1.0,1.0,0.6505628424946985,0.6666666666666666,0.79,ENEM_MAT_04_escala-cartografia.pdf
+fechado,bm25,Q082,contextual,Grandezas e medidas,medio (8-20 chunks),ENEM_MAT_04_escala-cartografia.pdf,0.0,1.0,1.0,1.0,0.5,0.33372002317091876,0.3333333333333333,1.24,ENEM_MAT_03_distancia-entre-dois-pontos.pdf
+fechado,bm25,Q083,direta,Grandezas e medidas,grande (>20 chunks),ENEM_MAT_04_sistema-internacional-de-unidades.pdf,1.0,1.0,1.0,1.0,1.0,0.8572048559638626,1.0,0.97,ENEM_MAT_04_sistema-internacional-de-unidades.pdf
+fechado,bm25,Q084,contextual,Grandezas e medidas,grande (>20 chunks),ENEM_MAT_04_sistema-internacional-de-unidades.pdf,1.0,1.0,1.0,1.0,1.0,0.718342412090308,0.6666666666666666,1.16,ENEM_MAT_04_sistema-internacional-de-unidades.pdf
+fechado,bm25,Q085,direta,Grandezas e medidas,pequeno (<=7 chunks),ENEM_MAT_04_vazao.pdf,1.0,1.0,1.0,1.0,1.0,0.7422876424363961,1.0,0.73,ENEM_MAT_04_vazao.pdf
+fechado,bm25,Q086,contextual,Grandezas e medidas,pequeno (<=7 chunks),ENEM_MAT_04_vazao.pdf,1.0,1.0,1.0,1.0,1.0,0.4726015064276488,0.6666666666666666,1.3,ENEM_MAT_04_vazao.pdf
+fechado,bm25,Q087,direta,Grandezas e medidas,grande (>20 chunks),ENEM_MAT_04_velocidade.pdf,1.0,1.0,1.0,1.0,1.0,0.7917267193679838,1.0,0.76,ENEM_MAT_04_velocidade.pdf
+fechado,bm25,Q088,contextual,Grandezas e medidas,grande (>20 chunks),ENEM_MAT_04_velocidade.pdf,0.0,0.0,0.0,1.0,0.14285714285714285,0.1951400572044218,0.0,1.2,ENEM_MAT_01_regra-de-tres.pdf
+fechado,bm25,Q089,direta,"Combinatória, estatística e probabilidade",medio (8-20 chunks),ENEM_MAT_05_analise-combinatoria.pdf,1.0,1.0,1.0,1.0,1.0,0.7591402384099978,1.0,0.96,ENEM_MAT_05_analise-combinatoria.pdf
+fechado,bm25,Q090,contextual,"Combinatória, estatística e probabilidade",medio (8-20 chunks),ENEM_MAT_05_analise-combinatoria.pdf,1.0,1.0,1.0,1.0,1.0,0.6859371712772155,1.0,1.12,ENEM_MAT_05_analise-combinatoria.pdf
+fechado,bm25,Q091,direta,"Combinatória, estatística e probabilidade",medio (8-20 chunks),ENEM_MAT_05_arranjo-combinatoria.pdf,1.0,1.0,1.0,1.0,1.0,0.7677078645873638,1.0,0.92,ENEM_MAT_05_analise-combinatoria.pdf
+fechado,bm25,Q092,contextual,"Combinatória, estatística e probabilidade",medio (8-20 chunks),ENEM_MAT_05_arranjo-combinatoria.pdf,0.0,0.0,0.0,1.0,0.14285714285714285,0.5150579128158299,0.6666666666666666,1.41,ENEM_MAT_05_combinacao-matematica.pdf
+fechado,bm25,Q093,direta,"Combinatória, estatística e probabilidade",pequeno (<=7 chunks),ENEM_MAT_05_combinacao-matematica.pdf,0.0,0.0,0.0,1.0,0.16666666666666666,0.5825032706023059,1.0,0.74,ENEM_MAT_05_analise-combinatoria.pdf
+fechado,bm25,Q094,contextual,"Combinatória, estatística e probabilidade",pequeno (<=7 chunks),ENEM_MAT_05_combinacao-matematica.pdf,0.0,0.0,0.0,1.0,0.14285714285714285,0.48805082108346487,1.0,1.15,ENEM_MAT_05_analise-combinatoria.pdf
+fechado,bm25,Q095,direta,"Combinatória, estatística e probabilidade",grande (>20 chunks),ENEM_MAT_05_desvio-padrao.pdf,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.05,ENEM_MAT_05_desvio-padrao.pdf
+fechado,bm25,Q096,contextual,"Combinatória, estatística e probabilidade",grande (>20 chunks),ENEM_MAT_05_desvio-padrao.pdf,1.0,1.0,1.0,1.0,1.0,0.7059054020403311,1.0,1.58,ENEM_MAT_05_desvio-padrao.pdf
+fechado,bm25,Q097,direta,"Combinatória, estatística e probabilidade",medio (8-20 chunks),ENEM_MAT_05_estatistica.pdf,0.0,1.0,1.0,1.0,0.3333333333333333,0.17630010660342912,0.3333333333333333,0.88,ENEM_MAT_05_permutacao.pdf
+fechado,bm25,Q098,contextual,"Combinatória, estatística e probabilidade",medio (8-20 chunks),ENEM_MAT_05_estatistica.pdf,0.0,1.0,1.0,1.0,0.5,0.23365080824310533,0.3333333333333333,0.93,ENEM_MAT_05_desvio-padrao.pdf
+fechado,bm25,Q099,direta,"Combinatória, estatística e probabilidade",pequeno (<=7 chunks),ENEM_MAT_05_media-aritmetica.pdf,0.0,1.0,1.0,1.0,0.3333333333333333,0.42069705268665997,0.3333333333333333,0.73,ENEM_MAT_02_funcao-logaritmica.pdf
+fechado,bm25,Q100,contextual,"Combinatória, estatística e probabilidade",pequeno (<=7 chunks),ENEM_MAT_05_media-aritmetica.pdf,1.0,1.0,1.0,1.0,1.0,0.35341817886732363,0.3333333333333333,1.42,ENEM_MAT_05_media-aritmetica.pdf
+fechado,bm25,Q101,direta,"Combinatória, estatística e probabilidade",grande (>20 chunks),ENEM_MAT_05_mediana-estatistica.pdf,1.0,1.0,1.0,1.0,1.0,0.696938354998433,1.0,0.85,ENEM_MAT_05_mediana-estatistica.pdf
+fechado,bm25,Q102,contextual,"Combinatória, estatística e probabilidade",grande (>20 chunks),ENEM_MAT_05_mediana-estatistica.pdf,0.0,1.0,1.0,1.0,0.5,0.31516255047698366,0.6666666666666666,1.28,ENEM_MAT_06_amortizacao.pdf
+fechado,bm25,Q103,direta,"Combinatória, estatística e probabilidade",grande (>20 chunks),ENEM_MAT_05_moda-estatistica.pdf,1.0,1.0,1.0,1.0,1.0,0.7123736502858726,1.0,0.57,ENEM_MAT_05_moda-estatistica.pdf
+fechado,bm25,Q104,contextual,"Combinatória, estatística e probabilidade",grande (>20 chunks),ENEM_MAT_05_moda-estatistica.pdf,1.0,1.0,1.0,1.0,1.0,0.601572065456638,0.6666666666666666,1.16,ENEM_MAT_05_moda-estatistica.pdf
+fechado,bm25,Q105,direta,"Combinatória, estatística e probabilidade",medio (8-20 chunks),ENEM_MAT_05_permutacao.pdf,1.0,1.0,1.0,1.0,1.0,1.0,1.0,0.71,ENEM_MAT_05_permutacao.pdf
+fechado,bm25,Q106,contextual,"Combinatória, estatística e probabilidade",medio (8-20 chunks),ENEM_MAT_05_permutacao.pdf,0.0,0.0,0.0,1.0,0.14285714285714285,0.29588270316452225,0.6666666666666666,1.02,ENEM_MAT_07_deducao-logica.pdf
+fechado,bm25,Q107,direta,"Combinatória, estatística e probabilidade",pequeno (<=7 chunks),ENEM_MAT_05_probabilidade-condicional.pdf,1.0,1.0,1.0,1.0,1.0,0.40489179961089855,0.6666666666666666,0.71,ENEM_MAT_05_probabilidade-condicional.pdf
+fechado,bm25,Q108,contextual,"Combinatória, estatística e probabilidade",pequeno (<=7 chunks),ENEM_MAT_05_probabilidade-condicional.pdf,1.0,1.0,1.0,1.0,1.0,0.6606844407517196,0.6666666666666666,0.94,ENEM_MAT_05_probabilidade-condicional.pdf
+fechado,bm25,Q109,direta,"Combinatória, estatística e probabilidade",grande (>20 chunks),ENEM_MAT_05_probabilidade.pdf,0.0,0.0,1.0,1.0,0.2,0.2753324438625337,0.0,0.73,ENEM_MAT_05_moda-estatistica.pdf
+fechado,bm25,Q110,contextual,"Combinatória, estatística e probabilidade",grande (>20 chunks),ENEM_MAT_05_probabilidade.pdf,0.0,0.0,0.0,1.0,0.1111111111111111,0.16867134721368446,0.3333333333333333,1.06,ENEM_MAT_03_teorema-de-pitagoras.pdf
+fechado,bm25,Q111,direta,"Combinatória, estatística e probabilidade",medio (8-20 chunks),ENEM_MAT_05_variancia.pdf,1.0,1.0,1.0,1.0,1.0,0.693356132114143,1.0,0.7,ENEM_MAT_05_variancia.pdf
+fechado,bm25,Q112,contextual,"Combinatória, estatística e probabilidade",medio (8-20 chunks),ENEM_MAT_05_variancia.pdf,0.0,0.0,0.0,0.0,0.0,0.18915165033808484,0.3333333333333333,1.21,ENEM_MAT_05_mediana-estatistica.pdf
+fechado,bm25,Q113,direta,Matemática financeira,pequeno (<=7 chunks),ENEM_MAT_06_amortizacao.pdf,1.0,1.0,1.0,1.0,1.0,0.8123682286880258,1.0,0.96,ENEM_MAT_06_amortizacao.pdf
+fechado,bm25,Q114,contextual,Matemática financeira,pequeno (<=7 chunks),ENEM_MAT_06_amortizacao.pdf,1.0,1.0,1.0,1.0,1.0,0.6848922118817872,0.6666666666666666,1.37,ENEM_MAT_06_amortizacao.pdf
+fechado,bm25,Q115,direta,Matemática financeira,grande (>20 chunks),ENEM_MAT_06_inflacao.pdf,1.0,1.0,1.0,1.0,1.0,1.0,1.0,0.71,ENEM_MAT_06_inflacao.pdf
+fechado,bm25,Q116,contextual,Matemática financeira,grande (>20 chunks),ENEM_MAT_06_inflacao.pdf,1.0,1.0,1.0,1.0,1.0,0.42257499837058643,0.6666666666666666,1.29,ENEM_MAT_06_inflacao.pdf
+fechado,bm25,Q117,direta,Matemática financeira,grande (>20 chunks),ENEM_MAT_06_juros-compostos.pdf,1.0,1.0,1.0,1.0,1.0,1.0,1.0,0.85,ENEM_MAT_06_juros-compostos.pdf
+fechado,bm25,Q118,contextual,Matemática financeira,grande (>20 chunks),ENEM_MAT_06_juros-compostos.pdf,1.0,1.0,1.0,1.0,1.0,0.8630152897016882,1.0,1.45,ENEM_MAT_06_juros-compostos.pdf
+fechado,bm25,Q119,direta,Matemática financeira,grande (>20 chunks),ENEM_MAT_06_juros-simples.pdf,1.0,1.0,1.0,1.0,1.0,0.8701249883466592,1.0,0.79,ENEM_MAT_06_juros-compostos.pdf
+fechado,bm25,Q120,contextual,Matemática financeira,grande (>20 chunks),ENEM_MAT_06_juros-simples.pdf,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.58,ENEM_MAT_06_juros-compostos.pdf
+fechado,bm25,Q121,direta,Matemática financeira,medio (8-20 chunks),ENEM_MAT_06_taxa-de-cambio.pdf,1.0,1.0,1.0,1.0,1.0,0.8669479898642709,1.0,0.65,ENEM_MAT_06_taxa-de-cambio.pdf
+fechado,bm25,Q122,contextual,Matemática financeira,medio (8-20 chunks),ENEM_MAT_06_taxa-de-cambio.pdf,0.0,1.0,1.0,1.0,0.5,0.13886244387355454,0.3333333333333333,1.3,ENEM_MAT_01_conjuntos-numericos.pdf
+fechado,bm25,Q123,direta,Lógica,grande (>20 chunks),ENEM_MAT_07_deducao-logica.pdf,1.0,1.0,1.0,1.0,1.0,1.0,1.0,0.63,ENEM_MAT_07_deducao-logica.pdf
+fechado,bm25,Q124,contextual,Lógica,grande (>20 chunks),ENEM_MAT_07_deducao-logica.pdf,1.0,1.0,1.0,1.0,1.0,0.8790301722005142,1.0,1.39,ENEM_MAT_07_deducao-logica.pdf
+fechado,bm25,Q125,direta,Lógica,grande (>20 chunks),ENEM_MAT_07_logica-proposicional.pdf,1.0,1.0,1.0,1.0,1.0,1.0,1.0,0.81,ENEM_MAT_07_logica-proposicional.pdf
+fechado,bm25,Q126,contextual,Lógica,grande (>20 chunks),ENEM_MAT_07_logica-proposicional.pdf,0.0,1.0,1.0,1.0,0.5,0.7185255771977349,1.0,1.49,ENEM_MAT_07_deducao-logica.pdf
+completo,e5_denso,Q001,direta,Números e operações,grande (>20 chunks),ENEM_MAT_01_conjuntos-numericos.pdf,1.0,1.0,1.0,1.0,1.0,0.30523488393970116,0.3333333333333333,254.99,ENEM_MAT_01_conjuntos-numericos.pdf
+completo,e5_denso,Q002,contextual,Números e operações,grande (>20 chunks),ENEM_MAT_01_conjuntos-numericos.pdf,1.0,1.0,1.0,1.0,1.0,0.6321722795235047,1.0,256.78,ENEM_MAT_01_conjuntos-numericos.pdf
+completo,e5_denso,Q003,direta,Números e operações,medio (8-20 chunks),ENEM_MAT_01_numeros-irracionais.pdf,1.0,1.0,1.0,1.0,1.0,0.4215828880095359,0.3333333333333333,252.99,ENEM_MAT_01_numeros-irracionais.pdf
+completo,e5_denso,Q004,contextual,Números e operações,medio (8-20 chunks),ENEM_MAT_01_numeros-irracionais.pdf,0.0,0.0,0.0,1.0,0.14285714285714285,0.07336392209936005,0.0,269.59,ENEM_MAT_03_teorema-de-pitagoras.pdf
+completo,e5_denso,Q005,direta,Números e operações,grande (>20 chunks),ENEM_MAT_01_numeros-racionais.pdf,1.0,1.0,1.0,1.0,1.0,0.9321572773044168,1.0,251.26,ENEM_MAT_01_numeros-racionais.pdf
+completo,e5_denso,Q006,contextual,Números e operações,grande (>20 chunks),ENEM_MAT_01_numeros-racionais.pdf,0.0,0.0,0.0,1.0,0.125,0.13305201013572898,0.0,265.31,TEO_MAT-V1_2024.pdf
+completo,e5_denso,Q007,direta,Números e operações,pequeno (<=7 chunks),ENEM_MAT_01_porcentagem.pdf,1.0,1.0,1.0,1.0,1.0,0.6079860690479548,1.0,266.79,ENEM_MAT_01_porcentagem.pdf
+completo,e5_denso,Q008,contextual,Números e operações,pequeno (<=7 chunks),ENEM_MAT_01_porcentagem.pdf,0.0,0.0,0.0,0.0,0.0,0.0,0.0,268.84,TEO_MAT-V2_2024.pdf
+completo,e5_denso,Q009,direta,Números e operações,medio (8-20 chunks),ENEM_MAT_01_progressao-aritmetica.pdf,1.0,1.0,1.0,1.0,1.0,0.7191184989488184,0.6666666666666666,265.4,ENEM_MAT_01_progressao-aritmetica.pdf
+completo,e5_denso,Q010,contextual,Números e operações,medio (8-20 chunks),ENEM_MAT_01_progressao-aritmetica.pdf,0.0,0.0,0.0,0.0,0.0,0.0,0.0,266.66,TEO_MT-V5_2024.pdf
+completo,e5_denso,Q011,direta,Números e operações,medio (8-20 chunks),ENEM_MAT_01_progressao-geometrica.pdf,1.0,1.0,1.0,1.0,1.0,0.5501204291738185,1.0,271.51,ENEM_MAT_01_progressao-geometrica.pdf
+completo,e5_denso,Q012,contextual,Números e operações,medio (8-20 chunks),ENEM_MAT_01_progressao-geometrica.pdf,0.0,0.0,0.0,0.0,0.0,0.0,0.0,306.22,TEO_MT-V3_2024.pdf
+completo,e5_denso,Q013,direta,Números e operações,pequeno (<=7 chunks),ENEM_MAT_01_razao-e-proporcao.pdf,1.0,1.0,1.0,1.0,1.0,0.56885331124342,1.0,246.2,ENEM_MAT_01_razao-e-proporcao.pdf
+completo,e5_denso,Q014,contextual,Números e operações,pequeno (<=7 chunks),ENEM_MAT_01_razao-e-proporcao.pdf,0.0,0.0,0.0,0.0,0.0,0.0,0.0,292.64,TEO_MAT-V2_2024.pdf
+completo,e5_denso,Q015,direta,Números e operações,pequeno (<=7 chunks),ENEM_MAT_01_regra-de-tres.pdf,1.0,1.0,1.0,1.0,1.0,0.47027739974159277,0.3333333333333333,267.15,ENEM_MAT_01_regra-de-tres.pdf
+completo,e5_denso,Q016,contextual,Números e operações,pequeno (<=7 chunks),ENEM_MAT_01_regra-de-tres.pdf,0.0,0.0,0.0,0.0,0.0,0.0,0.0,305.98,TEO_MAT-V2_2024.pdf
+completo,e5_denso,Q017,direta,Números e operações,grande (>20 chunks),ENEM_MAT_01_sistema-de-numeracao.pdf,1.0,1.0,1.0,1.0,1.0,1.0,1.0,258.28,ENEM_MAT_01_sistema-de-numeracao.pdf
+completo,e5_denso,Q018,contextual,Números e operações,grande (>20 chunks),ENEM_MAT_01_sistema-de-numeracao.pdf,0.0,0.0,0.0,0.0,0.0,0.0,0.0,285.64,TEO_MT-V4_2024.pdf
+completo,e5_denso,Q019,direta,Álgebra e funções,medio (8-20 chunks),ENEM_MAT_02_equacao-do-primeiro-grau.pdf,0.0,0.0,0.0,0.0,0.0,0.0,0.0,261.87,TEO_MAT-V1_2024.pdf
+completo,e5_denso,Q020,contextual,Álgebra e funções,medio (8-20 chunks),ENEM_MAT_02_equacao-do-primeiro-grau.pdf,0.0,0.0,0.0,0.0,0.0,0.0,0.0,261.04,TEO_MT-V5_2024.pdf
+completo,e5_denso,Q021,direta,Álgebra e funções,grande (>20 chunks),ENEM_MAT_02_equacao-do-segundo-grau.pdf,0.0,0.0,1.0,1.0,0.2,0.2329726085570736,0.0,274.81,TEO_MAT-V1_2024.pdf
+completo,e5_denso,Q022,contextual,Álgebra e funções,grande (>20 chunks),ENEM_MAT_02_equacao-do-segundo-grau.pdf,0.0,0.0,0.0,1.0,0.1,0.06362078819895171,0.0,303.27,TEO_MAT-V1_2024.pdf
+completo,e5_denso,Q023,direta,Álgebra e funções,medio (8-20 chunks),ENEM_MAT_02_funcao-afim.pdf,1.0,1.0,1.0,1.0,1.0,0.9363792118010481,1.0,279.35,ENEM_MAT_02_funcao-afim.pdf
+completo,e5_denso,Q024,contextual,Álgebra e funções,medio (8-20 chunks),ENEM_MAT_02_funcao-afim.pdf,0.0,0.0,0.0,0.0,0.0,0.0,0.0,299.11,TEO_MAT-V2_2024.pdf
+completo,e5_denso,Q025,direta,Álgebra e funções,medio (8-20 chunks),ENEM_MAT_02_funcao-exponencial.pdf,1.0,1.0,1.0,1.0,1.0,0.8669479898642709,1.0,277.21,ENEM_MAT_02_funcao-exponencial.pdf
+completo,e5_denso,Q026,contextual,Álgebra e funções,medio (8-20 chunks),ENEM_MAT_02_funcao-exponencial.pdf,0.0,0.0,0.0,0.0,0.0,0.0,0.0,274.09,TEO_MT-V3_2024.pdf
+completo,e5_denso,Q027,direta,Álgebra e funções,grande (>20 chunks),ENEM_MAT_02_funcao-logaritmica.pdf,0.0,0.0,0.0,1.0,0.16666666666666666,0.3097213171566245,0.6666666666666666,285.41,ENEM_MAT_02_funcao-exponencial.pdf
+completo,e5_denso,Q028,contextual,Álgebra e funções,grande (>20 chunks),ENEM_MAT_02_funcao-logaritmica.pdf,1.0,1.0,1.0,1.0,1.0,0.6758704024811182,0.6666666666666666,318.18,ENEM_MAT_02_funcao-logaritmica.pdf
+completo,e5_denso,Q029,direta,Álgebra e funções,medio (8-20 chunks),ENEM_MAT_02_funcao-quadratica.pdf,1.0,1.0,1.0,1.0,1.0,0.7732377144137715,1.0,249.66,ENEM_MAT_02_funcao-quadratica.pdf
+completo,e5_denso,Q030,contextual,Álgebra e funções,medio (8-20 chunks),ENEM_MAT_02_funcao-quadratica.pdf,0.0,0.0,1.0,1.0,0.25,0.20286789743729947,0.0,313.1,TEO_MT-V3_2024.pdf
+completo,e5_denso,Q031,direta,Álgebra e funções,pequeno (<=7 chunks),ENEM_MAT_02_inequacao.pdf,1.0,1.0,1.0,1.0,1.0,0.5282800663700055,0.6666666666666666,261.71,ENEM_MAT_02_inequacao.pdf
+completo,e5_denso,Q032,contextual,Álgebra e funções,pequeno (<=7 chunks),ENEM_MAT_02_inequacao.pdf,0.0,0.0,0.0,0.0,0.0,0.0,0.0,301.2,TEO_MT-V3_2024.pdf
+completo,e5_denso,Q033,direta,Álgebra e funções,medio (8-20 chunks),ENEM_MAT_02_sequencia-numerica.pdf,1.0,1.0,1.0,1.0,1.0,0.9207464801295094,1.0,251.82,ENEM_MAT_02_sequencia-numerica.pdf
+completo,e5_denso,Q034,contextual,Álgebra e funções,medio (8-20 chunks),ENEM_MAT_02_sequencia-numerica.pdf,0.0,0.0,1.0,1.0,0.25,0.17993148201117176,0.0,287.38,TEO_MT-V5_2024.pdf
+completo,e5_denso,Q035,direta,Álgebra e funções,grande (>20 chunks),ENEM_MAT_02_sistema-de-equacoes-lineares.pdf,1.0,1.0,1.0,1.0,1.0,0.8012084767192145,1.0,259.01,ENEM_MAT_02_sistema-de-equacoes-lineares.pdf
+completo,e5_denso,Q036,contextual,Álgebra e funções,grande (>20 chunks),ENEM_MAT_02_sistema-de-equacoes-lineares.pdf,0.0,0.0,0.0,0.0,0.0,0.0,0.0,269.87,TEO_MT-V4_2024.pdf
+completo,e5_denso,Q037,direta,Geometria e trigonometria,grande (>20 chunks),ENEM_MAT_03_area-geometria.pdf,0.0,1.0,1.0,1.0,0.3333333333333333,0.4269620754585236,0.3333333333333333,269.91,TEO_MT-V3_2024.pdf
+completo,e5_denso,Q038,contextual,Geometria e trigonometria,grande (>20 chunks),ENEM_MAT_03_area-geometria.pdf,0.0,0.0,0.0,0.0,0.0,0.0,0.0,276.65,ebook-matematica-e-suas-tecnologias.pdf
+completo,e5_denso,Q039,direta,Geometria e trigonometria,medio (8-20 chunks),ENEM_MAT_03_ciclo-trigonometrico.pdf,0.0,0.0,1.0,1.0,0.2,0.45662787460027016,1.0,264.33,ENEM_MAT_03_trigonometria.pdf
+completo,e5_denso,Q040,contextual,Geometria e trigonometria,medio (8-20 chunks),ENEM_MAT_03_ciclo-trigonometrico.pdf,0.0,0.0,0.0,0.0,0.0,0.19181657645918823,0.3333333333333333,289.91,ENEM_MAT_03_trigonometria.pdf
+completo,e5_denso,Q041,direta,Geometria e trigonometria,pequeno (<=7 chunks),ENEM_MAT_03_cilindro.pdf,0.0,0.0,1.0,1.0,0.25,0.44069904742584565,0.3333333333333333,322.97,ENEM_MAT_03_volume.pdf
+completo,e5_denso,Q042,contextual,Geometria e trigonometria,pequeno (<=7 chunks),ENEM_MAT_03_cilindro.pdf,0.0,0.0,0.0,0.0,0.0,0.13347537859706932,0.3333333333333333,318.64,ENEM_MAT_03_volume.pdf
+completo,e5_denso,Q043,direta,Geometria e trigonometria,pequeno (<=7 chunks),ENEM_MAT_03_cone.pdf,1.0,1.0,1.0,1.0,1.0,0.46416537859398693,0.6666666666666666,273.69,ENEM_MAT_03_cone.pdf
+completo,e5_denso,Q044,contextual,Geometria e trigonometria,pequeno (<=7 chunks),ENEM_MAT_03_cone.pdf,0.0,0.0,0.0,0.0,0.0,0.0,0.0,299.97,TEO_MT-V4_2024.pdf
+completo,e5_denso,Q045,direta,Geometria e trigonometria,medio (8-20 chunks),ENEM_MAT_03_distancia-entre-dois-pontos.pdf,0.0,1.0,1.0,1.0,0.3333333333333333,0.47491152756850913,0.6666666666666666,267.73,ENEM_MAT_03_geometria-analitica.pdf
+completo,e5_denso,Q046,contextual,Geometria e trigonometria,medio (8-20 chunks),ENEM_MAT_03_distancia-entre-dois-pontos.pdf,0.0,0.0,0.0,0.0,0.0,0.0,0.0,289.45,ebook-matematica-e-suas-tecnologias.pdf
+completo,e5_denso,Q047,direta,Geometria e trigonometria,pequeno (<=7 chunks),ENEM_MAT_03_esfera.pdf,1.0,1.0,1.0,1.0,1.0,0.5490741901540193,0.6666666666666666,259.69,ENEM_MAT_03_esfera.pdf
+completo,e5_denso,Q048,contextual,Geometria e trigonometria,pequeno (<=7 chunks),ENEM_MAT_03_esfera.pdf,0.0,0.0,0.0,0.0,0.0,0.0,0.0,258.96,TEO_MT-V5_2024.pdf
+completo,e5_denso,Q049,direta,Geometria e trigonometria,grande (>20 chunks),ENEM_MAT_03_geometria-analitica.pdf,1.0,1.0,1.0,1.0,1.0,0.7624164915943118,1.0,241.57,ENEM_MAT_03_geometria-analitica.pdf
+completo,e5_denso,Q050,contextual,Geometria e trigonometria,grande (>20 chunks),ENEM_MAT_03_geometria-analitica.pdf,0.0,1.0,1.0,1.0,0.5,0.13886244387355454,0.3333333333333333,266.66,TEO_MT-V6_2024.pdf
+completo,e5_denso,Q051,direta,Geometria e trigonometria,pequeno (<=7 chunks),ENEM_MAT_03_geometria-espacial.pdf,1.0,1.0,1.0,1.0,1.0,0.6292200775079076,0.6666666666666666,266.66,ENEM_MAT_03_geometria-espacial.pdf
+completo,e5_denso,Q052,contextual,Geometria e trigonometria,pequeno (<=7 chunks),ENEM_MAT_03_geometria-espacial.pdf,1.0,1.0,1.0,1.0,1.0,0.3941769500918012,0.6666666666666666,271.11,ENEM_MAT_03_geometria-espacial.pdf
+completo,e5_denso,Q053,direta,Geometria e trigonometria,grande (>20 chunks),ENEM_MAT_03_geometria-plana.pdf,1.0,1.0,1.0,1.0,1.0,0.7753366239771083,1.0,275.12,ENEM_MAT_03_geometria-plana.pdf
+completo,e5_denso,Q054,contextual,Geometria e trigonometria,grande (>20 chunks),ENEM_MAT_03_geometria-plana.pdf,1.0,1.0,1.0,1.0,1.0,0.6390097281865127,0.6666666666666666,277.75,ENEM_MAT_03_geometria-plana.pdf
+completo,e5_denso,Q055,direta,Geometria e trigonometria,pequeno (<=7 chunks),ENEM_MAT_03_lei-dos-cossenos.pdf,1.0,1.0,1.0,1.0,1.0,0.5300012221160049,0.6666666666666666,271.14,ENEM_MAT_03_lei-dos-cossenos.pdf
+completo,e5_denso,Q056,contextual,Geometria e trigonometria,pequeno (<=7 chunks),ENEM_MAT_03_lei-dos-cossenos.pdf,0.0,0.0,0.0,0.0,0.0,0.04074203147025313,0.0,293.93,ENEM_MAT_03_triangulo-retangulo.pdf
+completo,e5_denso,Q057,direta,Geometria e trigonometria,pequeno (<=7 chunks),ENEM_MAT_03_lei-dos-senos.pdf,1.0,1.0,1.0,1.0,1.0,0.8344930694593112,1.0,269.05,ENEM_MAT_03_lei-dos-senos.pdf
+completo,e5_denso,Q058,contextual,Geometria e trigonometria,pequeno (<=7 chunks),ENEM_MAT_03_lei-dos-senos.pdf,0.0,1.0,1.0,1.0,0.3333333333333333,0.3356501422823893,0.6666666666666666,277.89,ENEM_MAT_03_trigonometria.pdf
+completo,e5_denso,Q059,direta,Geometria e trigonometria,pequeno (<=7 chunks),ENEM_MAT_03_perimetro.pdf,1.0,1.0,1.0,1.0,1.0,0.7335068554132388,1.0,275.59,ENEM_MAT_03_perimetro.pdf
+completo,e5_denso,Q060,contextual,Geometria e trigonometria,pequeno (<=7 chunks),ENEM_MAT_03_perimetro.pdf,0.0,1.0,1.0,1.0,0.5,0.17759747898211192,0.3333333333333333,277.49,ebook-matematica-e-suas-tecnologias.pdf
+completo,e5_denso,Q061,direta,Geometria e trigonometria,pequeno (<=7 chunks),ENEM_MAT_03_piramide-geometria.pdf,1.0,1.0,1.0,1.0,1.0,0.2444521888215188,0.3333333333333333,281.21,ENEM_MAT_03_piramide-geometria.pdf
+completo,e5_denso,Q062,contextual,Geometria e trigonometria,pequeno (<=7 chunks),ENEM_MAT_03_piramide-geometria.pdf,0.0,0.0,0.0,0.0,0.0,0.03679372067049626,0.0,278.57,ebook-matematica-e-suas-tecnologias.pdf
+completo,e5_denso,Q063,direta,Geometria e trigonometria,medio (8-20 chunks),ENEM_MAT_03_plano-cartesiano.pdf,1.0,1.0,1.0,1.0,1.0,0.6078421520159136,1.0,296.45,ENEM_MAT_03_plano-cartesiano.pdf
+completo,e5_denso,Q064,contextual,Geometria e trigonometria,medio (8-20 chunks),ENEM_MAT_03_plano-cartesiano.pdf,0.0,0.0,1.0,1.0,0.25,0.17993148201117176,0.0,299.72,ebook-matematica-e-suas-tecnologias.pdf
+completo,e5_denso,Q065,direta,Geometria e trigonometria,medio (8-20 chunks),ENEM_MAT_03_poligono.pdf,1.0,1.0,1.0,1.0,1.0,0.699636683010503,0.6666666666666666,278.1,ENEM_MAT_03_poligono.pdf
+completo,e5_denso,Q066,contextual,Geometria e trigonometria,medio (8-20 chunks),ENEM_MAT_03_poligono.pdf,0.0,1.0,1.0,1.0,0.5,0.3686580539482399,0.3333333333333333,266.54,TEO_MT-V3_2024.pdf
+completo,e5_denso,Q067,direta,Geometria e trigonometria,pequeno (<=7 chunks),ENEM_MAT_03_prisma-geometria.pdf,1.0,1.0,1.0,1.0,1.0,0.7016434129416325,1.0,253.29,ENEM_MAT_03_prisma-geometria.pdf
+completo,e5_denso,Q068,contextual,Geometria e trigonometria,pequeno (<=7 chunks),ENEM_MAT_03_prisma-geometria.pdf,0.0,0.0,0.0,0.0,0.0,0.0,0.0,282.83,TEO_MT-V3_2024.pdf
+completo,e5_denso,Q069,direta,Geometria e trigonometria,medio (8-20 chunks),ENEM_MAT_03_semelhanca-de-triangulos.pdf,1.0,1.0,1.0,1.0,1.0,0.5174612499126158,0.6666666666666666,268.89,ENEM_MAT_03_semelhanca-de-triangulos.pdf
+completo,e5_denso,Q070,contextual,Geometria e trigonometria,medio (8-20 chunks),ENEM_MAT_03_semelhanca-de-triangulos.pdf,0.0,0.0,0.0,0.0,0.0,0.0,0.0,310.57,ebook-matematica-e-suas-tecnologias.pdf
+completo,e5_denso,Q071,direta,Geometria e trigonometria,grande (>20 chunks),ENEM_MAT_03_teorema-de-pitagoras.pdf,1.0,1.0,1.0,1.0,1.0,0.6828805519144686,0.6666666666666666,284.06,ENEM_MAT_03_teorema-de-pitagoras.pdf
+completo,e5_denso,Q072,contextual,Geometria e trigonometria,grande (>20 chunks),ENEM_MAT_03_teorema-de-pitagoras.pdf,0.0,0.0,0.0,0.0,0.0,0.0,0.0,344.76,ebook-matematica-e-suas-tecnologias.pdf
+completo,e5_denso,Q073,direta,Geometria e trigonometria,pequeno (<=7 chunks),ENEM_MAT_03_triangulo-retangulo.pdf,1.0,1.0,1.0,1.0,1.0,0.5475019886510981,0.6666666666666666,244.55,ENEM_MAT_03_triangulo-retangulo.pdf
+completo,e5_denso,Q074,contextual,Geometria e trigonometria,pequeno (<=7 chunks),ENEM_MAT_03_triangulo-retangulo.pdf,1.0,1.0,1.0,1.0,1.0,0.4036641215426482,0.6666666666666666,329.63,ENEM_MAT_03_triangulo-retangulo.pdf
+completo,e5_denso,Q075,direta,Geometria e trigonometria,medio (8-20 chunks),ENEM_MAT_03_trigonometria.pdf,1.0,1.0,1.0,1.0,1.0,0.5958595188912911,0.6666666666666666,253.2,ENEM_MAT_03_trigonometria.pdf
+completo,e5_denso,Q076,contextual,Geometria e trigonometria,medio (8-20 chunks),ENEM_MAT_03_trigonometria.pdf,0.0,0.0,0.0,0.0,0.0,0.0,0.0,269.05,ebook-matematica-e-suas-tecnologias.pdf
+completo,e5_denso,Q077,direta,Geometria e trigonometria,pequeno (<=7 chunks),ENEM_MAT_03_volume.pdf,1.0,1.0,1.0,1.0,1.0,0.36417417493582804,0.3333333333333333,273.05,ENEM_MAT_03_volume.pdf
+completo,e5_denso,Q078,contextual,Geometria e trigonometria,pequeno (<=7 chunks),ENEM_MAT_03_volume.pdf,1.0,1.0,1.0,1.0,1.0,0.2996484034259831,0.3333333333333333,291.39,ENEM_MAT_03_volume.pdf
+completo,e5_denso,Q079,direta,Grandezas e medidas,pequeno (<=7 chunks),ENEM_MAT_04_densidade-demografica.pdf,1.0,1.0,1.0,1.0,1.0,0.5855700749881525,0.6666666666666666,316.78,ENEM_MAT_04_densidade-demografica.pdf
+completo,e5_denso,Q080,contextual,Grandezas e medidas,pequeno (<=7 chunks),ENEM_MAT_04_densidade-demografica.pdf,1.0,1.0,1.0,1.0,1.0,0.6366824387328317,0.6666666666666666,283.38,ENEM_MAT_04_densidade-demografica.pdf
+completo,e5_denso,Q081,direta,Grandezas e medidas,medio (8-20 chunks),ENEM_MAT_04_escala-cartografia.pdf,1.0,1.0,1.0,1.0,1.0,0.9305527638726646,1.0,255.77,ENEM_MAT_04_escala-cartografia.pdf
+completo,e5_denso,Q082,contextual,Grandezas e medidas,medio (8-20 chunks),ENEM_MAT_04_escala-cartografia.pdf,1.0,1.0,1.0,1.0,1.0,0.46772540004073715,0.6666666666666666,318.77,ENEM_MAT_04_escala-cartografia.pdf
+completo,e5_denso,Q083,direta,Grandezas e medidas,grande (>20 chunks),ENEM_MAT_04_sistema-internacional-de-unidades.pdf,1.0,1.0,1.0,1.0,1.0,1.0,1.0,265.77,ENEM_MAT_04_sistema-internacional-de-unidades.pdf
+completo,e5_denso,Q084,contextual,Grandezas e medidas,grande (>20 chunks),ENEM_MAT_04_sistema-internacional-de-unidades.pdf,1.0,1.0,1.0,1.0,1.0,0.9266360779006398,1.0,272.66,ENEM_MAT_04_sistema-internacional-de-unidades.pdf
+completo,e5_denso,Q085,direta,Grandezas e medidas,pequeno (<=7 chunks),ENEM_MAT_04_vazao.pdf,1.0,1.0,1.0,1.0,1.0,0.7983376406243772,1.0,274.02,ENEM_MAT_04_vazao.pdf
+completo,e5_denso,Q086,contextual,Grandezas e medidas,pequeno (<=7 chunks),ENEM_MAT_04_vazao.pdf,0.0,0.0,0.0,0.0,0.0,0.0,0.0,264.87,TEO_MAT-V1_2024.pdf
+completo,e5_denso,Q087,direta,Grandezas e medidas,grande (>20 chunks),ENEM_MAT_04_velocidade.pdf,1.0,1.0,1.0,1.0,1.0,0.6203974344166847,1.0,254.15,ENEM_MAT_04_velocidade.pdf
+completo,e5_denso,Q088,contextual,Grandezas e medidas,grande (>20 chunks),ENEM_MAT_04_velocidade.pdf,0.0,0.0,0.0,0.0,0.0,0.0,0.0,261.44,TEO_MAT-V2_2024.pdf
+completo,e5_denso,Q089,direta,"Combinatória, estatística e probabilidade",medio (8-20 chunks),ENEM_MAT_05_analise-combinatoria.pdf,0.0,1.0,1.0,1.0,0.5,0.40067051810063004,0.6666666666666666,281.23,ebook-matematica-e-suas-tecnologias.pdf
+completo,e5_denso,Q090,contextual,"Combinatória, estatística e probabilidade",medio (8-20 chunks),ENEM_MAT_05_analise-combinatoria.pdf,0.0,0.0,0.0,0.0,0.0,0.0,0.0,308.01,ebook-matematica-e-suas-tecnologias.pdf
+completo,e5_denso,Q091,direta,"Combinatória, estatística e probabilidade",medio (8-20 chunks),ENEM_MAT_05_arranjo-combinatoria.pdf,1.0,1.0,1.0,1.0,1.0,0.6473276111433256,1.0,258.85,ENEM_MAT_05_arranjo-combinatoria.pdf
+completo,e5_denso,Q092,contextual,"Combinatória, estatística e probabilidade",medio (8-20 chunks),ENEM_MAT_05_arranjo-combinatoria.pdf,0.0,0.0,0.0,0.0,0.0,0.0,0.0,259.54,TEO_MT-V5_2024.pdf
+completo,e5_denso,Q093,direta,"Combinatória, estatística e probabilidade",pequeno (<=7 chunks),ENEM_MAT_05_combinacao-matematica.pdf,1.0,1.0,1.0,1.0,1.0,0.5439097767553206,0.6666666666666666,253.03,ENEM_MAT_05_combinacao-matematica.pdf
+completo,e5_denso,Q094,contextual,"Combinatória, estatística e probabilidade",pequeno (<=7 chunks),ENEM_MAT_05_combinacao-matematica.pdf,0.0,0.0,0.0,0.0,0.0,0.0,0.0,281.11,TEO_MT-V5_2024.pdf
+completo,e5_denso,Q095,direta,"Combinatória, estatística e probabilidade",grande (>20 chunks),ENEM_MAT_05_desvio-padrao.pdf,1.0,1.0,1.0,1.0,1.0,1.0,1.0,280.8,ENEM_MAT_05_desvio-padrao.pdf
+completo,e5_denso,Q096,contextual,"Combinatória, estatística e probabilidade",grande (>20 chunks),ENEM_MAT_05_desvio-padrao.pdf,0.0,1.0,1.0,1.0,0.5,0.13886244387355454,0.3333333333333333,298.24,ENEM_MAT_05_moda-estatistica.pdf
+completo,e5_denso,Q097,direta,"Combinatória, estatística e probabilidade",medio (8-20 chunks),ENEM_MAT_05_estatistica.pdf,1.0,1.0,1.0,1.0,1.0,0.8987583839637467,1.0,277.73,ENEM_MAT_05_estatistica.pdf
+completo,e5_denso,Q098,contextual,"Combinatória, estatística e probabilidade",medio (8-20 chunks),ENEM_MAT_05_estatistica.pdf,0.0,0.0,0.0,0.0,0.0,0.0,0.0,257.62,TEO_MT-V5_2024.pdf
+completo,e5_denso,Q099,direta,"Combinatória, estatística e probabilidade",pequeno (<=7 chunks),ENEM_MAT_05_media-aritmetica.pdf,1.0,1.0,1.0,1.0,1.0,0.4960088352776717,0.6666666666666666,252.2,ENEM_MAT_05_media-aritmetica.pdf
+completo,e5_denso,Q100,contextual,"Combinatória, estatística e probabilidade",pequeno (<=7 chunks),ENEM_MAT_05_media-aritmetica.pdf,0.0,0.0,1.0,1.0,0.25,0.10975131898723876,0.0,275.49,ebook-matematica-e-suas-tecnologias.pdf
+completo,e5_denso,Q101,direta,"Combinatória, estatística e probabilidade",grande (>20 chunks),ENEM_MAT_05_mediana-estatistica.pdf,1.0,1.0,1.0,1.0,1.0,0.9363792118010481,1.0,261.82,ENEM_MAT_05_mediana-estatistica.pdf
+completo,e5_denso,Q102,contextual,"Combinatória, estatística e probabilidade",grande (>20 chunks),ENEM_MAT_05_mediana-estatistica.pdf,0.0,1.0,1.0,1.0,0.5,0.27454788926472085,0.3333333333333333,267.03,TEO_MAT-V2_2024.pdf
+completo,e5_denso,Q103,direta,"Combinatória, estatística e probabilidade",grande (>20 chunks),ENEM_MAT_05_moda-estatistica.pdf,1.0,1.0,1.0,1.0,1.0,0.8849197699716447,1.0,246.58,ENEM_MAT_05_moda-estatistica.pdf
+completo,e5_denso,Q104,contextual,"Combinatória, estatística e probabilidade",grande (>20 chunks),ENEM_MAT_05_moda-estatistica.pdf,0.0,0.0,0.0,0.0,0.0,0.0,0.0,261.37,ebook-matematica-e-suas-tecnologias.pdf
+completo,e5_denso,Q105,direta,"Combinatória, estatística e probabilidade",medio (8-20 chunks),ENEM_MAT_05_permutacao.pdf,1.0,1.0,1.0,1.0,1.0,0.6563033086078545,0.3333333333333333,260.04,ENEM_MAT_05_permutacao.pdf
+completo,e5_denso,Q106,contextual,"Combinatória, estatística e probabilidade",medio (8-20 chunks),ENEM_MAT_05_permutacao.pdf,0.0,0.0,0.0,0.0,0.0,0.0,0.0,275.86,TEO_MT-V4_2024.pdf
+completo,e5_denso,Q107,direta,"Combinatória, estatística e probabilidade",pequeno (<=7 chunks),ENEM_MAT_05_probabilidade-condicional.pdf,1.0,1.0,1.0,1.0,1.0,0.46258194721989987,0.6666666666666666,252.87,ENEM_MAT_05_probabilidade-condicional.pdf
+completo,e5_denso,Q108,contextual,"Combinatória, estatística e probabilidade",pequeno (<=7 chunks),ENEM_MAT_05_probabilidade-condicional.pdf,0.0,0.0,0.0,0.0,0.0,0.0,0.0,289.49,TEO_MT-V5_2024.pdf
+completo,e5_denso,Q109,direta,"Combinatória, estatística e probabilidade",grande (>20 chunks),ENEM_MAT_05_probabilidade.pdf,1.0,1.0,1.0,1.0,1.0,0.42688554937326645,0.6666666666666666,269.47,ENEM_MAT_05_probabilidade.pdf
+completo,e5_denso,Q110,contextual,"Combinatória, estatística e probabilidade",grande (>20 chunks),ENEM_MAT_05_probabilidade.pdf,0.0,0.0,1.0,1.0,0.25,0.2117418761106476,0.0,296.6,TEO_MT-V5_2024.pdf
+completo,e5_denso,Q111,direta,"Combinatória, estatística e probabilidade",medio (8-20 chunks),ENEM_MAT_05_variancia.pdf,1.0,1.0,1.0,1.0,1.0,0.7127866418040245,1.0,284.35,ENEM_MAT_05_variancia.pdf
+completo,e5_denso,Q112,contextual,"Combinatória, estatística e probabilidade",medio (8-20 chunks),ENEM_MAT_05_variancia.pdf,0.0,0.0,0.0,0.0,0.0,0.26527276487698537,0.6666666666666666,270.86,ENEM_MAT_05_mediana-estatistica.pdf
+completo,e5_denso,Q113,direta,Matemática financeira,pequeno (<=7 chunks),ENEM_MAT_06_amortizacao.pdf,1.0,1.0,1.0,1.0,1.0,0.6828770176958476,1.0,291.89,ENEM_MAT_06_amortizacao.pdf
+completo,e5_denso,Q114,contextual,Matemática financeira,pequeno (<=7 chunks),ENEM_MAT_06_amortizacao.pdf,0.0,1.0,1.0,1.0,0.5,0.350278584988544,0.3333333333333333,303.2,TEO_MT-V5_2024.pdf
+completo,e5_denso,Q115,direta,Matemática financeira,grande (>20 chunks),ENEM_MAT_06_inflacao.pdf,1.0,1.0,1.0,1.0,1.0,1.0,1.0,265.93,ENEM_MAT_06_inflacao.pdf
+completo,e5_denso,Q116,contextual,Matemática financeira,grande (>20 chunks),ENEM_MAT_06_inflacao.pdf,0.0,1.0,1.0,1.0,0.5,0.22400556151517553,0.3333333333333333,285.71,ebook-matematica-e-suas-tecnologias.pdf
+completo,e5_denso,Q117,direta,Matemática financeira,grande (>20 chunks),ENEM_MAT_06_juros-compostos.pdf,1.0,1.0,1.0,1.0,1.0,0.8701249883466592,1.0,285.15,ENEM_MAT_06_juros-simples.pdf
+completo,e5_denso,Q118,contextual,Matemática financeira,grande (>20 chunks),ENEM_MAT_06_juros-compostos.pdf,0.0,0.0,1.0,1.0,0.2,0.1635413866202963,0.0,279.33,TEO_MT-V3_2024.pdf
+completo,e5_denso,Q119,direta,Matemática financeira,grande (>20 chunks),ENEM_MAT_06_juros-simples.pdf,1.0,1.0,1.0,1.0,1.0,0.7542686714597936,0.6666666666666666,237.87,ENEM_MAT_06_juros-compostos.pdf
+completo,e5_denso,Q120,contextual,Matemática financeira,grande (>20 chunks),ENEM_MAT_06_juros-simples.pdf,0.0,0.0,0.0,1.0,0.16666666666666666,0.15176219107803537,0.0,283.44,TEO_MT-V5_2024.pdf
+completo,e5_denso,Q121,direta,Matemática financeira,medio (8-20 chunks),ENEM_MAT_06_taxa-de-cambio.pdf,1.0,1.0,1.0,1.0,1.0,0.7084409501232899,1.0,270.58,ENEM_MAT_06_taxa-de-cambio.pdf
+completo,e5_denso,Q122,contextual,Matemática financeira,medio (8-20 chunks),ENEM_MAT_06_taxa-de-cambio.pdf,0.0,0.0,0.0,0.0,0.0,0.0,0.0,266.54,TEO_MAT-V2_2024.pdf
+completo,e5_denso,Q123,direta,Lógica,grande (>20 chunks),ENEM_MAT_07_deducao-logica.pdf,1.0,1.0,1.0,1.0,1.0,1.0,1.0,331.78,ENEM_MAT_07_deducao-logica.pdf
+completo,e5_denso,Q124,contextual,Lógica,grande (>20 chunks),ENEM_MAT_07_deducao-logica.pdf,1.0,1.0,1.0,1.0,1.0,0.4936790360674166,0.6666666666666666,301.43,ENEM_MAT_07_deducao-logica.pdf
+completo,e5_denso,Q125,direta,Lógica,grande (>20 chunks),ENEM_MAT_07_logica-proposicional.pdf,1.0,1.0,1.0,1.0,1.0,0.9608008655106622,1.0,279.97,ENEM_MAT_07_logica-proposicional.pdf
+completo,e5_denso,Q126,contextual,Lógica,grande (>20 chunks),ENEM_MAT_07_logica-proposicional.pdf,0.0,1.0,1.0,1.0,0.5,0.5551122981969827,1.0,283.33,ENEM_MAT_07_deducao-logica.pdf
+completo,e5_rerank,Q001,direta,Números e operações,grande (>20 chunks),ENEM_MAT_01_conjuntos-numericos.pdf,0.0,1.0,1.0,1.0,0.5,0.28762634971412726,0.3333333333333333,1738.39,ebook-matematica-e-suas-tecnologias.pdf
+completo,e5_rerank,Q002,contextual,Números e operações,grande (>20 chunks),ENEM_MAT_01_conjuntos-numericos.pdf,1.0,1.0,1.0,1.0,1.0,0.6113107474945451,1.0,1731.63,ENEM_MAT_01_conjuntos-numericos.pdf
+completo,e5_rerank,Q003,direta,Números e operações,medio (8-20 chunks),ENEM_MAT_01_numeros-irracionais.pdf,1.0,1.0,1.0,1.0,1.0,0.4520549944568583,0.6666666666666666,1861.32,ENEM_MAT_01_numeros-irracionais.pdf
+completo,e5_rerank,Q004,contextual,Números e operações,medio (8-20 chunks),ENEM_MAT_01_numeros-irracionais.pdf,0.0,1.0,1.0,1.0,0.3333333333333333,0.29250736913707515,0.3333333333333333,2559.51,ENEM_MAT_01_numeros-racionais.pdf
+completo,e5_rerank,Q005,direta,Números e operações,grande (>20 chunks),ENEM_MAT_01_numeros-racionais.pdf,1.0,1.0,1.0,1.0,1.0,0.8987583839637467,1.0,1462.62,ENEM_MAT_01_numeros-racionais.pdf
+completo,e5_rerank,Q006,contextual,Números e operações,grande (>20 chunks),ENEM_MAT_01_numeros-racionais.pdf,0.0,0.0,1.0,1.0,0.2,0.15457433957839825,0.0,2106.89,TEO_MAT-V1_2024.pdf
+completo,e5_rerank,Q007,direta,Números e operações,pequeno (<=7 chunks),ENEM_MAT_01_porcentagem.pdf,1.0,1.0,1.0,1.0,1.0,0.503964175369842,0.6666666666666666,1684.25,ENEM_MAT_01_porcentagem.pdf
+completo,e5_rerank,Q008,contextual,Números e operações,pequeno (<=7 chunks),ENEM_MAT_01_porcentagem.pdf,0.0,0.0,0.0,0.0,0.0,0.0,0.0,2055.33,TEO_MAT-V2_2024.pdf
+completo,e5_rerank,Q009,direta,Números e operações,medio (8-20 chunks),ENEM_MAT_01_progressao-aritmetica.pdf,1.0,1.0,1.0,1.0,1.0,0.8701249883466592,1.0,2347.53,ENEM_MAT_01_progressao-aritmetica.pdf
+completo,e5_rerank,Q010,contextual,Números e operações,medio (8-20 chunks),ENEM_MAT_01_progressao-aritmetica.pdf,0.0,0.0,0.0,0.0,0.0,0.0,0.0,2426.81,TEO_MT-V5_2024.pdf
+completo,e5_rerank,Q011,direta,Números e operações,medio (8-20 chunks),ENEM_MAT_01_progressao-geometrica.pdf,1.0,1.0,1.0,1.0,1.0,0.4586883861453933,0.6666666666666666,2226.4,ENEM_MAT_01_progressao-geometrica.pdf
+completo,e5_rerank,Q012,contextual,Números e operações,medio (8-20 chunks),ENEM_MAT_01_progressao-geometrica.pdf,0.0,0.0,0.0,0.0,0.0,0.0,0.0,2318.22,TEO_MT-V3_2024.pdf
+completo,e5_rerank,Q013,direta,Números e operações,pequeno (<=7 chunks),ENEM_MAT_01_razao-e-proporcao.pdf,1.0,1.0,1.0,1.0,1.0,0.6307075512104563,0.6666666666666666,1785.89,ENEM_MAT_01_razao-e-proporcao.pdf
+completo,e5_rerank,Q014,contextual,Números e operações,pequeno (<=7 chunks),ENEM_MAT_01_razao-e-proporcao.pdf,0.0,0.0,0.0,0.0,0.0,0.0,0.0,2680.95,TEO_MT-V5_2024.pdf
+completo,e5_rerank,Q015,direta,Números e operações,pequeno (<=7 chunks),ENEM_MAT_01_regra-de-tres.pdf,1.0,1.0,1.0,1.0,1.0,0.5361025868094468,0.6666666666666666,2577.09,ENEM_MAT_01_regra-de-tres.pdf
+completo,e5_rerank,Q016,contextual,Números e operações,pequeno (<=7 chunks),ENEM_MAT_01_regra-de-tres.pdf,0.0,0.0,0.0,0.0,0.0,0.0,0.0,2178.36,TEO_MAT-V2_2024.pdf
+completo,e5_rerank,Q017,direta,Números e operações,grande (>20 chunks),ENEM_MAT_01_sistema-de-numeracao.pdf,1.0,1.0,1.0,1.0,1.0,0.9305687780632227,1.0,1703.8,ENEM_MAT_01_sistema-de-numeracao.pdf
+completo,e5_rerank,Q018,contextual,Números e operações,grande (>20 chunks),ENEM_MAT_01_sistema-de-numeracao.pdf,0.0,0.0,0.0,0.0,0.0,0.0,0.0,3304.84,TEO_MT-V4_2024.pdf
+completo,e5_rerank,Q019,direta,Álgebra e funções,medio (8-20 chunks),ENEM_MAT_02_equacao-do-primeiro-grau.pdf,0.0,0.0,0.0,1.0,0.16666666666666666,0.07839826897867533,0.0,2550.76,TEO_MT-V6_2024.pdf
+completo,e5_rerank,Q020,contextual,Álgebra e funções,medio (8-20 chunks),ENEM_MAT_02_equacao-do-primeiro-grau.pdf,0.0,0.0,0.0,0.0,0.0,0.0,0.0,2939.54,TEO_MT-V3_2024.pdf
+completo,e5_rerank,Q021,direta,Álgebra e funções,grande (>20 chunks),ENEM_MAT_02_equacao-do-segundo-grau.pdf,0.0,0.0,1.0,1.0,0.25,0.23440650992329987,0.0,2574.38,TEO_MT-V6_2024.pdf
+completo,e5_rerank,Q022,contextual,Álgebra e funções,grande (>20 chunks),ENEM_MAT_02_equacao-do-segundo-grau.pdf,0.0,0.0,0.0,0.0,0.0,0.0,0.0,2943.2,TEO_MAT-V1_2024.pdf
+completo,e5_rerank,Q023,direta,Álgebra e funções,medio (8-20 chunks),ENEM_MAT_02_funcao-afim.pdf,1.0,1.0,1.0,1.0,1.0,0.9363792118010481,1.0,2611.47,ENEM_MAT_02_funcao-afim.pdf
+completo,e5_rerank,Q024,contextual,Álgebra e funções,medio (8-20 chunks),ENEM_MAT_02_funcao-afim.pdf,0.0,0.0,0.0,0.0,0.0,0.0,0.0,2426.88,TEO_MAT-V2_2024.pdf
+completo,e5_rerank,Q025,direta,Álgebra e funções,medio (8-20 chunks),ENEM_MAT_02_funcao-exponencial.pdf,1.0,1.0,1.0,1.0,1.0,0.8285714603467751,1.0,2490.75,ENEM_MAT_02_funcao-exponencial.pdf
+completo,e5_rerank,Q026,contextual,Álgebra e funções,medio (8-20 chunks),ENEM_MAT_02_funcao-exponencial.pdf,0.0,0.0,0.0,0.0,0.0,0.0,0.0,2125.0,TEO_MT-V3_2024.pdf
+completo,e5_rerank,Q027,direta,Álgebra e funções,grande (>20 chunks),ENEM_MAT_02_funcao-logaritmica.pdf,0.0,1.0,1.0,1.0,0.5,0.3398431552628675,0.3333333333333333,2313.12,TEO_MT-V3_2024.pdf
+completo,e5_rerank,Q028,contextual,Álgebra e funções,grande (>20 chunks),ENEM_MAT_02_funcao-logaritmica.pdf,1.0,1.0,1.0,1.0,1.0,0.7877736340270853,0.6666666666666666,4079.05,ENEM_MAT_02_funcao-logaritmica.pdf
+completo,e5_rerank,Q029,direta,Álgebra e funções,medio (8-20 chunks),ENEM_MAT_02_funcao-quadratica.pdf,1.0,1.0,1.0,1.0,1.0,0.791249319316266,1.0,2578.39,ENEM_MAT_02_funcao-quadratica.pdf
+completo,e5_rerank,Q030,contextual,Álgebra e funções,medio (8-20 chunks),ENEM_MAT_02_funcao-quadratica.pdf,0.0,1.0,1.0,1.0,0.5,0.27902850308969557,0.6666666666666666,2110.77,TEO_MT-V3_2024.pdf
+completo,e5_rerank,Q031,direta,Álgebra e funções,pequeno (<=7 chunks),ENEM_MAT_02_inequacao.pdf,1.0,1.0,1.0,1.0,1.0,0.3239134396887189,0.3333333333333333,2153.89,ENEM_MAT_02_inequacao.pdf
+completo,e5_rerank,Q032,contextual,Álgebra e funções,pequeno (<=7 chunks),ENEM_MAT_02_inequacao.pdf,0.0,0.0,0.0,0.0,0.0,0.0,0.0,2662.24,TEO_MT-V3_2024.pdf
+completo,e5_rerank,Q033,direta,Álgebra e funções,medio (8-20 chunks),ENEM_MAT_02_sequencia-numerica.pdf,1.0,1.0,1.0,1.0,1.0,0.7850610347383431,1.0,1816.38,ENEM_MAT_02_sequencia-numerica.pdf
+completo,e5_rerank,Q034,contextual,Álgebra e funções,medio (8-20 chunks),ENEM_MAT_02_sequencia-numerica.pdf,0.0,0.0,0.0,1.0,0.16666666666666666,0.07839826897867533,0.0,2328.96,TEO_MT-V5_2024.pdf
+completo,e5_rerank,Q035,direta,Álgebra e funções,grande (>20 chunks),ENEM_MAT_02_sistema-de-equacoes-lineares.pdf,1.0,1.0,1.0,1.0,1.0,0.7859162856301583,1.0,2071.21,ENEM_MAT_02_sistema-de-equacoes-lineares.pdf
+completo,e5_rerank,Q036,contextual,Álgebra e funções,grande (>20 chunks),ENEM_MAT_02_sistema-de-equacoes-lineares.pdf,0.0,0.0,0.0,0.0,0.0,0.0,0.0,2307.66,TEO_MT-V4_2024.pdf
+completo,e5_rerank,Q037,direta,Geometria e trigonometria,grande (>20 chunks),ENEM_MAT_03_area-geometria.pdf,0.0,1.0,1.0,1.0,0.5,0.37566986542073233,0.3333333333333333,2798.82,TEO_MT-V3_2024.pdf
+completo,e5_rerank,Q038,contextual,Geometria e trigonometria,grande (>20 chunks),ENEM_MAT_03_area-geometria.pdf,0.0,0.0,0.0,0.0,0.0,0.0,0.0,2331.8,ebook-matematica-e-suas-tecnologias.pdf
+completo,e5_rerank,Q039,direta,Geometria e trigonometria,medio (8-20 chunks),ENEM_MAT_03_ciclo-trigonometrico.pdf,0.0,0.0,1.0,1.0,0.25,0.40265233312924825,1.0,1598.52,ENEM_MAT_03_trigonometria.pdf
+completo,e5_rerank,Q040,contextual,Geometria e trigonometria,medio (8-20 chunks),ENEM_MAT_03_ciclo-trigonometrico.pdf,0.0,0.0,0.0,0.0,0.0,0.1431729948762346,0.3333333333333333,2321.32,ENEM_MAT_03_trigonometria.pdf
+completo,e5_rerank,Q041,direta,Geometria e trigonometria,pequeno (<=7 chunks),ENEM_MAT_03_cilindro.pdf,0.0,1.0,1.0,1.0,0.3333333333333333,0.2508215455011457,0.3333333333333333,2251.02,TEO_MT-V4_2024.pdf
+completo,e5_rerank,Q042,contextual,Geometria e trigonometria,pequeno (<=7 chunks),ENEM_MAT_03_cilindro.pdf,0.0,0.0,0.0,0.0,0.0,0.08421358772610595,0.3333333333333333,2288.26,TEO_MT-V4_2024.pdf
+completo,e5_rerank,Q043,direta,Geometria e trigonometria,pequeno (<=7 chunks),ENEM_MAT_03_cone.pdf,1.0,1.0,1.0,1.0,1.0,0.3965987812667449,0.3333333333333333,2441.56,ENEM_MAT_03_cone.pdf
+completo,e5_rerank,Q044,contextual,Geometria e trigonometria,pequeno (<=7 chunks),ENEM_MAT_03_cone.pdf,0.0,0.0,0.0,0.0,0.0,0.0,0.0,2552.51,TEO_MT-V4_2024.pdf
+completo,e5_rerank,Q045,direta,Geometria e trigonometria,medio (8-20 chunks),ENEM_MAT_03_distancia-entre-dois-pontos.pdf,0.0,1.0,1.0,1.0,0.3333333333333333,0.464949381033215,0.6666666666666666,2555.35,ENEM_MAT_03_geometria-analitica.pdf
+completo,e5_rerank,Q046,contextual,Geometria e trigonometria,medio (8-20 chunks),ENEM_MAT_03_distancia-entre-dois-pontos.pdf,0.0,0.0,0.0,0.0,0.0,0.0,0.0,2561.97,TEO_MT-V6_2024.pdf
+completo,e5_rerank,Q047,direta,Geometria e trigonometria,pequeno (<=7 chunks),ENEM_MAT_03_esfera.pdf,1.0,1.0,1.0,1.0,1.0,0.5144568923635802,0.6666666666666666,2169.66,ENEM_MAT_03_esfera.pdf
+completo,e5_rerank,Q048,contextual,Geometria e trigonometria,pequeno (<=7 chunks),ENEM_MAT_03_esfera.pdf,0.0,0.0,0.0,0.0,0.0,0.0,0.0,2374.75,TEO_MAT-V2_2024.pdf
+completo,e5_rerank,Q049,direta,Geometria e trigonometria,grande (>20 chunks),ENEM_MAT_03_geometria-analitica.pdf,1.0,1.0,1.0,1.0,1.0,0.7909506325094736,1.0,2009.93,ENEM_MAT_03_geometria-analitica.pdf
+completo,e5_rerank,Q050,contextual,Geometria e trigonometria,grande (>20 chunks),ENEM_MAT_03_geometria-analitica.pdf,1.0,1.0,1.0,1.0,1.0,0.3589542101716347,0.6666666666666666,2272.67,ENEM_MAT_03_geometria-analitica.pdf
+completo,e5_rerank,Q051,direta,Geometria e trigonometria,pequeno (<=7 chunks),ENEM_MAT_03_geometria-espacial.pdf,1.0,1.0,1.0,1.0,1.0,0.6906199166750617,1.0,1595.4,ENEM_MAT_03_geometria-espacial.pdf
+completo,e5_rerank,Q052,contextual,Geometria e trigonometria,pequeno (<=7 chunks),ENEM_MAT_03_geometria-espacial.pdf,1.0,1.0,1.0,1.0,1.0,0.6069265044604972,1.0,13374.62,ENEM_MAT_03_geometria-espacial.pdf
+completo,e5_rerank,Q053,direta,Geometria e trigonometria,grande (>20 chunks),ENEM_MAT_03_geometria-plana.pdf,1.0,1.0,1.0,1.0,1.0,0.8006937664098819,1.0,2382.3,ENEM_MAT_03_geometria-plana.pdf
+completo,e5_rerank,Q054,contextual,Geometria e trigonometria,grande (>20 chunks),ENEM_MAT_03_geometria-plana.pdf,1.0,1.0,1.0,1.0,1.0,0.4569970750177365,0.3333333333333333,2405.87,ENEM_MAT_03_geometria-plana.pdf
+completo,e5_rerank,Q055,direta,Geometria e trigonometria,pequeno (<=7 chunks),ENEM_MAT_03_lei-dos-cossenos.pdf,1.0,1.0,1.0,1.0,1.0,0.4181656678911038,0.3333333333333333,2209.48,ENEM_MAT_03_lei-dos-cossenos.pdf
+completo,e5_rerank,Q056,contextual,Geometria e trigonometria,pequeno (<=7 chunks),ENEM_MAT_03_lei-dos-cossenos.pdf,0.0,0.0,0.0,0.0,0.0,0.04074203147025313,0.0,2499.36,ENEM_MAT_03_teorema-de-pitagoras.pdf
+completo,e5_rerank,Q057,direta,Geometria e trigonometria,pequeno (<=7 chunks),ENEM_MAT_03_lei-dos-senos.pdf,1.0,1.0,1.0,1.0,1.0,0.8457791614825966,1.0,2163.0,ENEM_MAT_03_lei-dos-senos.pdf
+completo,e5_rerank,Q058,contextual,Geometria e trigonometria,pequeno (<=7 chunks),ENEM_MAT_03_lei-dos-senos.pdf,1.0,1.0,1.0,1.0,1.0,0.5706302762515459,1.0,2447.73,ENEM_MAT_03_lei-dos-senos.pdf
+completo,e5_rerank,Q059,direta,Geometria e trigonometria,pequeno (<=7 chunks),ENEM_MAT_03_perimetro.pdf,1.0,1.0,1.0,1.0,1.0,0.8663186401827647,1.0,2309.64,ENEM_MAT_03_perimetro.pdf
+completo,e5_rerank,Q060,contextual,Geometria e trigonometria,pequeno (<=7 chunks),ENEM_MAT_03_perimetro.pdf,0.0,1.0,1.0,1.0,0.5,0.17759747898211192,0.3333333333333333,2264.28,ebook-matematica-e-suas-tecnologias.pdf
+completo,e5_rerank,Q061,direta,Geometria e trigonometria,pequeno (<=7 chunks),ENEM_MAT_03_piramide-geometria.pdf,1.0,1.0,1.0,1.0,1.0,0.2444521888215188,0.3333333333333333,2809.49,ENEM_MAT_03_piramide-geometria.pdf
+completo,e5_rerank,Q062,contextual,Geometria e trigonometria,pequeno (<=7 chunks),ENEM_MAT_03_piramide-geometria.pdf,0.0,0.0,0.0,0.0,0.0,0.13822912683196184,0.6666666666666666,2512.02,TEO_MT-V4_2024.pdf
+completo,e5_rerank,Q063,direta,Geometria e trigonometria,medio (8-20 chunks),ENEM_MAT_03_plano-cartesiano.pdf,0.0,1.0,1.0,1.0,0.5,0.372641359736204,0.3333333333333333,2225.34,TEO_MAT-V2_2024.pdf
+completo,e5_rerank,Q064,contextual,Geometria e trigonometria,medio (8-20 chunks),ENEM_MAT_03_plano-cartesiano.pdf,0.0,0.0,0.0,1.0,0.16666666666666666,0.21314484758222024,0.0,2314.52,TEO_MT-V5_2024.pdf
+completo,e5_rerank,Q065,direta,Geometria e trigonometria,medio (8-20 chunks),ENEM_MAT_03_poligono.pdf,0.0,0.0,1.0,1.0,0.2,0.3725907541108227,0.0,1996.42,TEO_MT-V3_2024.pdf
+completo,e5_rerank,Q066,contextual,Geometria e trigonometria,medio (8-20 chunks),ENEM_MAT_03_poligono.pdf,0.0,0.0,1.0,1.0,0.2,0.25170009034464175,0.0,2975.05,TEO_MT-V5_2024.pdf
+completo,e5_rerank,Q067,direta,Geometria e trigonometria,pequeno (<=7 chunks),ENEM_MAT_03_prisma-geometria.pdf,1.0,1.0,1.0,1.0,1.0,0.5435608859446481,0.3333333333333333,2496.21,ENEM_MAT_03_prisma-geometria.pdf
+completo,e5_rerank,Q068,contextual,Geometria e trigonometria,pequeno (<=7 chunks),ENEM_MAT_03_prisma-geometria.pdf,0.0,0.0,0.0,0.0,0.0,0.08039138809008574,0.3333333333333333,2906.57,TEO_MT-V3_2024.pdf
+completo,e5_rerank,Q069,direta,Geometria e trigonometria,medio (8-20 chunks),ENEM_MAT_03_semelhanca-de-triangulos.pdf,1.0,1.0,1.0,1.0,1.0,0.424926013816671,0.6666666666666666,2258.43,ENEM_MAT_03_semelhanca-de-triangulos.pdf
+completo,e5_rerank,Q070,contextual,Geometria e trigonometria,medio (8-20 chunks),ENEM_MAT_03_semelhanca-de-triangulos.pdf,0.0,0.0,0.0,0.0,0.0,0.0,0.0,2477.1,ebook-matematica-e-suas-tecnologias.pdf
+completo,e5_rerank,Q071,direta,Geometria e trigonometria,grande (>20 chunks),ENEM_MAT_03_teorema-de-pitagoras.pdf,1.0,1.0,1.0,1.0,1.0,0.736683392615148,0.6666666666666666,1797.39,ENEM_MAT_03_teorema-de-pitagoras.pdf
+completo,e5_rerank,Q072,contextual,Geometria e trigonometria,grande (>20 chunks),ENEM_MAT_03_teorema-de-pitagoras.pdf,0.0,0.0,0.0,0.0,0.0,0.0,0.0,2798.23,ebook-matematica-e-suas-tecnologias.pdf
+completo,e5_rerank,Q073,direta,Geometria e trigonometria,pequeno (<=7 chunks),ENEM_MAT_03_triangulo-retangulo.pdf,1.0,1.0,1.0,1.0,1.0,0.5980265221120246,1.0,2293.23,ENEM_MAT_03_triangulo-retangulo.pdf
+completo,e5_rerank,Q074,contextual,Geometria e trigonometria,pequeno (<=7 chunks),ENEM_MAT_03_triangulo-retangulo.pdf,0.0,1.0,1.0,1.0,0.5,0.4129230613530907,1.0,1764.54,ENEM_MAT_03_trigonometria.pdf
+completo,e5_rerank,Q075,direta,Geometria e trigonometria,medio (8-20 chunks),ENEM_MAT_03_trigonometria.pdf,1.0,1.0,1.0,1.0,1.0,0.6494462856411791,1.0,2122.89,ENEM_MAT_03_trigonometria.pdf
+completo,e5_rerank,Q076,contextual,Geometria e trigonometria,medio (8-20 chunks),ENEM_MAT_03_trigonometria.pdf,0.0,0.0,0.0,0.0,0.0,0.0,0.0,2896.49,ebook-matematica-e-suas-tecnologias.pdf
+completo,e5_rerank,Q077,direta,Geometria e trigonometria,pequeno (<=7 chunks),ENEM_MAT_03_volume.pdf,1.0,1.0,1.0,1.0,1.0,0.3495898039969803,0.3333333333333333,2058.88,ENEM_MAT_03_volume.pdf
+completo,e5_rerank,Q078,contextual,Geometria e trigonometria,pequeno (<=7 chunks),ENEM_MAT_03_volume.pdf,1.0,1.0,1.0,1.0,1.0,0.2996484034259831,0.3333333333333333,2531.22,ENEM_MAT_03_volume.pdf
+completo,e5_rerank,Q079,direta,Grandezas e medidas,pequeno (<=7 chunks),ENEM_MAT_04_densidade-demografica.pdf,1.0,1.0,1.0,1.0,1.0,0.7495275800817669,0.6666666666666666,2259.45,ENEM_MAT_04_densidade-demografica.pdf
+completo,e5_rerank,Q080,contextual,Grandezas e medidas,pequeno (<=7 chunks),ENEM_MAT_04_densidade-demografica.pdf,1.0,1.0,1.0,1.0,1.0,0.6366824387328317,0.6666666666666666,1904.08,ENEM_MAT_04_densidade-demografica.pdf
+completo,e5_rerank,Q081,direta,Grandezas e medidas,medio (8-20 chunks),ENEM_MAT_04_escala-cartografia.pdf,1.0,1.0,1.0,1.0,1.0,0.9229493163071021,1.0,1683.28,ENEM_MAT_04_escala-cartografia.pdf
+completo,e5_rerank,Q082,contextual,Grandezas e medidas,medio (8-20 chunks),ENEM_MAT_04_escala-cartografia.pdf,0.0,1.0,1.0,1.0,0.3333333333333333,0.3542429497791962,0.3333333333333333,2922.49,ENEM_MAT_03_distancia-entre-dois-pontos.pdf
+completo,e5_rerank,Q083,direta,Grandezas e medidas,grande (>20 chunks),ENEM_MAT_04_sistema-internacional-de-unidades.pdf,1.0,1.0,1.0,1.0,1.0,0.9305687780632227,1.0,2063.44,ENEM_MAT_04_sistema-internacional-de-unidades.pdf
+completo,e5_rerank,Q084,contextual,Grandezas e medidas,grande (>20 chunks),ENEM_MAT_04_sistema-internacional-de-unidades.pdf,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1754.99,ENEM_MAT_04_sistema-internacional-de-unidades.pdf
+completo,e5_rerank,Q085,direta,Grandezas e medidas,pequeno (<=7 chunks),ENEM_MAT_04_vazao.pdf,1.0,1.0,1.0,1.0,1.0,0.885568392972334,1.0,1906.34,ENEM_MAT_04_vazao.pdf
+completo,e5_rerank,Q086,contextual,Grandezas e medidas,pequeno (<=7 chunks),ENEM_MAT_04_vazao.pdf,0.0,0.0,0.0,0.0,0.0,0.0,0.0,2779.65,TEO_MAT-V1_2024.pdf
+completo,e5_rerank,Q087,direta,Grandezas e medidas,grande (>20 chunks),ENEM_MAT_04_velocidade.pdf,1.0,1.0,1.0,1.0,1.0,0.7967610662472991,1.0,1901.81,ENEM_MAT_04_velocidade.pdf
+completo,e5_rerank,Q088,contextual,Grandezas e medidas,grande (>20 chunks),ENEM_MAT_04_velocidade.pdf,0.0,0.0,0.0,0.0,0.0,0.0,0.0,2314.16,TEO_MAT-V2_2024.pdf
+completo,e5_rerank,Q089,direta,"Combinatória, estatística e probabilidade",medio (8-20 chunks),ENEM_MAT_05_analise-combinatoria.pdf,0.0,1.0,1.0,1.0,0.5,0.3125291152215463,0.6666666666666666,1788.28,ebook-matematica-e-suas-tecnologias.pdf
+completo,e5_rerank,Q090,contextual,"Combinatória, estatística e probabilidade",medio (8-20 chunks),ENEM_MAT_05_analise-combinatoria.pdf,0.0,0.0,0.0,0.0,0.0,0.0,0.0,2156.29,ebook-matematica-e-suas-tecnologias.pdf
+completo,e5_rerank,Q091,direta,"Combinatória, estatística e probabilidade",medio (8-20 chunks),ENEM_MAT_05_arranjo-combinatoria.pdf,1.0,1.0,1.0,1.0,1.0,0.6304454800736085,1.0,2112.51,ENEM_MAT_05_arranjo-combinatoria.pdf
+completo,e5_rerank,Q092,contextual,"Combinatória, estatística e probabilidade",medio (8-20 chunks),ENEM_MAT_05_arranjo-combinatoria.pdf,0.0,0.0,0.0,0.0,0.0,0.0,0.0,2300.14,TEO_MT-V4_2024.pdf
+completo,e5_rerank,Q093,direta,"Combinatória, estatística e probabilidade",pequeno (<=7 chunks),ENEM_MAT_05_combinacao-matematica.pdf,0.0,1.0,1.0,1.0,0.5,0.3238305019281128,0.3333333333333333,2069.03,ebook-matematica-e-suas-tecnologias.pdf
+completo,e5_rerank,Q094,contextual,"Combinatória, estatística e probabilidade",pequeno (<=7 chunks),ENEM_MAT_05_combinacao-matematica.pdf,0.0,0.0,0.0,0.0,0.0,0.0,0.0,1910.08,ebook-matematica-e-suas-tecnologias.pdf
+completo,e5_rerank,Q095,direta,"Combinatória, estatística e probabilidade",grande (>20 chunks),ENEM_MAT_05_desvio-padrao.pdf,1.0,1.0,1.0,1.0,1.0,0.9266360779006398,1.0,1845.84,ENEM_MAT_05_desvio-padrao.pdf
+completo,e5_rerank,Q096,contextual,"Combinatória, estatística e probabilidade",grande (>20 chunks),ENEM_MAT_05_desvio-padrao.pdf,1.0,1.0,1.0,1.0,1.0,0.5473983622993501,1.0,1978.84,ENEM_MAT_05_desvio-padrao.pdf
+completo,e5_rerank,Q097,direta,"Combinatória, estatística e probabilidade",medio (8-20 chunks),ENEM_MAT_05_estatistica.pdf,1.0,1.0,1.0,1.0,1.0,0.8572048559638626,1.0,1591.64,ENEM_MAT_05_estatistica.pdf
+completo,e5_rerank,Q098,contextual,"Combinatória, estatística e probabilidade",medio (8-20 chunks),ENEM_MAT_05_estatistica.pdf,1.0,1.0,1.0,1.0,1.0,0.3252660824969161,0.3333333333333333,1415.98,ENEM_MAT_05_estatistica.pdf
+completo,e5_rerank,Q099,direta,"Combinatória, estatística e probabilidade",pequeno (<=7 chunks),ENEM_MAT_05_media-aritmetica.pdf,1.0,1.0,1.0,1.0,1.0,0.415617447187586,0.6666666666666666,1835.6,ENEM_MAT_05_media-aritmetica.pdf
+completo,e5_rerank,Q100,contextual,"Combinatória, estatística e probabilidade",pequeno (<=7 chunks),ENEM_MAT_05_media-aritmetica.pdf,0.0,1.0,1.0,1.0,0.3333333333333333,0.12741733550370724,0.3333333333333333,2450.11,TEO_MT-V5_2024.pdf
+completo,e5_rerank,Q101,direta,"Combinatória, estatística e probabilidade",grande (>20 chunks),ENEM_MAT_05_mediana-estatistica.pdf,1.0,1.0,1.0,1.0,1.0,0.9266360779006398,1.0,1498.92,ENEM_MAT_05_mediana-estatistica.pdf
+completo,e5_rerank,Q102,contextual,"Combinatória, estatística e probabilidade",grande (>20 chunks),ENEM_MAT_05_mediana-estatistica.pdf,1.0,1.0,1.0,1.0,1.0,0.424926013816671,0.6666666666666666,2407.41,ENEM_MAT_05_mediana-estatistica.pdf
+completo,e5_rerank,Q103,direta,"Combinatória, estatística e probabilidade",grande (>20 chunks),ENEM_MAT_05_moda-estatistica.pdf,1.0,1.0,1.0,1.0,1.0,0.8611375561264454,0.6666666666666666,1557.19,ENEM_MAT_05_moda-estatistica.pdf
+completo,e5_rerank,Q104,contextual,"Combinatória, estatística e probabilidade",grande (>20 chunks),ENEM_MAT_05_moda-estatistica.pdf,1.0,1.0,1.0,1.0,1.0,0.22009176629808017,0.3333333333333333,2103.49,ENEM_MAT_05_moda-estatistica.pdf
+completo,e5_rerank,Q105,direta,"Combinatória, estatística e probabilidade",medio (8-20 chunks),ENEM_MAT_05_permutacao.pdf,0.0,1.0,1.0,1.0,0.5,0.685119869332369,0.6666666666666666,2060.38,TEO_MT-V4_2024.pdf
+completo,e5_rerank,Q106,contextual,"Combinatória, estatística e probabilidade",medio (8-20 chunks),ENEM_MAT_05_permutacao.pdf,0.0,0.0,0.0,0.0,0.0,0.0,0.0,1875.01,TEO_MT-V4_2024.pdf
+completo,e5_rerank,Q107,direta,"Combinatória, estatística e probabilidade",pequeno (<=7 chunks),ENEM_MAT_05_probabilidade-condicional.pdf,1.0,1.0,1.0,1.0,1.0,0.38160358729772015,0.3333333333333333,2221.73,ENEM_MAT_05_probabilidade-condicional.pdf
+completo,e5_rerank,Q108,contextual,"Combinatória, estatística e probabilidade",pequeno (<=7 chunks),ENEM_MAT_05_probabilidade-condicional.pdf,0.0,0.0,0.0,0.0,0.0,0.0,0.0,2486.37,TEO_MT-V5_2024.pdf
+completo,e5_rerank,Q109,direta,"Combinatória, estatística e probabilidade",grande (>20 chunks),ENEM_MAT_05_probabilidade.pdf,1.0,1.0,1.0,1.0,1.0,0.7759944384848244,1.0,1608.79,ENEM_MAT_05_probabilidade.pdf
+completo,e5_rerank,Q110,contextual,"Combinatória, estatística e probabilidade",grande (>20 chunks),ENEM_MAT_05_probabilidade.pdf,1.0,1.0,1.0,1.0,1.0,0.3230279508021492,0.3333333333333333,2924.88,ENEM_MAT_05_probabilidade.pdf
+completo,e5_rerank,Q111,direta,"Combinatória, estatística e probabilidade",medio (8-20 chunks),ENEM_MAT_05_variancia.pdf,1.0,1.0,1.0,1.0,1.0,0.8041584570597918,1.0,1827.08,ENEM_MAT_05_variancia.pdf
+completo,e5_rerank,Q112,contextual,"Combinatória, estatística e probabilidade",medio (8-20 chunks),ENEM_MAT_05_variancia.pdf,0.0,0.0,0.0,0.0,0.0,0.17853823829819596,0.3333333333333333,1918.58,ENEM_MAT_05_desvio-padrao.pdf
+completo,e5_rerank,Q113,direta,Matemática financeira,pequeno (<=7 chunks),ENEM_MAT_06_amortizacao.pdf,1.0,1.0,1.0,1.0,1.0,0.9048695460636007,1.0,2104.63,ENEM_MAT_06_amortizacao.pdf
+completo,e5_rerank,Q114,contextual,Matemática financeira,pequeno (<=7 chunks),ENEM_MAT_06_amortizacao.pdf,1.0,1.0,1.0,1.0,1.0,0.6396784072768184,0.6666666666666666,2329.59,ENEM_MAT_06_amortizacao.pdf
+completo,e5_rerank,Q115,direta,Matemática financeira,grande (>20 chunks),ENEM_MAT_06_inflacao.pdf,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1401.79,ENEM_MAT_06_inflacao.pdf
+completo,e5_rerank,Q116,contextual,Matemática financeira,grande (>20 chunks),ENEM_MAT_06_inflacao.pdf,1.0,1.0,1.0,1.0,1.0,0.40002324830925196,0.3333333333333333,2328.34,ENEM_MAT_06_inflacao.pdf
+completo,e5_rerank,Q117,direta,Matemática financeira,grande (>20 chunks),ENEM_MAT_06_juros-compostos.pdf,1.0,1.0,1.0,1.0,1.0,0.6316243658611127,0.6666666666666666,1872.42,ENEM_MAT_06_juros-simples.pdf
+completo,e5_rerank,Q118,contextual,Matemática financeira,grande (>20 chunks),ENEM_MAT_06_juros-compostos.pdf,0.0,1.0,1.0,1.0,0.3333333333333333,0.3347092591719316,0.3333333333333333,2135.67,TEO_MT-V3_2024.pdf
+completo,e5_rerank,Q119,direta,Matemática financeira,grande (>20 chunks),ENEM_MAT_06_juros-simples.pdf,1.0,1.0,1.0,1.0,1.0,0.501749354207772,0.6666666666666666,1812.72,ENEM_MAT_06_juros-compostos.pdf
+completo,e5_rerank,Q120,contextual,Matemática financeira,grande (>20 chunks),ENEM_MAT_06_juros-simples.pdf,0.0,0.0,0.0,1.0,0.1111111111111111,0.12987501165334076,0.0,2418.89,TEO_MT-V5_2024.pdf
+completo,e5_rerank,Q121,direta,Matemática financeira,medio (8-20 chunks),ENEM_MAT_06_taxa-de-cambio.pdf,1.0,1.0,1.0,1.0,1.0,0.7273298443105218,1.0,1416.61,ENEM_MAT_06_taxa-de-cambio.pdf
+completo,e5_rerank,Q122,contextual,Matemática financeira,medio (8-20 chunks),ENEM_MAT_06_taxa-de-cambio.pdf,0.0,0.0,0.0,0.0,0.0,0.0,0.0,2521.86,TEO_MAT-V2_2024.pdf
+completo,e5_rerank,Q123,direta,Lógica,grande (>20 chunks),ENEM_MAT_07_deducao-logica.pdf,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1478.11,ENEM_MAT_07_deducao-logica.pdf
+completo,e5_rerank,Q124,contextual,Lógica,grande (>20 chunks),ENEM_MAT_07_deducao-logica.pdf,1.0,1.0,1.0,1.0,1.0,0.8053589128717308,1.0,1814.96,ENEM_MAT_07_deducao-logica.pdf
+completo,e5_rerank,Q125,direta,Lógica,grande (>20 chunks),ENEM_MAT_07_logica-proposicional.pdf,1.0,1.0,1.0,1.0,1.0,0.9668728882728055,1.0,1961.27,ENEM_MAT_07_logica-proposicional.pdf
+completo,e5_rerank,Q126,contextual,Lógica,grande (>20 chunks),ENEM_MAT_07_logica-proposicional.pdf,0.0,1.0,1.0,1.0,0.5,0.649564472419492,1.0,2152.59,ENEM_MAT_07_deducao-logica.pdf
+completo,bm25,Q001,direta,Números e operações,grande (>20 chunks),ENEM_MAT_01_conjuntos-numericos.pdf,0.0,0.0,1.0,1.0,0.25,0.09478836436955078,0.0,4.42,TEO_MAT-V1_2024.pdf
+completo,bm25,Q002,contextual,Números e operações,grande (>20 chunks),ENEM_MAT_01_conjuntos-numericos.pdf,1.0,1.0,1.0,1.0,1.0,0.2548073772664688,0.3333333333333333,5.5,ENEM_MAT_01_conjuntos-numericos.pdf
+completo,bm25,Q003,direta,Números e operações,medio (8-20 chunks),ENEM_MAT_01_numeros-irracionais.pdf,0.0,0.0,0.0,1.0,0.16666666666666666,0.270922343648233,0.3333333333333333,2.69,TEO_MAT-V1_2024.pdf
+completo,bm25,Q004,contextual,Números e operações,medio (8-20 chunks),ENEM_MAT_01_numeros-irracionais.pdf,0.0,1.0,1.0,1.0,0.5,0.2722836544267499,0.6666666666666666,4.46,ENEM_MAT_01_numeros-racionais.pdf
+completo,bm25,Q005,direta,Números e operações,grande (>20 chunks),ENEM_MAT_01_numeros-racionais.pdf,0.0,1.0,1.0,1.0,0.5,0.576669299949219,0.6666666666666666,2.88,TEO_MAT-V1_2024.pdf
+completo,bm25,Q006,contextual,Números e operações,grande (>20 chunks),ENEM_MAT_01_numeros-racionais.pdf,0.0,0.0,1.0,1.0,0.25,0.2435522702101235,0.0,4.2,TEO_MAT-V1_2024.pdf
+completo,bm25,Q007,direta,Números e operações,pequeno (<=7 chunks),ENEM_MAT_01_porcentagem.pdf,1.0,1.0,1.0,1.0,1.0,0.321568268448101,0.3333333333333333,3.16,ENEM_MAT_01_porcentagem.pdf
+completo,bm25,Q008,contextual,Números e operações,pequeno (<=7 chunks),ENEM_MAT_01_porcentagem.pdf,0.0,0.0,1.0,1.0,0.25,0.10527982729515889,0.0,4.73,TEO_MAT-V2_2024.pdf
+completo,bm25,Q009,direta,Números e operações,medio (8-20 chunks),ENEM_MAT_01_progressao-aritmetica.pdf,1.0,1.0,1.0,1.0,1.0,0.933745776545611,1.0,3.58,ENEM_MAT_01_progressao-aritmetica.pdf
+completo,bm25,Q010,contextual,Números e operações,medio (8-20 chunks),ENEM_MAT_01_progressao-aritmetica.pdf,0.0,0.0,0.0,0.0,0.0,0.0,0.0,6.01,TEO_MT-V5_2024.pdf
+completo,bm25,Q011,direta,Números e operações,medio (8-20 chunks),ENEM_MAT_01_progressao-geometrica.pdf,1.0,1.0,1.0,1.0,1.0,0.593594889718037,0.6666666666666666,3.46,ENEM_MAT_01_progressao-geometrica.pdf
+completo,bm25,Q012,contextual,Números e operações,medio (8-20 chunks),ENEM_MAT_01_progressao-geometrica.pdf,0.0,0.0,0.0,0.0,0.0,0.0,0.0,5.76,TEO_MT-V3_2024.pdf
+completo,bm25,Q013,direta,Números e operações,pequeno (<=7 chunks),ENEM_MAT_01_razao-e-proporcao.pdf,1.0,1.0,1.0,1.0,1.0,0.4709037762089759,0.3333333333333333,2.89,ENEM_MAT_01_razao-e-proporcao.pdf
+completo,bm25,Q014,contextual,Números e operações,pequeno (<=7 chunks),ENEM_MAT_01_razao-e-proporcao.pdf,0.0,0.0,0.0,0.0,0.0,0.0,0.0,4.76,TEO_MT-V5_2024.pdf
+completo,bm25,Q015,direta,Números e operações,pequeno (<=7 chunks),ENEM_MAT_01_regra-de-tres.pdf,1.0,1.0,1.0,1.0,1.0,0.32870979613651274,0.3333333333333333,3.23,ENEM_MAT_01_regra-de-tres.pdf
+completo,bm25,Q016,contextual,Números e operações,pequeno (<=7 chunks),ENEM_MAT_01_regra-de-tres.pdf,0.0,0.0,0.0,0.0,0.0,0.0,0.0,4.08,ebook-matematica-e-suas-tecnologias.pdf
+completo,bm25,Q017,direta,Números e operações,grande (>20 chunks),ENEM_MAT_01_sistema-de-numeracao.pdf,1.0,1.0,1.0,1.0,1.0,0.538431315257452,1.0,3.31,ENEM_MAT_01_sistema-de-numeracao.pdf
+completo,bm25,Q018,contextual,Números e operações,grande (>20 chunks),ENEM_MAT_01_sistema-de-numeracao.pdf,0.0,1.0,1.0,1.0,0.5,0.13886244387355454,0.3333333333333333,5.67,TEO_MAT-V2_2024.pdf
+completo,bm25,Q019,direta,Álgebra e funções,medio (8-20 chunks),ENEM_MAT_02_equacao-do-primeiro-grau.pdf,0.0,0.0,0.0,0.0,0.0,0.0,0.0,3.8,TEO_MT-V6_2024.pdf
+completo,bm25,Q020,contextual,Álgebra e funções,medio (8-20 chunks),ENEM_MAT_02_equacao-do-primeiro-grau.pdf,0.0,0.0,0.0,0.0,0.0,0.0,0.0,4.35,ENEM_MAT_03_teorema-de-pitagoras.pdf
+completo,bm25,Q021,direta,Álgebra e funções,grande (>20 chunks),ENEM_MAT_02_equacao-do-segundo-grau.pdf,0.0,1.0,1.0,1.0,0.3333333333333333,0.2528410271851774,0.3333333333333333,4.75,TEO_MAT-V1_2024.pdf
+completo,bm25,Q022,contextual,Álgebra e funções,grande (>20 chunks),ENEM_MAT_02_equacao-do-segundo-grau.pdf,0.0,0.0,0.0,1.0,0.125,0.13568544539116628,0.0,4.92,TEO_MT-V3_2024.pdf
+completo,bm25,Q023,direta,Álgebra e funções,medio (8-20 chunks),ENEM_MAT_02_funcao-afim.pdf,1.0,1.0,1.0,1.0,1.0,0.7273298443105218,1.0,3.67,ENEM_MAT_02_funcao-afim.pdf
+completo,bm25,Q024,contextual,Álgebra e funções,medio (8-20 chunks),ENEM_MAT_02_funcao-afim.pdf,0.0,1.0,1.0,1.0,0.3333333333333333,0.11004588314904008,0.3333333333333333,5.8,TEO_MAT-V2_2024.pdf
+completo,bm25,Q025,direta,Álgebra e funções,medio (8-20 chunks),ENEM_MAT_02_funcao-exponencial.pdf,1.0,1.0,1.0,1.0,1.0,0.9266360779006398,1.0,3.36,ENEM_MAT_02_funcao-exponencial.pdf
+completo,bm25,Q026,contextual,Álgebra e funções,medio (8-20 chunks),ENEM_MAT_02_funcao-exponencial.pdf,0.0,0.0,0.0,0.0,0.0,0.0,0.0,4.98,TEO_MT-V3_2024.pdf
+completo,bm25,Q027,direta,Álgebra e funções,grande (>20 chunks),ENEM_MAT_02_funcao-logaritmica.pdf,0.0,0.0,0.0,0.0,0.0,0.0,0.0,2.75,TEO_MT-V5_2024.pdf
+completo,bm25,Q028,contextual,Álgebra e funções,grande (>20 chunks),ENEM_MAT_02_funcao-logaritmica.pdf,1.0,1.0,1.0,1.0,1.0,0.3589542101716347,0.6666666666666666,7.01,ENEM_MAT_02_funcao-logaritmica.pdf
+completo,bm25,Q029,direta,Álgebra e funções,medio (8-20 chunks),ENEM_MAT_02_funcao-quadratica.pdf,0.0,1.0,1.0,1.0,0.5,0.7038411647865612,1.0,3.26,ENEM_MAT_02_equacao-do-segundo-grau.pdf
+completo,bm25,Q030,contextual,Álgebra e funções,medio (8-20 chunks),ENEM_MAT_02_funcao-quadratica.pdf,0.0,1.0,1.0,1.0,0.5,0.31516255047698366,0.6666666666666666,4.63,TEO_MT-V3_2024.pdf
+completo,bm25,Q031,direta,Álgebra e funções,pequeno (<=7 chunks),ENEM_MAT_02_inequacao.pdf,0.0,0.0,0.0,0.0,0.0,0.0,0.0,2.65,ebook-matematica-e-suas-tecnologias.pdf
+completo,bm25,Q032,contextual,Álgebra e funções,pequeno (<=7 chunks),ENEM_MAT_02_inequacao.pdf,0.0,0.0,0.0,0.0,0.0,0.0,0.0,4.19,TEO_MT-V4_2024.pdf
+completo,bm25,Q033,direta,Álgebra e funções,medio (8-20 chunks),ENEM_MAT_02_sequencia-numerica.pdf,1.0,1.0,1.0,1.0,1.0,0.4349144697439573,0.6666666666666666,3.09,ENEM_MAT_02_sequencia-numerica.pdf
+completo,bm25,Q034,contextual,Álgebra e funções,medio (8-20 chunks),ENEM_MAT_02_sequencia-numerica.pdf,0.0,0.0,0.0,0.0,0.0,0.0,0.0,3.87,ENEM_MAT_05_probabilidade.pdf
+completo,bm25,Q035,direta,Álgebra e funções,grande (>20 chunks),ENEM_MAT_02_sistema-de-equacoes-lineares.pdf,1.0,1.0,1.0,1.0,1.0,0.6936634693435663,1.0,3.12,ENEM_MAT_02_sistema-de-equacoes-lineares.pdf
+completo,bm25,Q036,contextual,Álgebra e funções,grande (>20 chunks),ENEM_MAT_02_sistema-de-equacoes-lineares.pdf,0.0,0.0,0.0,0.0,0.0,0.0,0.0,4.82,TEO_MT-V4_2024.pdf
+completo,bm25,Q037,direta,Geometria e trigonometria,grande (>20 chunks),ENEM_MAT_03_area-geometria.pdf,0.0,0.0,1.0,1.0,0.2,0.15139734109601002,0.0,3.12,TEO_MT-V3_2024.pdf
+completo,bm25,Q038,contextual,Geometria e trigonometria,grande (>20 chunks),ENEM_MAT_03_area-geometria.pdf,0.0,1.0,1.0,1.0,0.5,0.43650324073307795,0.6666666666666666,4.31,ebook-matematica-e-suas-tecnologias.pdf
+completo,bm25,Q039,direta,Geometria e trigonometria,medio (8-20 chunks),ENEM_MAT_03_ciclo-trigonometrico.pdf,0.0,0.0,0.0,0.0,0.0,0.14709624256607365,0.0,2.26,ENEM_MAT_05_permutacao.pdf
+completo,bm25,Q040,contextual,Geometria e trigonometria,medio (8-20 chunks),ENEM_MAT_03_ciclo-trigonometrico.pdf,0.0,0.0,0.0,1.0,0.125,0.21964532680984203,0.0,4.91,TEO_MT-V3_2024.pdf
+completo,bm25,Q041,direta,Geometria e trigonometria,pequeno (<=7 chunks),ENEM_MAT_03_cilindro.pdf,1.0,1.0,1.0,1.0,1.0,0.3620405355106194,0.3333333333333333,3.11,ENEM_MAT_03_cilindro.pdf
+completo,bm25,Q042,contextual,Geometria e trigonometria,pequeno (<=7 chunks),ENEM_MAT_03_cilindro.pdf,0.0,0.0,0.0,0.0,0.0,0.057484716641728856,0.0,4.76,TEO_MAT-V1_2024.pdf
+completo,bm25,Q043,direta,Geometria e trigonometria,pequeno (<=7 chunks),ENEM_MAT_03_cone.pdf,0.0,1.0,1.0,1.0,0.3333333333333333,0.2093017209732717,0.3333333333333333,3.11,TEO_MT-V4_2024.pdf
+completo,bm25,Q044,contextual,Geometria e trigonometria,pequeno (<=7 chunks),ENEM_MAT_03_cone.pdf,0.0,0.0,0.0,0.0,0.0,0.0,0.0,5.3,TEO_MT-V4_2024.pdf
+completo,bm25,Q045,direta,Geometria e trigonometria,medio (8-20 chunks),ENEM_MAT_03_distancia-entre-dois-pontos.pdf,0.0,1.0,1.0,1.0,0.3333333333333333,0.3409747377605036,0.6666666666666666,4.24,ebook-matematica-e-suas-tecnologias.pdf
+completo,bm25,Q046,contextual,Geometria e trigonometria,medio (8-20 chunks),ENEM_MAT_03_distancia-entre-dois-pontos.pdf,0.0,0.0,0.0,0.0,0.0,0.09104627106559898,0.3333333333333333,5.43,ebook-matematica-e-suas-tecnologias.pdf
+completo,bm25,Q047,direta,Geometria e trigonometria,pequeno (<=7 chunks),ENEM_MAT_03_esfera.pdf,0.0,0.0,1.0,1.0,0.25,0.36840653227841025,0.0,3.65,ENEM_MAT_03_area-geometria.pdf
+completo,bm25,Q048,contextual,Geometria e trigonometria,pequeno (<=7 chunks),ENEM_MAT_03_esfera.pdf,1.0,1.0,1.0,1.0,1.0,0.3497320161166777,0.3333333333333333,4.24,ENEM_MAT_03_esfera.pdf
+completo,bm25,Q049,direta,Geometria e trigonometria,grande (>20 chunks),ENEM_MAT_03_geometria-analitica.pdf,0.0,0.0,0.0,1.0,0.16666666666666666,0.2848142012137644,0.0,2.68,TEO_MT-V5_2024.pdf
+completo,bm25,Q050,contextual,Geometria e trigonometria,grande (>20 chunks),ENEM_MAT_03_geometria-analitica.pdf,0.0,0.0,0.0,1.0,0.14285714285714285,0.13961814555374907,0.0,3.81,TEO_MT-V6_2024.pdf
+completo,bm25,Q051,direta,Geometria e trigonometria,pequeno (<=7 chunks),ENEM_MAT_03_geometria-espacial.pdf,1.0,1.0,1.0,1.0,1.0,0.2996484034259831,0.3333333333333333,3.44,ENEM_MAT_03_geometria-espacial.pdf
+completo,bm25,Q052,contextual,Geometria e trigonometria,pequeno (<=7 chunks),ENEM_MAT_03_geometria-espacial.pdf,0.0,1.0,1.0,1.0,0.5,0.1890570933316362,0.3333333333333333,3.85,TEO_MT-V3_2024.pdf
+completo,bm25,Q053,direta,Geometria e trigonometria,grande (>20 chunks),ENEM_MAT_03_geometria-plana.pdf,1.0,1.0,1.0,1.0,1.0,0.5326208815196265,1.0,3.22,ENEM_MAT_03_geometria-plana.pdf
+completo,bm25,Q054,contextual,Geometria e trigonometria,grande (>20 chunks),ENEM_MAT_03_geometria-plana.pdf,1.0,1.0,1.0,1.0,1.0,0.22009176629808017,0.3333333333333333,4.37,ENEM_MAT_03_geometria-plana.pdf
+completo,bm25,Q055,direta,Geometria e trigonometria,pequeno (<=7 chunks),ENEM_MAT_03_lei-dos-cossenos.pdf,0.0,0.0,1.0,1.0,0.25,0.2647088161895589,0.0,3.61,TEO_MAT-V2_2024.pdf
+completo,bm25,Q056,contextual,Geometria e trigonometria,pequeno (<=7 chunks),ENEM_MAT_03_lei-dos-cossenos.pdf,0.0,0.0,0.0,0.0,0.0,0.03855803981329107,0.0,5.62,ENEM_MAT_03_triangulo-retangulo.pdf
+completo,bm25,Q057,direta,Geometria e trigonometria,pequeno (<=7 chunks),ENEM_MAT_03_lei-dos-senos.pdf,0.0,1.0,1.0,1.0,0.5,0.757312130321276,0.6666666666666666,2.72,ENEM_MAT_03_trigonometria.pdf
+completo,bm25,Q058,contextual,Geometria e trigonometria,pequeno (<=7 chunks),ENEM_MAT_03_lei-dos-senos.pdf,0.0,0.0,0.0,0.0,0.0,0.3099227206397997,0.6666666666666666,5.66,ENEM_MAT_03_trigonometria.pdf
+completo,bm25,Q059,direta,Geometria e trigonometria,pequeno (<=7 chunks),ENEM_MAT_03_perimetro.pdf,1.0,1.0,1.0,1.0,1.0,0.6991198044722381,0.6666666666666666,2.77,ENEM_MAT_03_perimetro.pdf
+completo,bm25,Q060,contextual,Geometria e trigonometria,pequeno (<=7 chunks),ENEM_MAT_03_perimetro.pdf,0.0,0.0,0.0,0.0,0.0,0.0,0.0,4.58,ebook-matematica-e-suas-tecnologias.pdf
+completo,bm25,Q061,direta,Geometria e trigonometria,pequeno (<=7 chunks),ENEM_MAT_03_piramide-geometria.pdf,0.0,0.0,0.0,1.0,0.1111111111111111,0.07358744134099252,0.0,2.98,TEO_MT-V4_2024.pdf
+completo,bm25,Q062,contextual,Geometria e trigonometria,pequeno (<=7 chunks),ENEM_MAT_03_piramide-geometria.pdf,0.0,1.0,1.0,1.0,0.3333333333333333,0.19288862391547928,0.3333333333333333,5.75,TEO_MT-V4_2024.pdf
+completo,bm25,Q063,direta,Geometria e trigonometria,medio (8-20 chunks),ENEM_MAT_03_plano-cartesiano.pdf,0.0,0.0,1.0,1.0,0.2,0.1877014513055928,0.3333333333333333,3.22,ebook-matematica-e-suas-tecnologias.pdf
+completo,bm25,Q064,contextual,Geometria e trigonometria,medio (8-20 chunks),ENEM_MAT_03_plano-cartesiano.pdf,1.0,1.0,1.0,1.0,1.0,0.3628869103342175,0.3333333333333333,4.32,ENEM_MAT_03_plano-cartesiano.pdf
+completo,bm25,Q065,direta,Geometria e trigonometria,medio (8-20 chunks),ENEM_MAT_03_poligono.pdf,0.0,0.0,1.0,1.0,0.25,0.24936270394794902,0.0,3.49,TEO_MT-V3_2024.pdf
+completo,bm25,Q066,contextual,Geometria e trigonometria,medio (8-20 chunks),ENEM_MAT_03_poligono.pdf,1.0,1.0,1.0,1.0,1.0,0.40002324830925196,0.3333333333333333,3.85,ENEM_MAT_03_poligono.pdf
+completo,bm25,Q067,direta,Geometria e trigonometria,pequeno (<=7 chunks),ENEM_MAT_03_prisma-geometria.pdf,0.0,0.0,0.0,1.0,0.16666666666666666,0.1711653294272351,0.0,2.86,TEO_MT-V4_2024.pdf
+completo,bm25,Q068,contextual,Geometria e trigonometria,pequeno (<=7 chunks),ENEM_MAT_03_prisma-geometria.pdf,0.0,0.0,0.0,1.0,0.14285714285714285,0.1616577702441989,0.0,4.88,TEO_MT-V3_2024.pdf
+completo,bm25,Q069,direta,Geometria e trigonometria,medio (8-20 chunks),ENEM_MAT_03_semelhanca-de-triangulos.pdf,0.0,1.0,1.0,1.0,0.5,0.4170606134915054,0.6666666666666666,2.82,TEO_MAT-V2_2024.pdf
+completo,bm25,Q070,contextual,Geometria e trigonometria,medio (8-20 chunks),ENEM_MAT_03_semelhanca-de-triangulos.pdf,0.0,0.0,0.0,0.0,0.0,0.0,0.0,4.78,ebook-matematica-e-suas-tecnologias.pdf
+completo,bm25,Q071,direta,Geometria e trigonometria,grande (>20 chunks),ENEM_MAT_03_teorema-de-pitagoras.pdf,1.0,1.0,1.0,1.0,1.0,0.8899541168509599,0.6666666666666666,2.78,ENEM_MAT_03_teorema-de-pitagoras.pdf
+completo,bm25,Q072,contextual,Geometria e trigonometria,grande (>20 chunks),ENEM_MAT_03_teorema-de-pitagoras.pdf,0.0,0.0,0.0,0.0,0.0,0.0,0.0,3.87,TEO_MAT-V1_2024.pdf
+completo,bm25,Q073,direta,Geometria e trigonometria,pequeno (<=7 chunks),ENEM_MAT_03_triangulo-retangulo.pdf,1.0,1.0,1.0,1.0,1.0,0.6261902697806014,1.0,3.23,ENEM_MAT_03_triangulo-retangulo.pdf
+completo,bm25,Q074,contextual,Geometria e trigonometria,pequeno (<=7 chunks),ENEM_MAT_03_triangulo-retangulo.pdf,0.0,1.0,1.0,1.0,0.5,0.3698401987817563,0.6666666666666666,4.26,ENEM_MAT_03_trigonometria.pdf
+completo,bm25,Q075,direta,Geometria e trigonometria,medio (8-20 chunks),ENEM_MAT_03_trigonometria.pdf,0.0,1.0,1.0,1.0,0.5,0.30308203017988256,0.3333333333333333,2.67,TEO_MT-V3_2024.pdf
+completo,bm25,Q076,contextual,Geometria e trigonometria,medio (8-20 chunks),ENEM_MAT_03_trigonometria.pdf,0.0,0.0,0.0,0.0,0.0,0.0,0.0,5.56,ebook-matematica-e-suas-tecnologias.pdf
+completo,bm25,Q077,direta,Geometria e trigonometria,pequeno (<=7 chunks),ENEM_MAT_03_volume.pdf,0.0,0.0,0.0,0.0,0.0,0.0,0.0,4.02,TEO_MT-V4_2024.pdf
+completo,bm25,Q078,contextual,Geometria e trigonometria,pequeno (<=7 chunks),ENEM_MAT_03_volume.pdf,0.0,1.0,1.0,1.0,0.3333333333333333,0.14982420171299154,0.3333333333333333,3.49,ENEM_MAT_04_sistema-internacional-de-unidades.pdf
+completo,bm25,Q079,direta,Grandezas e medidas,pequeno (<=7 chunks),ENEM_MAT_04_densidade-demografica.pdf,1.0,1.0,1.0,1.0,1.0,0.8318724637288826,1.0,3.11,ENEM_MAT_04_densidade-demografica.pdf
+completo,bm25,Q080,contextual,Grandezas e medidas,pequeno (<=7 chunks),ENEM_MAT_04_densidade-demografica.pdf,1.0,1.0,1.0,1.0,1.0,0.8318724637288826,1.0,5.13,ENEM_MAT_04_densidade-demografica.pdf
+completo,bm25,Q081,direta,Grandezas e medidas,medio (8-20 chunks),ENEM_MAT_04_escala-cartografia.pdf,1.0,1.0,1.0,1.0,1.0,0.6547686578140901,0.6666666666666666,3.0,ENEM_MAT_04_escala-cartografia.pdf
+completo,bm25,Q082,contextual,Grandezas e medidas,medio (8-20 chunks),ENEM_MAT_04_escala-cartografia.pdf,1.0,1.0,1.0,1.0,1.0,0.23537653116186527,0.3333333333333333,5.06,ENEM_MAT_04_escala-cartografia.pdf
+completo,bm25,Q083,direta,Grandezas e medidas,grande (>20 chunks),ENEM_MAT_04_sistema-internacional-de-unidades.pdf,1.0,1.0,1.0,1.0,1.0,0.8572048559638626,1.0,3.73,ENEM_MAT_04_sistema-internacional-de-unidades.pdf
+completo,bm25,Q084,contextual,Grandezas e medidas,grande (>20 chunks),ENEM_MAT_04_sistema-internacional-de-unidades.pdf,1.0,1.0,1.0,1.0,1.0,0.718342412090308,0.6666666666666666,4.23,ENEM_MAT_04_sistema-internacional-de-unidades.pdf
+completo,bm25,Q085,direta,Grandezas e medidas,pequeno (<=7 chunks),ENEM_MAT_04_vazao.pdf,1.0,1.0,1.0,1.0,1.0,0.7422876424363961,1.0,2.54,ENEM_MAT_04_vazao.pdf
+completo,bm25,Q086,contextual,Grandezas e medidas,pequeno (<=7 chunks),ENEM_MAT_04_vazao.pdf,0.0,0.0,0.0,1.0,0.1111111111111111,0.08723075234795685,0.0,4.89,TEO_MAT-V1_2024.pdf
+completo,bm25,Q087,direta,Grandezas e medidas,grande (>20 chunks),ENEM_MAT_04_velocidade.pdf,1.0,1.0,1.0,1.0,1.0,0.8006937664098819,1.0,2.81,ENEM_MAT_04_velocidade.pdf
+completo,bm25,Q088,contextual,Grandezas e medidas,grande (>20 chunks),ENEM_MAT_04_velocidade.pdf,0.0,0.0,0.0,0.0,0.0,0.0,0.0,4.74,TEO_MAT-V2_2024.pdf
+completo,bm25,Q089,direta,"Combinatória, estatística e probabilidade",medio (8-20 chunks),ENEM_MAT_05_analise-combinatoria.pdf,0.0,0.0,0.0,1.0,0.16666666666666666,0.15176219107803537,0.0,3.75,TEO_MT-V4_2024.pdf
+completo,bm25,Q090,contextual,"Combinatória, estatística e probabilidade",medio (8-20 chunks),ENEM_MAT_05_analise-combinatoria.pdf,0.0,0.0,0.0,0.0,0.0,0.0,0.0,4.0,ebook-matematica-e-suas-tecnologias.pdf
+completo,bm25,Q091,direta,"Combinatória, estatística e probabilidade",medio (8-20 chunks),ENEM_MAT_05_arranjo-combinatoria.pdf,1.0,1.0,1.0,1.0,1.0,0.5043456916807345,0.6666666666666666,3.17,ENEM_MAT_05_analise-combinatoria.pdf
+completo,bm25,Q092,contextual,"Combinatória, estatística e probabilidade",medio (8-20 chunks),ENEM_MAT_05_arranjo-combinatoria.pdf,0.0,0.0,0.0,0.0,0.0,0.18925045943329133,0.3333333333333333,5.45,ENEM_MAT_05_combinacao-matematica.pdf
+completo,bm25,Q093,direta,"Combinatória, estatística e probabilidade",pequeno (<=7 chunks),ENEM_MAT_05_combinacao-matematica.pdf,0.0,0.0,0.0,1.0,0.1111111111111111,0.46235275684029536,0.6666666666666666,2.75,ENEM_MAT_05_analise-combinatoria.pdf
+completo,bm25,Q094,contextual,"Combinatória, estatística e probabilidade",pequeno (<=7 chunks),ENEM_MAT_05_combinacao-matematica.pdf,0.0,0.0,0.0,0.0,0.0,0.08785941583647709,0.0,4.59,ebook-matematica-e-suas-tecnologias.pdf
+completo,bm25,Q095,direta,"Combinatória, estatística e probabilidade",grande (>20 chunks),ENEM_MAT_05_desvio-padrao.pdf,1.0,1.0,1.0,1.0,1.0,0.9216017310213246,1.0,3.6,ENEM_MAT_05_desvio-padrao.pdf
+completo,bm25,Q096,contextual,"Combinatória, estatística e probabilidade",grande (>20 chunks),ENEM_MAT_05_desvio-padrao.pdf,1.0,1.0,1.0,1.0,1.0,0.6652907408280683,0.6666666666666666,5.75,ENEM_MAT_05_desvio-padrao.pdf
+completo,bm25,Q097,direta,"Combinatória, estatística e probabilidade",medio (8-20 chunks),ENEM_MAT_05_estatistica.pdf,0.0,0.0,1.0,1.0,0.2,0.15457433957839825,0.0,3.6,ENEM_MAT_05_permutacao.pdf
+completo,bm25,Q098,contextual,"Combinatória, estatística e probabilidade",medio (8-20 chunks),ENEM_MAT_05_estatistica.pdf,0.0,1.0,1.0,1.0,0.3333333333333333,0.11004588314904008,0.3333333333333333,3.62,TEO_MT-V5_2024.pdf
+completo,bm25,Q099,direta,"Combinatória, estatística e probabilidade",pequeno (<=7 chunks),ENEM_MAT_05_media-aritmetica.pdf,0.0,1.0,1.0,1.0,0.5,0.46349649945218196,0.6666666666666666,2.82,ENEM_MAT_02_funcao-logaritmica.pdf
+completo,bm25,Q100,contextual,"Combinatória, estatística e probabilidade",pequeno (<=7 chunks),ENEM_MAT_05_media-aritmetica.pdf,1.0,1.0,1.0,1.0,1.0,0.25483467100741447,0.3333333333333333,5.38,ENEM_MAT_05_media-aritmetica.pdf
+completo,bm25,Q101,direta,"Combinatória, estatística e probabilidade",grande (>20 chunks),ENEM_MAT_05_mediana-estatistica.pdf,1.0,1.0,1.0,1.0,1.0,0.7791714369672127,1.0,3.36,ENEM_MAT_05_mediana-estatistica.pdf
+completo,bm25,Q102,contextual,"Combinatória, estatística e probabilidade",grande (>20 chunks),ENEM_MAT_05_mediana-estatistica.pdf,0.0,0.0,1.0,1.0,0.25,0.17993148201117176,0.0,5.01,TEO_MAT-V2_2024.pdf
+completo,bm25,Q103,direta,"Combinatória, estatística e probabilidade",grande (>20 chunks),ENEM_MAT_05_moda-estatistica.pdf,1.0,1.0,1.0,1.0,1.0,0.6681564665834856,1.0,2.21,ENEM_MAT_05_moda-estatistica.pdf
+completo,bm25,Q104,contextual,"Combinatória, estatística e probabilidade",grande (>20 chunks),ENEM_MAT_05_moda-estatistica.pdf,0.0,1.0,1.0,1.0,0.5,0.3436966913921454,0.6666666666666666,4.66,TEO_MT-V5_2024.pdf
+completo,bm25,Q105,direta,"Combinatória, estatística e probabilidade",medio (8-20 chunks),ENEM_MAT_05_permutacao.pdf,0.0,0.0,1.0,1.0,0.2,0.36995731885538535,0.0,2.8,TEO_MT-V4_2024.pdf
+completo,bm25,Q106,contextual,"Combinatória, estatística e probabilidade",medio (8-20 chunks),ENEM_MAT_05_permutacao.pdf,0.0,0.0,0.0,0.0,0.0,0.0,0.0,3.97,TEO_MT-V4_2024.pdf
+completo,bm25,Q107,direta,"Combinatória, estatística e probabilidade",pequeno (<=7 chunks),ENEM_MAT_05_probabilidade-condicional.pdf,1.0,1.0,1.0,1.0,1.0,0.3239134396887189,0.3333333333333333,2.86,ENEM_MAT_05_probabilidade-condicional.pdf
+completo,bm25,Q108,contextual,"Combinatória, estatística e probabilidade",pequeno (<=7 chunks),ENEM_MAT_05_probabilidade-condicional.pdf,0.0,0.0,1.0,1.0,0.2,0.22749013678522056,0.0,3.93,TEO_MT-V5_2024.pdf
+completo,bm25,Q109,direta,"Combinatória, estatística e probabilidade",grande (>20 chunks),ENEM_MAT_05_probabilidade.pdf,0.0,0.0,0.0,1.0,0.1,0.09674789992614623,0.0,2.65,TEO_MT-V6_2024.pdf
+completo,bm25,Q110,contextual,"Combinatória, estatística e probabilidade",grande (>20 chunks),ENEM_MAT_05_probabilidade.pdf,0.0,0.0,0.0,0.0,0.0,0.0,0.0,4.35,TEO_MT-V5_2024.pdf
+completo,bm25,Q111,direta,"Combinatória, estatística e probabilidade",medio (8-20 chunks),ENEM_MAT_05_variancia.pdf,1.0,1.0,1.0,1.0,1.0,0.6790890616565622,1.0,2.71,ENEM_MAT_05_variancia.pdf
+completo,bm25,Q112,contextual,"Combinatória, estatística e probabilidade",medio (8-20 chunks),ENEM_MAT_05_variancia.pdf,0.0,0.0,0.0,0.0,0.0,0.1670257223321078,0.6666666666666666,4.49,ENEM_MAT_05_mediana-estatistica.pdf
+completo,bm25,Q113,direta,Matemática financeira,pequeno (<=7 chunks),ENEM_MAT_06_amortizacao.pdf,1.0,1.0,1.0,1.0,1.0,0.708718891276108,1.0,3.5,ENEM_MAT_06_amortizacao.pdf
+completo,bm25,Q114,contextual,Matemática financeira,pequeno (<=7 chunks),ENEM_MAT_06_amortizacao.pdf,1.0,1.0,1.0,1.0,1.0,0.459082823391373,0.6666666666666666,4.61,ENEM_MAT_06_amortizacao.pdf
+completo,bm25,Q115,direta,Matemática financeira,grande (>20 chunks),ENEM_MAT_06_inflacao.pdf,1.0,1.0,1.0,1.0,1.0,1.0,1.0,2.57,ENEM_MAT_06_inflacao.pdf
+completo,bm25,Q116,contextual,Matemática financeira,grande (>20 chunks),ENEM_MAT_06_inflacao.pdf,1.0,1.0,1.0,1.0,1.0,0.3589542101716347,0.6666666666666666,4.41,ENEM_MAT_06_inflacao.pdf
+completo,bm25,Q117,direta,Matemática financeira,grande (>20 chunks),ENEM_MAT_06_juros-compostos.pdf,0.0,1.0,1.0,1.0,0.5,0.3125291152215463,0.6666666666666666,2.95,TEO_MT-V3_2024.pdf
+completo,bm25,Q118,contextual,Matemática financeira,grande (>20 chunks),ENEM_MAT_06_juros-compostos.pdf,1.0,1.0,1.0,1.0,1.0,0.48882922182497546,0.6666666666666666,5.7,ENEM_MAT_06_juros-compostos.pdf
+completo,bm25,Q119,direta,Matemática financeira,grande (>20 chunks),ENEM_MAT_06_juros-simples.pdf,0.0,1.0,1.0,1.0,0.3333333333333333,0.5040610795300535,0.3333333333333333,2.86,TEO_MT-V3_2024.pdf
+completo,bm25,Q120,contextual,Matemática financeira,grande (>20 chunks),ENEM_MAT_06_juros-simples.pdf,0.0,0.0,1.0,1.0,0.2,0.3063365306564336,0.0,5.83,TEO_MT-V3_2024.pdf
+completo,bm25,Q121,direta,Matemática financeira,medio (8-20 chunks),ENEM_MAT_06_taxa-de-cambio.pdf,1.0,1.0,1.0,1.0,1.0,0.8669479898642709,1.0,2.29,ENEM_MAT_06_taxa-de-cambio.pdf
+completo,bm25,Q122,contextual,Matemática financeira,medio (8-20 chunks),ENEM_MAT_06_taxa-de-cambio.pdf,1.0,1.0,1.0,1.0,1.0,0.22009176629808017,0.3333333333333333,5.14,ENEM_MAT_06_taxa-de-cambio.pdf
+completo,bm25,Q123,direta,Lógica,grande (>20 chunks),ENEM_MAT_07_deducao-logica.pdf,1.0,1.0,1.0,1.0,1.0,1.0,1.0,2.29,ENEM_MAT_07_deducao-logica.pdf
+completo,bm25,Q124,contextual,Lógica,grande (>20 chunks),ENEM_MAT_07_deducao-logica.pdf,0.0,1.0,1.0,1.0,0.5,0.5652611407223593,0.6666666666666666,5.35,TEO_MT-V4_2024.pdf
+completo,bm25,Q125,direta,Lógica,grande (>20 chunks),ENEM_MAT_07_logica-proposicional.pdf,1.0,1.0,1.0,1.0,1.0,1.0,1.0,2.91,ENEM_MAT_07_logica-proposicional.pdf
+completo,bm25,Q126,contextual,Lógica,grande (>20 chunks),ENEM_MAT_07_logica-proposicional.pdf,0.0,1.0,1.0,1.0,0.5,0.6717589890736099,1.0,5.23,ENEM_MAT_07_deducao-logica.pdf
