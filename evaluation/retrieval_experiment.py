@@ -17,6 +17,7 @@ import hashlib
 import json
 import logging
 import os
+import re
 import subprocess
 import time
 from dataclasses import dataclass
@@ -62,7 +63,64 @@ def load_json(path: str) -> Dict[str, Any]:
 
 
 def chunk_counts(gold: Dict[str, Any]) -> Dict[str, int]:
-    return {d["document_name"]: int(d["chunks_indexados"]) for d in gold["documentos"]}
+    """Chunks no índice por unidade de relevância: documento ENEM_MAT_* ou segmento de apostila (gabarito 2.0)."""
+    counts = {d["document_name"]: int(d["chunks_indexados"]) for d in gold["documentos"]}
+    counts.update({s["id"]: int(s["chunks_indexados"]) for s in gold.get("segmentos", [])})
+    return counts
+
+
+# Página de origem do chunk, lida do id gerado na ingestão (ex.: mat_2024_p39_c163_74f8e3 -> 39).
+_PAGE_IN_ID = re.compile(r"_p(\d+)_c\d+_")
+
+
+def segment_index(gold: Dict[str, Any]) -> Dict[str, List[Dict[str, Any]]]:
+    """Segmentos página-assunto das apostilas, agrupados por documento."""
+    index: Dict[str, List[Dict[str, Any]]] = {}
+    for s in gold.get("segmentos", []):
+        index.setdefault(s["document_name"], []).append(s)
+    return index
+
+
+def expand_with_segments(relevantes: Dict[str, int], gold: Dict[str, Any]) -> Dict[str, int]:
+    """
+    Acrescenta aos julgamentos de uma query os segmentos de apostila: o grau de um segmento é o maior grau
+    que a query dá aos tópicos (PDFs ENEM_MAT_*) que ele ensina. Segmentos de grau 0 ficam de fora.
+    """
+    expanded = dict(relevantes)
+    for s in gold.get("segmentos", []):
+        grade = max((int(relevantes.get(t, 0)) for t in s["topicos"]), default=0)
+        if grade > 0:
+            expanded[s["id"]] = grade
+    return expanded
+
+
+def without_segments(items: Sequence[Dict[str, Any]],
+                     segments: Dict[str, List[Dict[str, Any]]]) -> List[Dict[str, Any]]:
+    """
+    Itens só com os julgamentos por documento. Usado no cenário fechado (filtro nos ENEM_MAT_*): as apostilas
+    não podem ser recuperadas ali e não devem entrar no ranking ideal do nDCG.
+    """
+    seg_ids = {s["id"] for ss in segments.values() for s in ss}
+    return [{**it, "relevantes": {k: v for k, v in it["relevantes"].items() if k not in seg_ids}} for it in items]
+
+
+def relevance_unit(hit: Dict[str, Any], segments: Optional[Dict[str, List[Dict[str, Any]]]] = None) -> str:
+    """
+    Unidade de relevância de um chunk ranqueado: o segmento de páginas, se o documento for uma apostila
+    segmentada; senão, o próprio documento. Página sem segmento vira uma unidade não julgada (grau 0).
+    """
+    doc = hit["document_name"]
+    if not segments or doc not in segments:
+        return doc
+    page = hit.get("page_number")
+    if page is None:
+        m = _PAGE_IN_ID.search(hit.get("id", ""))
+        page = int(m.group(1)) if m else None
+    if page is not None:
+        for s in segments[doc]:
+            if s["pagina_inicial"] <= int(page) <= s["pagina_final"]:
+                return s["id"]
+    return f"{doc}#p{page}"
 
 
 def gold_document_names(gold: Dict[str, Any]) -> List[str]:
@@ -86,7 +144,7 @@ def gold_items(gold: Dict[str, Any]) -> List[Dict[str, Any]]:
         items.append({
             "id": item["id"],
             "query": item["query"],
-            "relevantes": item["relevantes"],
+            "relevantes": expand_with_segments(item["relevantes"], gold),
             "tipo": item["tipo"],
             "eixo": target["eixo_tematico"],
             "tamanho": size_bucket(int(target["chunks_indexados"])),
@@ -273,18 +331,19 @@ def new_run_dir(prefix: str, frozen: bool) -> str:
 # ---------------------------------------------------------------------------
 
 def per_query_metrics(
-    records: Sequence[Dict[str, Any]], items: Sequence[Dict[str, Any]], counts: Dict[str, int]
+    records: Sequence[Dict[str, Any]], items: Sequence[Dict[str, Any]], counts: Dict[str, int],
+    segments: Optional[Dict[str, List[Dict[str, Any]]]] = None,
 ) -> List[Dict[str, Any]]:
     by_id = {it["id"]: it for it in items}
     rows = []
     for rec in records:
         item = by_id[rec["id"]]
-        names = [h["document_name"] for h in rec["ranking"]]
-        m = q.evaluate_ranking(names, item["relevantes"], counts)
+        units = [relevance_unit(h, segments) for h in rec["ranking"]]
+        m = q.evaluate_ranking(units, item["relevantes"], counts)
         row = {k: v for k, v in item.items() if k not in ("relevantes", "query")}
         row.update(m)
         row["latency_ms"] = rec["latency_ms"]
-        row["top1_document"] = names[0] if names else ""
+        row["top1_document"] = units[0] if units else ""
         rows.append(row)
     return rows
 

@@ -72,6 +72,7 @@ def main():
     if args.limit:
         items = items[:args.limit]
     counts = rx.chunk_counts(gold)
+    segments = rx.segment_index(gold)  # apostilas julgadas por segmento de páginas (gabarito 2.0)
     namespace = settings.NAMESPACE_MATERIAIS_DIDATICOS
 
     if args.recalcular:
@@ -136,10 +137,10 @@ def main():
         with open(os.path.join(run_dir, "manifest.json"), "w", encoding="utf-8") as fh:
             json.dump(manifest, fh, ensure_ascii=False, indent=2)
 
-    analyze(run_dir, manifest, items, counts, scenarios, systems, args)
+    analyze(run_dir, manifest, items, counts, segments, scenarios, systems, args)
 
 
-def analyze(run_dir, manifest, items, counts, scenarios, systems, args):
+def analyze(run_dir, manifest, items, counts, segments, scenarios, systems, args):
     rows_all, summaries, comparisons = [], {}, {}
     breakdowns = {"tipo de query": {}, "eixo temático": {}, "tamanho do documento": {}}
     for scenario in scenarios:
@@ -149,7 +150,9 @@ def analyze(run_dir, manifest, items, counts, scenarios, systems, args):
             if not os.path.exists(path):
                 logger.warning(f"Rodada ausente: {path}")
                 continue
-            rows = rx.per_query_metrics(rx.load_jsonl(path), items, counts)
+            # No cenário fechado as apostilas não podem ser recuperadas: só os julgamentos por documento.
+            scen_items = items if scenario == "completo" else rx.without_segments(items, segments)
+            rows = rx.per_query_metrics(rx.load_jsonl(path), scen_items, counts, segments)
             label = f"{scenario}/{system}"
             rows_by_system[system] = rows
             summaries[label] = rx.summarize(rows, n_resamples=args.bootstrap, seed=args.seed)

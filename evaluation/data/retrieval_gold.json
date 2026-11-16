@@ -1,8 +1,8 @@
 {
-  "versao": "1.0",
-  "congelado": false,
-  "descricao": "Gabarito (qrels) de recuperação para o namespace materiais_didaticos, restrito aos 62 PDFs ENEM_MAT_* derivados da Wikipédia. Relevância graduada: 2 = documento-alvo do tópico (inclui duplicatas exatas), 1 = documento correlato aceitável.",
-  "unidade_de_relevancia": "documento (metadata.document_name dos chunks recuperados)",
+  "versao": "2.0",
+  "congelado": true,
+  "descricao": "Gabarito (qrels) de recuperação para o namespace materiais_didaticos. Os 62 PDFs ENEM_MAT_* (Wikipédia) são julgados por documento; as 8 apostilas (TEO_*, caderno_matematica e ebook) são julgadas por segmento de páginas com o mesmo assunto. Relevância graduada: 2 = documento-alvo do tópico (inclui duplicatas exatas), 1 = documento correlato aceitável.",
+  "unidade_de_relevancia": "documento (metadata.document_name) para os ENEM_MAT_*; segmento de páginas (document_name + page_number, lido do id do chunk) para as apostilas",
   "escala": {
     "2": "alvo",
     "1": "correlato",
@@ -12,7 +12,8 @@
     "ENEM_MAT_05_analise-combinatoria.pdf e ENEM_MAT_05_arranjo-combinatoria.pdf são bytes idênticos (artigo 'Combinatória').",
     "ENEM_MAT_06_juros-compostos.pdf e ENEM_MAT_06_juros-simples.pdf são bytes idênticos (artigo 'Juro').",
     "O prefixo numérico do arquivo (01..07) é um eixo temático próprio do acervo e NÃO corresponde às competências C1..C7 da Matriz do ENEM.",
-    "PDFs TEO_*, caderno_matematica.pdf e ebook-matematica-e-suas-tecnologias.pdf estão fora do gabarito (sem rótulo de tópico)."
+    "Versão 2.0: as 8 apostilas, antes fora do gabarito, foram rotuladas por segmento página-assunto. Os volumes TEO_* seguem o sumário (página impressa = página do PDF); o e-book e o caderno foram lidos página a página (o caderno quase não tem camada de texto e foi rotulado pelas imagens das páginas). A rotulagem foi feita com assistência de IA.",
+    "A versão 1.0 (só os ENEM_MAT_*) foi usada na rodada evaluation/results/recuperacao-20261116-022117."
   ],
   "documentos": [
     {
@@ -1936,5 +1937,1890 @@
         "ENEM_MAT_07_deducao-logica.pdf": 1
       }
     }
-  ]
+  ],
+  "regra_segmentos": "Cada segmento lista os tópicos-alvo (PDFs ENEM_MAT_*) que ele ensina. O grau de um segmento numa query é o maior grau que a query dá a esses tópicos: um segmento sobre o tópico-alvo vale 2, um sobre um tópico correlato vale 1. Páginas fora dos segmentos (capas, sumários, assuntos sem tópico no gabarito, como matrizes, polinômios e números complexos) valem 0.",
+  "segmentos": [
+    {
+      "id": "TEO_MAT-V1_2024.pdf#p15-22",
+      "document_name": "TEO_MAT-V1_2024.pdf",
+      "pagina_inicial": 15,
+      "pagina_final": 22,
+      "assunto": "Equações do 1º grau e problemas clássicos",
+      "topicos": [
+        "ENEM_MAT_02_equacao-do-primeiro-grau.pdf"
+      ],
+      "chunks_indexados": 37
+    },
+    {
+      "id": "TEO_MAT-V1_2024.pdf#p23-27",
+      "document_name": "TEO_MAT-V1_2024.pdf",
+      "pagina_inicial": 23,
+      "pagina_final": 27,
+      "assunto": "Equações do 2º grau",
+      "topicos": [
+        "ENEM_MAT_02_equacao-do-segundo-grau.pdf"
+      ],
+      "chunks_indexados": 20
+    },
+    {
+      "id": "TEO_MAT-V1_2024.pdf#p36-41",
+      "document_name": "TEO_MAT-V1_2024.pdf",
+      "pagina_inicial": 36,
+      "pagina_final": 41,
+      "assunto": "Trigonometria no triângulo retângulo",
+      "topicos": [
+        "ENEM_MAT_03_trigonometria.pdf",
+        "ENEM_MAT_03_triangulo-retangulo.pdf"
+      ],
+      "chunks_indexados": 26
+    },
+    {
+      "id": "TEO_MAT-V1_2024.pdf#p50-53",
+      "document_name": "TEO_MAT-V1_2024.pdf",
+      "pagina_inicial": 50,
+      "pagina_final": 53,
+      "assunto": "Conjuntos numéricos: naturais, inteiros e racionais",
+      "topicos": [
+        "ENEM_MAT_01_conjuntos-numericos.pdf",
+        "ENEM_MAT_01_numeros-racionais.pdf"
+      ],
+      "chunks_indexados": 17
+    },
+    {
+      "id": "TEO_MAT-V1_2024.pdf#p54-56",
+      "document_name": "TEO_MAT-V1_2024.pdf",
+      "pagina_inicial": 54,
+      "pagina_final": 56,
+      "assunto": "Conjuntos numéricos: irracionais e reais",
+      "topicos": [
+        "ENEM_MAT_01_conjuntos-numericos.pdf",
+        "ENEM_MAT_01_numeros-irracionais.pdf"
+      ],
+      "chunks_indexados": 8
+    },
+    {
+      "id": "TEO_MAT-V1_2024.pdf#p59-64",
+      "document_name": "TEO_MAT-V1_2024.pdf",
+      "pagina_inicial": 59,
+      "pagina_final": 64,
+      "assunto": "Introdução à geometria plana",
+      "topicos": [
+        "ENEM_MAT_03_geometria-plana.pdf"
+      ],
+      "chunks_indexados": 15
+    },
+    {
+      "id": "TEO_MAT-V1_2024.pdf#p65-72",
+      "document_name": "TEO_MAT-V1_2024.pdf",
+      "pagina_inicial": 65,
+      "pagina_final": 72,
+      "assunto": "Ângulos no triângulo e na circunferência",
+      "topicos": [
+        "ENEM_MAT_03_geometria-plana.pdf"
+      ],
+      "chunks_indexados": 21
+    },
+    {
+      "id": "TEO_MAT-V1_2024.pdf#p73-77",
+      "document_name": "TEO_MAT-V1_2024.pdf",
+      "pagina_inicial": 73,
+      "pagina_final": 77,
+      "assunto": "Razão proporcional, teoremas de Tales e da bissetriz",
+      "topicos": [
+        "ENEM_MAT_03_semelhanca-de-triangulos.pdf",
+        "ENEM_MAT_03_geometria-plana.pdf"
+      ],
+      "chunks_indexados": 20
+    },
+    {
+      "id": "TEO_MAT-V1_2024.pdf#p78-80",
+      "document_name": "TEO_MAT-V1_2024.pdf",
+      "pagina_inicial": 78,
+      "pagina_final": 80,
+      "assunto": "Pontos notáveis do triângulo",
+      "topicos": [
+        "ENEM_MAT_03_geometria-plana.pdf"
+      ],
+      "chunks_indexados": 10
+    },
+    {
+      "id": "TEO_MAT-V2_2024.pdf#p9-17",
+      "document_name": "TEO_MAT-V2_2024.pdf",
+      "pagina_inicial": 9,
+      "pagina_final": 17,
+      "assunto": "Inequações do 1º e do 2º grau",
+      "topicos": [
+        "ENEM_MAT_02_inequacao.pdf"
+      ],
+      "chunks_indexados": 30
+    },
+    {
+      "id": "TEO_MAT-V2_2024.pdf#p26-32",
+      "document_name": "TEO_MAT-V2_2024.pdf",
+      "pagina_inicial": 26,
+      "pagina_final": 32,
+      "assunto": "Funções do 1º grau",
+      "topicos": [
+        "ENEM_MAT_02_funcao-afim.pdf"
+      ],
+      "chunks_indexados": 21
+    },
+    {
+      "id": "TEO_MAT-V2_2024.pdf#p35-40",
+      "document_name": "TEO_MAT-V2_2024.pdf",
+      "pagina_inicial": 35,
+      "pagina_final": 40,
+      "assunto": "Razão, proporção e grandezas proporcionais",
+      "topicos": [
+        "ENEM_MAT_01_razao-e-proporcao.pdf"
+      ],
+      "chunks_indexados": 42
+    },
+    {
+      "id": "TEO_MAT-V2_2024.pdf#p41-43",
+      "document_name": "TEO_MAT-V2_2024.pdf",
+      "pagina_inicial": 41,
+      "pagina_final": 43,
+      "assunto": "Grandezas proporcionais e regra de três",
+      "topicos": [
+        "ENEM_MAT_01_razao-e-proporcao.pdf",
+        "ENEM_MAT_01_regra-de-tres.pdf"
+      ],
+      "chunks_indexados": 17
+    },
+    {
+      "id": "TEO_MAT-V2_2024.pdf#p53-60",
+      "document_name": "TEO_MAT-V2_2024.pdf",
+      "pagina_inicial": 53,
+      "pagina_final": 60,
+      "assunto": "Porcentagem, acréscimos e descontos",
+      "topicos": [
+        "ENEM_MAT_01_porcentagem.pdf"
+      ],
+      "chunks_indexados": 32
+    },
+    {
+      "id": "TEO_MAT-V2_2024.pdf#p63-66",
+      "document_name": "TEO_MAT-V2_2024.pdf",
+      "pagina_inicial": 63,
+      "pagina_final": 66,
+      "assunto": "Semelhança de triângulos",
+      "topicos": [
+        "ENEM_MAT_03_semelhanca-de-triangulos.pdf"
+      ],
+      "chunks_indexados": 15
+    },
+    {
+      "id": "TEO_MAT-V2_2024.pdf#p67-72",
+      "document_name": "TEO_MAT-V2_2024.pdf",
+      "pagina_inicial": 67,
+      "pagina_final": 72,
+      "assunto": "Relações métricas no triângulo retângulo",
+      "topicos": [
+        "ENEM_MAT_03_triangulo-retangulo.pdf",
+        "ENEM_MAT_03_teorema-de-pitagoras.pdf"
+      ],
+      "chunks_indexados": 17
+    },
+    {
+      "id": "TEO_MAT-V2_2024.pdf#p73-77",
+      "document_name": "TEO_MAT-V2_2024.pdf",
+      "pagina_inicial": 73,
+      "pagina_final": 77,
+      "assunto": "Trigonometria num triângulo qualquer (leis dos senos e dos cossenos)",
+      "topicos": [
+        "ENEM_MAT_03_lei-dos-senos.pdf",
+        "ENEM_MAT_03_lei-dos-cossenos.pdf",
+        "ENEM_MAT_03_trigonometria.pdf"
+      ],
+      "chunks_indexados": 17
+    },
+    {
+      "id": "TEO_MAT-V2_2024.pdf#p78-84",
+      "document_name": "TEO_MAT-V2_2024.pdf",
+      "pagina_inicial": 78,
+      "pagina_final": 84,
+      "assunto": "Áreas dos triângulos",
+      "topicos": [
+        "ENEM_MAT_03_area-geometria.pdf"
+      ],
+      "chunks_indexados": 18
+    },
+    {
+      "id": "TEO_MT-V3_2024.pdf#p6-13",
+      "document_name": "TEO_MT-V3_2024.pdf",
+      "pagina_inicial": 6,
+      "pagina_final": 13,
+      "assunto": "Função polinomial do 2º grau",
+      "topicos": [
+        "ENEM_MAT_02_funcao-quadratica.pdf"
+      ],
+      "chunks_indexados": 27
+    },
+    {
+      "id": "TEO_MT-V3_2024.pdf#p14-20",
+      "document_name": "TEO_MT-V3_2024.pdf",
+      "pagina_inicial": 14,
+      "pagina_final": 20,
+      "assunto": "Equações, inequações e funções exponenciais",
+      "topicos": [
+        "ENEM_MAT_02_funcao-exponencial.pdf"
+      ],
+      "chunks_indexados": 27
+    },
+    {
+      "id": "TEO_MT-V3_2024.pdf#p21-40",
+      "document_name": "TEO_MT-V3_2024.pdf",
+      "pagina_inicial": 21,
+      "pagina_final": 40,
+      "assunto": "Logaritmos: propriedades, equações e funções logarítmicas",
+      "topicos": [
+        "ENEM_MAT_02_funcao-logaritmica.pdf"
+      ],
+      "chunks_indexados": 71
+    },
+    {
+      "id": "TEO_MT-V3_2024.pdf#p42-47",
+      "document_name": "TEO_MT-V3_2024.pdf",
+      "pagina_inicial": 42,
+      "pagina_final": 47,
+      "assunto": "Juros simples e compostos",
+      "topicos": [
+        "ENEM_MAT_06_juros-simples.pdf",
+        "ENEM_MAT_06_juros-compostos.pdf"
+      ],
+      "chunks_indexados": 26
+    },
+    {
+      "id": "TEO_MT-V3_2024.pdf#p48-67",
+      "document_name": "TEO_MT-V3_2024.pdf",
+      "pagina_inicial": 48,
+      "pagina_final": 67,
+      "assunto": "Conceitos trigonométricos (arcos, ciclo trigonométrico)",
+      "topicos": [
+        "ENEM_MAT_03_ciclo-trigonometrico.pdf",
+        "ENEM_MAT_03_trigonometria.pdf"
+      ],
+      "chunks_indexados": 56
+    },
+    {
+      "id": "TEO_MT-V3_2024.pdf#p68-84",
+      "document_name": "TEO_MT-V3_2024.pdf",
+      "pagina_inicial": 68,
+      "pagina_final": 84,
+      "assunto": "Relações fundamentais, transformações e equações trigonométricas",
+      "topicos": [
+        "ENEM_MAT_03_trigonometria.pdf"
+      ],
+      "chunks_indexados": 83
+    },
+    {
+      "id": "TEO_MT-V3_2024.pdf#p87-93",
+      "document_name": "TEO_MT-V3_2024.pdf",
+      "pagina_inicial": 87,
+      "pagina_final": 93,
+      "assunto": "Polígonos",
+      "topicos": [
+        "ENEM_MAT_03_poligono.pdf"
+      ],
+      "chunks_indexados": 18
+    },
+    {
+      "id": "TEO_MT-V3_2024.pdf#p94-104",
+      "document_name": "TEO_MT-V3_2024.pdf",
+      "pagina_inicial": 94,
+      "pagina_final": 104,
+      "assunto": "Áreas dos quadriláteros e do círculo",
+      "topicos": [
+        "ENEM_MAT_03_area-geometria.pdf"
+      ],
+      "chunks_indexados": 31
+    },
+    {
+      "id": "TEO_MT-V3_2024.pdf#p105-113",
+      "document_name": "TEO_MT-V3_2024.pdf",
+      "pagina_inicial": 105,
+      "pagina_final": 113,
+      "assunto": "Poliedros e geometria métrica de posição",
+      "topicos": [
+        "ENEM_MAT_03_geometria-espacial.pdf"
+      ],
+      "chunks_indexados": 25
+    },
+    {
+      "id": "TEO_MT-V3_2024.pdf#p114-120",
+      "document_name": "TEO_MT-V3_2024.pdf",
+      "pagina_inicial": 114,
+      "pagina_final": 120,
+      "assunto": "Prismas",
+      "topicos": [
+        "ENEM_MAT_03_prisma-geometria.pdf",
+        "ENEM_MAT_03_geometria-espacial.pdf"
+      ],
+      "chunks_indexados": 21
+    },
+    {
+      "id": "TEO_MT-V4_2024.pdf#p11-30",
+      "document_name": "TEO_MT-V4_2024.pdf",
+      "pagina_inicial": 11,
+      "pagina_final": 30,
+      "assunto": "Funções trigonométricas",
+      "topicos": [
+        "ENEM_MAT_03_trigonometria.pdf",
+        "ENEM_MAT_03_ciclo-trigonometrico.pdf"
+      ],
+      "chunks_indexados": 71
+    },
+    {
+      "id": "TEO_MT-V4_2024.pdf#p51-55",
+      "document_name": "TEO_MT-V4_2024.pdf",
+      "pagina_inicial": 51,
+      "pagina_final": 55,
+      "assunto": "Inequações trigonométricas",
+      "topicos": [
+        "ENEM_MAT_03_trigonometria.pdf"
+      ],
+      "chunks_indexados": 11
+    },
+    {
+      "id": "TEO_MT-V4_2024.pdf#p56-60",
+      "document_name": "TEO_MT-V4_2024.pdf",
+      "pagina_inicial": 56,
+      "pagina_final": 60,
+      "assunto": "Princípio fundamental da contagem",
+      "topicos": [
+        "ENEM_MAT_05_analise-combinatoria.pdf"
+      ],
+      "chunks_indexados": 18
+    },
+    {
+      "id": "TEO_MT-V4_2024.pdf#p61-67",
+      "document_name": "TEO_MT-V4_2024.pdf",
+      "pagina_inicial": 61,
+      "pagina_final": 67,
+      "assunto": "Fatorial e permutações simples e com repetição",
+      "topicos": [
+        "ENEM_MAT_05_permutacao.pdf",
+        "ENEM_MAT_05_analise-combinatoria.pdf"
+      ],
+      "chunks_indexados": 27
+    },
+    {
+      "id": "TEO_MT-V4_2024.pdf#p68-74",
+      "document_name": "TEO_MT-V4_2024.pdf",
+      "pagina_inicial": 68,
+      "pagina_final": 74,
+      "assunto": "Arranjos",
+      "topicos": [
+        "ENEM_MAT_05_analise-combinatoria.pdf"
+      ],
+      "chunks_indexados": 24
+    },
+    {
+      "id": "TEO_MT-V4_2024.pdf#p77-83",
+      "document_name": "TEO_MT-V4_2024.pdf",
+      "pagina_inicial": 77,
+      "pagina_final": 83,
+      "assunto": "Volume de prismas",
+      "topicos": [
+        "ENEM_MAT_03_prisma-geometria.pdf",
+        "ENEM_MAT_03_volume.pdf"
+      ],
+      "chunks_indexados": 22
+    },
+    {
+      "id": "TEO_MT-V4_2024.pdf#p84-95",
+      "document_name": "TEO_MT-V4_2024.pdf",
+      "pagina_inicial": 84,
+      "pagina_final": 95,
+      "assunto": "Pirâmides e troncos de pirâmides",
+      "topicos": [
+        "ENEM_MAT_03_piramide-geometria.pdf",
+        "ENEM_MAT_03_volume.pdf"
+      ],
+      "chunks_indexados": 44
+    },
+    {
+      "id": "TEO_MT-V4_2024.pdf#p96-102",
+      "document_name": "TEO_MT-V4_2024.pdf",
+      "pagina_inicial": 96,
+      "pagina_final": 102,
+      "assunto": "Cilindros",
+      "topicos": [
+        "ENEM_MAT_03_cilindro.pdf"
+      ],
+      "chunks_indexados": 18
+    },
+    {
+      "id": "TEO_MT-V4_2024.pdf#p103-111",
+      "document_name": "TEO_MT-V4_2024.pdf",
+      "pagina_inicial": 103,
+      "pagina_final": 111,
+      "assunto": "Cones e troncos de cone",
+      "topicos": [
+        "ENEM_MAT_03_cone.pdf"
+      ],
+      "chunks_indexados": 26
+    },
+    {
+      "id": "TEO_MT-V5_2024.pdf#p13-19",
+      "document_name": "TEO_MT-V5_2024.pdf",
+      "pagina_inicial": 13,
+      "pagina_final": 19,
+      "assunto": "Noções de sequência e progressão aritmética",
+      "topicos": [
+        "ENEM_MAT_01_progressao-aritmetica.pdf",
+        "ENEM_MAT_02_sequencia-numerica.pdf"
+      ],
+      "chunks_indexados": 30
+    },
+    {
+      "id": "TEO_MT-V5_2024.pdf#p20-28",
+      "document_name": "TEO_MT-V5_2024.pdf",
+      "pagina_inicial": 20,
+      "pagina_final": 28,
+      "assunto": "Progressão geométrica",
+      "topicos": [
+        "ENEM_MAT_01_progressao-geometrica.pdf"
+      ],
+      "chunks_indexados": 39
+    },
+    {
+      "id": "TEO_MT-V5_2024.pdf#p29-38",
+      "document_name": "TEO_MT-V5_2024.pdf",
+      "pagina_inicial": 29,
+      "pagina_final": 38,
+      "assunto": "Problemas envolvendo PA e PG",
+      "topicos": [
+        "ENEM_MAT_01_progressao-aritmetica.pdf",
+        "ENEM_MAT_01_progressao-geometrica.pdf"
+      ],
+      "chunks_indexados": 52
+    },
+    {
+      "id": "TEO_MT-V5_2024.pdf#p47-53",
+      "document_name": "TEO_MT-V5_2024.pdf",
+      "pagina_inicial": 47,
+      "pagina_final": 53,
+      "assunto": "Combinação simples",
+      "topicos": [
+        "ENEM_MAT_05_combinacao-matematica.pdf"
+      ],
+      "chunks_indexados": 30
+    },
+    {
+      "id": "TEO_MT-V5_2024.pdf#p62-67",
+      "document_name": "TEO_MT-V5_2024.pdf",
+      "pagina_inicial": 62,
+      "pagina_final": 67,
+      "assunto": "Probabilidade: adição",
+      "topicos": [
+        "ENEM_MAT_05_probabilidade.pdf"
+      ],
+      "chunks_indexados": 20
+    },
+    {
+      "id": "TEO_MT-V5_2024.pdf#p68-77",
+      "document_name": "TEO_MT-V5_2024.pdf",
+      "pagina_inicial": 68,
+      "pagina_final": 77,
+      "assunto": "Probabilidade condicional",
+      "topicos": [
+        "ENEM_MAT_05_probabilidade-condicional.pdf"
+      ],
+      "chunks_indexados": 42
+    },
+    {
+      "id": "TEO_MT-V5_2024.pdf#p78-86",
+      "document_name": "TEO_MT-V5_2024.pdf",
+      "pagina_inicial": 78,
+      "pagina_final": 86,
+      "assunto": "Estatística: conceitos, tabelas e gráficos",
+      "topicos": [
+        "ENEM_MAT_05_estatistica.pdf"
+      ],
+      "chunks_indexados": 32
+    },
+    {
+      "id": "TEO_MT-V5_2024.pdf#p87-89",
+      "document_name": "TEO_MT-V5_2024.pdf",
+      "pagina_inicial": 87,
+      "pagina_final": 89,
+      "assunto": "Medidas de tendência central (média, mediana e moda)",
+      "topicos": [
+        "ENEM_MAT_05_media-aritmetica.pdf",
+        "ENEM_MAT_05_mediana-estatistica.pdf",
+        "ENEM_MAT_05_moda-estatistica.pdf",
+        "ENEM_MAT_05_estatistica.pdf"
+      ],
+      "chunks_indexados": 15
+    },
+    {
+      "id": "TEO_MT-V5_2024.pdf#p90-92",
+      "document_name": "TEO_MT-V5_2024.pdf",
+      "pagina_inicial": 90,
+      "pagina_final": 92,
+      "assunto": "Medidas de dispersão (variância e desvio padrão)",
+      "topicos": [
+        "ENEM_MAT_05_variancia.pdf",
+        "ENEM_MAT_05_desvio-padrao.pdf",
+        "ENEM_MAT_05_estatistica.pdf"
+      ],
+      "chunks_indexados": 13
+    },
+    {
+      "id": "TEO_MT-V5_2024.pdf#p93-96",
+      "document_name": "TEO_MT-V5_2024.pdf",
+      "pagina_inicial": 93,
+      "pagina_final": 96,
+      "assunto": "Exercícios de estatística (tendência central e dispersão)",
+      "topicos": [
+        "ENEM_MAT_05_estatistica.pdf",
+        "ENEM_MAT_05_media-aritmetica.pdf",
+        "ENEM_MAT_05_mediana-estatistica.pdf",
+        "ENEM_MAT_05_moda-estatistica.pdf",
+        "ENEM_MAT_05_variancia.pdf",
+        "ENEM_MAT_05_desvio-padrao.pdf"
+      ],
+      "chunks_indexados": 13
+    },
+    {
+      "id": "TEO_MT-V5_2024.pdf#p98-104",
+      "document_name": "TEO_MT-V5_2024.pdf",
+      "pagina_inicial": 98,
+      "pagina_final": 104,
+      "assunto": "Esferas",
+      "topicos": [
+        "ENEM_MAT_03_esfera.pdf"
+      ],
+      "chunks_indexados": 21
+    },
+    {
+      "id": "TEO_MT-V5_2024.pdf#p105-107",
+      "document_name": "TEO_MT-V5_2024.pdf",
+      "pagina_inicial": 105,
+      "pagina_final": 107,
+      "assunto": "Inscrição e circunscrição de sólidos",
+      "topicos": [
+        "ENEM_MAT_03_geometria-espacial.pdf"
+      ],
+      "chunks_indexados": 7
+    },
+    {
+      "id": "TEO_MT-V5_2024.pdf#p108-116",
+      "document_name": "TEO_MT-V5_2024.pdf",
+      "pagina_inicial": 108,
+      "pagina_final": 116,
+      "assunto": "Geometria analítica: distância e ponto médio",
+      "topicos": [
+        "ENEM_MAT_03_distancia-entre-dois-pontos.pdf",
+        "ENEM_MAT_03_geometria-analitica.pdf"
+      ],
+      "chunks_indexados": 34
+    },
+    {
+      "id": "TEO_MT-V5_2024.pdf#p117-131",
+      "document_name": "TEO_MT-V5_2024.pdf",
+      "pagina_inicial": 117,
+      "pagina_final": 131,
+      "assunto": "Geometria analítica: retas, coeficiente angular e posições relativas",
+      "topicos": [
+        "ENEM_MAT_03_geometria-analitica.pdf"
+      ],
+      "chunks_indexados": 56
+    },
+    {
+      "id": "TEO_MT-V6_2024.pdf#p68-86",
+      "document_name": "TEO_MT-V6_2024.pdf",
+      "pagina_inicial": 68,
+      "pagina_final": 86,
+      "assunto": "Sistemas lineares",
+      "topicos": [
+        "ENEM_MAT_02_sistema-de-equacoes-lineares.pdf"
+      ],
+      "chunks_indexados": 68
+    },
+    {
+      "id": "TEO_MT-V6_2024.pdf#p89-110",
+      "document_name": "TEO_MT-V6_2024.pdf",
+      "pagina_inicial": 89,
+      "pagina_final": 110,
+      "assunto": "Geometria analítica: ponto e reta, circunferência e elipse",
+      "topicos": [
+        "ENEM_MAT_03_geometria-analitica.pdf"
+      ],
+      "chunks_indexados": 79
+    },
+    {
+      "id": "ebook-matematica-e-suas-tecnologias.pdf#p9-9",
+      "document_name": "ebook-matematica-e-suas-tecnologias.pdf",
+      "pagina_inicial": 9,
+      "pagina_final": 9,
+      "assunto": "Números naturais",
+      "topicos": [
+        "ENEM_MAT_01_conjuntos-numericos.pdf"
+      ],
+      "chunks_indexados": 2
+    },
+    {
+      "id": "ebook-matematica-e-suas-tecnologias.pdf#p10-10",
+      "document_name": "ebook-matematica-e-suas-tecnologias.pdf",
+      "pagina_inicial": 10,
+      "pagina_final": 10,
+      "assunto": "Números inteiros e racionais",
+      "topicos": [
+        "ENEM_MAT_01_conjuntos-numericos.pdf",
+        "ENEM_MAT_01_numeros-racionais.pdf"
+      ],
+      "chunks_indexados": 2
+    },
+    {
+      "id": "ebook-matematica-e-suas-tecnologias.pdf#p11-11",
+      "document_name": "ebook-matematica-e-suas-tecnologias.pdf",
+      "pagina_inicial": 11,
+      "pagina_final": 11,
+      "assunto": "Números irracionais",
+      "topicos": [
+        "ENEM_MAT_01_conjuntos-numericos.pdf",
+        "ENEM_MAT_01_numeros-irracionais.pdf"
+      ],
+      "chunks_indexados": 1
+    },
+    {
+      "id": "ebook-matematica-e-suas-tecnologias.pdf#p12-14",
+      "document_name": "ebook-matematica-e-suas-tecnologias.pdf",
+      "pagina_inicial": 12,
+      "pagina_final": 14,
+      "assunto": "Números reais e exercícios",
+      "topicos": [
+        "ENEM_MAT_01_conjuntos-numericos.pdf"
+      ],
+      "chunks_indexados": 4
+    },
+    {
+      "id": "ebook-matematica-e-suas-tecnologias.pdf#p20-20",
+      "document_name": "ebook-matematica-e-suas-tecnologias.pdf",
+      "pagina_inicial": 20,
+      "pagina_final": 20,
+      "assunto": "Equação do 1º grau e sistemas com duas incógnitas",
+      "topicos": [
+        "ENEM_MAT_02_equacao-do-primeiro-grau.pdf",
+        "ENEM_MAT_02_sistema-de-equacoes-lineares.pdf"
+      ],
+      "chunks_indexados": 2
+    },
+    {
+      "id": "ebook-matematica-e-suas-tecnologias.pdf#p21-24",
+      "document_name": "ebook-matematica-e-suas-tecnologias.pdf",
+      "pagina_inicial": 21,
+      "pagina_final": 24,
+      "assunto": "Sistemas: substituição e adição",
+      "topicos": [
+        "ENEM_MAT_02_sistema-de-equacoes-lineares.pdf"
+      ],
+      "chunks_indexados": 7
+    },
+    {
+      "id": "ebook-matematica-e-suas-tecnologias.pdf#p25-28",
+      "document_name": "ebook-matematica-e-suas-tecnologias.pdf",
+      "pagina_inicial": 25,
+      "pagina_final": 28,
+      "assunto": "Equação do 2º grau",
+      "topicos": [
+        "ENEM_MAT_02_equacao-do-segundo-grau.pdf"
+      ],
+      "chunks_indexados": 6
+    },
+    {
+      "id": "ebook-matematica-e-suas-tecnologias.pdf#p29-31",
+      "document_name": "ebook-matematica-e-suas-tecnologias.pdf",
+      "pagina_inicial": 29,
+      "pagina_final": 31,
+      "assunto": "Triângulo retângulo e relações métricas",
+      "topicos": [
+        "ENEM_MAT_03_triangulo-retangulo.pdf",
+        "ENEM_MAT_03_teorema-de-pitagoras.pdf",
+        "ENEM_MAT_03_geometria-plana.pdf"
+      ],
+      "chunks_indexados": 5
+    },
+    {
+      "id": "ebook-matematica-e-suas-tecnologias.pdf#p32-35",
+      "document_name": "ebook-matematica-e-suas-tecnologias.pdf",
+      "pagina_inicial": 32,
+      "pagina_final": 35,
+      "assunto": "Polígonos e cálculo de áreas",
+      "topicos": [
+        "ENEM_MAT_03_poligono.pdf",
+        "ENEM_MAT_03_area-geometria.pdf",
+        "ENEM_MAT_03_geometria-plana.pdf"
+      ],
+      "chunks_indexados": 5
+    },
+    {
+      "id": "ebook-matematica-e-suas-tecnologias.pdf#p36-39",
+      "document_name": "ebook-matematica-e-suas-tecnologias.pdf",
+      "pagina_inicial": 36,
+      "pagina_final": 39,
+      "assunto": "Área e volume de prismas e pirâmides",
+      "topicos": [
+        "ENEM_MAT_03_prisma-geometria.pdf",
+        "ENEM_MAT_03_piramide-geometria.pdf",
+        "ENEM_MAT_03_volume.pdf",
+        "ENEM_MAT_03_geometria-espacial.pdf"
+      ],
+      "chunks_indexados": 8
+    },
+    {
+      "id": "ebook-matematica-e-suas-tecnologias.pdf#p40-42",
+      "document_name": "ebook-matematica-e-suas-tecnologias.pdf",
+      "pagina_inicial": 40,
+      "pagina_final": 42,
+      "assunto": "Progressão aritmética",
+      "topicos": [
+        "ENEM_MAT_01_progressao-aritmetica.pdf",
+        "ENEM_MAT_02_sequencia-numerica.pdf"
+      ],
+      "chunks_indexados": 6
+    },
+    {
+      "id": "ebook-matematica-e-suas-tecnologias.pdf#p43-46",
+      "document_name": "ebook-matematica-e-suas-tecnologias.pdf",
+      "pagina_inicial": 43,
+      "pagina_final": 46,
+      "assunto": "Progressão geométrica",
+      "topicos": [
+        "ENEM_MAT_01_progressao-geometrica.pdf",
+        "ENEM_MAT_02_sequencia-numerica.pdf"
+      ],
+      "chunks_indexados": 5
+    },
+    {
+      "id": "ebook-matematica-e-suas-tecnologias.pdf#p47-52",
+      "document_name": "ebook-matematica-e-suas-tecnologias.pdf",
+      "pagina_inicial": 47,
+      "pagina_final": 52,
+      "assunto": "Trigonometria: razões, arcos e ciclo",
+      "topicos": [
+        "ENEM_MAT_03_trigonometria.pdf",
+        "ENEM_MAT_03_ciclo-trigonometrico.pdf"
+      ],
+      "chunks_indexados": 12
+    },
+    {
+      "id": "ebook-matematica-e-suas-tecnologias.pdf#p53-55",
+      "document_name": "ebook-matematica-e-suas-tecnologias.pdf",
+      "pagina_inicial": 53,
+      "pagina_final": 55,
+      "assunto": "Resolução de triângulos (leis dos senos e dos cossenos)",
+      "topicos": [
+        "ENEM_MAT_03_lei-dos-senos.pdf",
+        "ENEM_MAT_03_lei-dos-cossenos.pdf",
+        "ENEM_MAT_03_trigonometria.pdf"
+      ],
+      "chunks_indexados": 4
+    },
+    {
+      "id": "ebook-matematica-e-suas-tecnologias.pdf#p67-69",
+      "document_name": "ebook-matematica-e-suas-tecnologias.pdf",
+      "pagina_inicial": 67,
+      "pagina_final": 69,
+      "assunto": "Sistemas lineares",
+      "topicos": [
+        "ENEM_MAT_02_sistema-de-equacoes-lineares.pdf"
+      ],
+      "chunks_indexados": 3
+    },
+    {
+      "id": "ebook-matematica-e-suas-tecnologias.pdf#p70-73",
+      "document_name": "ebook-matematica-e-suas-tecnologias.pdf",
+      "pagina_inicial": 70,
+      "pagina_final": 73,
+      "assunto": "Análise combinatória: contagem, fatorial e arranjos",
+      "topicos": [
+        "ENEM_MAT_05_analise-combinatoria.pdf"
+      ],
+      "chunks_indexados": 11
+    },
+    {
+      "id": "ebook-matematica-e-suas-tecnologias.pdf#p74-75",
+      "document_name": "ebook-matematica-e-suas-tecnologias.pdf",
+      "pagina_inicial": 74,
+      "pagina_final": 75,
+      "assunto": "Permutação simples",
+      "topicos": [
+        "ENEM_MAT_05_permutacao.pdf",
+        "ENEM_MAT_05_analise-combinatoria.pdf"
+      ],
+      "chunks_indexados": 5
+    },
+    {
+      "id": "ebook-matematica-e-suas-tecnologias.pdf#p76-76",
+      "document_name": "ebook-matematica-e-suas-tecnologias.pdf",
+      "pagina_inicial": 76,
+      "pagina_final": 76,
+      "assunto": "Permutação com repetição e combinação simples",
+      "topicos": [
+        "ENEM_MAT_05_permutacao.pdf",
+        "ENEM_MAT_05_combinacao-matematica.pdf"
+      ],
+      "chunks_indexados": 3
+    },
+    {
+      "id": "ebook-matematica-e-suas-tecnologias.pdf#p77-79",
+      "document_name": "ebook-matematica-e-suas-tecnologias.pdf",
+      "pagina_inicial": 77,
+      "pagina_final": 79,
+      "assunto": "Probabilidade",
+      "topicos": [
+        "ENEM_MAT_05_probabilidade.pdf"
+      ],
+      "chunks_indexados": 7
+    },
+    {
+      "id": "ebook-matematica-e-suas-tecnologias.pdf#p80-82",
+      "document_name": "ebook-matematica-e-suas-tecnologias.pdf",
+      "pagina_inicial": 80,
+      "pagina_final": 82,
+      "assunto": "Probabilidade condicional",
+      "topicos": [
+        "ENEM_MAT_05_probabilidade-condicional.pdf",
+        "ENEM_MAT_05_probabilidade.pdf"
+      ],
+      "chunks_indexados": 6
+    },
+    {
+      "id": "ebook-matematica-e-suas-tecnologias.pdf#p83-83",
+      "document_name": "ebook-matematica-e-suas-tecnologias.pdf",
+      "pagina_inicial": 83,
+      "pagina_final": 83,
+      "assunto": "Coordenadas cartesianas no plano",
+      "topicos": [
+        "ENEM_MAT_03_plano-cartesiano.pdf",
+        "ENEM_MAT_03_geometria-analitica.pdf"
+      ],
+      "chunks_indexados": 2
+    },
+    {
+      "id": "ebook-matematica-e-suas-tecnologias.pdf#p84-84",
+      "document_name": "ebook-matematica-e-suas-tecnologias.pdf",
+      "pagina_inicial": 84,
+      "pagina_final": 84,
+      "assunto": "Distância entre dois pontos e equação da reta",
+      "topicos": [
+        "ENEM_MAT_03_distancia-entre-dois-pontos.pdf",
+        "ENEM_MAT_03_geometria-analitica.pdf"
+      ],
+      "chunks_indexados": 3
+    },
+    {
+      "id": "ebook-matematica-e-suas-tecnologias.pdf#p85-88",
+      "document_name": "ebook-matematica-e-suas-tecnologias.pdf",
+      "pagina_inicial": 85,
+      "pagina_final": 88,
+      "assunto": "Geometria analítica: ponto e reta, áreas, paralelas",
+      "topicos": [
+        "ENEM_MAT_03_geometria-analitica.pdf"
+      ],
+      "chunks_indexados": 8
+    },
+    {
+      "id": "ebook-matematica-e-suas-tecnologias.pdf#p89-89",
+      "document_name": "ebook-matematica-e-suas-tecnologias.pdf",
+      "pagina_inicial": 89,
+      "pagina_final": 89,
+      "assunto": "Questões ENEM: sombras e postes",
+      "topicos": [
+        "ENEM_MAT_03_semelhanca-de-triangulos.pdf"
+      ],
+      "chunks_indexados": 2
+    },
+    {
+      "id": "ebook-matematica-e-suas-tecnologias.pdf#p90-90",
+      "document_name": "ebook-matematica-e-suas-tecnologias.pdf",
+      "pagina_inicial": 90,
+      "pagina_final": 90,
+      "assunto": "Questões ENEM: triângulos e área de placas",
+      "topicos": [
+        "ENEM_MAT_03_geometria-plana.pdf",
+        "ENEM_MAT_03_area-geometria.pdf"
+      ],
+      "chunks_indexados": 2
+    },
+    {
+      "id": "ebook-matematica-e-suas-tecnologias.pdf#p91-91",
+      "document_name": "ebook-matematica-e-suas-tecnologias.pdf",
+      "pagina_inicial": 91,
+      "pagina_final": 91,
+      "assunto": "Questões ENEM: áreas",
+      "topicos": [
+        "ENEM_MAT_03_area-geometria.pdf"
+      ],
+      "chunks_indexados": 2
+    },
+    {
+      "id": "ebook-matematica-e-suas-tecnologias.pdf#p92-92",
+      "document_name": "ebook-matematica-e-suas-tecnologias.pdf",
+      "pagina_inicial": 92,
+      "pagina_final": 92,
+      "assunto": "Questões ENEM: pomar e percurso",
+      "topicos": [
+        "ENEM_MAT_03_geometria-plana.pdf",
+        "ENEM_MAT_03_perimetro.pdf"
+      ],
+      "chunks_indexados": 2
+    },
+    {
+      "id": "ebook-matematica-e-suas-tecnologias.pdf#p93-93",
+      "document_name": "ebook-matematica-e-suas-tecnologias.pdf",
+      "pagina_inicial": 93,
+      "pagina_final": 93,
+      "assunto": "Questões ENEM: áreas de placas",
+      "topicos": [
+        "ENEM_MAT_03_area-geometria.pdf"
+      ],
+      "chunks_indexados": 2
+    },
+    {
+      "id": "ebook-matematica-e-suas-tecnologias.pdf#p94-94",
+      "document_name": "ebook-matematica-e-suas-tecnologias.pdf",
+      "pagina_inicial": 94,
+      "pagina_final": 94,
+      "assunto": "Questões ENEM: origami e encolhimento de tecido",
+      "topicos": [
+        "ENEM_MAT_03_geometria-plana.pdf",
+        "ENEM_MAT_03_area-geometria.pdf"
+      ],
+      "chunks_indexados": 2
+    },
+    {
+      "id": "ebook-matematica-e-suas-tecnologias.pdf#p95-96",
+      "document_name": "ebook-matematica-e-suas-tecnologias.pdf",
+      "pagina_inicial": 95,
+      "pagina_final": 96,
+      "assunto": "Questões ENEM: perímetro e área de terrenos e telas",
+      "topicos": [
+        "ENEM_MAT_03_perimetro.pdf",
+        "ENEM_MAT_03_area-geometria.pdf"
+      ],
+      "chunks_indexados": 5
+    },
+    {
+      "id": "ebook-matematica-e-suas-tecnologias.pdf#p97-97",
+      "document_name": "ebook-matematica-e-suas-tecnologias.pdf",
+      "pagina_inicial": 97,
+      "pagina_final": 97,
+      "assunto": "Questões ENEM: área de terreno",
+      "topicos": [
+        "ENEM_MAT_03_area-geometria.pdf"
+      ],
+      "chunks_indexados": 1
+    },
+    {
+      "id": "ebook-matematica-e-suas-tecnologias.pdf#p98-98",
+      "document_name": "ebook-matematica-e-suas-tecnologias.pdf",
+      "pagina_inicial": 98,
+      "pagina_final": 98,
+      "assunto": "Questões ENEM: corrimão e estação equidistante",
+      "topicos": [
+        "ENEM_MAT_03_teorema-de-pitagoras.pdf",
+        "ENEM_MAT_03_geometria-plana.pdf"
+      ],
+      "chunks_indexados": 2
+    },
+    {
+      "id": "ebook-matematica-e-suas-tecnologias.pdf#p99-100",
+      "document_name": "ebook-matematica-e-suas-tecnologias.pdf",
+      "pagina_inicial": 99,
+      "pagina_final": 100,
+      "assunto": "Questões ENEM: função quadrática",
+      "topicos": [
+        "ENEM_MAT_02_funcao-quadratica.pdf"
+      ],
+      "chunks_indexados": 5
+    },
+    {
+      "id": "ebook-matematica-e-suas-tecnologias.pdf#p101-101",
+      "document_name": "ebook-matematica-e-suas-tecnologias.pdf",
+      "pagina_inicial": 101,
+      "pagina_final": 101,
+      "assunto": "Questões ENEM: frações equivalentes",
+      "topicos": [
+        "ENEM_MAT_01_numeros-racionais.pdf"
+      ],
+      "chunks_indexados": 2
+    },
+    {
+      "id": "ebook-matematica-e-suas-tecnologias.pdf#p102-102",
+      "document_name": "ebook-matematica-e-suas-tecnologias.pdf",
+      "pagina_inicial": 102,
+      "pagina_final": 102,
+      "assunto": "Questões ENEM: porcentagem",
+      "topicos": [
+        "ENEM_MAT_01_porcentagem.pdf"
+      ],
+      "chunks_indexados": 2
+    },
+    {
+      "id": "ebook-matematica-e-suas-tecnologias.pdf#p103-103",
+      "document_name": "ebook-matematica-e-suas-tecnologias.pdf",
+      "pagina_inicial": 103,
+      "pagina_final": 103,
+      "assunto": "Questões ENEM: porcentagem e razão",
+      "topicos": [
+        "ENEM_MAT_01_porcentagem.pdf",
+        "ENEM_MAT_01_razao-e-proporcao.pdf"
+      ],
+      "chunks_indexados": 1
+    },
+    {
+      "id": "ebook-matematica-e-suas-tecnologias.pdf#p104-104",
+      "document_name": "ebook-matematica-e-suas-tecnologias.pdf",
+      "pagina_inicial": 104,
+      "pagina_final": 104,
+      "assunto": "Questões ENEM: razão e probabilidade",
+      "topicos": [
+        "ENEM_MAT_01_razao-e-proporcao.pdf",
+        "ENEM_MAT_05_probabilidade.pdf"
+      ],
+      "chunks_indexados": 1
+    },
+    {
+      "id": "ebook-matematica-e-suas-tecnologias.pdf#p105-105",
+      "document_name": "ebook-matematica-e-suas-tecnologias.pdf",
+      "pagina_inicial": 105,
+      "pagina_final": 105,
+      "assunto": "Questões ENEM: cilindro",
+      "topicos": [
+        "ENEM_MAT_03_cilindro.pdf",
+        "ENEM_MAT_03_volume.pdf"
+      ],
+      "chunks_indexados": 2
+    },
+    {
+      "id": "ebook-matematica-e-suas-tecnologias.pdf#p106-106",
+      "document_name": "ebook-matematica-e-suas-tecnologias.pdf",
+      "pagina_inicial": 106,
+      "pagina_final": 106,
+      "assunto": "Questões ENEM: proporção",
+      "topicos": [
+        "ENEM_MAT_01_razao-e-proporcao.pdf"
+      ],
+      "chunks_indexados": 2
+    },
+    {
+      "id": "ebook-matematica-e-suas-tecnologias.pdf#p107-107",
+      "document_name": "ebook-matematica-e-suas-tecnologias.pdf",
+      "pagina_inicial": 107,
+      "pagina_final": 107,
+      "assunto": "Questões ENEM: mediana e desconto",
+      "topicos": [
+        "ENEM_MAT_05_mediana-estatistica.pdf",
+        "ENEM_MAT_01_porcentagem.pdf"
+      ],
+      "chunks_indexados": 2
+    },
+    {
+      "id": "ebook-matematica-e-suas-tecnologias.pdf#p108-108",
+      "document_name": "ebook-matematica-e-suas-tecnologias.pdf",
+      "pagina_inicial": 108,
+      "pagina_final": 108,
+      "assunto": "Questões ENEM: desconto e probabilidade condicional",
+      "topicos": [
+        "ENEM_MAT_01_porcentagem.pdf",
+        "ENEM_MAT_05_probabilidade-condicional.pdf"
+      ],
+      "chunks_indexados": 2
+    },
+    {
+      "id": "ebook-matematica-e-suas-tecnologias.pdf#p109-109",
+      "document_name": "ebook-matematica-e-suas-tecnologias.pdf",
+      "pagina_inicial": 109,
+      "pagina_final": 109,
+      "assunto": "Questões ENEM: média e contagem",
+      "topicos": [
+        "ENEM_MAT_05_media-aritmetica.pdf",
+        "ENEM_MAT_05_analise-combinatoria.pdf"
+      ],
+      "chunks_indexados": 2
+    },
+    {
+      "id": "ebook-matematica-e-suas-tecnologias.pdf#p110-110",
+      "document_name": "ebook-matematica-e-suas-tecnologias.pdf",
+      "pagina_inicial": 110,
+      "pagina_final": 110,
+      "assunto": "Questões ENEM: contagem",
+      "topicos": [
+        "ENEM_MAT_05_analise-combinatoria.pdf"
+      ],
+      "chunks_indexados": 1
+    },
+    {
+      "id": "ebook-matematica-e-suas-tecnologias.pdf#p111-111",
+      "document_name": "ebook-matematica-e-suas-tecnologias.pdf",
+      "pagina_inicial": 111,
+      "pagina_final": 111,
+      "assunto": "Questões ENEM: equação do 2º grau",
+      "topicos": [
+        "ENEM_MAT_02_equacao-do-segundo-grau.pdf"
+      ],
+      "chunks_indexados": 1
+    },
+    {
+      "id": "caderno_matematica.pdf#p12-18",
+      "document_name": "caderno_matematica.pdf",
+      "pagina_inicial": 12,
+      "pagina_final": 18,
+      "assunto": "Revisão: frações e números decimais",
+      "topicos": [
+        "ENEM_MAT_01_numeros-racionais.pdf"
+      ],
+      "chunks_indexados": 7
+    },
+    {
+      "id": "caderno_matematica.pdf#p35-37",
+      "document_name": "caderno_matematica.pdf",
+      "pagina_inicial": 35,
+      "pagina_final": 37,
+      "assunto": "Equação do 1º grau",
+      "topicos": [
+        "ENEM_MAT_02_equacao-do-primeiro-grau.pdf"
+      ],
+      "chunks_indexados": 3
+    },
+    {
+      "id": "caderno_matematica.pdf#p38-44",
+      "document_name": "caderno_matematica.pdf",
+      "pagina_inicial": 38,
+      "pagina_final": 44,
+      "assunto": "Equação do 2º grau",
+      "topicos": [
+        "ENEM_MAT_02_equacao-do-segundo-grau.pdf"
+      ],
+      "chunks_indexados": 7
+    },
+    {
+      "id": "caderno_matematica.pdf#p51-51",
+      "document_name": "caderno_matematica.pdf",
+      "pagina_inicial": 51,
+      "pagina_final": 51,
+      "assunto": "Números naturais",
+      "topicos": [
+        "ENEM_MAT_01_conjuntos-numericos.pdf"
+      ],
+      "chunks_indexados": 1
+    },
+    {
+      "id": "caderno_matematica.pdf#p56-57",
+      "document_name": "caderno_matematica.pdf",
+      "pagina_inicial": 56,
+      "pagina_final": 57,
+      "assunto": "Números inteiros",
+      "topicos": [
+        "ENEM_MAT_01_conjuntos-numericos.pdf"
+      ],
+      "chunks_indexados": 2
+    },
+    {
+      "id": "caderno_matematica.pdf#p58-59",
+      "document_name": "caderno_matematica.pdf",
+      "pagina_inicial": 58,
+      "pagina_final": 59,
+      "assunto": "Números racionais e dízimas periódicas",
+      "topicos": [
+        "ENEM_MAT_01_conjuntos-numericos.pdf",
+        "ENEM_MAT_01_numeros-racionais.pdf"
+      ],
+      "chunks_indexados": 2
+    },
+    {
+      "id": "caderno_matematica.pdf#p60-60",
+      "document_name": "caderno_matematica.pdf",
+      "pagina_inicial": 60,
+      "pagina_final": 60,
+      "assunto": "Números irracionais e reais; razões e proporções",
+      "topicos": [
+        "ENEM_MAT_01_conjuntos-numericos.pdf",
+        "ENEM_MAT_01_numeros-irracionais.pdf",
+        "ENEM_MAT_01_razao-e-proporcao.pdf"
+      ],
+      "chunks_indexados": 1
+    },
+    {
+      "id": "caderno_matematica.pdf#p61-61",
+      "document_name": "caderno_matematica.pdf",
+      "pagina_inicial": 61,
+      "pagina_final": 61,
+      "assunto": "Razões e proporções",
+      "topicos": [
+        "ENEM_MAT_01_razao-e-proporcao.pdf"
+      ],
+      "chunks_indexados": 1
+    },
+    {
+      "id": "caderno_matematica.pdf#p62-63",
+      "document_name": "caderno_matematica.pdf",
+      "pagina_inicial": 62,
+      "pagina_final": 63,
+      "assunto": "Proporcionalidade e regra de três",
+      "topicos": [
+        "ENEM_MAT_01_razao-e-proporcao.pdf",
+        "ENEM_MAT_01_regra-de-tres.pdf"
+      ],
+      "chunks_indexados": 2
+    },
+    {
+      "id": "caderno_matematica.pdf#p64-64",
+      "document_name": "caderno_matematica.pdf",
+      "pagina_inicial": 64,
+      "pagina_final": 64,
+      "assunto": "Regra de três composta e porcentagem",
+      "topicos": [
+        "ENEM_MAT_01_regra-de-tres.pdf",
+        "ENEM_MAT_01_porcentagem.pdf"
+      ],
+      "chunks_indexados": 1
+    },
+    {
+      "id": "caderno_matematica.pdf#p65-66",
+      "document_name": "caderno_matematica.pdf",
+      "pagina_inicial": 65,
+      "pagina_final": 66,
+      "assunto": "Porcentagem, aumento e desconto",
+      "topicos": [
+        "ENEM_MAT_01_porcentagem.pdf"
+      ],
+      "chunks_indexados": 2
+    },
+    {
+      "id": "caderno_matematica.pdf#p67-67",
+      "document_name": "caderno_matematica.pdf",
+      "pagina_inicial": 67,
+      "pagina_final": 67,
+      "assunto": "Desconto percentual e juros simples",
+      "topicos": [
+        "ENEM_MAT_01_porcentagem.pdf",
+        "ENEM_MAT_06_juros-simples.pdf"
+      ],
+      "chunks_indexados": 1
+    },
+    {
+      "id": "caderno_matematica.pdf#p68-72",
+      "document_name": "caderno_matematica.pdf",
+      "pagina_inicial": 68,
+      "pagina_final": 72,
+      "assunto": "Juros simples e compostos",
+      "topicos": [
+        "ENEM_MAT_06_juros-simples.pdf",
+        "ENEM_MAT_06_juros-compostos.pdf"
+      ],
+      "chunks_indexados": 4
+    },
+    {
+      "id": "caderno_matematica.pdf#p73-75",
+      "document_name": "caderno_matematica.pdf",
+      "pagina_inicial": 73,
+      "pagina_final": 75,
+      "assunto": "Progressão aritmética",
+      "topicos": [
+        "ENEM_MAT_01_progressao-aritmetica.pdf",
+        "ENEM_MAT_02_sequencia-numerica.pdf"
+      ],
+      "chunks_indexados": 3
+    },
+    {
+      "id": "caderno_matematica.pdf#p76-76",
+      "document_name": "caderno_matematica.pdf",
+      "pagina_inicial": 76,
+      "pagina_final": 76,
+      "assunto": "Progressão aritmética e geométrica",
+      "topicos": [
+        "ENEM_MAT_01_progressao-aritmetica.pdf",
+        "ENEM_MAT_01_progressao-geometrica.pdf"
+      ],
+      "chunks_indexados": 1
+    },
+    {
+      "id": "caderno_matematica.pdf#p77-81",
+      "document_name": "caderno_matematica.pdf",
+      "pagina_inicial": 77,
+      "pagina_final": 81,
+      "assunto": "Progressão geométrica",
+      "topicos": [
+        "ENEM_MAT_01_progressao-geometrica.pdf"
+      ],
+      "chunks_indexados": 5
+    },
+    {
+      "id": "caderno_matematica.pdf#p86-86",
+      "document_name": "caderno_matematica.pdf",
+      "pagina_inicial": 86,
+      "pagina_final": 86,
+      "assunto": "Sistema de coordenadas cartesianas e gráfico de função",
+      "topicos": [
+        "ENEM_MAT_03_plano-cartesiano.pdf"
+      ],
+      "chunks_indexados": 1
+    },
+    {
+      "id": "caderno_matematica.pdf#p93-96",
+      "document_name": "caderno_matematica.pdf",
+      "pagina_inicial": 93,
+      "pagina_final": 96,
+      "assunto": "Função afim e estudo do sinal",
+      "topicos": [
+        "ENEM_MAT_02_funcao-afim.pdf"
+      ],
+      "chunks_indexados": 4
+    },
+    {
+      "id": "caderno_matematica.pdf#p97-97",
+      "document_name": "caderno_matematica.pdf",
+      "pagina_inicial": 97,
+      "pagina_final": 97,
+      "assunto": "Inequações do 1º grau",
+      "topicos": [
+        "ENEM_MAT_02_inequacao.pdf",
+        "ENEM_MAT_02_funcao-afim.pdf"
+      ],
+      "chunks_indexados": 1
+    },
+    {
+      "id": "caderno_matematica.pdf#p98-98",
+      "document_name": "caderno_matematica.pdf",
+      "pagina_inicial": 98,
+      "pagina_final": 98,
+      "assunto": "Inequação produto e função quadrática",
+      "topicos": [
+        "ENEM_MAT_02_inequacao.pdf",
+        "ENEM_MAT_02_funcao-quadratica.pdf"
+      ],
+      "chunks_indexados": 1
+    },
+    {
+      "id": "caderno_matematica.pdf#p99-100",
+      "document_name": "caderno_matematica.pdf",
+      "pagina_inicial": 99,
+      "pagina_final": 100,
+      "assunto": "Função quadrática",
+      "topicos": [
+        "ENEM_MAT_02_funcao-quadratica.pdf"
+      ],
+      "chunks_indexados": 1
+    },
+    {
+      "id": "caderno_matematica.pdf#p101-102",
+      "document_name": "caderno_matematica.pdf",
+      "pagina_inicial": 101,
+      "pagina_final": 102,
+      "assunto": "Estudo do sinal da quadrática e inequações do 2º grau",
+      "topicos": [
+        "ENEM_MAT_02_funcao-quadratica.pdf",
+        "ENEM_MAT_02_inequacao.pdf"
+      ],
+      "chunks_indexados": 2
+    },
+    {
+      "id": "caderno_matematica.pdf#p104-105",
+      "document_name": "caderno_matematica.pdf",
+      "pagina_inicial": 104,
+      "pagina_final": 105,
+      "assunto": "Função exponencial",
+      "topicos": [
+        "ENEM_MAT_02_funcao-exponencial.pdf"
+      ],
+      "chunks_indexados": 2
+    },
+    {
+      "id": "caderno_matematica.pdf#p106-108",
+      "document_name": "caderno_matematica.pdf",
+      "pagina_inicial": 106,
+      "pagina_final": 108,
+      "assunto": "Logaritmo e função logarítmica",
+      "topicos": [
+        "ENEM_MAT_02_funcao-logaritmica.pdf"
+      ],
+      "chunks_indexados": 3
+    },
+    {
+      "id": "caderno_matematica.pdf#p109-118",
+      "document_name": "caderno_matematica.pdf",
+      "pagina_inicial": 109,
+      "pagina_final": 118,
+      "assunto": "Estatística descritiva: conceitos, tabelas e gráficos",
+      "topicos": [
+        "ENEM_MAT_05_estatistica.pdf"
+      ],
+      "chunks_indexados": 4
+    },
+    {
+      "id": "caderno_matematica.pdf#p119-121",
+      "document_name": "caderno_matematica.pdf",
+      "pagina_inicial": 119,
+      "pagina_final": 121,
+      "assunto": "Média aritmética",
+      "topicos": [
+        "ENEM_MAT_05_media-aritmetica.pdf",
+        "ENEM_MAT_05_estatistica.pdf"
+      ],
+      "chunks_indexados": 3
+    },
+    {
+      "id": "caderno_matematica.pdf#p122-126",
+      "document_name": "caderno_matematica.pdf",
+      "pagina_inicial": 122,
+      "pagina_final": 126,
+      "assunto": "Mediana, moda e exercício do ENEM",
+      "topicos": [
+        "ENEM_MAT_05_media-aritmetica.pdf",
+        "ENEM_MAT_05_mediana-estatistica.pdf",
+        "ENEM_MAT_05_moda-estatistica.pdf",
+        "ENEM_MAT_05_estatistica.pdf"
+      ],
+      "chunks_indexados": 4
+    },
+    {
+      "id": "caderno_matematica.pdf#p127-129",
+      "document_name": "caderno_matematica.pdf",
+      "pagina_inicial": 127,
+      "pagina_final": 129,
+      "assunto": "Medidas de dispersão: variância",
+      "topicos": [
+        "ENEM_MAT_05_variancia.pdf",
+        "ENEM_MAT_05_estatistica.pdf"
+      ],
+      "chunks_indexados": 3
+    },
+    {
+      "id": "caderno_matematica.pdf#p130-132",
+      "document_name": "caderno_matematica.pdf",
+      "pagina_inicial": 130,
+      "pagina_final": 132,
+      "assunto": "Desvio padrão e exercício do ENEM",
+      "topicos": [
+        "ENEM_MAT_05_variancia.pdf",
+        "ENEM_MAT_05_desvio-padrao.pdf",
+        "ENEM_MAT_05_estatistica.pdf"
+      ],
+      "chunks_indexados": 3
+    },
+    {
+      "id": "caderno_matematica.pdf#p133-134",
+      "document_name": "caderno_matematica.pdf",
+      "pagina_inicial": 133,
+      "pagina_final": 134,
+      "assunto": "Fatorial e princípio fundamental da contagem",
+      "topicos": [
+        "ENEM_MAT_05_analise-combinatoria.pdf"
+      ],
+      "chunks_indexados": 2
+    },
+    {
+      "id": "caderno_matematica.pdf#p135-136",
+      "document_name": "caderno_matematica.pdf",
+      "pagina_inicial": 135,
+      "pagina_final": 136,
+      "assunto": "Permutação simples e com repetição",
+      "topicos": [
+        "ENEM_MAT_05_permutacao.pdf",
+        "ENEM_MAT_05_analise-combinatoria.pdf"
+      ],
+      "chunks_indexados": 2
+    },
+    {
+      "id": "caderno_matematica.pdf#p137-138",
+      "document_name": "caderno_matematica.pdf",
+      "pagina_inicial": 137,
+      "pagina_final": 138,
+      "assunto": "Arranjo e combinação simples",
+      "topicos": [
+        "ENEM_MAT_05_analise-combinatoria.pdf",
+        "ENEM_MAT_05_combinacao-matematica.pdf"
+      ],
+      "chunks_indexados": 2
+    },
+    {
+      "id": "caderno_matematica.pdf#p139-142",
+      "document_name": "caderno_matematica.pdf",
+      "pagina_inicial": 139,
+      "pagina_final": 142,
+      "assunto": "Probabilidade: espaço amostral e eventos",
+      "topicos": [
+        "ENEM_MAT_05_probabilidade.pdf"
+      ],
+      "chunks_indexados": 4
+    },
+    {
+      "id": "caderno_matematica.pdf#p143-149",
+      "document_name": "caderno_matematica.pdf",
+      "pagina_inicial": 143,
+      "pagina_final": 149,
+      "assunto": "Probabilidade condicional, eventos independentes e questões do ENEM",
+      "topicos": [
+        "ENEM_MAT_05_probabilidade-condicional.pdf",
+        "ENEM_MAT_05_probabilidade.pdf"
+      ],
+      "chunks_indexados": 7
+    },
+    {
+      "id": "caderno_matematica.pdf#p150-152",
+      "document_name": "caderno_matematica.pdf",
+      "pagina_inicial": 150,
+      "pagina_final": 152,
+      "assunto": "Geometria plana: noções, paralelismo e ângulos",
+      "topicos": [
+        "ENEM_MAT_03_geometria-plana.pdf"
+      ],
+      "chunks_indexados": 0
+    },
+    {
+      "id": "caderno_matematica.pdf#p153-153",
+      "document_name": "caderno_matematica.pdf",
+      "pagina_inicial": 153,
+      "pagina_final": 153,
+      "assunto": "Polígonos",
+      "topicos": [
+        "ENEM_MAT_03_poligono.pdf"
+      ],
+      "chunks_indexados": 0
+    },
+    {
+      "id": "caderno_matematica.pdf#p154-157",
+      "document_name": "caderno_matematica.pdf",
+      "pagina_inicial": 154,
+      "pagina_final": 157,
+      "assunto": "Triângulos: classificação e pontos notáveis",
+      "topicos": [
+        "ENEM_MAT_03_geometria-plana.pdf"
+      ],
+      "chunks_indexados": 2
+    },
+    {
+      "id": "caderno_matematica.pdf#p158-163",
+      "document_name": "caderno_matematica.pdf",
+      "pagina_inicial": 158,
+      "pagina_final": 163,
+      "assunto": "Quadriláteros, ângulos de polígonos e malhas",
+      "topicos": [
+        "ENEM_MAT_03_poligono.pdf"
+      ],
+      "chunks_indexados": 1
+    },
+    {
+      "id": "caderno_matematica.pdf#p164-165",
+      "document_name": "caderno_matematica.pdf",
+      "pagina_inicial": 164,
+      "pagina_final": 165,
+      "assunto": "Simetria e isometria",
+      "topicos": [
+        "ENEM_MAT_03_geometria-plana.pdf"
+      ],
+      "chunks_indexados": 0
+    },
+    {
+      "id": "caderno_matematica.pdf#p166-170",
+      "document_name": "caderno_matematica.pdf",
+      "pagina_inicial": 166,
+      "pagina_final": 170,
+      "assunto": "Semelhança, teorema de Tales e da bissetriz",
+      "topicos": [
+        "ENEM_MAT_03_semelhanca-de-triangulos.pdf"
+      ],
+      "chunks_indexados": 1
+    },
+    {
+      "id": "caderno_matematica.pdf#p171-171",
+      "document_name": "caderno_matematica.pdf",
+      "pagina_inicial": 171,
+      "pagina_final": 171,
+      "assunto": "Semelhança e relações métricas (Pitágoras)",
+      "topicos": [
+        "ENEM_MAT_03_semelhanca-de-triangulos.pdf",
+        "ENEM_MAT_03_teorema-de-pitagoras.pdf",
+        "ENEM_MAT_03_triangulo-retangulo.pdf"
+      ],
+      "chunks_indexados": 0
+    },
+    {
+      "id": "caderno_matematica.pdf#p172-173",
+      "document_name": "caderno_matematica.pdf",
+      "pagina_inicial": 172,
+      "pagina_final": 173,
+      "assunto": "Relações métricas e razões trigonométricas no triângulo retângulo",
+      "topicos": [
+        "ENEM_MAT_03_triangulo-retangulo.pdf",
+        "ENEM_MAT_03_teorema-de-pitagoras.pdf",
+        "ENEM_MAT_03_trigonometria.pdf"
+      ],
+      "chunks_indexados": 1
+    },
+    {
+      "id": "caderno_matematica.pdf#p174-174",
+      "document_name": "caderno_matematica.pdf",
+      "pagina_inicial": 174,
+      "pagina_final": 174,
+      "assunto": "Apótema, perímetros e áreas",
+      "topicos": [
+        "ENEM_MAT_03_poligono.pdf",
+        "ENEM_MAT_03_perimetro.pdf",
+        "ENEM_MAT_03_area-geometria.pdf"
+      ],
+      "chunks_indexados": 1
+    },
+    {
+      "id": "caderno_matematica.pdf#p175-176",
+      "document_name": "caderno_matematica.pdf",
+      "pagina_inicial": 175,
+      "pagina_final": 176,
+      "assunto": "Perímetros e áreas de figuras planas",
+      "topicos": [
+        "ENEM_MAT_03_perimetro.pdf",
+        "ENEM_MAT_03_area-geometria.pdf"
+      ],
+      "chunks_indexados": 0
+    },
+    {
+      "id": "caderno_matematica.pdf#p177-179",
+      "document_name": "caderno_matematica.pdf",
+      "pagina_inicial": 177,
+      "pagina_final": 179,
+      "assunto": "Circunferência, círculo e comprimento de arco",
+      "topicos": [
+        "ENEM_MAT_03_geometria-plana.pdf",
+        "ENEM_MAT_03_area-geometria.pdf",
+        "ENEM_MAT_03_perimetro.pdf"
+      ],
+      "chunks_indexados": 0
+    },
+    {
+      "id": "caderno_matematica.pdf#p180-182",
+      "document_name": "caderno_matematica.pdf",
+      "pagina_inicial": 180,
+      "pagina_final": 182,
+      "assunto": "Potência de ponto e questões de polígonos e ladrilhos",
+      "topicos": [
+        "ENEM_MAT_03_poligono.pdf",
+        "ENEM_MAT_03_geometria-plana.pdf"
+      ],
+      "chunks_indexados": 0
+    },
+    {
+      "id": "caderno_matematica.pdf#p183-186",
+      "document_name": "caderno_matematica.pdf",
+      "pagina_inicial": 183,
+      "pagina_final": 186,
+      "assunto": "Questões de áreas e perímetros",
+      "topicos": [
+        "ENEM_MAT_03_area-geometria.pdf",
+        "ENEM_MAT_03_perimetro.pdf"
+      ],
+      "chunks_indexados": 3
+    },
+    {
+      "id": "caderno_matematica.pdf#p187-188",
+      "document_name": "caderno_matematica.pdf",
+      "pagina_inicial": 187,
+      "pagina_final": 188,
+      "assunto": "Geometria espacial: poliedros e relação de Euler",
+      "topicos": [
+        "ENEM_MAT_03_geometria-espacial.pdf"
+      ],
+      "chunks_indexados": 1
+    },
+    {
+      "id": "caderno_matematica.pdf#p189-192",
+      "document_name": "caderno_matematica.pdf",
+      "pagina_inicial": 189,
+      "pagina_final": 192,
+      "assunto": "Prismas, cubo e paralelepípedo",
+      "topicos": [
+        "ENEM_MAT_03_prisma-geometria.pdf",
+        "ENEM_MAT_03_volume.pdf",
+        "ENEM_MAT_03_geometria-espacial.pdf"
+      ],
+      "chunks_indexados": 4
+    },
+    {
+      "id": "caderno_matematica.pdf#p193-193",
+      "document_name": "caderno_matematica.pdf",
+      "pagina_inicial": 193,
+      "pagina_final": 193,
+      "assunto": "Questões de volume e pirâmides",
+      "topicos": [
+        "ENEM_MAT_03_prisma-geometria.pdf",
+        "ENEM_MAT_03_esfera.pdf",
+        "ENEM_MAT_03_piramide-geometria.pdf",
+        "ENEM_MAT_03_volume.pdf"
+      ],
+      "chunks_indexados": 1
+    },
+    {
+      "id": "caderno_matematica.pdf#p194-195",
+      "document_name": "caderno_matematica.pdf",
+      "pagina_inicial": 194,
+      "pagina_final": 195,
+      "assunto": "Pirâmides e tetraedro",
+      "topicos": [
+        "ENEM_MAT_03_piramide-geometria.pdf",
+        "ENEM_MAT_03_volume.pdf"
+      ],
+      "chunks_indexados": 2
+    },
+    {
+      "id": "caderno_matematica.pdf#p196-196",
+      "document_name": "caderno_matematica.pdf",
+      "pagina_inicial": 196,
+      "pagina_final": 196,
+      "assunto": "Cilindros",
+      "topicos": [
+        "ENEM_MAT_03_cilindro.pdf",
+        "ENEM_MAT_03_volume.pdf"
+      ],
+      "chunks_indexados": 1
+    },
+    {
+      "id": "caderno_matematica.pdf#p197-197",
+      "document_name": "caderno_matematica.pdf",
+      "pagina_inicial": 197,
+      "pagina_final": 197,
+      "assunto": "Cilindros e cones",
+      "topicos": [
+        "ENEM_MAT_03_cilindro.pdf",
+        "ENEM_MAT_03_cone.pdf"
+      ],
+      "chunks_indexados": 1
+    },
+    {
+      "id": "caderno_matematica.pdf#p198-198",
+      "document_name": "caderno_matematica.pdf",
+      "pagina_inicial": 198,
+      "pagina_final": 198,
+      "assunto": "Cones e esferas",
+      "topicos": [
+        "ENEM_MAT_03_cone.pdf",
+        "ENEM_MAT_03_esfera.pdf"
+      ],
+      "chunks_indexados": 1
+    },
+    {
+      "id": "caderno_matematica.pdf#p199-199",
+      "document_name": "caderno_matematica.pdf",
+      "pagina_inicial": 199,
+      "pagina_final": 199,
+      "assunto": "Esferas e volume composto",
+      "topicos": [
+        "ENEM_MAT_03_esfera.pdf",
+        "ENEM_MAT_03_cilindro.pdf",
+        "ENEM_MAT_03_volume.pdf"
+      ],
+      "chunks_indexados": 1
+    },
+    {
+      "id": "caderno_matematica.pdf#p200-207",
+      "document_name": "caderno_matematica.pdf",
+      "pagina_inicial": 200,
+      "pagina_final": 207,
+      "assunto": "Trigonometria no triângulo retângulo e ângulos notáveis",
+      "topicos": [
+        "ENEM_MAT_03_trigonometria.pdf",
+        "ENEM_MAT_03_triangulo-retangulo.pdf"
+      ],
+      "chunks_indexados": 7
+    },
+    {
+      "id": "caderno_matematica.pdf#p208-208",
+      "document_name": "caderno_matematica.pdf",
+      "pagina_inicial": 208,
+      "pagina_final": 208,
+      "assunto": "Aplicações e teorema dos senos",
+      "topicos": [
+        "ENEM_MAT_03_trigonometria.pdf",
+        "ENEM_MAT_03_lei-dos-senos.pdf"
+      ],
+      "chunks_indexados": 1
+    },
+    {
+      "id": "caderno_matematica.pdf#p209-209",
+      "document_name": "caderno_matematica.pdf",
+      "pagina_inicial": 209,
+      "pagina_final": 209,
+      "assunto": "Teorema dos cossenos e ciclo trigonométrico",
+      "topicos": [
+        "ENEM_MAT_03_lei-dos-cossenos.pdf",
+        "ENEM_MAT_03_ciclo-trigonometrico.pdf"
+      ],
+      "chunks_indexados": 1
+    },
+    {
+      "id": "caderno_matematica.pdf#p210-211",
+      "document_name": "caderno_matematica.pdf",
+      "pagina_inicial": 210,
+      "pagina_final": 211,
+      "assunto": "Ciclo trigonométrico e funções circulares",
+      "topicos": [
+        "ENEM_MAT_03_ciclo-trigonometrico.pdf",
+        "ENEM_MAT_03_trigonometria.pdf"
+      ],
+      "chunks_indexados": 2
+    },
+    {
+      "id": "caderno_matematica.pdf#p212-214",
+      "document_name": "caderno_matematica.pdf",
+      "pagina_inicial": 212,
+      "pagina_final": 214,
+      "assunto": "Questões de trigonometria no triângulo retângulo",
+      "topicos": [
+        "ENEM_MAT_03_trigonometria.pdf",
+        "ENEM_MAT_03_triangulo-retangulo.pdf"
+      ],
+      "chunks_indexados": 3
+    },
+    {
+      "id": "caderno_matematica.pdf#p215-217",
+      "document_name": "caderno_matematica.pdf",
+      "pagina_inicial": 215,
+      "pagina_final": 217,
+      "assunto": "Transformações trigonométricas e arco duplo",
+      "topicos": [
+        "ENEM_MAT_03_trigonometria.pdf"
+      ],
+      "chunks_indexados": 3
+    },
+    {
+      "id": "caderno_matematica.pdf#p238-247",
+      "document_name": "caderno_matematica.pdf",
+      "pagina_inicial": 238,
+      "pagina_final": 247,
+      "assunto": "Sistemas lineares",
+      "topicos": [
+        "ENEM_MAT_02_sistema-de-equacoes-lineares.pdf"
+      ],
+      "chunks_indexados": 9
+    },
+    {
+      "id": "caderno_matematica.pdf#p274-276",
+      "document_name": "caderno_matematica.pdf",
+      "pagina_inicial": 274,
+      "pagina_final": 276,
+      "assunto": "Geometria analítica: plano cartesiano, distância e ponto médio",
+      "topicos": [
+        "ENEM_MAT_03_geometria-analitica.pdf",
+        "ENEM_MAT_03_plano-cartesiano.pdf",
+        "ENEM_MAT_03_distancia-entre-dois-pontos.pdf"
+      ],
+      "chunks_indexados": 3
+    },
+    {
+      "id": "caderno_matematica.pdf#p277-293",
+      "document_name": "caderno_matematica.pdf",
+      "pagina_inicial": 277,
+      "pagina_final": 293,
+      "assunto": "Geometria analítica: área, retas, distância ponto-reta e cônicas",
+      "topicos": [
+        "ENEM_MAT_03_geometria-analitica.pdf"
+      ],
+      "chunks_indexados": 16
+    }
+  ],
+  "data_congelamento": "2026-11-16"
 }

@@ -6,7 +6,8 @@ a partir das rodadas salvas em `evaluation/results/`.
 
 Convenções (ver docs/03-avaliacao-cientifica/baseline-e-metricas-tcc.md, Seção 2.1):
 - A unidade ranqueada é o *chunk*, porque é o que chega ao prompt do LLM.
-- Cada chunk herda o grau de relevância do PDF de origem (`metadata.document_name`):
+- Cada chunk herda o grau de relevância da sua unidade: o PDF de origem (`metadata.document_name`) ou, nas
+  apostilas, o segmento de páginas com o mesmo assunto (gabarito 2.0, ver retrieval_experiment.relevance_unit):
   2 = documento-alvo, 1 = correlato, 0 = não relevante ou não julgado.
 - Hit Rate, MRR e o numerador do nDCG consideram "acerto" o grau 2.
 - nDCG usa ganho linear (rel / log2(i + 1)), como o trec_eval e o BEIR.

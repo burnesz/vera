@@ -54,7 +54,7 @@ def dialog_items(dialogs, gold, queries_by_condition):
         items[cond] = [{
             "id": d["id"],
             "query": queries_by_condition[cond][d["id"]],
-            "relevantes": d["relevantes"],
+            "relevantes": rx.expand_with_segments(d["relevantes"], gold),
             "topico_alvo": d["topico_alvo"],
             "eixo": docs[d["topico_alvo"]]["eixo_tematico"],
         } for d in dialogs]
@@ -140,8 +140,13 @@ def main():
     }
     items = dialog_items(dialogs, gold, queries)
     rows_by_cond, summaries = {}, {}
+    segments = rx.segment_index(gold)
+    # No cenário fechado as apostilas não podem ser recuperadas: só os julgamentos por documento.
+    fechado = manifest.get("cenario", args.cenario) == "fechado"
     for cond in CONDITIONS:
-        rows = rx.per_query_metrics(rx.load_jsonl(os.path.join(run_dir, "runs", f"{cond}.jsonl")), items[cond], counts)
+        cond_items = rx.without_segments(items[cond], segments) if fechado else items[cond]
+        rows = rx.per_query_metrics(rx.load_jsonl(os.path.join(run_dir, "runs", f"{cond}.jsonl")), cond_items,
+                                    counts, segments)
         rows_by_cond[cond] = rows
         summaries[cond] = rx.summarize(rows, n_resamples=args.bootstrap, seed=args.seed)
     comparisons = {"query rewriting": rx.compare_systems(

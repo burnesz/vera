@@ -79,7 +79,13 @@ O módulo de avaliação quantitativa deverá acompanhar três dimensões de per
 
 #### 2.1.2 Coleção de teste
 
-- **Corpus julgado**: os 63 PDFs `raw/ENEM_MAT_XX_<topico>.pdf` do R2 (artigos da Wikipédia, 1.285 chunks no namespace `materiais_didaticos`, que tem 4.038 no total). O tópico vem do nome do arquivo. Os PDFs `TEO_*`, `caderno_matematica.pdf` e `ebook-matematica-e-suas-tecnologias.pdf` ficam fora porque não têm rótulo de tópico.
+- **Corpus julgado**: o namespace `materiais_didaticos` tem 4.038 chunks.
+  - Os 63 PDFs `raw/ENEM_MAT_XX_<topico>.pdf` do R2 (artigos da Wikipédia, 1.285 chunks) são julgados **por documento**. O tópico vem do nome do arquivo.
+  - **Gabarito 2.0**: as 8 apostilas (`TEO_*`, `caderno_matematica.pdf` e `ebook-matematica-e-suas-tecnologias.pdf`, 2.753 chunks) são julgadas **por segmento de páginas** com o mesmo assunto. São 161 segmentos e 723 páginas, que cobrem 1.898 chunks. Cada segmento lista os tópicos (PDFs `ENEM_MAT_*`) que ensina, e o seu grau numa query é o maior grau que ela dá a esses tópicos (`regra_segmentos` no JSON).
+  - Os volumes `TEO_*` foram segmentados pelo sumário, porque a página impressa coincide com a página do PDF. O e-book e o caderno foram lidos página a página. O caderno quase não tem camada de texto e foi rotulado pelas imagens das páginas.
+  - Páginas fora dos segmentos têm grau 0: capas, sumários e assuntos sem tópico no gabarito, como matrizes, polinômios e números complexos.
+  - A página do chunk vem do id gravado na ingestão (`..._p<página>_c<chunk>_...`). A rotulagem foi feita com assistência de IA.
+  - A versão 1.0, só com os `ENEM_MAT_*`, foi usada na rodada `recuperacao-20261116-022117`, que guarda uma cópia dela.
 - **Duplicatas exatas**: `05_analise-combinatoria` = `05_arranjo-combinatoria` (artigo "Combinatória") e `06_juros-compostos` = `06_juros-simples` (artigo "Juro"). As duas cópias contam como alvo (grau 2). São 61 artigos distintos. As duplicatas também ocupam posições do top-K no sistema real.
 - **Eixo do arquivo ≠ competência**: o prefixo `01`..`07` é um agrupamento temático do acervo e **não** coincide com `C1`–`C7` da Matriz.
 - **Queries** ([`evaluation/data/retrieval_gold.json`](../../evaluation/data/retrieval_gold.json)): 126, duas por PDF. A `direta` cita o tópico (sinal lexical). A `contextual` descreve uma situação no estilo ENEM sem nomear o tópico (sinal semântico). 126 queries está acima das 50 usuais no TREC (Voorhees & Buckley, 2002).
@@ -93,7 +99,7 @@ O módulo de avaliação quantitativa deverá acompanhar três dimensões de per
 | Fator | Níveis |
 |---|---|
 | Sistema (variável independente) | `e5_denso` (produção), `e5_rerank` (E5 + `bge-reranker-v2-m3` sobre 25 candidatos, mesmo procedimento de `search(rerank=True)`), `bm25` (baseline lexical, Okapi BM25 k1 = 1,2, b = 0,75 sobre os mesmos chunks) |
-| Cenário | `fechado`: filtro `document_name $in [63 PDFs]`, medição limpa. `completo`: namespace inteiro, chunks não julgados contam como 0, limite inferior realista |
+| Cenário | `fechado`: filtro `document_name $in [63 PDFs]`, medição limpa, só com os julgamentos por documento. `completo`: namespace inteiro, como na produção, com as apostilas julgadas por segmento (gabarito 2.0) |
 | Unidade experimental | query (126), medidas pareadas em todos os sistemas |
 
 Hipóteses pré-registradas (H1 = métrica primária Hit@3):
@@ -112,7 +118,7 @@ Hipóteses: **H2a** `com_reescrita` > `sem_reescrita`; **H2b** `oraculo` × `com
 
 #### 2.1.4 Métricas e convenções
 
-A unidade ranqueada é o **chunk**, porque é o que chega ao prompt. Cada chunk herda o grau do PDF de origem (`metadata.document_name`). Os rankings são salvos até a profundidade 25.
+A unidade ranqueada é o **chunk**, porque é o que chega ao prompt. Cada chunk herda o grau da sua unidade de relevância: o PDF de origem (`metadata.document_name`) ou, nas apostilas, o segmento de páginas (`retrieval_experiment.relevance_unit`). No cenário `fechado`, o ranking ideal do nDCG usa só os documentos, porque as apostilas não podem ser recuperadas ali. Os rankings são salvos até a profundidade 25.
 
 | Métrica | Definição | Papel | Referência |
 |---|---|---|---|
@@ -148,7 +154,9 @@ A unidade ranqueada é o **chunk**, porque é o que chega ao prompt. Cada chunk 
 #### 2.1.7 Ameaças à validade e observações
 
 - **Construção do instrumento**: as queries foram redigidas por um LLM (assistente de código) que tinha visto os documentos. É uma crítica conhecida ao paradigma Cranfield, mitigada pela revisão humana e pelo segundo avaliador.
-- **Corpus**: no cenário `completo`, chunks relevantes dos livros `TEO_*` contam como erro, o que torna os números um limite inferior.
+- **Corpus**: no gabarito 1.0, os chunks relevantes das apostilas contavam como erro no cenário `completo`, e os números eram um limite inferior. O gabarito 2.0 corrige isso com os segmentos de páginas. Restam duas limitações:
+  - o segmento é mais grosso que o chunk: um chunk de exercício misto herda os tópicos do segmento inteiro;
+  - os segmentos foram rotulados por uma única pessoa com assistência de IA, sem segundo avaliador.
 - **BM25**: usa o texto salvo no metadado (até 3.000 caracteres; os chunks têm cerca de 1.200, então não há corte na prática) e não aplica stemming.
 - **Latência (achado do teste de fumaça)**: `EmbeddingService` fixa `torch.set_num_threads(os.cpu_count())`. Com o `llama-server` ocupando ~7 núcleos, um embedding de query levou ~5,6 s com 16 threads, contra ~0,15 s com 4 threads. Isso afeta a produção e a medição. A correção está pendente de decisão e não foi aplicada.
 

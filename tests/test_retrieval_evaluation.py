@@ -103,6 +103,78 @@ def test_gold_integrity():
     assert {qq["tipo"] for qq in gold["queries"]} == {"direta", "contextual"}
 
 
+def test_gold_segments_integrity():
+    """Segmentos das apostilas: tópicos válidos, sem páginas repetidas e só fora dos ENEM_MAT_*."""
+    gold = rx.load_json(rx.GOLD_PATH)
+    names = set(rx.gold_document_names(gold))
+    segs = gold["segmentos"]
+    assert len({s["id"] for s in segs}) == len(segs)
+    paginas = set()
+    for s in segs:
+        assert s["document_name"] not in names
+        assert s["topicos"] and set(s["topicos"]) <= names
+        assert s["pagina_inicial"] <= s["pagina_final"]
+        for p in range(s["pagina_inicial"], s["pagina_final"] + 1):
+            assert (s["document_name"], p) not in paginas
+            paginas.add((s["document_name"], p))
+    assert set(rx.chunk_counts(gold)) == names | {s["id"] for s in segs}
+
+
+# --- Segmentos página-assunto (gabarito 2.0) ----------------------------------
+
+GOLD_SEG = {
+    "documentos": [{"document_name": "alvo.pdf", "chunks_indexados": 2},
+                   {"document_name": "correlato.pdf", "chunks_indexados": 1}],
+    "segmentos": [
+        {"id": "apostila.pdf#p10-12", "document_name": "apostila.pdf", "pagina_inicial": 10, "pagina_final": 12,
+         "topicos": ["alvo.pdf"], "chunks_indexados": 4},
+        {"id": "apostila.pdf#p13-15", "document_name": "apostila.pdf", "pagina_inicial": 13, "pagina_final": 15,
+         "topicos": ["correlato.pdf"], "chunks_indexados": 3},
+        {"id": "apostila.pdf#p16-20", "document_name": "apostila.pdf", "pagina_inicial": 16, "pagina_final": 20,
+         "topicos": ["outro.pdf"], "chunks_indexados": 5},
+    ],
+}
+
+
+def test_expand_with_segments_takes_highest_topic_grade():
+    rel = rx.expand_with_segments({"alvo.pdf": 2, "correlato.pdf": 1}, GOLD_SEG)
+    assert rel["apostila.pdf#p10-12"] == 2
+    assert rel["apostila.pdf#p13-15"] == 1
+    assert "apostila.pdf#p16-20" not in rel  # segmento sobre outro tópico
+    assert rx.chunk_counts(GOLD_SEG)["apostila.pdf#p10-12"] == 4
+
+
+def test_relevance_unit_maps_page_to_segment():
+    segs = rx.segment_index(GOLD_SEG)
+    assert rx.relevance_unit({"id": "mat_2024_p11_c40_ab12cd", "document_name": "apostila.pdf"}, segs) \
+        == "apostila.pdf#p10-12"
+    assert rx.relevance_unit({"id": "x", "document_name": "apostila.pdf", "page_number": 14}, segs) \
+        == "apostila.pdf#p13-15"
+    assert rx.relevance_unit({"id": "mat_2024_p3_c1_ff", "document_name": "apostila.pdf"}, segs) == "apostila.pdf#p3"
+    assert rx.relevance_unit({"id": "mat_x_p11_c1_ff", "document_name": "alvo.pdf"}, segs) == "alvo.pdf"
+    assert rx.relevance_unit({"id": "mat_x_p11_c1_ff", "document_name": "apostila.pdf"}) == "apostila.pdf"
+
+
+def test_metrics_credit_relevant_segment():
+    """Um chunk da apostila na página do tópico-alvo conta como acerto; o de outra página, não."""
+    item = {"id": "Q1", "query": "q", "relevantes": rx.expand_with_segments({"alvo.pdf": 2}, GOLD_SEG)}
+    records = [{"id": "Q1", "latency_ms": 1.0, "ranking": [
+        {"rank": 1, "id": "mat_2024_p17_c1_aa", "document_name": "apostila.pdf", "score": 0.9},
+        {"rank": 2, "id": "mat_2024_p11_c2_bb", "document_name": "apostila.pdf", "score": 0.8}]}]
+    row = rx.per_query_metrics(records, [item], rx.chunk_counts(GOLD_SEG), rx.segment_index(GOLD_SEG))[0]
+    assert row["hit@1"] == 0.0 and row["hit@3"] == 1.0
+    assert row["mrr@10"] == pytest.approx(0.5)
+    assert row["top1_document"] == "apostila.pdf#p16-20"
+
+
+def test_without_segments_keeps_only_document_judgments():
+    """Cenário fechado: o ranking ideal não pode contar chunks de apostilas que nem podem ser recuperados."""
+    item = {"id": "Q1", "relevantes": rx.expand_with_segments({"alvo.pdf": 2}, GOLD_SEG)}
+    (fechado,) = rx.without_segments([item], rx.segment_index(GOLD_SEG))
+    assert fechado["relevantes"] == {"alvo.pdf": 2}
+    assert "apostila.pdf#p10-12" in item["relevantes"]  # o item original não é alterado
+
+
 def test_dialogs_integrity():
     gold = rx.load_json(rx.GOLD_PATH)
     names = set(rx.gold_document_names(gold))
