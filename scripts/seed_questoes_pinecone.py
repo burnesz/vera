@@ -2,7 +2,7 @@
 """
 Script de Carga e Vetorização de Questões Históricas do ENEM no Pinecone.
 Popula o namespace 'questoes_enem' no índice vetorial do Pinecone a partir do
-arquivo CSV 'data/itens_prova_2009_2024_enriquecido.csv'.
+arquivo CSV 'data/itens_prova_2009_2024_llm_texto.csv'.
 
 Os vetores representam os enunciados das questões históricas (com modelo multilingual-e5-large),
 e as alternativas, gabarito, habilidade e metadados da TRI são anexados como metadados.
@@ -113,7 +113,7 @@ def parse_csv_questions(csv_path: str) -> List[Dict[str, Any]]:
 
 
 def seed_questoes_pinecone(
-    csv_path: str = "data/itens_prova_2009_2024_enriquecido.csv",
+    csv_path: str = "data/itens_prova_2009_2024_llm_texto.csv",
     namespace: str = settings.NAMESPACE_QUESTOES_ENEM,
     batch_size: int = 50,
     dry_run: bool = False
@@ -170,7 +170,7 @@ def parse_args():
     parser.add_argument(
         "--csv-path",
         type=str,
-        default="data/itens_prova_2009_2024_enriquecido.csv",
+        default="data/itens_prova_2009_2024_llm_texto.csv",
         help="Caminho do CSV de itens enriquecidos do ENEM."
     )
     parser.add_argument(

@@ -9,8 +9,8 @@ from scripts.seed_questoes import seed_questoes, parse_csv_rows
 
 
 def test_parse_csv_rows():
-    items = parse_csv_rows("data/itens_prova_2009_2024_enriquecido.csv")
-    assert len(items) == 401
+    items = parse_csv_rows("data/itens_prova_2009_2024_llm_texto.csv")
+    assert len(items) == 506
     first = items[0]
     assert first["co_item"] == 60227
     assert first["ano"] == 2009
@@ -30,14 +30,14 @@ def test_seed_questoes_sqlite(tmp_path):
     engine = create_engine(db_url)
     Base.metadata.create_all(bind=engine)
 
-    # 1ª execução: deve inserir todos os 401 itens e as 30 habilidades
+    # 1ª execução: deve inserir todos os 506 itens e as 30 habilidades
     result1 = seed_questoes(
-        csv_path="data/itens_prova_2009_2024_enriquecido.csv",
+        csv_path="data/itens_prova_2009_2024_llm_texto.csv",
         db_url=db_url,
         dry_run=False
     )
-    assert result1["total_parsed"] == 401
-    assert result1["inserted"] == 401
+    assert result1["total_parsed"] == 506
+    assert result1["inserted"] == 506
     assert result1["updated"] == 0
 
     Session = sessionmaker(bind=engine)
@@ -48,7 +48,7 @@ def test_seed_questoes_sqlite(tmp_path):
     assert hab_count == 30
 
     q_count = session.query(QuestaoEnem).count()
-    assert q_count == 401
+    assert q_count == 506
 
     # Valida integridade de um item e relacionamento
     q = session.query(QuestaoEnem).filter_by(co_item=60227).first()
@@ -63,13 +63,42 @@ def test_seed_questoes_sqlite(tmp_path):
 
     # 2ª execução: idempotência (deve atualizar sem duplicar)
     result2 = seed_questoes(
-        csv_path="data/itens_prova_2009_2024_enriquecido.csv",
+        csv_path="data/itens_prova_2009_2024_llm_texto.csv",
         db_url=db_url,
         dry_run=False
     )
     assert result2["inserted"] == 0
-    assert result2["updated"] == 401
+    assert result2["updated"] == 506
 
     session = Session()
-    assert session.query(QuestaoEnem).count() == 401
+    assert session.query(QuestaoEnem).count() == 506
+    session.close()
+
+
+def test_seed_questoes_remover_ausentes(tmp_path):
+    """Com remover_ausentes, as questões que saíram do CSV são apagadas; sem a opção, ficam."""
+    import csv
+    origem = "data/itens_prova_2009_2024_llm_texto.csv"
+    with open(origem, encoding="utf-8-sig") as f:
+        leitor = csv.DictReader(f, delimiter=";")
+        campos, linhas = leitor.fieldnames, list(leitor)
+    reduzido = tmp_path / "reduzido.csv"
+    with open(reduzido, "w", encoding="utf-8-sig", newline="") as f:
+        w = csv.DictWriter(f, fieldnames=campos, delimiter=";")
+        w.writeheader()
+        w.writerows(linhas[:-3])
+
+    db_url = f"sqlite:///{tmp_path / 'test_remover.db'}"
+    seed_questoes(csv_path=origem, db_url=db_url)
+    assert seed_questoes(csv_path=str(reduzido), db_url=db_url)["removed"] == 0
+
+    session = sessionmaker(bind=create_engine(db_url))()
+    assert session.query(QuestaoEnem).count() == 506
+    session.close()
+
+    result = seed_questoes(csv_path=str(reduzido), db_url=db_url, remover_ausentes=True)
+    assert result["removed"] == 3
+    session = sessionmaker(bind=create_engine(db_url))()
+    assert session.query(QuestaoEnem).count() == 503
+    assert session.query(QuestaoEnem).filter_by(co_item=int(linhas[-1]["CO_ITEM"])).first() is None
     session.close()

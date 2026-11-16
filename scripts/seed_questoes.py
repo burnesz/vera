@@ -7,7 +7,7 @@ from typing import Dict, Any, List, Optional
 
 # Garante inclusão do diretório raiz no PYTHONPATH
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
-from sqlalchemy import select, create_engine
+from sqlalchemy import select, delete, create_engine
 from sqlalchemy.exc import OperationalError
 from sqlalchemy.orm import sessionmaker, Session
 from sqlalchemy.dialects.postgresql import insert as pg_insert
@@ -91,12 +91,17 @@ def parse_csv_rows(csv_path: str) -> List[Dict[str, Any]]:
 
 
 def seed_questoes(
-    csv_path: str = "data/itens_prova_2009_2024_enriquecido.csv",
+    csv_path: str = "data/itens_prova_2009_2024_llm_texto.csv",
     db_url: Optional[str] = None,
-    dry_run: bool = False
+    dry_run: bool = False,
+    remover_ausentes: bool = False,
 ) -> Dict[str, Any]:
     """
-    Popula a tabela questoes_enem a partir do CSV enriquecido de forma idempotente.
+    Popula a tabela questoes_enem a partir do CSV de forma idempotente.
+
+    Com remover_ausentes=True, apaga as questões cujo co_item não está mais no CSV (por exemplo,
+    itens que a extração passou a identificar como dependentes de imagem). A exclusão se propaga
+    (ON DELETE CASCADE) aos itens de simulado e às respostas que apontam para essas questões.
     """
     logger.info(f"Iniciando leitura do CSV: {csv_path}")
     items = parse_csv_rows(csv_path)
@@ -111,6 +116,7 @@ def seed_questoes(
             "total_parsed": total_parsed,
             "inserted": 0,
             "updated": 0,
+            "removed": 0,
         }
 
     target_url = db_url or settings.DATABASE_URL
@@ -193,12 +199,23 @@ def seed_questoes(
                     session.add(new_q)
                     inserted_count += 1
 
+        removed_count = 0
+        if remover_ausentes:
+            no_csv = {item["co_item"] for item in items}
+            ausentes = sorted(c for c in session.scalars(select(QuestaoEnem.co_item)).all() if c not in no_csv)
+            if ausentes:
+                # DELETE direto, para valer o ON DELETE CASCADE do banco (via ORM, as FKs dos filhos virariam NULL)
+                session.execute(delete(QuestaoEnem).where(QuestaoEnem.co_item.in_(ausentes)))
+                removed_count = len(ausentes)
+                logger.info(f"Removidas {removed_count} questões ausentes do CSV: {ausentes}")
+
         session.commit()
         logger.info(f"Carga concluída com sucesso! Processados: {inserted_count + updated_count} itens.")
         return {
             "total_parsed": total_parsed,
             "inserted": inserted_count,
             "updated": updated_count,
+            "removed": removed_count,
         }
 
     except OperationalError as e:
@@ -216,9 +233,11 @@ def seed_questoes(
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Popula a tabela questoes_enem com itens enriquecidos do ENEM.")
-    parser.add_argument("--csv", default="data/itens_prova_2009_2024_enriquecido.csv", help="Caminho do arquivo CSV")
+    parser.add_argument("--csv", default="data/itens_prova_2009_2024_llm_texto.csv", help="Caminho do arquivo CSV")
     parser.add_argument("--db-url", default=None, help="DATABASE_URL alternativa (opcional)")
     parser.add_argument("--dry-run", action="store_true", help="Apenas valida o CSV sem persistir no banco")
+    parser.add_argument("--remover-ausentes", action="store_true",
+                        help="Apaga do banco as questões que não estão no CSV (propaga aos simulados e respostas)")
     args = parser.parse_args()
 
-    seed_questoes(csv_path=args.csv, db_url=args.db_url, dry_run=args.dry_run)
+    seed_questoes(csv_path=args.csv, db_url=args.db_url, dry_run=args.dry_run, remover_ausentes=args.remover_ausentes)

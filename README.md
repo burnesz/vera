@@ -206,7 +206,7 @@ vera/
 │       ├── storage.py          # Cliente Cloudflare R2
 │       └── vectorstore.py      # Interface de busca vetorial no Pinecone
 ├── data/                       # Arquivos de dados e acervos enriquecidos
-│   └── itens_prova_2009_2024_enriquecido.csv # Microdados tratados do INEP
+│   └── itens_prova_2009_2024_llm_texto.csv # Microdados tratados do INEP
 ├── frontend/                   # Interface Web moderna em React + TypeScript + Vite
 │   ├── src/
 │   │   ├── components/         # Componentes reutilizáveis (MathText, Navbar, Sidebar, etc.)
@@ -370,7 +370,7 @@ python scripts/seed_habilidades.py
 ```
 
 ### 2. Importar o Acervo Histórico de Questões do ENEM (2009–2024)
-Lê o arquivo enriquecido em `data/itens_prova_2009_2024_enriquecido.csv` e popula a tabela `questoes_enem`:
+Lê o arquivo enriquecido em `data/itens_prova_2009_2024_llm_texto.csv` e popula a tabela `questoes_enem`:
 ```bash
 python scripts/seed_questoes.py
 ```
