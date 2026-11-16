@@ -27,6 +27,9 @@ class Settings(BaseSettings):
     # segue nos demais usos.
     LLM_MODEL_TUTORIA: str = "qwen3:8b-q4_K_M"
     LLM_THINK_TUTORIA: Optional[bool] = False
+    # Teto de tokens gerados pelo modelo da tutora/feedback. O <pensamento> + <resposta> com LaTeX passa de 1024
+    # tokens com frequência; com o teto antigo o texto era cortado no meio de fórmulas (2026-11-16).
+    LLM_MAX_TOKENS_TUTORIA: int = 3072
 
     # Vector Store (Pinecone)
 

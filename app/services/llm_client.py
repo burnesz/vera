@@ -46,6 +46,7 @@ class LLMClient:
         max_retries: int = 3,
         mock_mode: bool = False,
         think: Optional[bool] = None,
+        max_tokens: Optional[int] = None,
         **kwargs: Any
     ):
         self.endpoint_url = (endpoint_url or settings.LLM_ENDPOINT_URL).rstrip("/")
@@ -55,6 +56,17 @@ class LLMClient:
         self.mock_mode = mock_mode
         # Modelos com raciocínio (ex.: Qwen3) aceitam ligar/desligar o "thinking"; None mantém o padrão do modelo
         self.think = think
+        # Teto de tokens padrão deste cliente; uma chamada com max_tokens explícito tem precedência
+        self.default_max_tokens = max_tokens
+
+    @staticmethod
+    def _warn_if_truncated(data: Dict[str, Any], payload: Dict[str, Any]) -> None:
+        """Avisa quando o Ollama parou por atingir num_predict: o texto chega cortado (ex.: LaTeX sem fechar)."""
+        if data.get("done_reason") == "length":
+            logger.warning(
+                f"Resposta do modelo {payload.get('model')} cortada no limite de "
+                f"{payload.get('options', {}).get('num_predict')} tokens (done_reason=length)."
+            )
 
     @property
     def headers(self) -> Dict[str, str]:
@@ -72,7 +84,12 @@ class LLMClient:
         format: Optional[Union[str, Dict[str, Any]]] = None,
         seed: Optional[int] = None
     ) -> Tuple[str, Dict[str, Any]]:
-        resolved_max_tokens = max_tokens if max_tokens is not None else settings.LLM_MAX_TOKENS
+        if max_tokens is not None:
+            resolved_max_tokens = max_tokens
+        elif self.default_max_tokens is not None:
+            resolved_max_tokens = self.default_max_tokens
+        else:
+            resolved_max_tokens = settings.LLM_MAX_TOKENS
 
         url = f"{self.endpoint_url}/api/generate"
         options: Dict[str, Any] = {
@@ -237,6 +254,7 @@ class LLMClient:
                     if response.status_code == 200:
                         data = response.json()
                         if "response" in data:
+                            self._warn_if_truncated(data, payload)
                             return data["response"]
                         raise LLMResponseError(f"Formato de resposta inesperado do Ollama: {data}")
 
@@ -304,6 +322,7 @@ class LLMClient:
                     if response.status_code == 200:
                         data = response.json()
                         if "response" in data:
+                            self._warn_if_truncated(data, payload)
                             return data["response"]
                         raise LLMResponseError(f"Formato de resposta inesperado do Ollama: {data}")
 
@@ -430,4 +449,5 @@ def cliente_tutoria(**kwargs: Any) -> LLMClient:
     Cliente do feedback pedagógico e da tutora (RN-INF07): LLM_MODEL_TUTORIA com LLM_THINK_TUTORIA.
     A baseline zero-shot usa o mesmo cliente, para que a comparação mude só a arquitetura, e não o modelo.
     """
+    kwargs.setdefault("max_tokens", settings.LLM_MAX_TOKENS_TUTORIA)
     return LLMClient(model_name=settings.LLM_MODEL_TUTORIA, think=settings.LLM_THINK_TUTORIA, **kwargs)

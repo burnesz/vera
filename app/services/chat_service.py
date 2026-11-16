@@ -109,7 +109,9 @@ class ChatService:
         db: Optional[Session] = None,
         user_id: Optional[uuid.UUID] = None,
     ):
-        self.llm_client = llm_client or LLMClient(model_name=settings.LLM_MODEL_TUTORIA, think=settings.LLM_THINK_TUTORIA)  # RN-INF07
+        self.llm_client = llm_client or LLMClient(
+            model_name=settings.LLM_MODEL_TUTORIA, think=settings.LLM_THINK_TUTORIA,
+            max_tokens=settings.LLM_MAX_TOKENS_TUTORIA)  # RN-INF07
         self.vector_store = vector_store or PineconeVectorStore()
         self.session_manager = manager or session_manager
         self.db = db

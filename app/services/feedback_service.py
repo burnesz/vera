@@ -53,7 +53,9 @@ class FeedbackService:
         vector_store: Optional[PineconeVectorStore] = None,
         queries_path: str = "data/habilidades_queries.json",
     ):
-        self.llm_client = llm_client or LLMClient(model_name=settings.LLM_MODEL_TUTORIA, think=settings.LLM_THINK_TUTORIA)  # RN-INF07
+        self.llm_client = llm_client or LLMClient(
+            model_name=settings.LLM_MODEL_TUTORIA, think=settings.LLM_THINK_TUTORIA,
+            max_tokens=settings.LLM_MAX_TOKENS_TUTORIA)  # RN-INF07
         self.vector_store = vector_store or PineconeVectorStore()
         self.queries_path = queries_path
         self._canonical_queries_cache: Optional[Dict[str, str]] = None

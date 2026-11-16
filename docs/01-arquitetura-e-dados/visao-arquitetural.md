@@ -70,7 +70,7 @@ flowchart TB
 | **RN-INF01** | **Variáveis de Ambiente Configuráveis**: o endpoint do LLM e o modelo devem ser lidos obrigatoriamente de `LLM_ENDPOINT_URL` (padrão: `http://localhost:11434`) e `LLM_MODEL` (padrão: `qwen2.5:7b-instruct-q4_K_M`). | `Settings` em `app/core/config.py` e `LLMClient.__init__` em `app/services/llm_client.py`. |
 | **RN-INF02** | **Health-Check Proativo**: a API disponibiliza o endpoint `GET /api/v1/health` que inspeciona a conectividade com o Ollama (`/api/tags`), PostgreSQL e Pinecone. | `app/api/v1/health.py` e `LLMClient.health_check()`. |
 | **RN-INF03** | **Resiliência com Retry e Backoff**: chamadas ao LLM utilizam política de retry exponencial (até 3 tentativas) e timeout estendido (`LLM_TIMEOUT_SECONDS = 300.0`, `LLM_NUM_CTX = 4096`) para absorver picos de carga na GPU/CPU local. | `LLMClient.generate()` e `LLMClient.agenerate()` em `app/services/llm_client.py`. |
-| **RN-INF07** | **Modelo por Função**: o feedback por item e a tutora usam `LLM_MODEL_TUTORIA` (padrão: `qwen3:8b-q4_K_M`) com `LLM_THINK_TUTORIA` (padrão: `false`, raciocínio desligado), escolhidos pelo Experimento 1 de seleção de modelos (`DSR-08`). Os demais usos seguem `LLM_MODEL`. | `cliente_tutoria()` em `app/services/llm_client.py`; padrões de `FeedbackService`, `ChatService` e `BaselineService`. |
+| **RN-INF07** | **Modelo por Função**: o feedback por item e a tutora usam `LLM_MODEL_TUTORIA` (padrão: `qwen3:8b-q4_K_M`) com `LLM_THINK_TUTORIA` (padrão: `false`, raciocínio desligado), escolhidos pelo Experimento 1 de seleção de modelos (`DSR-08`). O teto de saída é `LLM_MAX_TOKENS_TUTORIA`; uma chamada com `max_tokens` explícito (reescrita da consulta: 60) tem precedência. Respostas cortadas pelo teto (`done_reason=length`) geram um aviso no log. Os demais usos seguem `LLM_MODEL`. | `cliente_tutoria()` em `app/services/llm_client.py`; padrões de `FeedbackService`, `ChatService` e `BaselineService`. |
 | **RN-INF04** | **Modo Mock para Testes**: o `LLMClient` deve manter suporte a `mock_mode=True` (ou respostas simuladas injetáveis) para execução de suítes Pytest desacopladas do hardware de inferência. | `LLMClient(mock_mode=True)` em `app/services/llm_client.py`. |
 
 ---
@@ -86,9 +86,10 @@ flowchart TB
 | | `LLM_MODEL` | `"qwen2.5:7b-instruct-q4_K_M"` | Tag do modelo no Ollama (**RN-INF01**) |
 | | `LLM_MODEL_TUTORIA` | `"qwen3:8b-q4_K_M"` | Modelo do feedback e da tutora (**RN-INF07**, `DSR-08`) |
 | | `LLM_THINK_TUTORIA` | `false` | Liga/desliga o modo de raciocínio do modelo da tutoria (**RN-INF07**) |
+| | `LLM_MAX_TOKENS_TUTORIA` | `3072` | Teto de tokens de saída do feedback e da tutora (**RN-INF07**). Com o teto geral de 1024, o `<pensamento>` + `<resposta>` era cortado no meio de fórmulas (2026-11-16) |
 | | `LLM_TIMEOUT_SECONDS` | `300.0` | Timeout máximo por requisição HTTP ao Ollama |
 | | `LLM_MAX_TOKENS` | `1024` | Limite padrão de tokens de saída (`num_predict`) |
-| | `LLM_NUM_CTX` | `4096` | Janela de contexto no Ollama (`num_ctx`), calibrada para acomodar o prompt RAG sem sobrecarregar a VRAM |
+| | `LLM_NUM_CTX` | `4096` | Janela de contexto no Ollama (`num_ctx`), calibrada para acomodar o prompt RAG sem sobrecarregar a VRAM. O `.env` usa `8192`, necessário para caber o prompt do feedback mais os 3072 tokens de saída |
 | **Pinecone & E5** | `PINECONE_API_KEY` | `""` | Chave da API Pinecone |
 | | `PINECONE_INDEX_NAME` | `"vera-math-index"` | Nome do índice vetorial |
 | | `EMBEDDING_MODEL_NAME` | `"intfloat/multilingual-e5-large"` | Modelo local SentenceTransformers (1024 dims) |

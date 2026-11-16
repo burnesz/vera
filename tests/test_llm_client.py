@@ -243,3 +243,26 @@ def test_feedback_tutora_e_baseline_usam_o_modelo_da_tutoria():
     for servico in (FeedbackService(vector_store=MagicMock()), ChatService(vector_store=MagicMock()), BaselineService()):
         assert servico.llm_client.model_name == settings.LLM_MODEL_TUTORIA
         assert servico.llm_client.think == settings.LLM_THINK_TUTORIA
+        assert servico.llm_client.default_max_tokens == settings.LLM_MAX_TOKENS_TUTORIA
+
+
+def test_teto_de_tokens_do_cliente_e_precedencia_da_chamada():
+    """O teto do cliente substitui LLM_MAX_TOKENS, e um max_tokens explícito (ex.: reescrita, 60) vence os dois."""
+    from app.core.config import settings
+
+    def num_predict(client, **kw):
+        return client._build_payload_and_url(prompt="oi", **kw)[1]["options"]["num_predict"]
+
+    assert num_predict(LLMClient(model_name="m")) == settings.LLM_MAX_TOKENS
+    assert num_predict(LLMClient(model_name="m", max_tokens=3072)) == 3072
+    assert num_predict(LLMClient(model_name="m", max_tokens=3072), max_tokens=60) == 60
+
+
+@patch("httpx.Client")
+def test_aviso_quando_resposta_e_cortada_no_limite(mock_client_cls, caplog):
+    resp = MagicMock(status_code=200)
+    resp.json.return_value = {"response": "texto $$ \\frac{1", "done_reason": "length"}
+    mock_client_cls.return_value.__enter__.return_value.post.return_value = resp
+    with caplog.at_level("WARNING"):
+        assert LLMClient(model_name="m", max_tokens=10).generate("oi").startswith("texto")
+    assert "done_reason=length" in caplog.text
