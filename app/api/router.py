@@ -1,5 +1,5 @@
 from fastapi import APIRouter
-from app.api.v1 import health, chat, auth, simulado, questoes, dashboard, feedback
+from app.api.v1 import health, chat, auth, simulado, dashboard, feedback, admin_ineditas
 
 api_router = APIRouter()
 
@@ -8,8 +8,8 @@ api_router.include_router(health.router)
 api_router.include_router(auth.router)
 api_router.include_router(chat.router)
 api_router.include_router(simulado.router, prefix="/simulados", tags=["Simulados"])
-api_router.include_router(questoes.router, prefix="/questoes", tags=["Questões"])
 api_router.include_router(dashboard.router, prefix="/dashboard", tags=["Dashboard"])
 api_router.include_router(feedback.router, prefix="/feedback", tags=["Feedback"])
+api_router.include_router(admin_ineditas.router, prefix="/admin/ineditas", tags=["Administração"])
 
 

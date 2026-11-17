@@ -51,7 +51,7 @@ def main():
         "-n", "--namespace",
         type=str,
         default=settings.NAMESPACE_MATERIAIS_DIDATICOS,
-        help=f"Namespace do Pinecone a ser consultado (ex: '{settings.NAMESPACE_MATERIAIS_DIDATICOS}', 'materiais_didaticos_v2', '{settings.NAMESPACE_QUESTOES_ENEM}')"
+        help=f"Namespace do Pinecone a ser consultado (ex: '{settings.NAMESPACE_MATERIAIS_DIDATICOS}', 'materiais_didaticos_v2', 'questoes_enem (desativado)')"
     )
     parser.add_argument(
         "-k", "--top-k",
@@ -141,7 +141,7 @@ def main():
             print("\n--- [TRECHO DIDÁTICO NA ÍNTEGRA] ---")
             print(full_text.strip() if full_text else "(Texto vazio)")
 
-        elif args.namespace == settings.NAMESPACE_QUESTOES_ENEM:
+        elif args.namespace == "questoes_enem":  # namespace desativado, ainda presente no índice
             ano = meta.get("ano", "N/A")
             co_item = meta.get("co_item", "N/A")
             hab = meta.get("habilidade_codigo", "N/A")

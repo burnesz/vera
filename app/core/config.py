@@ -58,10 +58,11 @@ class Settings(BaseSettings):
     # RAG / Chat Query Rewriting
     ENABLE_QUERY_REWRITING: bool = True
 
-    # PoT Deterministic Complexity Thresholds (B2)
-    POT_MIN_OPERATIONS: int = 3
-    POT_MIN_OPERATION_TYPES: int = 2
-
+    # Serviço de questões inéditas (repositório questoes-ineditas-enem, app/api.py). A geração saiu da plataforma:
+    # a tela de administrador pede lotes a esse serviço e importa as aprovadas para questoes_ineditas.
+    QUESTOES_API_URL: str = "http://127.0.0.1:8100"
+    QUESTOES_API_KEY: Optional[str] = None
+    QUESTOES_API_TIMEOUT_SECONDS: float = 30.0
 
 
     # PostgreSQL Relational Database
@@ -90,8 +91,6 @@ class Settings(BaseSettings):
 
     # Namespaces Pinecone (RN-VETOR01)
     NAMESPACE_MATERIAIS_DIDATICOS: str = "materiais_didaticos"
-    NAMESPACE_QUESTOES_ENEM: str = "questoes_enem"
-    NAMESPACE_QUESTOES_HISTORICAS: str = "questoes_enem"
 
     # Administrador Padrão (Auto-provisionamento seguro via .env no startup)
     ADMIN_NAME: str = "Administrador VERA"
