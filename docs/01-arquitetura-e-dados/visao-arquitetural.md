@@ -30,7 +30,7 @@ flowchart TB
     end
 
     subgraph Backend ["Backend FastAPI (/api/v1)"]
-        API["Rotas: /health, /auth, /chat, /simulados,\n/questoes, /dashboard, /feedback"]
+        API["Rotas: /health, /auth, /chat, /simulados,\n/admin/ineditas, /dashboard, /feedback"]
         SVC["Serviços: ChatService, FeedbackService, QuestionService,\nSimuladoService, CodeExecutor, QuestionValidator"]
         LLM["LLMClient (HTTP Resiliente + Retry + Mock)"]
     end
@@ -129,9 +129,10 @@ Todos os endpoints são montados sob `/api/v1` em `app/main.py`:
   - `GET /api/v1/simulados/tentativas/me`: histórico de tentativas concluídas do estudante.
   - `GET /api/v1/simulados/tentativas/{tentativa_id}` e `GET /api/v1/simulados/{simulado_id}/resultado`: relatório de correção.
   - `DELETE /api/v1/simulados/{simulado_id}`: exclui um simulado e seus registros associados.
-- **Questões Inéditas (`app/api/v1/questoes.py` — prefixo `/api/v1/questoes`)**:
-  - `POST /api/v1/questoes/ineditas/gerar`: dispara o pipeline PoT para gerar e validar uma questão inédita para uma habilidade (`RN-Q01` a `RN-Q04`, `max_attempts=5`). Geração em lote é feita via `scripts/populate_questoes_ineditas.py`.
-  - `GET /api/v1/questoes/ineditas` e `GET /api/v1/questoes/ineditas/{questao_id}`: consulta de questões inéditas.
+- **Questões Inéditas, só para administradores (`app/api/v1/admin_ineditas.py`, prefixo `/api/v1/admin/ineditas`)**:
+  - A geração roda no serviço externo `questoes-ineditas-enem`, que expõe uma API HTTP na porta 8100.
+  - Estas rotas repassam os lotes ao serviço (`/lotes`, `/lotes/{id}`, `/lotes/{id}/cancelar`, `/habilidades` e `/saude`) e importam para `questoes_ineditas` as questões aprovadas que o administrador escolhe (`/importar`).
+  - Mais detalhes em [geracao-questoes-pot.md](../02-dominios-e-fluxos/geracao-questoes-pot.md).
 - **Dashboard (`app/api/v1/dashboard.py` — prefixo `/api/v1/dashboard`)**:
   - `GET /api/v1/dashboard/desempenho`: diagnóstico consolidado por competência (`C1`–`C7`) e habilidade (`H01`–`H30`) + últimas tentativas.
 - **Feedback por Item (`app/api/v1/feedback.py` — prefixo `/api/v1/feedback`)**:

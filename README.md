@@ -15,7 +15,7 @@
 - [Fluxos Centrais de IA](#-fluxos-centrais-de-ia)
   - [1. Simulado ENEM & Diagnóstico de Lacunas](#1-simulado-enem--diagnóstico-de-lacunas)
   - [2. Feedback Pedagógico por Item (RAG + CoT)](#2-feedback-pedagógico-por-item-rag--cot)
-  - [3. Geração de Questões Inéditas (Program-Aided Generation — PoT)](#3-geração-de-questões-inéditas-program-aided-generation--pot)
+  - [3. Geração de Questões Inéditas (serviço externo)](#3-geração-de-questões-inéditas-serviço-externo)
   - [4. Tutora Virtual Interativa](#4-tutora-virtual-interativa)
 - [Pilha Tecnológica](#-pilha-tecnológica)
 - [Estrutura do Repositório](#-estrutura-do-repositório)
@@ -61,15 +61,14 @@ flowchart TD
         UI_Feedback[Relatório de Desempenho & Feedbacks]
         UI_Chat[Tutora Virtual VERA com CoT & LaTeX]
         UI_Dash[Dashboard de Habilidades H01-H30]
+        UI_Admin[Admin: Questões Inéditas]
     end
 
     subgraph Backend ["Backend & Orquestração (FastAPI)"]
         API_Router["API Gateway /api/v1"]
         Auth_Service["Autenticação JWT & Usuários"]
         Simulado_Service["Engine de Simulados Estratificados"]
-        Question_Service["Pipeline de Geração de Questões"]
-        Question_Validator["Validador Estrutural (JSON, Unicidade)"]
-        Code_Executor["CodeExecutor PoT (AST + Subprocesso 5s)"]
+        Admin_Ineditas["Admin de Questões Inéditas (lotes + importação)"]
         Chat_Service["Orquestrador de Tutoria RAG"]
         Feedback_Service["Feedback por Item (RAG + CoT)"]
         LLM_Client["LLM Client (Ollama Qwen 2.5 + Retry/Backoff)"]
@@ -86,17 +85,14 @@ flowchart TD
 
     Frontend <-->|REST API + JWT| API_Router
     API_Router --> Simulado_Service
-    API_Router --> Question_Service
+    API_Router --> Admin_Ineditas
     API_Router --> Chat_Service
     API_Router --> Auth_Service
     API_Router --> Feedback_Service
 
     Simulado_Service <--> Postgres
-    Question_Service <-->|Few-Shot RAG Top-10 + Fallback| Pinecone
-    Question_Service <--> Postgres
-    Question_Service --> Question_Validator
-    Question_Service --> Code_Executor
-    Question_Service <--> LLM_Client
+    Admin_Ineditas <-->|HTTP: lotes| QuestoesAPI
+    Admin_Ineditas -->|importa aprovadas| Postgres
     Chat_Service <--> LLM_Client
     Chat_Service <-->|Embeddings Multilingual-E5| Pinecone
     Feedback_Service <--> Pinecone
@@ -104,6 +100,11 @@ flowchart TD
     Feedback_Service <--> LLM_Client
 
     LLM_Client <-->|HTTP /api/chat| OllamaLocal
+    QuestoesAPI <-->|Qwen2.5 gera, Qwen3 valida| OllamaLocal
+
+    subgraph Externo ["Serviço questoes-ineditas-enem (repositório próprio)"]
+        QuestoesAPI["API de Geração PoT :8100"]
+    end
 ```
 
 ---
@@ -136,11 +137,9 @@ Durante o desenvolvimento do protótipo e os ciclos de avaliação da DSR, adoto
 - **CoT**: O prompt recebe a alternativa marcada e o gabarito oficial e exige `<pensamento>` (diagnóstico do distrator e resolução) e `<resposta>` (explicação acolhedora em LaTeX e o que estudar).
 - **Cache**: O feedback é persistido na tabela `feedbacks` (um por resposta) e só pode ser acessado pelo dono da tentativa.
 
-### 3. Geração de Questões Inéditas (Program-Aided Generation — PoT)
-- **Seleção de Contexto**: Top-10 questões históricas da mesma habilidade no Pinecone, com sorteio de 2 exemplos, tema, abertura e tipologia (fallback no PostgreSQL).
-- **Geração em 2 chamadas**: o LLM escreve planejamento, enunciado e 4 erros típicos; depois, uma função Python `def resolver()` que calcula a resposta correta e os distratores.
-- **Execução Determinística (`CodeExecutor`)**: AST segura, subprocesso com timeout de 5s, nexo numérico com o enunciado e montagem das alternativas A–E e do gabarito por código (o LLM nunca escolhe a letra).
-- **Validação em 3 Etapas**: Resolução Cega (sem alternativas/gabarito) → Confronto de Equivalência → Auditoria Semântica por critério; qualquer falha dispara *Stateless Retry* (até 5 tentativas).
+### 3. Geração de Questões Inéditas (serviço externo)
+- A geração (RAG few-shot, solver Python, validação cega e auditoria) fica no repositório `questoes-ineditas-enem`, exposta como API HTTP (`app/api.py`, porta 8100), com o Qwen 2.5 como gerador e o Qwen3 como avaliador.
+- Na VERA, o administrador pede **lotes** (habilidades e quantidade por habilidade) na tela **Questões inéditas**, acompanha o andamento e adiciona ao acervo as aprovadas que revisar; elas entram na tabela `questoes_ineditas`, de onde os simulados sorteiam 15% dos itens.
 - Detalhes: [docs/02-dominios-e-fluxos/geracao-questoes-pot.md](docs/02-dominios-e-fluxos/geracao-questoes-pot.md).
 
 ### 4. Tutora Virtual Interativa
@@ -161,7 +160,7 @@ Durante o desenvolvimento do protótipo e os ciclos de avaliação da DSR, adoto
 - **Banco Vetorial**: [Pinecone](https://www.pinecone.io/) (Namespaces `materiais_didaticos` e `questoes_enem`)
 - **Banco Relacional & ORM**: PostgreSQL 15 + SQLAlchemy 2.0
 - **Autenticação**: JWT (JSON Web Tokens) com senhas criptografadas via Bcrypt
-- **Testes Automatizados**: Pytest (166 testes unitários e de integração)
+- **Testes Automatizados**: Pytest (149 testes unitários e de integração)
 
 ### Frontend Web
 - **Linguagem & Framework**: React 18, TypeScript, [Vite](https://vitejs.dev/)
@@ -199,9 +198,7 @@ vera/
 │       ├── chat_service.py     # Sessões de conversa e injeção de contexto RAG
 │       ├── feedback_service.py # Feedback pedagógico por item errado (RAG + CoT)
 │       ├── llm_client.py       # Cliente HTTP assíncrono para o daemon do Ollama
-│       ├── question_service.py # Pipeline PoT de geração e validação em 3 etapas
-│       ├── code_executor.py    # Execução segura do solver Python (AST, timeout, nexo numérico)
-│       ├── question_validator.py # Sanitização JSON/LaTeX e formatação de tabelas
+│       ├── questoes_api_client.py # Cliente do serviço externo de questões inéditas
 │       ├── simulado_service.py # Montagem, amostragem, correção e diagnóstico de simulados
 │       ├── storage.py          # Cliente Cloudflare R2
 │       └── vectorstore.py      # Interface de busca vetorial no Pinecone
@@ -220,12 +217,10 @@ vera/
 │   ├── init_db.sql             # DDL completo das tabelas PostgreSQL
 │   ├── seed_habilidades.py     # Carga das 30 habilidades da Matriz do ENEM
 │   ├── seed_questoes.py        # Carga dos itens do ENEM a partir do CSV
-│   ├── seed_questoes_pinecone.py # Vetorização das questões históricas (namespace questoes_enem)
-│   ├── populate_questoes_ineditas.py # Geração em lote de itens inéditos via pipeline PoT
 │   ├── clean_tiny_chunks.py    # Limpeza de chunks curtos no Pinecone
 │   ├── search_pinecone.py      # Inspeção de consultas semânticas
 │   └── ollama_forwarder.py     # Proxy de compatibilidade de rede
-├── tests/                      # 18 módulos Pytest (auth, chat, PoT, code executor, simulados, feedback, ...)
+├── tests/                      # Módulos Pytest (auth, chat, simulados, feedback, admin de inéditas, ...)
 ├── docs/                       # Memória do projeto (notas modulares por domínio, ver AGENTS.md)
 ├── docker-compose.yml          # Orquestração dos containers (API + DB + Web)
 ├── Dockerfile                  # Container da API FastAPI
@@ -375,24 +370,22 @@ Lê o arquivo enriquecido em `data/itens_prova_2009_2024_llm_texto.csv` e popula
 python scripts/seed_questoes.py
 ```
 
-### 3. Povoar Questões Inéditas com o LLM Local
-Executa o pipeline PoT (few-shot RAG + solver Python + validação em 3 etapas):
+### 3. Gerar Questões Inéditas (serviço externo)
+A geração saiu da plataforma e fica no repositório `questoes-ineditas-enem`, que a expõe como API HTTP. Suba o serviço:
 ```bash
-# Gerar 1 questão inédita para todas as 30 habilidades via Ollama local:
-python scripts/populate_questoes_ineditas.py --habilidades all --count 1
-
-# Gerar para habilidades específicas:
-python scripts/populate_questoes_ineditas.py --habilidades H01,H02,H03
-
-# Modo simulação (rápido/mock para validação de testes sem carregar o LLM):
-python scripts/populate_questoes_ineditas.py --habilidades all --mock
+# no repositório questoes-ineditas-enem
+./.venv/bin/uvicorn app.api:app --host 127.0.0.1 --port 8100
 ```
+Na VERA, entre como administrador e abra **Questões inéditas** no menu lateral: escolha as habilidades (ou todas) e
+quantas questões por habilidade, acompanhe o lote e adicione ao acervo as aprovadas. As rotas ficam em
+`/api/v1/admin/ineditas/*` (só administradores); o endereço do serviço vem de `QUESTOES_API_URL` (padrão
+`http://127.0.0.1:8100`) e a chave opcional, de `QUESTOES_API_KEY`.
 
 ---
 
 ## 🧪 Suíte de Testes
 
-O projeto conta com 166 testes automatizados cobrindo autenticação, modelos relacionais, ingestão, `LLMClient`, `CodeExecutor`, pipeline PoT, simulados, feedback por item, chat e endpoints da API.
+O projeto conta com 149 testes automatizados cobrindo autenticação, modelos relacionais, ingestão, `LLMClient`, simulados, feedback por item, chat, rotas de administrador do serviço de questões e endpoints da API.
 
 Execute a suíte com o Pytest:
 

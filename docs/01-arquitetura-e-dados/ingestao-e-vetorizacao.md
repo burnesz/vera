@@ -9,7 +9,6 @@ related_code:
   - "app/services/vectorstore.py"
   - "app/services/storage.py"
   - "app/core/sanitizer.py"
-  - "scripts/seed_questoes_pinecone.py"
   - "scripts/clean_tiny_chunks.py"
 related_notes:
   - "./visao-arquitetural.md"
@@ -28,7 +27,7 @@ O banco vetorial **Pinecone** centraliza a memória semântica do sistema em um 
 | Namespace | Conteúdo | Origem / Script de Carga | Consumidor Principal |
 |---|---|---|---|
 | **`materiais_didaticos`** | Chunks conceituais e teóricos extraídos de apostilas e livros didáticos de Matemática do Ensino Médio (armazenados no Cloudflare R2). | `app/pipeline/chunking.py` + `app/pipeline/index_embeddings.py` | `ChatService` (Tutora Virtual VERA) |
-| **`questoes_enem`** | Vetores dos enunciados das **402 questões históricas** do ENEM com metadados completos (`habilidade`, `ano`, `co_item`, `gabarito`, `alternativas`). | `scripts/seed_questoes_pinecone.py` | `QuestionService` (RAG *Few-Shot* para geração PoT) |
+| ~~`questoes_enem`~~ | **Desativado em 2026-11-16.** Servia ao RAG *few-shot* da primeira versão da geração dentro da plataforma, que foi removida. O serviço `questoes-ineditas-enem` usa um ChromaDB próprio. Os vetores ainda existem no índice e podem ser apagados. | (script removido) | nenhum |
 
 ---
 

@@ -25,7 +25,7 @@ Registro atualizado do progresso das 4 fases de desenvolvimento do projeto VERA.
 - [x] Modelos relacionais completos no PostgreSQL 15: usuários, habilidades, questões ENEM, inéditas, simulados, tentativas, respostas, desempenho, feedbacks e chat (`app/db/models/`)
 - [x] Carga da Matriz de Referência do ENEM (`H01` a `H30`, `C1` a `C7`) via script (`scripts/seed_habilidades.py`)
 - [x] Carga do acervo de 402 questões históricas textuais do ENEM no PostgreSQL (`scripts/seed_questoes.py`)
-- [x] Vetorização e carga dos itens históricos no namespace `questoes_enem` do Pinecone (`scripts/seed_questoes_pinecone.py`)
+- [x] Vetorização e carga dos itens históricos no namespace `questoes_enem` do Pinecone (desativado em 2026-11-16, junto com a geração dentro da plataforma)
 - [x] Pipeline de chunking semântico de PDFs didáticos com Unstructured, fallback PyMuPDF e OCR de fórmulas via `pix2tex` (`app/pipeline/chunking.py` e `app/pipeline/formula_extractor.py`)
 - [x] Vetorização de materiais didáticos no namespace `materiais_didaticos` do Pinecone com `intfloat/multilingual-e5-large` (`app/pipeline/index_embeddings.py`)
 - [x] Integração com Cloudflare R2 para armazenamento em nuvem de PDFs didáticos (`app/services/storage.py`)
@@ -37,11 +37,15 @@ Registro atualizado do progresso das 4 fases de desenvolvimento do projeto VERA.
 - [x] Autenticação stateless JWT (`HS256`) com senhas criptografadas via Bcrypt (`app/api/v1/auth.py` e `app/core/security.py`)
 - [x] Engine de simulados estratificados com 45 itens (85% históricas + 15% inéditas, cobertura de habilidades e omissão de gabarito durante a prova) (`app/services/simulado_service.py` e `app/api/v1/simulado.py`)
 - [x] Recuperação RAG diversificada para *few-shot*: Top-10 candidatos no Pinecone com sorteio aleatório de 2 exemplos + sorteio de temas e aberturas narrativas (`DSR-04`)
-- [x] Pipeline PoT (*Program-Aided Generation*) com execução de `def resolver()` em subprocesso isolado, inspeção de AST, *groundedness* numérico e montagem determinística de gabarito (`app/services/code_executor.py` — `DSR-03`)
+- [x] Pipeline PoT (*Program-Aided Generation*) com execução de `def resolver()` em subprocesso isolado, inspeção de AST, *groundedness* numérico e montagem determinística de gabarito (`DSR-03`; código movido para `questoes-ineditas-enem` em 2026-11-16)
 - [x] Defesa em cascata contra *Anchoring Bias*: **Auto-Healing Algorítmico de Distratores** em 0ms + **Stateless Retry** com contexto limpo (`DSR-05`)
 - [x] Pipeline de **Validação Modular em 3 Etapas** contra *Sycophancy*: Resolução Cega Pura $\rightarrow$ Confronto de Equivalência com *Early Exit* $\rightarrow$ Auditoria Semântica com flags booleanas e rejeição determinística (`DSR-06`)
 - [x] Suporte estruturado a `tabela_dados` (conversão automática para Markdown) e sanitização de escapes LaTeX em JSON (`app/services/question_validator.py`)
-- [x] Script multi-round de geração em lote e povoamento de questões inéditas (`scripts/populate_questoes_ineditas.py`)
+- [x] Script multi-round de geração em lote e povoamento de questões inéditas
+- [x] **2026-11-16: geração movida para o serviço `questoes-ineditas-enem`.**
+  - O pipeline PoT dos itens acima saiu da plataforma e agora roda no serviço, exposto como API.
+  - A VERA ganhou a tela de administrador **Questões inéditas**, para gerar lotes e importar as aprovadas (`app/api/v1/admin_ineditas.py` e `frontend/src/pages/AdminIneditasPage.tsx`).
+  - Detalhes em [geracao-questoes-pot.md](../02-dominios-e-fluxos/geracao-questoes-pot.md).
 - [x] Serviço de Tutoria RAG Interativa com *Query Rewriting*, CoT obrigatório (`<pensamento>` + `<resposta>`) e persistência relacional (`app/services/chat_service.py` e `app/api/v1/chat.py` — `DSR-02`)
 - [x] Feedback pedagógico pontual por item errado com RAG determinístico, CoT e cache em `feedbacks` (`app/services/feedback_service.py` e `app/api/v1/feedback.py` — `RN-FB01`..`03`)
 - [x] Pós-processamento do feedback: verificação automática contra gabarito e habilidade, com Stateless Retry (até 3 tentativas) e HTTP `422` se reprovado (`app/services/feedback_verifier.py` — `RN-FB04`, 2026-11-15)

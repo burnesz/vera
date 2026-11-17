@@ -21,6 +21,12 @@ export const Topbar: React.FC<TopbarProps> = ({ currentPage, onOpenSidebar }) =>
           category: 'Tutoria Inteligente',
           badge: 'RAG + CoT',
         };
+      case 'admin-ineditas':
+        return {
+          title: 'Geração de Questões Inéditas',
+          category: 'Administração',
+          badge: 'Admin',
+        };
       case 'home':
       default:
         return {

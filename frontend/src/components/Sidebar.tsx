@@ -5,6 +5,7 @@ import {
   LayoutDashboard,
   FileCheck2,
   BotMessageSquare,
+  Sparkles,
   LogOut,
   X,
 } from 'lucide-react';
@@ -183,6 +184,30 @@ export const Sidebar: React.FC<SidebarProps> = ({
               Online
             </span>
           </button>
+
+          {user?.role === 'admin' && (
+            <>
+              <div
+                style={{
+                  fontSize: '0.725rem',
+                  fontWeight: 700,
+                  color: 'var(--text-muted)',
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.06em',
+                  padding: '1rem 0.75rem 0.5rem',
+                }}
+              >
+                Administração
+              </div>
+              <button
+                onClick={() => handleItemClick('admin-ineditas')}
+                className={`sidebar-nav-item ${currentPage === 'admin-ineditas' ? 'active' : ''}`}
+              >
+                <Sparkles size={20} />
+                <span>Questões inéditas</span>
+              </button>
+            </>
+          )}
         </div>
 
         {/* Rodapé do Menu Lateral: Perfil do Estudante & Sair */}

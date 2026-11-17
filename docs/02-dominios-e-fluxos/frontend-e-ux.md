@@ -14,6 +14,7 @@ related_code:
   - "frontend/src/pages/StudentDashboard.tsx"
   - "frontend/src/pages/SimuladoPage.tsx"
   - "frontend/src/pages/ChatPage.tsx"
+  - "frontend/src/pages/AdminIneditasPage.tsx"
   - "frontend/src/services/api.ts"
   - "frontend/src/services/authService.ts"
   - "frontend/src/services/simuladoService.ts"
@@ -47,6 +48,7 @@ O frontend da plataforma VERA (`frontend/`) é uma Single Page Application (SPA)
 | `src/pages/LoginPage.tsx` & `RegisterPage.tsx` | Fluxos de autenticação e criação de conta de estudante. |
 | `src/pages/StudentDashboard.tsx` | Painel de diagnóstico alimentado por `GET /dashboard/desempenho`: métricas globais, **7 Competências (`C1`–`C7`)**, **30 Habilidades (`H01`–`H30`)** filtráveis por nível de domínio (Críticas / Em Treino / Consolidadas) e últimas tentativas. |
 | `src/pages/SimuladoPage.tsx` | Ambiente completo de prova: cronômetro, navegação pelos 45 itens, marcação de revisão/dúvida, folha de respostas lateral, submissão e tela pós-prova de revisão item a item (enunciado, alternativas, gabarito, justificativa) com card **"Explicação Pedagógica da Tutora VERA"** para questões erradas (`RN-FB01`–`04`) e atalho para o Chat. Falhas da API aparecem num aviso fixo no topo da página (`errorBanner`). |
+| `src/pages/AdminIneditasPage.tsx` | Tela **Questões inéditas**, que só aparece para administradores: ela some do menu lateral e redireciona para o início quem não tem `role === 'admin'`. Nela o administrador:<br>• monta um lote, escolhendo as habilidades (ou todas as 28 ativas), as questões por habilidade e as tentativas;<br>• acompanha o lote, que é consultado a cada 5 s e cujo id fica no `localStorage`;<br>• pré-visualiza as aprovadas com o `MathText`;<br>• adiciona ao acervo as selecionadas ou todas.<br>Ela usa `services/adminIneditasService.ts` e as rotas `/admin/ineditas/*`. Veja [geracao-questoes-pot.md](./geracao-questoes-pot.md). |
 | `src/pages/ChatPage.tsx` | Interface conversacional com a Tutora VERA: barra lateral de histórico de sessões (`chat_sessions`), exibição retrátil do bloco `<pensamento>` (*Chain-of-Thought*), citações dos materiais didáticos recuperados e renderização KaTeX. |
 
 ---

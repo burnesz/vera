@@ -18,6 +18,11 @@ related_notes:
 # Catálogo de Decisões de Engenharia DSR
 
 > Registro arquitetural (ADR/DSR) contendo as justificativas técnicas e científicas para a banca examinadora do TCC sobre a evolução dos artefatos da plataforma VERA.
+>
+> **Nota de 2026-11-16:**
+> - As decisões sobre a geração de questões inéditas (PoT, validação e retry) continuam válidas, mas o código delas saiu da plataforma e foi para o repositório `questoes-ineditas-enem`.
+> - Os caminhos `app/services/question_service.py`, `code_executor.py`, `question_validator.py` e `app/schemas/question.py`, citados abaixo, ficam como registro histórico.
+> - A integração atual está descrita em [geracao-questoes-pot.md](../02-dominios-e-fluxos/geracao-questoes-pot.md).
 
 ---
 

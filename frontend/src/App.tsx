@@ -9,15 +9,19 @@ import { SimuladoPage } from './pages/SimuladoPage';
 import { ChatPage } from './pages/ChatPage';
 import { LoginPage } from './pages/LoginPage';
 import { RegisterPage } from './pages/RegisterPage';
+import { AdminIneditasPage } from './pages/AdminIneditasPage';
+
+const PAGINAS = ['home', 'simulado', 'chat', 'login', 'register', 'admin-ineditas'];
 
 const AppContent: React.FC = () => {
-  const { isAuthenticated, isLoading } = useAuth();
+  const { isAuthenticated, isLoading, user } = useAuth();
+  const isAdmin = user?.role === 'admin';
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   // Roteador sincronizado com a URL (pathname)
   const [currentPage, setCurrentPage] = useState<string>(() => {
     const path = window.location.pathname.replace(/^\//, '') || 'home';
-    if (['home', 'simulado', 'chat', 'login', 'register'].includes(path)) {
+    if (PAGINAS.includes(path)) {
       return path;
     }
     return 'home';
@@ -36,7 +40,7 @@ const AppContent: React.FC = () => {
   useEffect(() => {
     const handlePopState = () => {
       const path = window.location.pathname.replace(/^\//, '') || 'home';
-      if (['home', 'simulado', 'chat', 'login', 'register'].includes(path)) {
+      if (PAGINAS.includes(path)) {
         setCurrentPage(path);
       } else {
         setCurrentPage('home');
@@ -88,6 +92,7 @@ const AppContent: React.FC = () => {
             {currentPage === 'home' && <HomePage onNavigate={navigateTo} />}
             {currentPage === 'simulado' && <SimuladoPage onNavigate={navigateTo} />}
             {currentPage === 'chat' && <ChatPage onNavigate={navigateTo} />}
+            {currentPage === 'admin-ineditas' && (isAdmin ? <AdminIneditasPage /> : <HomePage onNavigate={navigateTo} />)}
             {(currentPage === 'login' || currentPage === 'register') && (
               <HomePage onNavigate={navigateTo} />
             )}

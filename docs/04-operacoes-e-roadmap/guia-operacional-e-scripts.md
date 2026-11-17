@@ -5,10 +5,7 @@ rules: ["RN-INF04"]
 related_code:
   - "scripts/seed_habilidades.py"
   - "scripts/seed_questoes.py"
-  - "scripts/seed_questoes_pinecone.py"
-  - "scripts/populate_questoes_ineditas.py"
   - "scripts/clean_tiny_chunks.py"
-  - "scripts/search_pinecone.py"
   - "scripts/ollama_forwarder.py"
   - "pytest.ini"
   - "docker-compose.yml"
@@ -46,15 +43,14 @@ related_notes:
 |---|---|---|
 | `scripts/seed_habilidades.py` | Popula as 30 habilidades oficiais (`H01`–`H30`) e competências (`C1`–`C7`) na tabela `habilidades_enem`. | `./.venv/bin/python scripts/seed_habilidades.py` |
 | `scripts/seed_questoes.py` | Importa o dataset enriquecido (`data/itens_prova_2009_2024_enriquecido.csv`) com as 402 questões históricas para `questoes_enem`. | `./.venv/bin/python scripts/seed_questoes.py` |
-| `scripts/seed_questoes_pinecone.py` | Gera embeddings E5-large (1024 dims) das 402 questões históricas e faz upsert no namespace `questoes_enem` do Pinecone. | `./.venv/bin/python scripts/seed_questoes_pinecone.py` |
-| `scripts/populate_questoes_ineditas.py` | Executa o pipeline PoT em lote (multi-round com retry) para povoar a tabela `questoes_ineditas`. Flags: `--habilidades` (`all` ou `H01,H02`), `--count`, `--few-shot-k`, `--mock`, `--skip-existing`, `--tema`, `--abertura`. | `./.venv/bin/python scripts/populate_questoes_ineditas.py --habilidades all --count 1` |
+| `scripts/search_pinecone.py` | Utilitário CLI para inspecionar e testar consultas semânticas nos namespaces do Pinecone. | `./.venv/bin/python scripts/search_pinecone.py` |
+| Serviço `questoes-ineditas-enem` | A geração de questões inéditas saiu da plataforma. Suba a API do serviço e gere os lotes pela tela de administrador **Questões inéditas**, como em [geracao-questoes-pot.md](../02-dominios-e-fluxos/geracao-questoes-pot.md). | `./.venv/bin/uvicorn app.api:app --host 127.0.0.1 --port 8100` (no outro repositório) |
 | `scripts/seed_alunos_ficticios.py` | Gera **dados fictícios** de uso sem chamar o LLM: 5 estudantes (`<slug>@ficticio.vera`, senha `aluno123`) com perfis distintos, simulados de 45 itens montados por `gerar_simulado_enem` e respondidos via TRI 3PL com os parâmetros `a`/`b`/`c` de cada item, submetidos por `submeter_tentativa_simulado` (atualiza `desempenho_habilidades`), datas espalhadas nas últimas semanas e simulados pendentes. Não gera feedbacks, chat nem inéditas. Parâmetros TRI sem separador decimal no CSV (44 itens, sobretudo 2012) são normalizados (÷1000) na leitura. Requer `seed_questoes.py` antes. | `./.venv/bin/python scripts/seed_alunos_ficticios.py [--alunos N] [--seed 42] [--recriar \| --limpar]` |
 | `scripts/run_retrieval_eval.py` | **Experimento 1 do TCC**: roda as 126 queries de `evaluation/data/retrieval_gold.json` nos sistemas `e5_denso`, `e5_rerank` e `bm25`, nos cenários `fechado` (63 PDFs `ENEM_MAT_*`) e `completo`. Gera Hit@K, MRR@10, nDCG@10, Context Precision@3 e latência, com IC 95% por bootstrap e testes de permutação pareados (Holm). Saída em `evaluation/results/<pasta>/`; prefixo `piloto-` enquanto o gabarito não estiver congelado. Flags: `--sistemas`, `--cenarios`, `--limit`, `--recalcular <pasta>`, `--atualizar-corpus`. | `./.venv/bin/python scripts/run_retrieval_eval.py [--limit 5]` |
 | `scripts/run_rewriting_eval.py` | **Experimento 2 do TCC**: compara `sem_reescrita`, `com_reescrita` (`ChatService.rewrite_query`) e `oraculo` nos 30 diálogos de `evaluation/data/rewriting_dialogs.json`. Exige o Ollama ativo. Flags: `--cenario`, `--recalcular <pasta>`. | `./.venv/bin/python scripts/run_rewriting_eval.py` |
 | `scripts/relevance_agreement.py` | Validação do gabarito por segundo avaliador: `exportar` monta o pool cego (gabarito + top-5 de cada rodada) em `evaluation/data/anotacao/pool.csv`; `calcular` dá o kappa de Cohen (simples e ponderado) e as divergências. | `./.venv/bin/python scripts/relevance_agreement.py exportar --rodada evaluation/results/<pasta>` |
 | `scripts/freeze_gold.py` | Congela o gabarito e os diálogos (`congelado: true` + data) e imprime o SHA-256 (`RN-AVAL02`). | `./.venv/bin/python scripts/freeze_gold.py` |
 | `scripts/clean_tiny_chunks.py` | Audita e remove chunks residuais curtos (`< 15` palavras) do namespace `materiais_didaticos` no Pinecone (`RN-CHUNK02`). | `./.venv/bin/python scripts/clean_tiny_chunks.py` |
-| `scripts/search_pinecone.py` | Utilitário CLI para inspecionar e testar consultas semânticas nos namespaces do Pinecone. | `./.venv/bin/python scripts/search_pinecone.py` |
 | `scripts/ollama_forwarder.py` | Proxy/forwarder utilitário para roteamento de chamadas ao daemon do Ollama entre WSL e host Windows quando necessário. | `./.venv/bin/python scripts/ollama_forwarder.py` |
 
 ---

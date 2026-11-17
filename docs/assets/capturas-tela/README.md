@@ -29,9 +29,15 @@ Telas usadas na demonstração da monografia (Seção 6.1). Todas estão em 16:9
 | `20_tutora_conversa_2.png` | Mariana | 2ª pergunta, que depende da 1ª ("E se eu dobrar o raio…?"), e resposta |
 | `21_tutora_fontes.png` | Mariana | Fontes teóricas recuperadas para a resposta |
 | `22_tutora_raciocinio.png` | Mariana | Raciocínio pedagógico (chain-of-thought) da tutora expandido |
+| `23_admin_ineditas_lote.png` | Administrador | Questões inéditas: montagem de um lote (H03, H12 e H24) e andamento de cada pedido |
+| `24_admin_ineditas_revisao.png` | Administrador | Questões inéditas: revisão de uma questão aprovada antes de adicioná-la ao acervo |
 
 ## Como refazer
 
 1. Suba a API com `LLM_TIMEOUT_SECONDS=1200` e o frontend.
 2. Rode `scripts/seed_alunos_ficticios.py` e `scripts/gerar_conteudo_demo.py`. A geração leva cerca de 35 minutos.
 3. Rode `scripts/capturar_telas.py`. A captura leva cerca de 3 minutos.
+4. Para as telas 23 e 24:
+   - suba a API do serviço `questoes-ineditas-enem` com o comando `./.venv/bin/uvicorn app.api:app --port 8100`;
+   - gere um lote real pela própria tela, como administrador, com H03, H12 e H24, 1 questão cada (cerca de 30 minutos);
+   - rode `scripts/capturar_telas_admin.py <senha do admin> <id do lote> docs/assets/capturas-tela H03,H12,H24 H24`.
