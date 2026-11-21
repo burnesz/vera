@@ -187,7 +187,7 @@ A unidade ranqueada é o **chunk**, porque é o que chega ao prompt. Cada chunk 
 - **Corpus**: no gabarito 1.0, os chunks relevantes das apostilas contavam como erro no cenário `completo`, e os números eram um limite inferior. O gabarito 2.0 corrige isso com os segmentos de páginas. Restam duas limitações:
   - o segmento é mais grosso que o chunk: um chunk de exercício misto herda os tópicos do segmento inteiro;
   - os segmentos foram rotulados por uma única pessoa com assistência de IA, sem segundo avaliador.
-- **BM25**: usa o texto salvo no metadado (até 3.000 caracteres; os chunks têm cerca de 1.200, então não há corte na prática) e não aplica stemming.
+- **BM25**: usa o texto salvo no metadado (até 3.000 caracteres; os chunks têm no máximo 800, então não há corte na prática) e não aplica stemming.
 - **Latência (achado do teste de fumaça)**: `EmbeddingService` fixa `torch.set_num_threads(os.cpu_count())`. Com o `llama-server` ocupando ~7 núcleos, um embedding de query levou ~5,6 s com 16 threads, contra ~0,15 s com 4 threads. Isso afeta a produção e a medição. A correção está pendente de decisão e não foi aplicada.
 
 #### 2.1.8 Referências

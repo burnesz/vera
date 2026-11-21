@@ -35,13 +35,14 @@ O banco vetorial **Pinecone** centraliza a memória semântica do sistema em um 
 
 ### `RN-CHUNK01` — Segmentação Semântica Hierárquica com Fallback Automático
 - **Prioridade 1 (Unstructured)**: O `MaterialChunker` (`app/pipeline/chunking.py`) prioriza particionamento semântico via `chunk_by_title`, preservando a coesão de seções didáticas.
-  - Parâmetros: `max_characters = CHUNK_SIZE` (padrão `1200`), `new_after_n_chars = int(CHUNK_SIZE * 0.75)` (`900`), `combine_text_under_n_chars = 400`.
+  - Parâmetros: `max_characters = CHUNK_SIZE`, `new_after_n_chars = int(CHUNK_SIZE * 0.75)` (`600` com o `.env` atual), `combine_text_under_n_chars = 400`.
 - **Prioridade 2 (Fallback PyMuPDF)**: Ativado automaticamente quando o Unstructured retorna 0 chunks (PDF com layout complexo/duas colunas) ou lança exceção. Extrai blocos em ordem de leitura natural, normaliza símbolos matemáticos Unicode para LaTeX inline e aplica janela deslizante com overlap.
 
 ### `RN-CHUNK02` — Limites de Janela, Limpeza de Ruído e Descarte de Fragmentos Curtos
-- Os limites são controlados por `CHUNK_SIZE` (`1200`) e `CHUNK_OVERLAP` (`150`).
+- Os limites são controlados por `CHUNK_SIZE` e `CHUNK_OVERLAP`. O padrão do código é `1200`/`150`, mas o `.env` define `CHUNK_SIZE=800`, e foi com 800 que a base atual foi indexada (4.038 chunks, no máximo 800 caracteres e mediana de 757).
+- **Base atual**: na indexação usada no TCC, todos os 71 materiais passaram pelo fluxo PyMuPDF, e o `pix2tex` não converteu nenhuma fórmula. As fórmulas que estão como imagem nos PDFs não aparecem nos chunks.
 - **Filtros de Ruído**:
-  - Descarte de elementos estruturais do tipo `Header`, `Footer` e `PageNumber`, bem como cabeçalhos editoriais repetitivos (`HEADER_REGEX`) e seções de referências bibliográficas (`REF_TITLE_REGEX` e `_has_reference_signals`).
+  - Descarte de elementos estruturais do tipo `Header`, `Footer` e `PageNumber` (só no fluxo Unstructured), bem como cabeçalhos editoriais repetitivos (`HEADER_REGEX`) e seções de referências bibliográficas (`REF_TITLE_REGEX` e `_has_reference_signals`).
   - **Filtro de Tamanho Mínimo**: descarta fragmentos residuais menores que `MIN_CHUNK_WORDS = 15` palavras (`MIN_WORDS_UNSTRUCTURED = 20` no fluxo Unstructured), evitando que títulos isolados poluam a busca vetorial. O script `scripts/clean_tiny_chunks.py` permite auditoria e limpeza retroativa no Pinecone.
 - **Metadados Semânticos Puros**: `parse_metadata_from_filename` extrai `filename`, `title`, `topic` e `source_type="materiais_didaticos"` sem forçar mapeamento artificial de habilidades nos PDFs teóricos.
 

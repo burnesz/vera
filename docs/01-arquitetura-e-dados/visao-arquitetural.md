@@ -95,8 +95,8 @@ flowchart TB
 | | `EMBEDDING_MODEL_NAME` | `"intfloat/multilingual-e5-large"` | Modelo local SentenceTransformers (1024 dims) |
 | | `EMBEDDING_DEVICE` | `"cpu"` | Dispositivo para embeddings (`cpu` para reservar VRAM total da GPU para o Ollama) |
 | | `NAMESPACE_MATERIAIS_DIDATICOS` | `"materiais_didaticos"` | Namespace de apostilas/livros para a Tutora RAG |
-| | `NAMESPACE_QUESTOES_ENEM` | `"questoes_enem"` | Namespace das 402 questões históricas do ENEM |
-| **Ingestão / RAG** | `CHUNK_SIZE` / `CHUNK_OVERLAP` | `1200` / `150` | Limites de caracteres do `MaterialChunker` |
+| | `NAMESPACE_QUESTOES_ENEM` | `"questoes_enem"` | Desativado desde 2026-11-16: servia à geração de questões que saiu da plataforma. O serviço `questoes-ineditas-enem` usa um ChromaDB próprio |
+| **Ingestão / RAG** | `CHUNK_SIZE` / `CHUNK_OVERLAP` | `1200` / `150` | Limites de caracteres do `MaterialChunker`. O `.env` usa `800` / `150`, valores com que a base atual foi indexada |
 | | `FORMULA_EXTRACTION_ENABLED` | `True` | Ativa OCR matemático via `pix2tex` no fallback PyMuPDF |
 | | `ENABLE_QUERY_REWRITING` | `True` | Ativa reescrita de consultas no `ChatService` |
 | **PostgreSQL** | `DATABASE_URL` | Montada via `POSTGRES_*` | String de conexão `postgresql+psycopg2://...` |
